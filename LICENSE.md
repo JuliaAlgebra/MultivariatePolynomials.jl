@@ -1,6 +1,6 @@
 The MultivariatePolynomials.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2016: Christopher Coey, Robin Deits, Joey Huchette, Benoît Legat, and contributors
+> Copyright (c) 2016: Christopher Coey, Robin Deits, Joey Huchette, Benoît Legat, Amelia Perry, and contributors
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
