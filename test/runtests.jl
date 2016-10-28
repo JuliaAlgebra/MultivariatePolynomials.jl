@@ -1,5 +1,14 @@
 using MultivariatePolynomials
-using Base.Test
+using FactCheck
 
-# write your own tests here
-@test 1 == 2
+#include("mono.jl")
+#include("poly.jl")
+#include("rational.jl")
+include("promote.jl")
+include("comp.jl")
+include("alg.jl")
+include("diff.jl")
+include("subs.jl")
+#include("show.jl")
+
+FactCheck.exitstatus()
