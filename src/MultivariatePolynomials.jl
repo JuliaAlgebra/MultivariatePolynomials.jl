@@ -7,6 +7,7 @@ import Base.show, Base.length, Base.getindex, Base.vect, Base.isless, Base.isemp
 include("mono.jl")
 include("poly.jl")
 include("rational.jl")
+include("measure.jl")
 include("exp.jl")
 include("promote.jl")
 include("comp.jl")
