@@ -2,13 +2,13 @@ function dot(m::Measure, p::TermContainer)
   i = 1
   s = 0
   for t in p
-    while t.x != m.x[i] && i <= length(m.x)
+    while i <= length(m.x) && t.x != m.x[i]
       i += 1
     end
     if i > length(m.x)
       error("The polynomial $p has a monomial for which the expectation is not known in $m")
     end
-    s += m.a * t.α
+    s += m.a[i] * t.α
     i += 1
   end
   s

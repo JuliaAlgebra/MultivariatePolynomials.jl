@@ -24,6 +24,7 @@ function buildpolyvar(var)
   end
 end
 
+# Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
   reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg) for arg in args])
 end
