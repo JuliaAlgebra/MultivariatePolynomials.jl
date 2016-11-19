@@ -28,14 +28,14 @@ function (*)(x::PolyVar, y::PolyVar)
   if x === y
     Monomial([x], [2])
   else
-    Monomial([x,y], [1,1])
+    Monomial(x > y ? [x,y] : [y,x], [1,1])
   end
 end
 function (*)(x::PolyVar, y::Monomial)
   i = 1
   vars = y.vars
   n = length(vars)
-  while i <= n && x > vars[i]
+  while i <= n && x < vars[i]
     i += 1
   end
   if i > n
@@ -172,12 +172,12 @@ function plusorminus{S,T}(p::TermContainer{S}, q::TermContainer{T}, isplus)
   i = j = 1
   while i <= length(p) || j <= length(q)
       z = zeros(Int, nvars)
-      if j > length(q) || (i <= length(p) && p[i].x < q[j].x)
+      if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
           t = p[i]
           z[maps[1]] = t.x.z
           α = t.α
           i += 1
-      elseif i > length(p) || q[j].x < p[i].x
+      elseif i > length(p) || q[j].x > p[i].x
           t = q[j]
           z[maps[2]] = t.x.z
           α = isplus ? t.α : -t.α

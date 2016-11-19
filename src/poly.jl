@@ -112,7 +112,7 @@ end
 (::Type{VecPolynomial{T}}){T}(f::Function, x::Vector) = VecPolynomial{T}(f, MonomialVector(x))
 
 function vecpolynomialclean{T}(vars::Vector{PolyVar}, adup::Vector{T}, Zdup::Vector{Vector{Int}})
-  σ = sortperm(Zdup)
+  σ = sortperm(Zdup, rev=true)
   Z = Vector{Vector{Int}}()
   a = Vector{T}()
   i = 0

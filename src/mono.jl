@@ -153,7 +153,7 @@ function myunion(varsvec::Vector{Vector{PolyVar}})
   while !isempty(nonempty)
     imin = 0
     for i in nonempty
-      if imin == 0 || varsvec[i][is[i]] < varsvec[imin][is[imin]]
+      if imin == 0 || varsvec[i][is[i]] > varsvec[imin][is[imin]]
         imin = i
       end
     end
