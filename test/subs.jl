@@ -19,4 +19,8 @@ facts("Substitution") do
   @fact isapproxzero(q([-1], [x[1]])) --> true
   @fact isapproxzero(q([1], [x[1]])) --> false
   @fact isapprox(q([1], [x[1]]), 2/3) --> true
+
+  P = [1 2 3; 2 4 5; 3 5 6]
+  p = MatPolynomial(P, x)
+  @fact p(ones(3), x) --> 31
 end

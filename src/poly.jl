@@ -180,6 +180,7 @@ end
 function MatPolynomial{T}(Q::Matrix{T}, x::MonomialVector)
   MatPolynomial{T}((i,j) -> Q[i,j], x)
 end
+MatPolynomial(Q::Matrix, x::Vector) = MatPolynomial(Q, MonomialVector(x))
 
 function getindex(p::MatPolynomial, I::NTuple{2,Int})
   i, j = I
