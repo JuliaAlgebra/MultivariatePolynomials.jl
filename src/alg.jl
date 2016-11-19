@@ -146,16 +146,20 @@ end
 function (+)(x::Term, y::Term)
   if x.x == y.x
     Term(x.α+y.α, x.x)
-  else
+  elseif x.x > y.x
     VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
+  else
+    VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
   end
 end
 
 function (-)(x::Term, y::Term)
   if x.x == y.x
     Term(x.α-y.α, x.x)
-  else
+  elseif x.x > y.x
     VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
+  else
+    VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
   end
 end
 

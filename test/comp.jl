@@ -1,4 +1,4 @@
-facts("Equality") do
+facts("Monomial equality") do
     @polyvar x y
     @fact x*y == x --> false
     @fact x == Monomial(x) --> true
@@ -21,4 +21,13 @@ facts("Graded Lex Order") do
     @fact x*y^5*z^2 > x^4*y*z^3 --> false
     @fact x^5*y*z > x^4*y*z^2 --> true
     @fact x^5*y*z < x^4*y*z^2 --> false
+end
+facts("Polynomial equality") do
+    @polyvar x y
+    @fact 2*x*y + 3*y^2 --> 3*y^2 + 2*y*x
+    @fact 3*x*y + 2*y^2 != 3*y^2 + 2*y*x --> true
+    @fact isapprox((2-1e-3)*x*y + (3+1e-3)*y^2, 3*y^2 + 2*y*x, rtol=1e-2) --> true
+    @fact isapprox((2-1e-3)*x*y + (3+1e-1)*y^2, 3*y^2 + 2*y*x, rtol=1e-2) --> false
+    @fact isapprox(1e-3*x*y + 3*y^2 + x^2, x^2 + 3*y^2, rtol=1e-2, ztol=1e-2) --> true
+    @fact isapprox(3*y^2 + x^2, x^2 + 1e-3*x*y + 3*y^2, rtol=1e-2, ztol=1e-2) --> true
 end

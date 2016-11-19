@@ -141,12 +141,12 @@ function isapprox{S,T}(p::VecPolynomial{S}, q::VecPolynomial{T}; rtol::Real=Base
   i = j = 1
   while i <= length(p.x) || j <= length(q.x)
     lhs, rhs = 0, 0
-    if i > length(p.x) || (j <= length(q.x) && q.x[j] < p.x[i])
+    if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
       if !isapproxzero(q.a[j], ztol=ztol)
         return false
       end
       j += 1
-    elseif j > length(q.x) || p.x[i] < q.x[j]
+    elseif j > length(q.x) || p.x[i] > q.x[j]
       if !isapproxzero(p.a[i], ztol=ztol)
         return false
       end
