@@ -1,7 +1,7 @@
 using MultivariatePolynomials
 using FactCheck
 
-#include("mono.jl")
+include("mono.jl")
 include("poly.jl")
 #include("rational.jl")
 include("promote.jl")

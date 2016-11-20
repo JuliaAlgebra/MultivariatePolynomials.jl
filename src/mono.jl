@@ -174,7 +174,7 @@ function myunion(varsvec::Vector{Vector{PolyVar}})
 end
 
 function MonomialVector(X::Vector)
-  varsvec = Vector{PolyVar}[ vars(x) for x in X ]
+  varsvec = Vector{PolyVar}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
   allvars, maps = myunion(varsvec)
   nvars = length(allvars)
   n = sum([length(x) for x in X])
@@ -182,7 +182,20 @@ function MonomialVector(X::Vector)
   offset = 0
   for (i, x) in enumerate(X)
     for (j, m) in enumerate(x)
-      Z[offset+j][maps[i]] = m.z
+      if isa(m, PolyVar)
+        @assert length(maps[i] == 1)
+        z = [1]
+      elseif isa(m, Monomial)
+        z = m.z
+      elseif isa(m, VecPolynomial)
+        @assert length(m.x) == 1
+        z = m.x[1].z
+      elseif isa(m, Term)
+        z = m.x.z
+      else
+        z = Int[]
+      end
+      Z[offset+j][maps[i]] = z
     end
     offset += length(x)
   end
