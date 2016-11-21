@@ -43,7 +43,8 @@ length(::Term) = 1
 isempty(::Term) = false
 start(::Term) = false
 done(::Term, state) = state
-next(x::Term, state) = (x, true)
+next(t::Term, state) = (t, true)
+getindex(t::Term, I::Int) = t
 
 # Invariant:
 # a and x might be empty: meaning it is the zero polynomial
@@ -111,7 +112,7 @@ end
 (::Type{VecPolynomial{T}}){T}(f::Function, x::Vector) = VecPolynomial{T}(f, MonomialVector(x))
 
 function vecpolynomialclean{T}(vars::Vector{PolyVar}, adup::Vector{T}, Zdup::Vector{Vector{Int}})
-  σ = sortperm(Zdup)
+  σ = sortperm(Zdup, rev=true)
   Z = Vector{Vector{Int}}()
   a = Vector{T}()
   i = 0
@@ -132,11 +133,12 @@ end
 
 vars(p::VecPolynomial) = vars(p.x)
 
-length(x::VecPolynomial) = length(x.a)
-isempty(x::VecPolynomial) = length(x) > 0
+length(p::VecPolynomial) = length(p.a)
+isempty(p::VecPolynomial) = length(p) > 0
 start(::VecPolynomial) = 1
-done(x::VecPolynomial, state) = length(x) < state
-next(x::VecPolynomial, state) = (Term(x.a[state], x.x[state]), state+1)
+done(p::VecPolynomial, state) = length(p) < state
+next(p::VecPolynomial, state) = (p[state], state+1)
+getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
 function removemonomials(p::VecPolynomial, x::MonomialVector)
   # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
@@ -178,6 +180,7 @@ end
 function MatPolynomial{T}(Q::Matrix{T}, x::MonomialVector)
   MatPolynomial{T}((i,j) -> Q[i,j], x)
 end
+MatPolynomial(Q::Matrix, x::Vector) = MatPolynomial(Q, MonomialVector(x))
 
 function getindex(p::MatPolynomial, I::NTuple{2,Int})
   i, j = I

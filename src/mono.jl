@@ -24,6 +24,7 @@ function buildpolyvar(var)
   end
 end
 
+# Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
   reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg) for arg in args])
 end
@@ -52,7 +53,7 @@ type Monomial <: MonomialContainer
 
   function Monomial(vars::Vector{PolyVar}, z::Vector{Int})
     if length(vars) != length(z)
-      error("There should be as many vars than exponents")
+      throw(ArgumentError("There should be as many vars than exponents"))
     end
     new(vars, z)
   end
@@ -103,9 +104,10 @@ vars{T<:Union{Monomial,MonomialVector}}(x::T) = x.vars
 
 nvars(x::MonomialContainer) = length(vars(x))
 
+# list them in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs, filter::Function)
   Z = Vector{Vector{Int}}()
-  for deg in degs
+  for deg in sort(degs, rev=true)
     z = zeros(Int, n)
     z[1] = deg
     while true
@@ -129,6 +131,7 @@ function getZfordegs(n, degs, filter::Function)
       end
     end
   end
+  @assert issorted(Z, rev=true)
   Z
 end
 
@@ -152,7 +155,7 @@ function myunion(varsvec::Vector{Vector{PolyVar}})
   while !isempty(nonempty)
     imin = 0
     for i in nonempty
-      if imin == 0 || varsvec[i][is[i]] < varsvec[imin][is[imin]]
+      if imin == 0 || varsvec[i][is[i]] > varsvec[imin][is[imin]]
         imin = i
       end
     end
@@ -172,18 +175,27 @@ function myunion(varsvec::Vector{Vector{PolyVar}})
   vars, maps
 end
 
-function MonomialVector(X::Vector)
-  varsvec = Vector{PolyVar}[ vars(x) for x in X ]
+#function MonomialVector{T<:Union{PolyVar,Monomial,Term,Int}}(X::Vector{T})
+function MonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
+  varsvec = Vector{PolyVar}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
   allvars, maps = myunion(varsvec)
   nvars = length(allvars)
   n = sum([length(x) for x in X])
   Z = [zeros(Int, nvars) for i in 1:n]
   offset = 0
   for (i, x) in enumerate(X)
-    for (j, m) in enumerate(x)
-      Z[offset+j][maps[i]] = m.z
+    if isa(x, PolyVar)
+      @assert length(maps[i]) == 1
+      z = [1]
+    elseif isa(x, Monomial)
+      z = x.z
+    elseif isa(x, Term)
+      z = x.x.z
+    else
+      @assert isa(x, Int)
+      z = Int[]
     end
-    offset += length(x)
+    Z[i][maps[i]] = z
   end
   MonomialVector(allvars, Z)
 end

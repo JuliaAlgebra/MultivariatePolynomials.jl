@@ -28,14 +28,14 @@ function (*)(x::PolyVar, y::PolyVar)
   if x === y
     Monomial([x], [2])
   else
-    Monomial([x,y], [1,1])
+    Monomial(x > y ? [x,y] : [y,x], [1,1])
   end
 end
 function (*)(x::PolyVar, y::Monomial)
   i = 1
   vars = y.vars
   n = length(vars)
-  while i <= n && x > vars[i]
+  while i <= n && x < vars[i]
     i += 1
   end
   if i > n
@@ -146,53 +146,59 @@ end
 function (+)(x::Term, y::Term)
   if x.x == y.x
     Term(x.α+y.α, x.x)
-  else
+  elseif x.x > y.x
     VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
+  else
+    VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
   end
 end
 
 function (-)(x::Term, y::Term)
   if x.x == y.x
     Term(x.α-y.α, x.x)
-  else
+  elseif x.x > y.x
     VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
+  else
+    VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
   end
 end
 
 (+){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) + Term(y)
 (-){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) - Term(y)
 
-function plusorminus{S,T}(x::TermContainer{S}, y::TermContainer{T}, isplus)
-  varsvec = [vars(x), vars(y)]
+function plusorminus{S,T}(p::TermContainer{S}, q::TermContainer{T}, isplus)
+  varsvec = [vars(p), vars(q)]
   allvars, maps = myunion(varsvec)
   nvars = length(allvars)
   U = promote_type(S, T)
   a = Vector{U}()
   Z = Vector{Vector{Int}}()
-  # FIXME not sorted
-  for (i, tc) in enumerate([x,y])
-    for (j, t) in enumerate(tc)
-      added = false
+  i = j = 1
+  while i <= length(p) || j <= length(q)
       z = zeros(Int, nvars)
-      z[maps[i]] = t.x.z
-      if i == 1 || isplus
-        α = t.α
+      if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
+          t = p[i]
+          z[maps[1]] = t.x.z
+          α = t.α
+          i += 1
+      elseif i > length(p) || q[j].x > p[i].x
+          t = q[j]
+          z[maps[2]] = t.x.z
+          α = isplus ? t.α : -t.α
+          j += 1
       else
-        α = -t.α
+          t = p[i]
+          z[maps[1]] = t.x.z
+          α = t.α
+          s = q[j]
+          α += isplus ? s.α : -s.α
+          i += 1
+          j += 1
       end
-      for k in 1:length(Z)
-        if Z[k] == z
-          a[k] += α
-          added = true
-          break
-        end
-      end
-      if !added
-        push!(a, α)
-        push!(Z, z)
-      end
-    end
+      push!(a, α)
+      push!(Z, z)
   end
+
   VecPolynomial(a, MonomialVector(allvars, Z))
 end
 

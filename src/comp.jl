@@ -12,20 +12,20 @@ function mycomp(x::Monomial, y::Monomial)
     # since they have the same degree,
     # if we get j > nvars(y), the rest in x.z should be zeros
     while i <= nvars(x) && j <= nvars(y)
-      if x.vars[i] < y.vars[j]
+      if x.vars[i] > y.vars[j]
         if x.z[i] == 0
           i += 1
         else
           return 1
         end
-      elseif x.vars[i] > y.vars[j]
+      elseif x.vars[i] < y.vars[j]
         if y.z[j] == 0
           j += 1
         else
           return -1
         end
       elseif x.z[i] != y.z[j]
-        return y.z[j] - x.z[i]
+        return x.z[i] - y.z[j]
       else
         i += 1
         j += 1
@@ -98,7 +98,7 @@ end
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.deno == q.num*p.deno
 (==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
 
-isless(x::PolyVar, y::PolyVar) = isless(x.name, y.name)
+isless(x::PolyVar, y::PolyVar) = isless(y.name, x.name)
 
 function isless(x::Vector, y::Vector)
   @assert length(x) == length(y)
@@ -109,9 +109,9 @@ function isless(x::Vector, y::Vector)
   else
     for (a, b) in zip(x, y)
       if a < b
-        return false
-      elseif a > b
         return true
+      elseif a > b
+        return false
       end
     end
     false
@@ -122,6 +122,8 @@ end
 function isless(x::Monomial, y::Monomial)
   mycomp(x, y) < 0
 end
+isless(x::Monomial, y::PolyVar) = isless(x, Monomial(y))
+isless(x::PolyVar, y::Monomial) = isless(Monomial(x), y)
 
 function isapproxzero(x; ztol::Real=1e-6)
   -ztol < x < ztol
@@ -139,12 +141,12 @@ function isapprox{S,T}(p::VecPolynomial{S}, q::VecPolynomial{T}; rtol::Real=Base
   i = j = 1
   while i <= length(p.x) || j <= length(q.x)
     lhs, rhs = 0, 0
-    if i > length(p.x) || (j <= length(q.x) && q.x[j] < p.x[i])
+    if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
       if !isapproxzero(q.a[j], ztol=ztol)
         return false
       end
       j += 1
-    elseif j > length(q.x) || p.x[i] < q.x[j]
+    elseif j > length(q.x) || p.x[i] > q.x[j]
       if !isapproxzero(p.a[i], ztol=ztol)
         return false
       end
