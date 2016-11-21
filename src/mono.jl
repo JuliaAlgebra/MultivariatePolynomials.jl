@@ -104,9 +104,10 @@ vars{T<:Union{Monomial,MonomialVector}}(x::T) = x.vars
 
 nvars(x::MonomialContainer) = length(vars(x))
 
+# list them in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs, filter::Function)
   Z = Vector{Vector{Int}}()
-  for deg in degs
+  for deg in sort(degs, rev=true)
     z = zeros(Int, n)
     z[1] = deg
     while true
@@ -130,6 +131,7 @@ function getZfordegs(n, degs, filter::Function)
       end
     end
   end
+  @assert issorted(Z, rev=true)
   Z
 end
 
