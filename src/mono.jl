@@ -53,7 +53,7 @@ type Monomial <: MonomialContainer
 
   function Monomial(vars::Vector{PolyVar}, z::Vector{Int})
     if length(vars) != length(z)
-      error("There should be as many vars than exponents")
+      throw(ArgumentError("There should be as many vars than exponents"))
     end
     new(vars, z)
   end
