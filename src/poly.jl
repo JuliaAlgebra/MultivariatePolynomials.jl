@@ -3,6 +3,7 @@ import Base.eltype, Base.zero, Base.one
 
 abstract TermType{T} <: PolyType
 zero{T}(t::TermType{T}) = VecPolynomial(T[], MonomialVector(vars(t), Vector{Vector{Int}}()))
+zero(::Type{PolyType}) = zero(VecPolynomial{Int})
 zero{T<:TermType}(::Type{T}) = VecPolynomial(eltype(T)[], MonomialVector(PolyVar[], Vector{Vector{Int}}()))
 one{T}(t::TermType{T}) = Term(one(T), Monomial(vars(t), zeros(Int, length(vars(t)))))
 one{T<:TermType}(::Type{T}) = Term(one(eltype(T)), Monomial(PolyVar[], Int[]))
@@ -93,6 +94,7 @@ Base.convert{S,T}(::Type{VecPolynomial{T}}, p::VecPolynomial{S}) = VecPolynomial
 Base.convert{T}(::Type{TermContainer{T}}, p::VecPolynomial) = VecPolynomial{T}(p)
 Base.convert(::Type{Any}, p::VecPolynomial) = p
 
+Base.convert(::Type{PolyType}, p::TermContainer) = p
 function Base.convert{S}(::Type{S}, p::TermContainer)
   s = zero(S)
   for t in p
