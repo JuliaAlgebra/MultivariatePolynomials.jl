@@ -31,37 +31,71 @@ function (*)(x::PolyVar, y::PolyVar)
     Monomial(x > y ? [x,y] : [y,x], [1,1])
   end
 end
+function multiplyvar(v, x)
+    i = findfirst(w->w <= x, v)
+    if i > 0 && v[i] == x
+        # /!\ no copy done here for efficiency, do not mess up with vars
+        w = v
+        updatez = z -> begin
+            newz = copy(z)
+            newz[i] += 1
+            newz
+        end
+    else
+        n = length(v)
+        if i == 0
+            i = n+1
+        end
+        I = 1:i-1
+        J = i:n
+        K = J+1
+        w = Vector{PolyVar}(n+1)
+        w[I] = v[I]
+        w[i] = x
+        w[K] = v[J]
+        updatez = z -> begin
+            newz = Vector{Int}(n+1)
+            newz[I] = z[I]
+            newz[i] = 1
+            newz[K] = z[J]
+            newz
+        end
+    end
+    w, updatez
+end
+function multiplymono(v, x)
+    if v == x.vars
+        # /!\ no copy done here for efficiency, do not mess up with vars
+        w = v
+        updatez = z -> z + x.z
+    else
+        w, maps = myunion([v, x.vars])
+        updatez = z -> begin
+            newz = zeros(Int, length(w))
+            newz[maps[1]] += z
+            newz[maps[2]] += x.z
+            newz
+        end
+    end
+    w, updatez
+end
 function (*)(x::PolyVar, y::Monomial)
-  i = 1
-  vars = y.vars
-  n = length(vars)
-  while i <= n && x < vars[i]
-    i += 1
-  end
-  if i > n
-    Monomial([vars; x], [y.z; 1])
-  elseif x == vars[i]
-    znew = copy(y.z)
-    znew[i] += 1
-    Monomial(vars, znew)
-  else
-    znew = copy(y.z)
-    znew[i] += 1
-    Monomial([vars[1:i-1]; x; vars[i:end]], [y.z[1:i-1]; 1; y.z[i:end]])
-  end
+    w, updatez = multiplyvar(y.vars, x)
+    Monomial(w, updatez(y.z))
+end
+function (*)(x::PolyVar, y::MonomialVector)
+    w, updatez = multiplyvar(y.vars, x)
+    MonomialVector(w, updatez.(y.Z))
+end
+function (*)(x::Monomial, y::Monomial)
+    w, updatez = multiplymono(y.vars, x)
+    Monomial(w, updatez(y.z))
+end
+function (*)(x::Monomial, y::MonomialVector)
+    w, updatez = multiplymono(y.vars, x)
+    MonomialVector(w, updatez.(y.Z))
 end
 (*)(x::Monomial, y::PolyVar) = y * x
-function (*)(x::Monomial, y::Monomial)
-  if x.vars == y.vars
-    Monomial(x.vars, x.z + y.z)
-  else
-    allvars, maps = myunion([x.vars, y.vars])
-    z = zeros(Int, length(allvars))
-    z[maps[1]] += x.z
-    z[maps[2]] += y.z
-    Monomial(allvars, z)
-  end
-end
 
 # non-PolyType * PolyType: specific methods for speed
 *(p::PolyType, α) = α * p
@@ -79,6 +113,15 @@ end
 # The three above are mapped to one of the two below
 *(p::PolyType, q::Term) = TermContainer(p) * q
 *(p::PolyType, q::VecPolynomial) = TermContainer(p) * q
+
+# I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
+function *{S<:Union{PolyVar,Monomial}}(x::S, t::Term)
+    Term(t.α, x*t.x)
+end
+function *{S<:Union{PolyVar,Monomial},T}(x::S, p::VecPolynomial{T})
+    # /!\ No copy of a is done
+    VecPolynomial{T}(p.a, x*p.x)
+end
 
 # TermContainer * TermContainer
 *(x::Term, y::Term) = Term(x.α*y.α, x.x*y.x)
