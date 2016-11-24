@@ -14,6 +14,8 @@ include("comp.jl")
 include("alg.jl")
 include("diff.jl")
 include("subs.jl")
+include("algebraicset.jl")
+
 include("show.jl")
 
 end # module
