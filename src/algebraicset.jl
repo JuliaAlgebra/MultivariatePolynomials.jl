@@ -1,41 +1,28 @@
 export AlgebraicSet, BasicSemialgebraicSet, addequality!, addinequality!
 # Semialgebraic set described by polynomials with coefficients in T
-abstract AbstractSemialgebraicSet{T}
+abstract AbstractSemialgebraicSet
 
-addequality!{T}(S::AbstractSemialgebraicSet{T}, p) = addequality!(S, VecPolynomial{T}(p))
-addinequality!{T}(S::AbstractSemialgebraicSet{T}, p) = addinequality!(S, VecPolynomial{T}(p))
+abstract AbstractBasicSemialgebraicSet <: AbstractSemialgebraicSet
+abstract AbstractAlgebraicSet <: AbstractBasicSemialgebraicSet
 
-abstract AbstractBasicSemialgebraicSet{T} <: AbstractSemialgebraicSet{T}
-abstract AbstractAlgebraicSet{T} <: AbstractBasicSemialgebraicSet{T}
+addinequality!(S::AbstractAlgebraicSet, p) = throw(ArgumentError("Cannot add inequality to an algebraic set"))
 
-addinequality!{T}(S::AbstractAlgebraicSet{T}, p) = throw(ArgumentError("Cannot add inequality to an algebraic set"))
-
-type AlgebraicSet{T} <: AbstractAlgebraicSet{T}
-    p::Vector{VecPolynomial{T}}
+type AlgebraicSet <: AbstractAlgebraicSet
+    p::Vector
 end
-function (::Type{AlgebraicSet{T}}){T}()
-    AlgebraicSet{T}(VecPolynomial{T}[])
+function (::Type{AlgebraicSet})()
+    AlgebraicSet(Any[])
 end
 
+addequality!(V::AlgebraicSet, p) = push!(V.p, p)
 
-function Base.convert{T,U}(::Type{AlgebraicSet{T}}, V::AlgebraicSet{U})
-    AlgebraicSet{T}(Vector{VecPolynomial{T}}(V.p))
+type BasicSemialgebraicSet <: AbstractBasicSemialgebraicSet
+    V::AlgebraicSet
+    p::Vector
+end
+function (::Type{BasicSemialgebraicSet})()
+    BasicSemialgebraicSet(AlgebraicSet(), Any[])
 end
 
-addequality!{T}(V::AlgebraicSet{T}, p::VecPolynomial{T}) = push!(V.p, p)
-
-type BasicSemialgebraicSet{T} <: AbstractBasicSemialgebraicSet{T}
-    V::AlgebraicSet{T}
-    p::Vector{VecPolynomial{T}}
-end
-function (::Type{BasicSemialgebraicSet{T}}){T}()
-    BasicSemialgebraicSet{T}(AlgebraicSet{T}(), VecPolynomial{T}[])
-end
-
-
-function Base.convert{T,U}(::Type{BasicSemialgebraicSet{T}}, S::BasicSemialgebraicSet{U})
-    BasicSemialgebraicSet{T}(convert(AlgebraicSet{T}, S.V), Vector{VecPolynomial{T}}(S.p))
-end
-
-addequality!{T}(S::BasicSemialgebraicSet{T}, p::VecPolynomial{T}) = addequality!(S.V, p)
-addinequality!{T}(S::BasicSemialgebraicSet{T}, p::VecPolynomial{T}) = push!(S.p, p)
+addequality!(S::BasicSemialgebraicSet, p) = addequality!(S.V, p)
+addinequality!(S::BasicSemialgebraicSet, p) = push!(S.p, p)
