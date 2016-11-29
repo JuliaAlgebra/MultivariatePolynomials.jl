@@ -11,7 +11,7 @@ end
 
 function buildpolyvar(var)
     if isa(var, Symbol)
-        esc(:($var = PolyVar($"$var")))
+        :($(esc(var)) = PolyVar($"$var"))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
@@ -20,7 +20,7 @@ function buildpolyvar(var)
         varname = var.args[1]
         prefix = string(var.args[1])
         idxset = var.args[2]
-        esc(:($varname = polyvecvar($prefix, $idxset)))
+        :($(esc(varname)) = polyvecvar($prefix, $idxset))
     end
 end
 
