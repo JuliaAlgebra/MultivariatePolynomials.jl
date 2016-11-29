@@ -9,5 +9,4 @@ let
     vals = [1.0, 2.0]
 
     println(@benchmark(($p)($vals, $vars)))
-    vals = MultivariatePolynomials.evalmap(MultivariatePolynomials.vars(p), vals, vars)
 end
