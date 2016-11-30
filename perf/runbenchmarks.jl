@@ -9,4 +9,7 @@ let
     vals = [1.0, 2.0]
 
     println(@benchmark(($p)($vals, $vars)))
+
+    vars_out_of_order = [vars[2], vars[1]]
+    println(@benchmark(($p)($vals, $vars_out_of_order)))
 end
