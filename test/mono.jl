@@ -16,13 +16,13 @@ facts("Vector to Monomial Vector") do
     @fact MonomialVector([x]) --> MonomialVector([x], [[1]])
 end
 module newmodule
-  using FactCheck
-  import MultivariatePolynomials
-  facts("Polyvar macro hygiene") do
-    # Verify that the @polyvar macro works when the package has been activated
-    # with `import` instead of `using`.
-    MultivariatePolynomials.@polyvar x y
-    @fact isa(x, MultivariatePolynomials.PolyVar) --> true
-    @fact isa(y, MultivariatePolynomials.PolyVar) --> true
-  end
+    using FactCheck
+    import MultivariatePolynomials
+    facts("Polyvar macro hygiene") do
+        # Verify that the @polyvar macro works when the package has been activated
+        # with `import` instead of `using`.
+        MultivariatePolynomials.@polyvar x y
+        @fact isa(x, MultivariatePolynomials.PolyVar) --> true
+        @fact isa(y, MultivariatePolynomials.PolyVar) --> true
+    end
 end
