@@ -1,3 +1,5 @@
+import Base.Test: @inferred
+
 facts("Substitution") do
     @polyvar x[1:3]
 
@@ -23,4 +25,7 @@ facts("Substitution") do
     P = [1 2 3; 2 4 5; 3 5 6]
     p = MatPolynomial(P, x)
     @fact p(ones(3), x) --> 31
+
+    p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
+    @inferred p([1.0, 2.0], [x[1], x[2]])
 end

@@ -1,14 +1,21 @@
-function evalmap(vars, x::Vector, varorder::Vector{PolyVar})
-    vals = Any[var for var in vars]
-    for (i, var) in enumerate(varorder)
-        j = findfirst(vars, var)
-        # If i == 0, that means that the variable is not present
-        # so it is ignored
-        if j > 0
-            vals[j] = x[i]
+function evalmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
+    if vars == varorder
+        x
+    else
+        vals = Vector{T}(length(vars))
+        for (i, var) in enumerate(varorder)
+            j = findfirst(vars, var)
+            # If i == 0, that means that the variable is not present
+            # so it is ignored
+            if j > 0
+              vals[j] = x[i]
+            end
         end
+        for i in 1:length(vals)
+            @assert isdefined(vals, i) "Variable $(vars[i]) was not assigned a value"
+        end
+        vals
     end
-    vals
 end
 
 function monoeval(z::Vector{Int}, vals::Vector)
@@ -39,11 +46,7 @@ end
 
 function (p::VecPolynomial)(x::Vector, varorder)
     vals = evalmap(vars(p), x, varorder)
-    q = zero(p)
-    for i in 1:length(p)
-        q += p.a[i] * monoeval(p.x.Z[i], vals)
-    end
-    q
+    sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
 function (p::MatPolynomial)(x::Vector, varorder)
