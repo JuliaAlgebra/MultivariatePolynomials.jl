@@ -25,11 +25,11 @@ Base.transpose(p::PolyType) = p
 
 # Product between PolyVar and Monomial -> Monomial
 function (*)(x::PolyVar, y::PolyVar)
-  if x === y
-    Monomial([x], [2])
-  else
-    Monomial(x > y ? [x,y] : [y,x], [1,1])
-  end
+    if x === y
+        Monomial([x], [2])
+    else
+        Monomial(x > y ? [x,y] : [y,x], [1,1])
+    end
 end
 function multiplyvar(v, x)
     i = findfirst(w->w <= x, v)
@@ -127,53 +127,53 @@ end
 *(x::Term, y::Term) = Term(x.α*y.α, x.x*y.x)
 *(p::VecPolynomial, t::Term) = t * p
 function *(t::Term, p::VecPolynomial)
-  if iszero(t)
-    zero(p)
-  else
-    n = length(p)
-    allvars, maps = myunion([t.x.vars, p.x.vars])
-    nvars = length(allvars)
-    Z = [zeros(Int, nvars) for i in 1:n]
-    for i in 1:n
-      Z[i][maps[1]] = t.x.z
-      Z[i][maps[2]] += p.x.Z[i]
+    if iszero(t)
+        zero(p)
+    else
+        n = length(p)
+        allvars, maps = myunion([t.x.vars, p.x.vars])
+        nvars = length(allvars)
+        Z = [zeros(Int, nvars) for i in 1:n]
+        for i in 1:n
+            Z[i][maps[1]] = t.x.z
+            Z[i][maps[2]] += p.x.Z[i]
+        end
+        VecPolynomial(t.α * p.a, MonomialVector(allvars, Z))
     end
-    VecPolynomial(t.α * p.a, MonomialVector(allvars, Z))
-  end
 end
 function *(p::VecPolynomial, q::VecPolynomial)
-  if iszero(p)
-    zero(q)
-  elseif iszero(q)
-    zero(p)
-  else
-    samevars = vars(p) == vars(q)
-    if samevars
-      allvars = vars(p)
+    if iszero(p)
+        zero(q)
+    elseif iszero(q)
+        zero(p)
     else
-      allvars, maps = myunion([vars(p), vars(q)])
-    end
-    N = length(p)*length(q)
-    Z = Vector{Vector{Int}}(N)
-    T = typeof(p.a[1]*q.a[1])
-    a = Vector{T}(N)
-    i = 0
-    for u in p
-      for v in q
+        samevars = vars(p) == vars(q)
         if samevars
-          z = u.x.z + v.x.z
+            allvars = vars(p)
         else
-          z = zeros(Int, length(allvars))
-          z[maps[1]] += u.x.z
-          z[maps[2]] += v.x.z
+            allvars, maps = myunion([vars(p), vars(q)])
         end
-        i += 1
-        Z[i] = z
-        a[i] = u.α * v.α
-      end
+        N = length(p)*length(q)
+        Z = Vector{Vector{Int}}(N)
+        T = typeof(p.a[1]*q.a[1])
+        a = Vector{T}(N)
+        i = 0
+        for u in p
+            for v in q
+                if samevars
+                    z = u.x.z + v.x.z
+                else
+                    z = zeros(Int, length(allvars))
+                    z[maps[1]] += u.x.z
+                    z[maps[2]] += v.x.z
+                end
+                i += 1
+                Z[i] = z
+                a[i] = u.α * v.α
+            end
+        end
+        vecpolynomialclean(allvars, a, Z)
     end
-    vecpolynomialclean(allvars, a, Z)
-  end
 end
 
 dot(p::PolyType, q::PolyType) = p * q
@@ -182,67 +182,67 @@ dot(p::PolyType, α) = p * α
 
 myminivect{T}(x::T, y::T) = [x, y]
 function myminivect{S,T}(x::S, y::T)
-  U = promote_type(S, T)
-  [U(x), U(y)]
+    U = promote_type(S, T)
+    [U(x), U(y)]
 end
 
 function (+)(x::Term, y::Term)
-  if x.x == y.x
-    Term(x.α+y.α, x.x)
-  elseif x.x > y.x
-    VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
-  else
-    VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
-  end
+    if x.x == y.x
+        Term(x.α+y.α, x.x)
+    elseif x.x > y.x
+        VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
+    else
+        VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
+    end
 end
 
 function (-)(x::Term, y::Term)
-  if x.x == y.x
-    Term(x.α-y.α, x.x)
-  elseif x.x > y.x
-    VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
-  else
-    VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
-  end
+    if x.x == y.x
+        Term(x.α-y.α, x.x)
+    elseif x.x > y.x
+        VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
+    else
+        VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
+    end
 end
 
 (+){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) + Term(y)
 (-){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) - Term(y)
 
 function plusorminus{S,T}(p::TermContainer{S}, q::TermContainer{T}, isplus)
-  varsvec = [vars(p), vars(q)]
-  allvars, maps = myunion(varsvec)
-  nvars = length(allvars)
-  U = promote_type(S, T)
-  a = Vector{U}()
-  Z = Vector{Vector{Int}}()
-  i = j = 1
-  while i <= length(p) || j <= length(q)
-      z = zeros(Int, nvars)
-      if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
-          t = p[i]
-          z[maps[1]] = t.x.z
-          α = t.α
-          i += 1
-      elseif i > length(p) || q[j].x > p[i].x
-          t = q[j]
-          z[maps[2]] = t.x.z
-          α = isplus ? t.α : -t.α
-          j += 1
-      else
-          t = p[i]
-          z[maps[1]] = t.x.z
-          α = t.α
-          s = q[j]
-          α += isplus ? s.α : -s.α
-          i += 1
-          j += 1
-      end
-      push!(a, α)
-      push!(Z, z)
-  end
+    varsvec = [vars(p), vars(q)]
+    allvars, maps = myunion(varsvec)
+    nvars = length(allvars)
+    U = promote_type(S, T)
+    a = Vector{U}()
+    Z = Vector{Vector{Int}}()
+    i = j = 1
+    while i <= length(p) || j <= length(q)
+        z = zeros(Int, nvars)
+        if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
+            t = p[i]
+            z[maps[1]] = t.x.z
+            α = t.α
+            i += 1
+        elseif i > length(p) || q[j].x > p[i].x
+            t = q[j]
+            z[maps[2]] = t.x.z
+            α = isplus ? t.α : -t.α
+            j += 1
+        else
+            t = p[i]
+            z[maps[1]] = t.x.z
+            α = t.α
+            s = q[j]
+            α += isplus ? s.α : -s.α
+            i += 1
+            j += 1
+        end
+        push!(a, α)
+        push!(Z, z)
+    end
 
-  VecPolynomial(a, MonomialVector(allvars, Z))
+    VecPolynomial(a, MonomialVector(allvars, Z))
 end
 
 

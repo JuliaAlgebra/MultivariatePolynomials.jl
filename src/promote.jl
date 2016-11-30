@@ -9,8 +9,8 @@ promote_rule{S<:PolyType,T<:TermType}(::Type{T}, ::Type{S}) = VecPolynomial{prom
 promote_rule{S<:PolyType,T<:TermType}(::Type{S}, ::Type{T}) = VecPolynomial{promote_type(Int, eltype(T))}
 
 function promote_rule{S,T<:RationalPoly}(::Type{S}, ::Type{T})
-  U = promote_type(S, T.parameters[1], T.parameters[2])
-  RationalPoly{U, U}
+    U = promote_type(S, T.parameters[1], T.parameters[2])
+    RationalPoly{U, U}
 end
 promote_rule{S,T<:RationalPoly}(::Type{T}, ::Type{S}) = promote_rule(S, T)
 promote_rule{S<:PolyType,T<:RationalPoly}(::Type{S}, ::Type{T}) = T
