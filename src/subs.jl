@@ -11,34 +11,37 @@ function evalmap(vars, x::Vector, varorder::Vector{PolyVar})
     vals
 end
 
-function termeval(t::Term, vals::Vector)
-    val = t.α
-    for i in 1:length(vals)
-        if t.x.z[i] > 0
-            val *= vals[i]^t.x.z[i]
+function monoeval(z::Vector{Int}, vals::Vector)
+    @assert length(z) == length(vals)
+    @assert !isempty(z)
+    val = vals[1]^z[1]
+    for i in 2:length(vals)
+        if z[i] > 0
+            val *= vals[i]^z[i]
         end
     end
     val
 end
 
 function (m::PolyVar)(x::Vector, varorder)
-    Term(m)(x, varorder)
+    Monomial(m)(x, varorder)
 end
 
 function (m::Monomial)(x::Vector, varorder)
-    Term(m)(x, varorder)
+    vals = evalmap(vars(m), x, varorder)
+    monoeval(m.z, vals)
 end
 
 function (t::Term)(x::Vector, varorder)
     vals = evalmap(vars(t), x, varorder)
-    termeval(t, vals)
+    t.α * monoeval(t.x.z, vals)
 end
 
 function (p::VecPolynomial)(x::Vector, varorder)
     vals = evalmap(vars(p), x, varorder)
     q = zero(p)
-    for t in p
-        q += termeval(t, vals)
+    for i in 1:length(p)
+        q += p.a[i] * monoeval(p.x.Z[i], vals)
     end
     q
 end
