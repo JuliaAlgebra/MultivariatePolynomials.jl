@@ -1,5 +1,5 @@
 using MultivariatePolynomials
-using FactCheck
+using Base.Test
 
 include("mono.jl")
 include("poly.jl")
@@ -12,5 +12,3 @@ include("subs.jl")
 include("algebraicset.jl")
 
 #include("show.jl")
-
-FactCheck.exitstatus()

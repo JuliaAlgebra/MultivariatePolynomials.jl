@@ -1,12 +1,12 @@
-facts("Algebraic set") do
+@testset "Algebraic set" begin
     @polyvar x y
     V = AlgebraicSet()
-    @fact_throws ArgumentError addinequality!(V, x*y)
+    @test_throws ArgumentError addinequality!(V, x*y)
     S = BasicSemialgebraicSet()
     addequality!(S, x)
     addinequality!(S, x^2*y)
     addequality!(S, 2*x^2*y)
-    @fact typeof(Int32(2)*x^2*y) --> Term{Int32}
+    @test typeof(Int32(2)*x^2*y) == Term{Int32}
     addequality!(S, Int32(2)*x^2*y)
     addinequality!(S, 1.0x^2*y)
     addequality!(S, (6//3)*x^2*y+y)

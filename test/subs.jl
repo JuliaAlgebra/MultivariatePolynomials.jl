@@ -1,30 +1,30 @@
 import Base.Test: @inferred
 
-facts("Substitution") do
+@testset "Substitution" begin
     @polyvar x[1:3]
 
     a = (x[1])([x[2]], [x[1]])
     b = x[2]
-    @fact (x[1])([x[2]], [x[1]]) == x[2] --> true
+    @test (x[1])([x[2]], [x[1]]) == x[2]
 
     p = x[1]*x[2]*x[3]
-    @fact Int(p([1, 2, 3], x)) --> 6
+    @test Int(p([1, 2, 3], x)) == 6
 
     p = x[1]^2 + x[1]*x[3] - 3
-    @fact Int(p([5, x[1]*x[2], 4], x)) --> 42
+    @test Int(p([5, x[1]*x[2], 4], x)) == 42
 
     p = x[1]^2 + x[2]^2
     q = p([1 -1; 1 1] * x[1:2], x[1:2])
-    @fact q == 2p --> true
+    @test q == 2p
 
     q = (x[1] + 1) / (x[1] + 2)
-    @fact isapproxzero(q([-1], [x[1]])) --> true
-    @fact isapproxzero(q([1], [x[1]])) --> false
-    @fact isapprox(q([1], [x[1]]), 2/3) --> true
+    @test isapproxzero(q([-1], [x[1]]))
+    @test !isapproxzero(q([1], [x[1]]))
+    @test isapprox(q([1], [x[1]]), 2/3)
 
     P = [1 2 3; 2 4 5; 3 5 6]
     p = MatPolynomial(P, x)
-    @fact p(ones(3), x) --> 31
+    @test p(ones(3), x) == 31
 
     p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
     @inferred p([1.0, 2.0], [x[1], x[2]])
