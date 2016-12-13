@@ -6,4 +6,5 @@
     @test expectation(m, p) == p(v, x) == expectation(p, m)
     @test_throws ErrorException dot(x[1] * x[2] * x[3], m)
     @test dot(0.5 * x[1] * x[2]^2, m) == 2.0
+    @test dot(m, x[1] * x[3]) == 3
 end
