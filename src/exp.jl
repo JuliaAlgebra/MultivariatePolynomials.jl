@@ -1,3 +1,5 @@
+export expectation
+
 function dot(m::Measure, p::TermContainer)
     i = 1
     s = 0
@@ -16,5 +18,5 @@ end
 dot(p::TermContainer, m::Measure) = dot(m, p)
 dot(m::Measure, p::PolyType) = dot(m, TermContainer(p))
 dot(p::PolyType, m::Measure) = dot(m, TermContainer(p))
-exp(m::Measure, p::PolyType) = dot(m, p)
-exp(p::PolyType, m::Measure) = dot(m, p)
+expectation(m::Measure, p::PolyType) = dot(m, p)
+expectation(p::PolyType, m::Measure) = dot(m, p)

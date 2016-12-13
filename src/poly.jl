@@ -1,4 +1,4 @@
-export Term, VecPolynomial, MatPolynomial, SOSDecomposition, getmat, removemonomials, TermType
+export Term, VecPolynomial, MatPolynomial, SOSDecomposition, getmat, monomials, removemonomials, TermType
 import Base.eltype, Base.zero, Base.one
 
 abstract TermType{T} <: PolyType
@@ -142,6 +142,7 @@ done(p::VecPolynomial, state) = length(p) < state
 next(p::VecPolynomial, state) = (p[state], state+1)
 getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
+monomials(p::VecPolynomial) = p.x
 function removemonomials(p::VecPolynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1

@@ -4,6 +4,7 @@ using Base.Test
 include("mono.jl")
 include("poly.jl")
 #include("rational.jl")
+include("exp.jl")
 include("promote.jl")
 include("comp.jl")
 include("alg.jl")

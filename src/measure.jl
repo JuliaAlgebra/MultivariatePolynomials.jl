@@ -1,4 +1,4 @@
-export Measure
+export Measure, zeta, ζ
 
 type Measure{T}
   a::Vector{T}
