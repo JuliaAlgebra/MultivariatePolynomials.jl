@@ -22,6 +22,10 @@ import Base.Test: @inferred
     @test !isapproxzero(q([1], [x[1]]))
     @test isapprox(q([1], [x[1]]), 2/3)
 
+    t = 2.0 * x[1] * x[2]^2
+    @test t([1, 2, 3], x) == 8.0
+    @test t([1, 3], [x[2], x[1]]) == 6.0
+
     P = [1 2 3; 2 4 5; 3 5 6]
     p = MatPolynomial(P, x)
     @test p(ones(3), x) == 31
