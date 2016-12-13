@@ -82,6 +82,7 @@ type MonomialVector <: MonomialContainer
                 error("There should be as many vars than exponents")
             end
         end
+        @assert issorted(Z, rev=true)
         new(vars, Z)
     end
 end
@@ -176,7 +177,7 @@ function myunion(varsvec::Vector{Vector{PolyVar}})
 end
 
 #function MonomialVector{T<:Union{PolyVar,Monomial,Term,Int}}(X::Vector{T})
-function MonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
+function buildZvarsvec{T<:Union{PolyType,Int}}(X::Vector{T})
     varsvec = Vector{PolyVar}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)
@@ -197,5 +198,15 @@ function MonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
         end
         Z[i][maps[i]] = z
     end
+    allvars, Z
+end
+function sortmonovec{T<:Union{PolyType,Int}}(X::Vector{T})
+    allvars, Z = buildZvarsvec(X)
+    perm = sortperm(Z, rev=true)
+    perm, MonomialVector(allvars, Z[perm])
+end
+function MonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
+    allvars, Z = buildZvarsvec(X)
+    sort!(Z, rev=true)
     MonomialVector(allvars, Z)
 end

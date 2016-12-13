@@ -4,7 +4,7 @@
     @test x == Monomial(x)
     @test Monomial([x,y], [1,0]) == x
     @test x != Monomial([x,y], [0,1])
-    @test MonomialVector([x,y], [[0,0],[1,0]]) == MonomialVector([x], [[0],[1]])
+    @test MonomialVector([x,y], [[1,0],[0,0]]) == MonomialVector([x], [[1],[0]])
 end
 @testset "Graded Lex Order" begin
     @polyvar x y z

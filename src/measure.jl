@@ -26,6 +26,13 @@ type Measure{T}
 end
 
 Measure{T}(a::Vector{T}, x::MonomialVector) = Measure{T}(a, x)
+function Measure(a::Vector, x::Vector)
+    if length(a) != length(x)
+        error("There should be as many coefficient than monomials")
+    end
+    perm, X = sortmonovec(x)
+    Measure(a[perm], X)
+end
 
 function zeta{T}(v::Vector{T}, x::MonomialVector, varorder::Vector{PolyVar})
   Measure(T[m(v, varorder) for m in x], x)
