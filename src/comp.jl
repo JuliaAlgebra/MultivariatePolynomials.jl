@@ -1,6 +1,21 @@
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
+# WTF
+function (==)(x::Vector{PolyVar}, y::Vector{PolyVar})
+    if length(x) != length(y)
+        false
+    else
+        #for (xi, yi) in zip(x, y)
+        for i in 1:length(x)
+            if x[i] != y[i]
+                return false
+            end
+        end
+        true
+    end
+end
+
 # graded lex ordering
 function mycomp(x::Monomial, y::Monomial)
     degx = deg(x)

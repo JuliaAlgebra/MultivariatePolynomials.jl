@@ -86,6 +86,7 @@ type MonomialVector <: MonomialContainer
         new(vars, Z)
     end
 end
+MonomialVector() = MonomialVector(PolyVar[], Vector{Int}[])
 
 copy(m::MonomialVector) = MonomialVector(copy(m.vars), copy(m.Z))
 

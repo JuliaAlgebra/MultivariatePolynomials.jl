@@ -1,3 +1,25 @@
+@testset "Term" begin
+    @polyvar x
+    @test typeof(one(1x)) == Term{Int}
+    @test typeof(zero(1x)) == Term{Int}
+    @test typeof(one(1.0x)) == Term{Float64}
+    @test typeof(zero(1.0x)) == Term{Float64}
+    @inferred one(1x)
+    @inferred zero(1x)
+    @inferred one(1.0x)
+    @inferred zero(1.0x)
+end
+@testset "VecPolynomial" begin
+    @polyvar x
+    @test typeof(one(1 + x)) == VecPolynomial{Int}
+    @test typeof(zero(1 + x)) == VecPolynomial{Int}
+    @test typeof(one(1.0 + x)) == VecPolynomial{Float64}
+    @test typeof(zero(1.0 + x)) == VecPolynomial{Float64}
+    @inferred one(1 + x)
+    @inferred zero(1 + x)
+    @inferred one(1.0 + x)
+    @inferred zero(1.0 + x)
+end
 @testset "Graded Lex Order" begin
     @polyvar x y z
     p = 3*y^2 + 2*y*x
