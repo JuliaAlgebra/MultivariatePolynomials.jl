@@ -29,7 +29,7 @@ Base.transpose(p::PolyType) = p
 # Defining the specific methods solve this problem and also make
 # them a lot faster
 ^(x::PolyVar, i::Int) = Monomial([x], [i])
-^(x::Monomial, i::Int) = Monomial(x.vars, i*z)
+^(x::Monomial, i::Int) = Monomial(x.vars, i*x.z)
 
 # Product between PolyVar and Monomial -> Monomial
 function (*)(x::PolyVar, y::PolyVar)

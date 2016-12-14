@@ -7,12 +7,19 @@
     @inferred x^2-2x
     @inferred x+2x
     @inferred x^2-2x+2
+    @inferred x^2-2x
+    @inferred 2x+2
     @inferred (1+x)^0
-    @inferred 1+x
+    @inferred (1+x)^1
     @inferred (1+x)^2
     @inferred (1+x)^3
-#   @inferred (2x)^0
-#   @inferred 2x
-#   @inferred (2x)^2
-#   @inferred (2x)^3
+    @inferred (x^2)^0
+    @inferred (x^2)^1
+    @inferred (x^2)^2
+    @inferred (x^2)^3
+    @inferred (2x) * (3x)
+    @inferred (2x)^0
+    @inferred (2x)^1
+    @inferred (2x)^2
+    @inferred (2x)^3
 end

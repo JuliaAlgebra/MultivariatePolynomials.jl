@@ -35,6 +35,7 @@ TermContainer{T}(α::T) = TermContainer{T}(α)
 
 Base.convert{T<:TermContainer}(::Type{T}, t::Term) = Term{eltype(T)}(t)
 Base.convert(::Type{Any}, t::Term) = t
+Base.copy{T}(t::Term{T}) = Term{T}(copy(t.α), copy(t.x))
 
 vars(t::Term) = vars(t.x)
 
