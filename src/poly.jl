@@ -14,6 +14,8 @@ one{T<:TermType}(::Type{T}) = VecPolynomial([one(eltype(T))], MonomialVector(Pol
 abstract TermContainer{T} <: TermType{T}
 
 #eltype{T<:TermType}(::Type{T}) = T.parameters[1] # not inferrence friendly it seems
+eltype{T}(::Type{TermContainer{T}}) = T
+eltype{T}(::Type{TermType{T}}) = T
 eltype{T}(p::TermType{T}) = T
 
 type Term{T} <: TermContainer{T}
@@ -24,6 +26,7 @@ Term(t::Term) = t
 Term(x::Monomial) = Term{Int}(x)
 Term(x::PolyVar) = Term(Monomial(x))
 TermContainer{T<:Union{Monomial,PolyVar}}(x::T) = Term(x)
+TermContainer{T}(t::TermContainer{T}) = t
 Term{T}(α::T) = Term{T}(α, Monomial())
 Base.convert{T}(::Type{Term{T}}, t::Term{T}) = t
 Base.convert{T}(::Type{Term{T}}, t::Term) = Term{T}(T(t.α), t.x)

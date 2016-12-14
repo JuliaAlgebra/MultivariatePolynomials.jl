@@ -3,7 +3,7 @@ using Base.Test
 
 include("mono.jl")
 include("poly.jl")
-#include("rational.jl")
+include("rational.jl")
 include("measure.jl")
 include("exp.jl")
 include("promote.jl")

@@ -121,8 +121,8 @@ function (==)(p::VecPolynomial, q::VecPolynomial)
     true
 end
 
-(==)(p::RationalPoly, q::RationalPoly) = p.num*q.deno == q.num*p.deno
-(==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
+(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+(==)(p, q::RationalPoly) = p*q.den == q.num
 
 isless(x::PolyVar, y::PolyVar) = isless(y.name, x.name)
 

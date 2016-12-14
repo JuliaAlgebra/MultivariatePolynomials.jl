@@ -10,6 +10,9 @@
     @inferred zero(1x)
     @inferred one(1.0x)
     @inferred zero(1.0x)
+
+    @test typeof(MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer(1))) == Term{Int}
+    @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer(1))
 end
 @testset "VecPolynomial" begin
     @polyvar x
