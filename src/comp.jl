@@ -93,7 +93,18 @@ end
 (==)(y, p::TermContainer) = TermContainer(y) == p
 (==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 
-function (==)(p::TermContainer, q::TermContainer)
+function (==)(s::Term, t::Term)
+    (s.α == t.α) && (iszero(s.α) || s.x == t.x)
+end
+function (==)(t::Term, p::VecPolynomial)
+    if iszero(t.α)
+        isempty(p.a)
+    else
+        length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
+    end
+end
+(==)(p::VecPolynomial, t::Term) = t == p
+function (==)(p::VecPolynomial, q::VecPolynomial)
     # terms should be sorted and without zeros
     for (tp,tq) in zip(p,q)
         if tp.x != tq.x

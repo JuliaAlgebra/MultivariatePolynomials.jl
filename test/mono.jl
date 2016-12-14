@@ -1,6 +1,21 @@
+@testset "PolyVar" begin
+    @polyvar x
+    @test zero(x) == 0
+    @test typeof(zero(x)) == VecPolynomial{Int}
+    @inferred zero(x)
+    @test one(x) == 1
+    @test typeof(one(x)) == VecPolynomial{Int}
+    @inferred one(x)
+end
 @testset "Monomial" begin
     @polyvar x
     @test_throws ArgumentError Monomial([x], [1,0])
+    @test zero(x^2) == 0
+    @test typeof(zero(x^2)) == VecPolynomial{Int}
+    @inferred zero(x^2)
+    @test one(x^2) == 1
+    @test typeof(one(x^2)) == VecPolynomial{Int}
+    @inferred one(x^2)
 end
 @testset "Degree to Monomial Vector" begin
     @polyvar x y z

@@ -1,8 +1,11 @@
 export Term, VecPolynomial, MatPolynomial, SOSDecomposition, getmat, monomials, removemonomials, TermType
-import Base.eltype, Base.zero, Base.one
 
 abstract TermType{T} <: PolyType
 zero(::Type{PolyType}) = zero(VecPolynomial{Int})
+one(::Type{PolyType}) = one(VecPolynomial{Int})
+zero(p::PolyType) = zero(PolyType)
+one(p::PolyType) = one(PolyType)
+
 zero{T}(t::TermType{T}) = VecPolynomial(T[], MonomialVector(vars(t), Vector{Vector{Int}}()))
 zero{T<:TermType}(::Type{T}) = VecPolynomial(eltype(T)[], MonomialVector())
 one{T}(t::TermType{T}) = VecPolynomial([one(T)], MonomialVector(vars(t), [zeros(Int, length(vars(t)))]))
@@ -10,7 +13,7 @@ one{T<:TermType}(::Type{T}) = VecPolynomial([one(eltype(T))], MonomialVector(Pol
 
 abstract TermContainer{T} <: TermType{T}
 
-eltype{T<:TermType}(::Type{T}) = T.parameters[1]
+#eltype{T<:TermType}(::Type{T}) = T.parameters[1] # not inferrence friendly it seems
 eltype{T}(p::TermType{T}) = T
 
 type Term{T} <: TermContainer{T}
@@ -33,12 +36,14 @@ Base.convert{T}(::Type{TermContainer{T}}, α::T) = Term{T}(α, Monomial())
 Base.convert{S,T}(::Type{TermContainer{T}}, α::S) = TermContainer{T}(T(α))
 TermContainer{T}(α::T) = TermContainer{T}(α)
 
+Base.convert{T}(::Type{TermContainer{T}}, t::Term) = Term{T}(t)
 Base.convert{T<:TermContainer}(::Type{T}, t::Term) = Term{eltype(T)}(t)
 Base.convert(::Type{Any}, t::Term) = t
 Base.copy{T}(t::Term{T}) = Term{T}(copy(t.α), copy(t.x))
 
 vars(t::Term) = vars(t.x)
 
+eltype{T}(::Type{Term{T}}) = T
 length(::Term) = 1
 isempty(::Term) = false
 start(::Term) = false
@@ -48,7 +53,7 @@ getindex(t::Term, I::Int) = t
 
 zero{T}(t::Term{T}) = Term(zero(T), t.x)
 zero{T}(::Type{Term{T}}) = zero(zero(T), Monomial())
-one{T}(t::Term{T}) = Term(one(T), t.x)
+one{T}(t::Term{T}) = Term(one(T), Monomial(t.x.vars, zeros(Int, length(t.x.vars))))
 one{T}(::Type{Term{T}}) = Term(one(T), Monomial())
 
 # Invariant:
@@ -139,6 +144,7 @@ end
 
 vars(p::VecPolynomial) = vars(p.x)
 
+eltype{T}(::Type{VecPolynomial{T}}) = T
 length(p::VecPolynomial) = length(p.a)
 isempty(p::VecPolynomial) = length(p) > 0
 start(::VecPolynomial) = 1

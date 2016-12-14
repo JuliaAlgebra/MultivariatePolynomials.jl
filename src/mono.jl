@@ -1,7 +1,5 @@
 export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars
 
-import Base.copy
-
 abstract PolyType
 abstract MonomialContainer <: PolyType
 

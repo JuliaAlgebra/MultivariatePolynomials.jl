@@ -1,5 +1,7 @@
 @testset "Term" begin
     @polyvar x
+    @test one(1x) == one(1.0x) == 1
+    @test zero(1x) == zero(1.0x) == 0
     @test typeof(one(1x)) == Term{Int}
     @test typeof(zero(1x)) == Term{Int}
     @test typeof(one(1.0x)) == Term{Float64}
@@ -11,6 +13,8 @@
 end
 @testset "VecPolynomial" begin
     @polyvar x
+    @test one(1 + x) == one(1.0 + x) == 1
+    @test zero(1 + x) == zero(1.0 + x) == 0
     @test typeof(one(1 + x)) == VecPolynomial{Int}
     @test typeof(zero(1 + x)) == VecPolynomial{Int}
     @test typeof(one(1.0 + x)) == VecPolynomial{Float64}
