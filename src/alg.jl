@@ -117,7 +117,7 @@ end
 # Reverse order to avoid abiguïty with above 5 specific methods
 *(p::PolyType, x::PolyVar) = x * p
 *(p::PolyType, x::Monomial) = x * p
-*(p::PolyType, x::MatPolynomial) = x * p
+*(p::PolyType, x::MatPolynomial) = x * VecPolynomial(p)
 # The three above are mapped to one of the two below
 *(p::PolyType, q::Term) = TermContainer(p) * q
 *(p::PolyType, q::VecPolynomial) = TermContainer(p) * q
@@ -194,25 +194,25 @@ function myminivect{S,T}(x::S, y::T)
     [U(x), U(y)]
 end
 
-#   function (+)(x::Term, y::Term)
-#       if x.x == y.x
-#           Term(x.α+y.α, x.x)
-#       elseif x.x > y.x
-#           VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
-#       else
-#           VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
-#       end
-#   end
-#
-#   function (-)(x::Term, y::Term)
-#       if x.x == y.x
-#           Term(x.α-y.α, x.x)
-#       elseif x.x > y.x
-#           VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
-#       else
-#           VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
-#       end
-#   end
+function (+)(x::Term, y::Term)
+    if x.x == y.x
+        VecPolynomial([x.α+y.α], [x.x])
+    elseif x.x > y.x
+        VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
+    else
+        VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
+    end
+end
+
+function (-)(x::Term, y::Term)
+    if x.x == y.x
+        VecPolynomial([x.α-y.α], [x.x])
+    elseif x.x > y.x
+        VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
+    else
+        VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
+    end
+end
 
 (+){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) + Term(y)
 (-){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) - Term(y)
@@ -269,7 +269,7 @@ end
 iszero{T}(x::T) = x == zero(T)
 iszero(t::Term) = iszero(t.α)
 iszero(p::VecPolynomial) = isempty(p.x)
-iszero(p::MatPolynomial) = isempty(p.x)
+iszero(p::MatPolynomial) = isempty(VecPolynomial(p).x)
 
 (-){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x - Term{T}(y)
 (-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) - y
