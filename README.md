@@ -20,7 +20,7 @@ Typically, one imagine `T` to be a subtype of `Number` but it can be anything.
 This is useful for example in the package [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) where `T` is often an affine expression of [JuMP](https://github.com/JuliaOpt/JuMP.jl) decision variables.
 
 Below is a simple usage example
-```
+```julia
 @polyvar x y
 p = 2x + 3.0x*y^2 + y
 differentiate(p, x) # compute the derivative of p with respect to x
@@ -30,7 +30,7 @@ p([x^2], [y]) # replace any occurence of y by x^2
 p([1, 2], [x, y]) # evaluate p at [1, 2]
 ```
 Below is an example with `@polyvar x[1:n]`
-```
+```julia
 n = 3
 A = rand(3, 3)
 @polyvar x[1:n]
