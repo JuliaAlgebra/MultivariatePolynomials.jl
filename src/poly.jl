@@ -55,7 +55,7 @@ next(t::Term, state) = (t, true)
 getindex(t::Term, I::Int) = t
 
 zero{T}(t::Term{T}) = Term(zero(T), t.x)
-zero{T}(::Type{Term{T}}) = zero(zero(T), Monomial())
+zero{T}(::Type{Term{T}}) = Term(zero(T), Monomial())
 one{T}(t::Term{T}) = Term(one(T), Monomial(t.x.vars, zeros(Int, length(t.x.vars))))
 one{T}(::Type{Term{T}}) = Term(one(T), Monomial())
 

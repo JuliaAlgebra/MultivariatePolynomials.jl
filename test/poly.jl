@@ -1,4 +1,12 @@
+@testset "TermContainer and TermType" begin
+    @test eltype(MultivariatePolynomials.TermContainer{Int}) == Int
+    @test eltype(MultivariatePolynomials.TermType{Float64}) == Float64
+end
+
 @testset "Term" begin
+    @test eltype(Term{Int}) == Int
+    @test zero(Term{Int}).α == 0
+    @test one(Term{Int}).α == 1
     @polyvar x
     @test one(1x) == one(1.0x) == 1
     @test zero(1x) == zero(1.0x) == 0
@@ -15,6 +23,7 @@
     @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer(1))
 end
 @testset "VecPolynomial" begin
+    @test eltype(VecPolynomial{Int}) == Int
     @polyvar x
     @test one(1 + x) == one(1.0 + x) == 1
     @test zero(1 + x) == zero(1.0 + x) == 0
