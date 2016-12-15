@@ -1,4 +1,4 @@
-export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars
+export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars, nvars
 
 abstract PolyType
 abstract MonomialContainer <: PolyType
