@@ -188,6 +188,10 @@ function isapprox{S,T}(p::VecPolynomial{S}, q::VecPolynomial{T}; rtol::Real=Base
     true
 end
 
+function isapprox{S, T}(s::Term{S}, t::Term{T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+    s.x == t.x && isapprox(s.α, t.α, rtol=rtol, atol=atol)
+end
+
 function isapprox{S,T}(p::SOSDecomposition{S}, q::SOSDecomposition{T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
     if length(p.ps) != length(q.ps)
         false

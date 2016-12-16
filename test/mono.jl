@@ -21,9 +21,13 @@ end
 end
 @testset "MonomialContainer" begin
     @polyvar x y
+    @test length(x) == 1
+    @test !isempty(x)
     for m in x
         @test x == x
     end
+    @test length(x^2) == 1
+    @test !isempty(x^2)
     for m in x^2
         @test m == x^2
     end
