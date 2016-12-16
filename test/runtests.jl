@@ -13,4 +13,4 @@ include("diff.jl")
 include("subs.jl")
 include("algebraicset.jl")
 
-#include("show.jl")
+include("show.jl")

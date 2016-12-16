@@ -67,7 +67,9 @@ function Base.show(io::IO, p::SOSDecomposition)
 end
 
 function Base.show(io::IO, p::RationalPoly)
+    print(io, "(")
     print(io, p.num)
-    print(io, " / ")
+    print(io, ") / (")
     print(io, p.den)
+    print(io, ")")
 end
