@@ -2,7 +2,7 @@ __precompile__()
 
 module MultivariatePolynomials
 
-import Base.show, Base.length, Base.getindex, Base.vect, Base.isless, Base.isempty, Base.start, Base.done, Base.next, Base.convert, Base.dot
+import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one
 
 include("mono.jl")
 include("poly.jl")

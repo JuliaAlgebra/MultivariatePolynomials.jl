@@ -1,15 +1,8 @@
-@testset "Monomial equality" begin
-    @polyvar x y
-    @test x*y != x
-    @test x == Monomial(x)
-    @test Monomial([x,y], [1,0]) == x
-    @test x != Monomial([x,y], [0,1])
-    @test MonomialVector([x,y], [[1,0],[0,0]]) == MonomialVector([x], [[1],[0]])
-end
 @testset "Graded Lex Order" begin
     @polyvar x y z
     @test x > y > z
     @test x^2*y > y^3 > z
+    @test y^2 >= x
     # Examples from p. 58, 59 of the 4th edition of "Ideals, Varieties, and Algorithms" of Cox, Little and O'Shea
     @test x^1*y^2*z^3 > x^3*y^2
     @test !(x^1*y^2*z^3 < x^3*y^2)
@@ -22,12 +15,45 @@ end
     @test x^5*y*z > x^4*y*z^2
     @test !(x^5*y*z < x^4*y*z^2)
 end
-@testset "Polynomial equality" begin
-    @polyvar x y
-    @test 2*x*y + 3*y^2 == 3*y^2 + 2*y*x
-    @test 3*x*y + 2*y^2 != 3*y^2 + 2*y*x
-    @test isapprox((2-1e-3)*x*y + (3+1e-3)*y^2, 3*y^2 + 2*y*x, rtol=1e-2)
-    @test !isapprox((2-1e-3)*x*y + (3+1e-1)*y^2, 3*y^2 + 2*y*x, rtol=1e-2)
-    @test isapprox(1e-3*x*y + 3*y^2 + x^2, x^2 + 3*y^2, rtol=1e-2, ztol=1e-2)
-    @test isapprox(3*y^2 + x^2, x^2 + 1e-3*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
+@testset "Equality" begin
+    @testset "Monomial equality" begin
+        @polyvar x y
+        @test 2 != x
+        @test 2 != x*y
+        @test 2 != MonomialVector([x, y], 1)
+        @test x != MonomialVector([x, y], 1)
+        @test x*y != x
+        @test 1x*y == x*y
+        @test 2x*y != x*y
+        @test x == Monomial(x)
+        @test Monomial([x, y], [1, 0]) == x
+        @test x != Monomial([x, y], [0, 1])
+        @test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
+        @test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
+    end
+    @testset "Polynomial equality" begin
+        @polyvar x y
+        @test 2*x*y + 3*y^2 == 3*y^2 + 2*y*x
+        @test 3*x*y + 2*y^2 != 3*y^2 + 2*y*x
+        @test x + y != x * (1 + y)
+        @test x*y == 3x + 2x*y - x - x*y - 2x
+        @test isapproxzero((1+1e-8)x - x, ztol=1e-7)
+        @test !isapproxzero((1+1e-6)x - x, ztol=1e-7)
+        @test isapprox((2-1e-3)*x*y + (3+1e-3)*y^2, 3*y^2 + 2*y*x, rtol=1e-2)
+        @test !isapprox((2-1e-3)*x*y + (3+1e-1)*y^2, 3*y^2 + 2*y*x, rtol=1e-2)
+        @test isapprox(1e-3*x*y + 3*y^2 + x^2, x^2 + 3*y^2, rtol=1e-2, ztol=1e-2)
+        @test isapprox(3*y^2 + x^2, x^2 + 1e-3*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
+        @test !isapprox(3*y^2 + x^2, x^2 + 1e-1*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
+        @test !isapprox(3.0*y^2 + x + x^2, x + 3*y^2, rtol=1e-2, ztol=1e-2)
+    end
+    @testset "SOSDecomposition equality" begin
+        @polyvar x y
+        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
+    end
+    @testset "RationalPoly equality" begin
+        @polyvar x y
+        @test isapprox((1+1e-8)x, (x*y)/y, rtol=1e-7)
+        @test isapproxzero(((1+1e-8)x - x)/y, ztol=1e-7)
+        @test !isapproxzero(((1+1e-8)x - y)/y, ztol=1e-9)
+    end
 end

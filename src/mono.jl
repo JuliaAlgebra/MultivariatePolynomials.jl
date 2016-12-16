@@ -1,6 +1,4 @@
-export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars
-
-import Base.copy
+export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars, nvars
 
 abstract PolyType
 abstract MonomialContainer <: PolyType
@@ -86,6 +84,7 @@ type MonomialVector <: MonomialContainer
         new(vars, Z)
     end
 end
+MonomialVector() = MonomialVector(PolyVar[], Vector{Int}[])
 
 copy(m::MonomialVector) = MonomialVector(copy(m.vars), copy(m.Z))
 

@@ -1,6 +1,21 @@
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
+# WTF
+function (==)(x::Vector{PolyVar}, y::Vector{PolyVar})
+    if length(x) != length(y)
+        false
+    else
+        #for (xi, yi) in zip(x, y)
+        for i in 1:length(x)
+            if x[i] != y[i]
+                return false
+            end
+        end
+        true
+    end
+end
+
 # graded lex ordering
 function mycomp(x::Monomial, y::Monomial)
     degx = deg(x)
@@ -78,7 +93,18 @@ end
 (==)(y, p::TermContainer) = TermContainer(y) == p
 (==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 
-function (==)(p::TermContainer, q::TermContainer)
+function (==)(s::Term, t::Term)
+    (s.α == t.α) && (iszero(s.α) || s.x == t.x)
+end
+function (==)(t::Term, p::VecPolynomial)
+    if iszero(t.α)
+        isempty(p.a)
+    else
+        length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
+    end
+end
+(==)(p::VecPolynomial, t::Term) = t == p
+function (==)(p::VecPolynomial, q::VecPolynomial)
     # terms should be sorted and without zeros
     for (tp,tq) in zip(p,q)
         if tp.x != tq.x
@@ -95,8 +121,8 @@ function (==)(p::TermContainer, q::TermContainer)
     true
 end
 
-(==)(p::RationalPoly, q::RationalPoly) = p.num*q.deno == q.num*p.deno
-(==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
+(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+(==)(p, q::RationalPoly) = p*q.den == q.num
 
 isless(x::PolyVar, y::PolyVar) = isless(y.name, x.name)
 
@@ -160,6 +186,10 @@ function isapprox{S,T}(p::VecPolynomial{S}, q::VecPolynomial{T}; rtol::Real=Base
         end
     end
     true
+end
+
+function isapprox{S, T}(s::Term{S}, t::Term{T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+    s.x == t.x && isapprox(s.α, t.α, rtol=rtol, atol=atol)
 end
 
 function isapprox{S,T}(p::SOSDecomposition{S}, q::SOSDecomposition{T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)

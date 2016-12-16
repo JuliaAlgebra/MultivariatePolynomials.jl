@@ -1,20 +1,23 @@
 export Term, VecPolynomial, MatPolynomial, SOSDecomposition, getmat, monomials, removemonomials, TermType
-import Base.eltype, Base.zero, Base.one
 
 abstract TermType{T} <: PolyType
-zero{T}(t::TermType{T}) = VecPolynomial(T[], MonomialVector(vars(t), Vector{Vector{Int}}()))
 zero(::Type{PolyType}) = zero(VecPolynomial{Int})
-zero{T<:TermType}(::Type{T}) = VecPolynomial(eltype(T)[], MonomialVector(PolyVar[], Vector{Vector{Int}}()))
-one{T}(t::TermType{T}) = Term(one(T), Monomial(vars(t), zeros(Int, length(vars(t)))))
-one{T<:TermType}(::Type{T}) = Term(one(eltype(T)), Monomial(PolyVar[], Int[]))
+one(::Type{PolyType}) = one(VecPolynomial{Int})
+zero(p::PolyType) = zero(PolyType)
+one(p::PolyType) = one(PolyType)
+
+zero{T}(t::TermType{T}) = VecPolynomial(T[], MonomialVector(vars(t), Vector{Vector{Int}}()))
+zero{T<:TermType}(::Type{T}) = VecPolynomial(eltype(T)[], MonomialVector())
+one{T}(t::TermType{T}) = VecPolynomial([one(T)], MonomialVector(vars(t), [zeros(Int, length(vars(t)))]))
+one{T<:TermType}(::Type{T}) = VecPolynomial([one(eltype(T))], MonomialVector(PolyVar[], [Int[]]))
 
 abstract TermContainer{T} <: TermType{T}
 
-eltype{T<:TermType}(::Type{T}) = T.parameters[1]
+#eltype{T<:TermType}(::Type{T}) = T.parameters[1] # not inferrence friendly it seems
+eltype{T}(::Type{TermContainer{T}}) = T
+eltype{T}(::Type{TermType{T}}) = T
 eltype{T}(p::TermType{T}) = T
 
-# Invariant:
-# α is nonzero (otherwise, just keep zero(T) and drop the monomial x)
 type Term{T} <: TermContainer{T}
     α::T
     x::Monomial
@@ -23,6 +26,7 @@ Term(t::Term) = t
 Term(x::Monomial) = Term{Int}(x)
 Term(x::PolyVar) = Term(Monomial(x))
 TermContainer{T<:Union{Monomial,PolyVar}}(x::T) = Term(x)
+TermContainer{T}(t::TermContainer{T}) = t
 Term{T}(α::T) = Term{T}(α, Monomial())
 Base.convert{T}(::Type{Term{T}}, t::Term{T}) = t
 Base.convert{T}(::Type{Term{T}}, t::Term) = Term{T}(T(t.α), t.x)
@@ -35,17 +39,25 @@ Base.convert{T}(::Type{TermContainer{T}}, α::T) = Term{T}(α, Monomial())
 Base.convert{S,T}(::Type{TermContainer{T}}, α::S) = TermContainer{T}(T(α))
 TermContainer{T}(α::T) = TermContainer{T}(α)
 
+Base.convert{T}(::Type{TermContainer{T}}, t::Term) = Term{T}(t)
 Base.convert{T<:TermContainer}(::Type{T}, t::Term) = Term{eltype(T)}(t)
 Base.convert(::Type{Any}, t::Term) = t
+Base.copy{T}(t::Term{T}) = Term{T}(copy(t.α), copy(t.x))
 
 vars(t::Term) = vars(t.x)
 
+eltype{T}(::Type{Term{T}}) = T
 length(::Term) = 1
 isempty(::Term) = false
 start(::Term) = false
 done(::Term, state) = state
 next(t::Term, state) = (t, true)
 getindex(t::Term, I::Int) = t
+
+zero{T}(t::Term{T}) = Term(zero(T), t.x)
+zero{T}(::Type{Term{T}}) = Term(zero(T), Monomial())
+one{T}(t::Term{T}) = Term(one(T), Monomial(t.x.vars, zeros(Int, length(t.x.vars))))
+one{T}(::Type{Term{T}}) = Term(one(T), Monomial())
 
 # Invariant:
 # a and x might be empty: meaning it is the zero polynomial
@@ -135,6 +147,7 @@ end
 
 vars(p::VecPolynomial) = vars(p.x)
 
+eltype{T}(::Type{VecPolynomial{T}}) = T
 length(p::VecPolynomial) = length(p.a)
 isempty(p::VecPolynomial) = length(p) > 0
 start(::VecPolynomial) = 1

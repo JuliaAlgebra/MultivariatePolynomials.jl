@@ -18,8 +18,10 @@ end
 function (/){S,T}(num::TermContainer{S}, den::TermContainer{T})
     RationalPoly{S,T}(num, den)
 end
-(/)(num::PolyType, den) = num * (1/den)
-(/)(num, den::PolyType) = TermContainer(num) / den
+(/)(num::PolyType, den) = num / TermContainer(den)
+function (/)(num, den::PolyType)
+    TermContainer(num) / den
+end
 (/)(num::PolyType, den::PolyType) = TermContainer(num) / TermContainer(den)
 
 function (+)(r::RationalPoly, s::RationalPoly)

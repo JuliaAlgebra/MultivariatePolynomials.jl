@@ -4,7 +4,7 @@
 # Any op T # ambig with Polytype op Any
 # PolyType op T # breaks ambig
 
-import Base.dot, Base.(.+), Base.(.-), Base.(.*), Base.(./), Base.(.^)
+import Base.(^), Base.dot, Base.(.+), Base.(.-), Base.(.*), Base.(./), Base.(.^)
 
 (.+)(p::PolyType, α) = p+α
 (.+)(α, p::PolyType) = α+p
@@ -22,6 +22,14 @@ import Base.dot, Base.(.+), Base.(.-), Base.(.*), Base.(./), Base.(.^)
 
 import Base.transpose
 Base.transpose(p::PolyType) = p
+
+# In Base/intfuncs.jl, x^p returns zero(x) when p == 0
+# Since one(PolyVar) and one(Monomial) do not return
+# a PolyVar and a Monomial, this results in type instability
+# Defining the specific methods solve this problem and also make
+# them a lot faster
+^(x::PolyVar, i::Int) = Monomial([x], [i])
+^(x::Monomial, i::Int) = Monomial(x.vars, i*x.z)
 
 # Product between PolyVar and Monomial -> Monomial
 function (*)(x::PolyVar, y::PolyVar)
@@ -109,7 +117,7 @@ end
 # Reverse order to avoid abiguïty with above 5 specific methods
 *(p::PolyType, x::PolyVar) = x * p
 *(p::PolyType, x::Monomial) = x * p
-*(p::PolyType, x::MatPolynomial) = x * p
+*(p::PolyType, x::MatPolynomial) = x * VecPolynomial(p)
 # The three above are mapped to one of the two below
 *(p::PolyType, q::Term) = TermContainer(p) * q
 *(p::PolyType, q::VecPolynomial) = TermContainer(p) * q
@@ -188,7 +196,7 @@ end
 
 function (+)(x::Term, y::Term)
     if x.x == y.x
-        Term(x.α+y.α, x.x)
+        VecPolynomial([x.α+y.α], [x.x])
     elseif x.x > y.x
         VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
     else
@@ -198,7 +206,7 @@ end
 
 function (-)(x::Term, y::Term)
     if x.x == y.x
-        Term(x.α-y.α, x.x)
+        VecPolynomial([x.α-y.α], [x.x])
     elseif x.x > y.x
         VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
     else
@@ -261,16 +269,17 @@ end
 iszero{T}(x::T) = x == zero(T)
 iszero(t::Term) = iszero(t.α)
 iszero(p::VecPolynomial) = isempty(p.x)
-iszero(p::MatPolynomial) = isempty(p.x)
+iszero(p::MatPolynomial) = isempty(VecPolynomial(p).x)
 
 (-){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x - Term{T}(y)
 (-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) - y
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
-(+)(x::PolyType, y) = iszero(y) ? x : x + Term(y)
-(+)(x, y::PolyType) = iszero(x) ? y : Term(x) + y
-(-)(x::PolyType, y) = iszero(y) ? x : x - Term(y)
-(-)(x, y::PolyType) = iszero(x) ? -y : Term(x) - y
+# Need to add VecPolynomial conversion for type stability
+(+)(x::PolyType, y) = iszero(y) ? VecPolynomial(x) : x + Term(y)
+(+)(x, y::PolyType) = iszero(x) ? VecPolynomial(y) : Term(x) + y
+(-)(x::PolyType, y) = iszero(y) ? VecPolynomial(x) : x - Term(y)
+(-)(x, y::PolyType) = iszero(x) ? VecPolynomial(-y) : Term(x) - y
 
 (-)(x::PolyVar) = Term(-1, Monomial(x))
 (-)(x::Monomial) = Term(-1, x)
