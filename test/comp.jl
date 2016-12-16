@@ -20,15 +20,16 @@ end
         @polyvar x y
         @test 2 != x
         @test 2 != x*y
-        @test 2 != monomials([x, y], 1)
-        @test x != monomials([x, y], 1)
+        @test 2 != MonomialVector([x, y], 1)
+        @test x != MonomialVector([x, y], 1)
         @test x*y != x
-        @test x != x*y
+        @test 1x*y == x*y
+        @test 2x*y != x*y
         @test x == Monomial(x)
         @test Monomial([x, y], [1, 0]) == x
         @test x != Monomial([x, y], [0, 1])
         @test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
-        @test monomials([x, y], 2) != monomials([x, y], 1)
+        @test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
     end
     @testset "Polynomial equality" begin
         @polyvar x y

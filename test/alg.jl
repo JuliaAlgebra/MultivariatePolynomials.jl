@@ -43,8 +43,9 @@
         @test MultivariatePolynomials.iszero(P-P)
         @test MultivariatePolynomials.iszero(P-p)
         @test MultivariatePolynomials.iszero(p-P)
-        @test P+P == P+p
-        @test x*P == x*p
-        @test 2*P == 2*p
+        @test P + P == P + p
+        @test x * P == x * p
+        @test 2 * P == 2 * p
+        @test P * (2x) == (2x) * p
     end
 end
