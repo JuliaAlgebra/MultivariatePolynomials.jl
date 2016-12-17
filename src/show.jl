@@ -3,7 +3,7 @@ function show(io::IO, x::PolyVar)
 end
 
 function show(io::IO, x::Monomial)
-    if sum(abs.(x.z)) == 0
+    if isconstant(x)
         show(io, 1)
     else
         needsep = false
@@ -37,7 +37,7 @@ function show(io::IO, x::MonomialVector)
 end
 
 function Base.show(io::IO, t::Term)
-    cst = sum(abs.(t.x.z)) == 0
+    cst = isconstant(t.x)
     if t.α != 1 || cst
         print(io, t.α)
     end

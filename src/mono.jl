@@ -69,6 +69,8 @@ start(::Monomial) = false
 done(::Monomial, state) = state
 next(x::Monomial, state) = (x, true)
 
+isconstant(x::Monomial) = sum(x.z) == 0
+
 # Invariant: Always sorted and no zero vector
 type MonomialVector <: MonomialContainer
     vars::Vector{PolyVar}
