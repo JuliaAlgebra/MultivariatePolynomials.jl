@@ -49,11 +49,17 @@ end
     @testset "SOSDecomposition equality" begin
         @polyvar x y
         @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
+        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x+y]))
+        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x-y]))
+        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x-y, x+y+1e-8]), ztol=1e-7)
     end
     @testset "RationalPoly equality" begin
         @polyvar x y
         @test isapprox((1+1e-8)x, (x*y)/y, rtol=1e-7)
         @test isapproxzero(((1+1e-8)x - x)/y, ztol=1e-7)
         @test !isapproxzero(((1+1e-8)x - y)/y, ztol=1e-9)
+        @test isapprox(((1+1e-8)x*y) / y^2, x / y, rtol=1e-7)
+        @test isapprox((2x) / x, 2.001, rtol=1e-2)
+        @test !isapprox(2.001,  (2x) / x, rtol=1e-4)
     end
 end

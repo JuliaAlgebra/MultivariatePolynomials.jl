@@ -1,3 +1,4 @@
+using Combinatorics
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
@@ -193,20 +194,28 @@ function isapprox{S, T}(s::Term{S}, t::Term{T}; rtol::Real=Base.rtoldefault(S, T
 end
 
 function isapprox{S,T}(p::SOSDecomposition{S}, q::SOSDecomposition{T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
-    if length(p.ps) != length(q.ps)
+    m = length(p.ps)
+    if length(q.ps) != m
         false
     else
-        for i in 1:length(p.ps)
-            if !isapprox(p.ps[i], q.ps[i], rtol=rtol, atol=atol, ztol=ztol)
-                return false
+        for σ in permutations(1:m)
+            ok = true
+            for i in 1:m
+                if !isapprox(p.ps[i], q.ps[σ[i]], rtol=rtol, atol=atol, ztol=ztol)
+                    ok = false
+                    break
+                end
+            end
+            if ok
+                return true
             end
         end
-        true
+        false
     end
 end
 
 isapprox{S,T,U,V}(p::RationalPoly{S,T}, q::RationalPoly{U,V}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), promote_op(*, S, V)), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num*q.den, q.num*p.den, rtol=rtol, atol=atol, ztol=ztol)
 isapprox{S,T,U}(p::RationalPoly{S,T}, q::TermContainer{U}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num, q*p.den, rtol=rtol, atol=atol, ztol=ztol)
 isapprox{S,T,U}(p::TermContainer{U}, q::RationalPoly{S,T}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p*q.den, q.num, rtol=rtol, atol=atol, ztol=ztol)
-isapprox(p::RationalPoly, q; atol::Real=0, ztol::Real=1e-6) = isapprox(p, TermContainer(q), atol=atol, ztol=ztol)
-isapprox(p, q::RationalPoly; atol::Real=0, ztol::Real=1e-6) = isapprox(TermContainer(p), q, atol=atol, ztol=ztol)
+isapprox(p::RationalPoly, q; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p, TermContainer(q), rtol=rtol, atol=atol, ztol=ztol)
+isapprox(p, q::RationalPoly; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(TermContainer(p), q, rtol=rtol, atol=atol, ztol=ztol)
