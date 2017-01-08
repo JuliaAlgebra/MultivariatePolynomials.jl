@@ -35,6 +35,10 @@ end
     @inferred zero(1 + x)
     @inferred one(1.0 + x)
     @inferred zero(1.0 + x)
+    @polyvar y
+    @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
+    @test mindeg(x*y + 2 + x^2*y + x + y) == 0
+    @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
 end
 @testset "Graded Lex Order" begin
     @polyvar x y z

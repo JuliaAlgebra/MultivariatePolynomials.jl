@@ -155,6 +155,10 @@ done(p::VecPolynomial, state) = length(p) < state
 next(p::VecPolynomial, state) = (p[state], state+1)
 getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
+extdeg(p::VecPolynomial) = extdeg(p.x)
+mindeg(p::VecPolynomial) = mindeg(p.x)
+maxdeg(p::VecPolynomial) = maxdeg(p.x)
+
 monomials(p::VecPolynomial) = p.x
 function removemonomials(p::VecPolynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)

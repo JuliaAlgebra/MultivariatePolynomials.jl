@@ -34,8 +34,6 @@ function Measure(a::Vector, x::Vector)
     Measure(a[perm], X)
 end
 
-function zeta{T}(v::Vector{T}, x::MonomialVector, varorder::Vector{PolyVar})
+function ζ{T}(v::Vector{T}, x::MonomialVector, varorder::Vector{PolyVar})
   Measure(T[m(v, varorder) for m in x], x)
 end
-
-ζ(v::Vector, x::MonomialVector, varorder::Vector{PolyVar}) = zeta(v, x, varorder)

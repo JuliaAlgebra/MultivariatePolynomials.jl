@@ -1,3 +1,4 @@
+export AbstractSemialgebraicSet, AbstractBasicSemialgebraicSet, AbstractAlgebraicSet
 export AlgebraicSet, BasicSemialgebraicSet, addequality!, addinequality!
 # Semialgebraic set described by polynomials with coefficients in T
 abstract AbstractSemialgebraicSet

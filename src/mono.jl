@@ -1,4 +1,4 @@
-export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars, nvars
+export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars, nvars, extdeg, mindeg, maxdeg
 
 abstract PolyType
 abstract MonomialContainer <: PolyType
@@ -101,6 +101,10 @@ isempty(x::MonomialVector) = length(x) == 0
 start(::MonomialVector) = 1
 done(x::MonomialVector, state) = length(x) < state
 next(x::MonomialVector, state) = (Monomial(x.vars, x.Z[state]), state+1)
+
+extdeg(x::MonomialVector) = extrema(sum.(x.Z))
+mindeg(x::MonomialVector) = minimum(sum.(x.Z))
+maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{Monomial,MonomialVector}}(x::T) = x.vars
 
