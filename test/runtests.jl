@@ -2,6 +2,7 @@ using MultivariatePolynomials
 using Base.Test
 
 include("mono.jl")
+include("ncmono.jl")
 include("poly.jl")
 include("rational.jl")
 include("measure.jl")

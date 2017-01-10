@@ -1,21 +1,5 @@
 using Combinatorics
-import Base.==, Base.isless, Base.isapprox
 export isapproxzero
-
-# WTF
-function (==)(x::Vector{PolyVar}, y::Vector{PolyVar})
-    if length(x) != length(y)
-        false
-    else
-        #for (xi, yi) in zip(x, y)
-        for i in 1:length(x)
-            if x[i] != y[i]
-                return false
-            end
-        end
-        true
-    end
-end
 
 # graded lex ordering
 function mycomp(x::Monomial, y::Monomial)
@@ -50,18 +34,6 @@ function mycomp(x::Monomial, y::Monomial)
         0
     end
 end
-
-
-# TODO equality should be between name ?
-# Technique: the higher catch the calls when it is rhs
-# so p::PolyType == x::PolyVar -> x == p
-(==)(p::PolyType, y) = y == p
-
-function (==)(x::PolyVar, y::PolyVar)
-    x === y
-end
-(==)(α, x::PolyVar) = false
-(==)(p::PolyType, x::PolyVar) = x == p
 
 function (==)(x::Monomial, y::Monomial)
     mycomp(x, y) == 0
@@ -124,8 +96,6 @@ end
 
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 (==)(p, q::RationalPoly) = p*q.den == q.num
-
-isless(x::PolyVar, y::PolyVar) = isless(y.name, x.name)
 
 function isless(x::Vector, y::Vector)
     @assert length(x) == length(y)

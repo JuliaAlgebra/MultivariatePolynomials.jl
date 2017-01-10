@@ -39,53 +39,13 @@ function (*)(x::PolyVar, y::PolyVar)
         Monomial(x > y ? [x,y] : [y,x], [1,1])
     end
 end
-function multiplyvar(v, x)
+function multiplyvar(v::Vector{PolyVar}, x::PolyVar)
     i = findfirst(w->w <= x, v)
     if i > 0 && v[i] == x
-        # /!\ no copy done here for efficiency, do not mess up with vars
-        w = v
-        updatez = z -> begin
-            newz = copy(z)
-            newz[i] += 1
-            newz
-        end
+        multiplyexistingvar(v, x, i)
     else
-        n = length(v)
-        if i == 0
-            i = n+1
-        end
-        I = 1:i-1
-        J = i:n
-        K = J+1
-        w = Vector{PolyVar}(n+1)
-        w[I] = v[I]
-        w[i] = x
-        w[K] = v[J]
-        updatez = z -> begin
-            newz = Vector{Int}(n+1)
-            newz[I] = z[I]
-            newz[i] = 1
-            newz[K] = z[J]
-            newz
-        end
+        insertvar(v, x, i == 0 ? length(v)+1 : i)
     end
-    w, updatez
-end
-function multiplymono(v, x)
-    if v == x.vars
-        # /!\ no copy done here for efficiency, do not mess up with vars
-        w = v
-        updatez = z -> z + x.z
-    else
-        w, maps = myunion([v, x.vars])
-        updatez = z -> begin
-            newz = zeros(Int, length(w))
-            newz[maps[1]] += z
-            newz[maps[2]] += x.z
-            newz
-        end
-    end
-    w, updatez
 end
 function (*)(x::PolyVar, y::Monomial)
     w, updatez = multiplyvar(y.vars, x)

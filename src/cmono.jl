@@ -1,30 +1,8 @@
-export PolyVar, Monomial, MonomialVector, @polyvar, monomials, polyvecvar, vars, nvars, extdeg, mindeg, maxdeg
-
-abstract PolyType
-abstract MonomialContainer <: PolyType
-
-function polyvecvar(prefix, idxset)
-    [PolyVar("$(prefix * string(i))") for i in idxset]
-end
-
-function buildpolyvar(var)
-    if isa(var, Symbol)
-        :($(esc(var)) = PolyVar($"$var"))
-    else
-        isa(var, Expr) || error("Expected $var to be a variable name")
-        Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
-        length(var.args) == 2 || error("Expected $var to have one index set")
-        #tmp = gensym()
-        varname = var.args[1]
-        prefix = string(var.args[1])
-        idxset = esc(var.args[2])
-        :($(esc(varname)) = polyvecvar($prefix, $idxset))
-    end
-end
+export PolyVar, Monomial, MonomialVector, @polyvar
 
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg) for arg in args])
+    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg, true) for arg in args])
 end
 
 # TODO equality should be between name ?
@@ -138,36 +116,6 @@ function monomials(vars::Vector{PolyVar}, degs, filter::Function = x->true)
     [Monomial(vars, z) for z in Z]
 end
 monomials(vars::Vector{PolyVar}, degs::Int, filter::Function = x->true) = monomials(vars, [degs], filter)
-
-
-function myunion(varsvec::Vector{Vector{PolyVar}})
-    n = length(varsvec)
-    is = ones(Int, n)
-    maps = [ zeros(Int, length(vars)) for vars in varsvec ]
-    nonempty = IntSet(find([!isempty(vars) for vars in varsvec]))
-    vars = Vector{PolyVar}()
-    while !isempty(nonempty)
-        imin = 0
-        for i in nonempty
-            if imin == 0 || varsvec[i][is[i]] > varsvec[imin][is[imin]]
-                imin = i
-            end
-        end
-        var = varsvec[imin][is[imin]]
-        push!(vars, var)
-        for i in nonempty
-            if var == varsvec[i][is[i]]
-                maps[i][is[i]] = length(vars)
-                if is[i] == length(varsvec[i])
-                    pop!(nonempty, i)
-                else
-                    is[i] += 1
-                end
-            end
-        end
-    end
-    vars, maps
-end
 
 #function MonomialVector{T<:Union{PolyVar,Monomial,Term,Int}}(X::Vector{T})
 function buildZvarsvec{T<:Union{PolyType,Int}}(X::Vector{T})

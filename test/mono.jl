@@ -29,6 +29,11 @@
         @test one(x^2) == 1
         @test typeof(one(x^2)) == VecPolynomial{Int}
         @inferred one(x^2)
+        @polyvar y[1:7]
+        m = y[1] * y[3] * y[5] * y[7]
+        @test issorted(vars(y[2] * m), rev=true)
+        @test issorted(vars(m * y[4]), rev=true)
+        @test issorted(vars(y[6] * m), rev=true)
     end
     @testset "MonomialVector" begin
         @polyvar x y
