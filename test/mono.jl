@@ -19,18 +19,8 @@ end
     @test typeof(one(x^2)) == VecPolynomial{Int}
     @inferred one(x^2)
 end
-@testset "MonomialContainer" begin
+@testset "MonomialVector" begin
     @polyvar x y
-    @test length(x) == 1
-    @test !isempty(x)
-    for m in x
-        @test x == x
-    end
-    @test length(x^2) == 1
-    @test !isempty(x^2)
-    for m in x^2
-        @test m == x^2
-    end
     X = [x^2,x*y,y^2]
     for (i, m) in enumerate(monomials([x,y], 2))
         @test m == X[i]

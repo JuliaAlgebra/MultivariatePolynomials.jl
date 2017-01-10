@@ -28,7 +28,7 @@ macro polyvar(args...)
 end
 
 # TODO equality should be between name ?
-immutable PolyVar <: MonomialContainer
+immutable PolyVar <: PolyType
     name::AbstractString
 end
 copy(x::PolyVar) = x
@@ -36,16 +36,10 @@ copy(x::PolyVar) = x
 vars(x::PolyVar) = [x]
 nvars(::PolyVar) = 1
 
-length(::PolyVar) = 1
-isempty(::PolyVar) = false
-start(::PolyVar) = false
-done(::PolyVar, state) = state
-next(x::PolyVar, state) = (Monomial(x), true)
-
 # Invariant:
 # vars is increasing
 # z may contain 0's (otherwise, getindex of MonomialVector would be inefficient)
-type Monomial <: MonomialContainer
+type Monomial <: PolyType
     vars::Vector{PolyVar}
     z::Vector{Int}
 
@@ -59,20 +53,16 @@ end
 Monomial() = Monomial(PolyVar[], Int[])
 deg(x::Monomial) = sum(x.z)
 
+nvars(x::Monomial) = length(x.vars)
+
 Base.convert(::Type{Monomial}, x::PolyVar) = Monomial([x], [1])
 
 copy(m::Monomial) = Monomial(copy(m.vars), copy(m.z))
 
-length(::Monomial) = 1
-isempty(::Monomial) = false
-start(::Monomial) = false
-done(::Monomial, state) = state
-next(x::Monomial, state) = (x, true)
-
 isconstant(x::Monomial) = sum(x.z) == 0
 
 # Invariant: Always sorted and no zero vector
-type MonomialVector <: MonomialContainer
+type MonomialVector <: PolyType
     vars::Vector{PolyVar}
     Z::Vector{Vector{Int}}
 
@@ -107,8 +97,6 @@ mindeg(x::MonomialVector) = minimum(sum.(x.Z))
 maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{Monomial,MonomialVector}}(x::T) = x.vars
-
-nvars(x::MonomialContainer) = length(vars(x))
 
 # list them in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs, filter::Function)
@@ -186,8 +174,7 @@ function buildZvarsvec{T<:Union{PolyType,Int}}(X::Vector{T})
     varsvec = Vector{PolyVar}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)
-    n = sum([length(x) for x in X])
-    Z = [zeros(Int, nvars) for i in 1:n]
+    Z = [zeros(Int, nvars) for i in 1:length(X)]
     offset = 0
     for (i, x) in enumerate(X)
         if isa(x, PolyVar)
