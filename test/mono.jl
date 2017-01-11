@@ -37,6 +37,7 @@
     end
     @testset "MonomialVector" begin
         @polyvar x y
+        @test_throws ArgumentError MonomialVector([x], [[1], [1,0]])
         X = [x^2,x*y,y^2]
         for (i, m) in enumerate(monomials([x,y], 2))
             @test m == X[i]

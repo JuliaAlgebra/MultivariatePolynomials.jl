@@ -35,7 +35,7 @@ type MonomialVector <: PolyType
     function MonomialVector(vars::Vector{PolyVar}, Z::Vector{Vector{Int}})
         for z in Z
             if length(vars) != length(z)
-                error("There should be as many vars than exponents")
+                throw(ArgumentError("There should be as many vars than exponents"))
             end
         end
         @assert issorted(Z, rev=true)
