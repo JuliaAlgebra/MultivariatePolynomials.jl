@@ -19,6 +19,8 @@ type NCMonomial <: PolyType
         new(vars, z)
     end
 end
+NCMonomial() = NCMonomial(NCPolyVar[], Int[])
+Base.convert(::Type{NCMonomial}, x::NCPolyVar) = NCMonomial([x], [1])
 
 type NCMonomialVector <: PolyType
     vars::Vector{NCPolyVar}
@@ -35,3 +37,7 @@ type NCMonomialVector <: PolyType
     end
 end
 NCMonomialVector() = NCMonomialVector(NCPolyVar[], Vector{Int}[])
+
+function getindex(x::NCMonomialVector, i::Integer)
+    NCMonomial(x.vars, x.Z[i])
+end

@@ -9,10 +9,6 @@ end
 immutable PolyVar <: PolyType
     name::AbstractString
 end
-copy(x::PolyVar) = x
-
-vars(x::PolyVar) = [x]
-nvars(::PolyVar) = 1
 
 # Invariant:
 # vars is increasing
@@ -29,15 +25,7 @@ type Monomial <: PolyType
     end
 end
 Monomial() = Monomial(PolyVar[], Int[])
-deg(x::Monomial) = sum(x.z)
-
-nvars(x::Monomial) = length(x.vars)
-
 Base.convert(::Type{Monomial}, x::PolyVar) = Monomial([x], [1])
-
-copy(m::Monomial) = Monomial(copy(m.vars), copy(m.z))
-
-isconstant(x::Monomial) = sum(x.z) == 0
 
 # Invariant: Always sorted and no zero vector
 type MonomialVector <: PolyType
@@ -56,25 +44,9 @@ type MonomialVector <: PolyType
 end
 MonomialVector() = MonomialVector(PolyVar[], Vector{Int}[])
 
-copy(m::MonomialVector) = MonomialVector(copy(m.vars), copy(m.Z))
-
-function getindex(x::MonomialVector, I)
-    MonomialVector(x.vars, x.Z[I])
-end
 function getindex(x::MonomialVector, i::Integer)
     Monomial(x.vars, x.Z[i])
 end
-length(x::MonomialVector) = length(x.Z)
-isempty(x::MonomialVector) = length(x) == 0
-start(::MonomialVector) = 1
-done(x::MonomialVector, state) = length(x) < state
-next(x::MonomialVector, state) = (Monomial(x.vars, x.Z[state]), state+1)
-
-extdeg(x::MonomialVector) = extrema(sum.(x.Z))
-mindeg(x::MonomialVector) = minimum(sum.(x.Z))
-maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
-
-vars{T<:Union{Monomial,MonomialVector}}(x::T) = x.vars
 
 # list them in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs, filter::Function)

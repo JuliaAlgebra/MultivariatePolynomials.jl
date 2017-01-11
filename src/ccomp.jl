@@ -1,68 +1,6 @@
 using Combinatorics
 export isapproxzero
 
-# graded lex ordering
-function mycomp(x::Monomial, y::Monomial)
-    degx = deg(x)
-    degy = deg(y)
-    if degx != degy
-        degx - degy
-    else
-        i = j = 1
-        # since they have the same degree,
-        # if we get j > nvars(y), the rest in x.z should be zeros
-        while i <= nvars(x) && j <= nvars(y)
-            if x.vars[i] > y.vars[j]
-                if x.z[i] == 0
-                    i += 1
-                else
-                    return 1
-                end
-            elseif x.vars[i] < y.vars[j]
-                if y.z[j] == 0
-                    j += 1
-                else
-                    return -1
-                end
-            elseif x.z[i] != y.z[j]
-                return x.z[i] - y.z[j]
-            else
-                i += 1
-                j += 1
-            end
-        end
-        0
-    end
-end
-
-function (==)(x::Monomial, y::Monomial)
-    mycomp(x, y) == 0
-end
-(==)(α, x::Monomial) = false
-(==)(x::PolyVar, y::Monomial) = Monomial(x) == y
-(==)(p::PolyType, x::Monomial) = x == p
-
-function (==)(x::MonomialVector, y::MonomialVector)
-    if length(x.Z) != length(y.Z)
-        return false
-    end
-    allvars, maps = myunion([vars(x), vars(y)])
-    # Should be sorted in the same order since the non-common
-    # polyvar should have exponent 0
-    for (a, b) in zip(x.Z, y.Z)
-        A = zeros(length(allvars))
-        B = zeros(length(allvars))
-        A[maps[1]] = a
-        B[maps[2]] = b
-        if A != B
-            return false
-        end
-    end
-    return true
-end
-(==)(α, x::MonomialVector) = false
-(==)(p::PolyType, x::MonomialVector) = false
-
 (==)(y, p::TermContainer) = TermContainer(y) == p
 (==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 

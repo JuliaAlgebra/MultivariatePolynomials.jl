@@ -21,6 +21,10 @@ function buildpolyvar(var, comm)
 end
 
 typealias AbstractPolyVar Union{PolyVar, NCPolyVar}
+copy(x::AbstractPolyVar) = x
+
+vars(x::AbstractPolyVar) = [x]
+nvars(::AbstractPolyVar) = 1
 
 function myunion{PV<:AbstractPolyVar}(varsvec::Vector{Vector{PV}})
     n = length(varsvec)
@@ -52,3 +56,27 @@ function myunion{PV<:AbstractPolyVar}(varsvec::Vector{Vector{PV}})
 end
 
 typealias AbstractMonomial Union{Monomial, NCMonomial}
+# /!\ vars not copied, do not mess with vars
+copy{M<:AbstractMonomial}(m::M) = M(m.vars, copy(m.z))
+deg(x::AbstractMonomial) = sum(x.z)
+nvars(x::AbstractMonomial) = length(x.vars)
+isconstant(x::AbstractMonomial) = deg(x) == 0
+
+typealias AbstractMonomialVector Union{MonomialVector, NCMonomialVector}
+# /!\ vars not copied, do not mess with vars
+copy{MV<:AbstractMonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
+function getindex{MV<:AbstractMonomialVector}(x::MV, I)
+    MV(x.vars, x.Z[I])
+end
+
+length(x::AbstractMonomialVector) = length(x.Z)
+isempty(x::AbstractMonomialVector) = length(x) == 0
+start(::AbstractMonomialVector) = 1
+done(x::AbstractMonomialVector, state) = length(x) < state
+next(x::AbstractMonomialVector, state) = (x[state], state+1)
+
+extdeg(x::AbstractMonomialVector) = extrema(sum.(x.Z))
+mindeg(x::AbstractMonomialVector) = minimum(sum.(x.Z))
+maxdeg(x::AbstractMonomialVector) = maximum(sum.(x.Z))
+
+vars{T<:Union{AbstractMonomial, AbstractMonomialVector}}(x::T) = x.vars

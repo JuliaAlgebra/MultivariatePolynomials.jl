@@ -18,7 +18,6 @@ include("promote.jl")
 
 include("comp.jl")
 include("ccomp.jl")
-include("nccomp.jl")
 
 include("alg.jl")
 include("calg.jl")

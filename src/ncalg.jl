@@ -4,7 +4,7 @@ function (*)(x::NCPolyVar, y::NCPolyVar)
     if x === y
         NCMonomial([x], [2])
     else
-        NCMonomial(x > y ? [x,y] : [y,x], [1,1])
+        NCMonomial([x, y], [1, 1])
     end
 end
 
