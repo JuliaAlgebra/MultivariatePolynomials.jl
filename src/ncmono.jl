@@ -41,3 +41,14 @@ NCMonomialVector() = NCMonomialVector(NCPolyVar[], Vector{Int}[])
 function getindex(x::NCMonomialVector, i::Integer)
     NCMonomial(x.vars, x.Z[i])
 end
+
+function sortmonovec{T<:Union{PolyType,Int}}(::Type{NCPolyVar}, X::Vector{T})
+    allvars, Z = buildZvarsvec(NCPolyVar, X)
+    perm = sortperm(Z, rev=true)
+    perm, NCMonomialVector(allvars, Z[perm])
+end
+function NCMonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
+    allvars, Z = buildZvarsvec(NCPolyVar, X)
+    sort!(Z, rev=true)
+    NCMonomialVector(allvars, Z)
+end

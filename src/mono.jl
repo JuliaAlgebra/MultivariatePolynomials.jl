@@ -80,3 +80,26 @@ mindeg(x::AbstractMonomialVector) = minimum(sum.(x.Z))
 maxdeg(x::AbstractMonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{AbstractMonomial, AbstractMonomialVector}}(x::T) = x.vars
+
+function buildZvarsvec{PV<:PolyVar, T<:Union{PolyType,Int}}(::Type{PV}, X::Vector{T})
+    varsvec = Vector{PV}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
+    allvars, maps = myunion(varsvec)
+    nvars = length(allvars)
+    Z = [zeros(Int, nvars) for i in 1:length(X)]
+    offset = 0
+    for (i, x) in enumerate(X)
+        if isa(x, AbstractPolyVar)
+            @assert length(maps[i]) == 1
+            z = [1]
+        elseif isa(x, AbstractMonomial)
+            z = x.z
+        elseif isa(x, AbstractTerm)
+            z = x.x.z
+        else
+            @assert isa(x, Int)
+            z = Int[]
+        end
+        Z[i][maps[i]] = z
+    end
+    allvars, Z
+end

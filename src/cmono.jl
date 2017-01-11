@@ -89,36 +89,13 @@ function monomials(vars::Vector{PolyVar}, degs, filter::Function = x->true)
 end
 monomials(vars::Vector{PolyVar}, degs::Int, filter::Function = x->true) = monomials(vars, [degs], filter)
 
-#function MonomialVector{T<:Union{PolyVar,Monomial,Term,Int}}(X::Vector{T})
-function buildZvarsvec{T<:Union{PolyType,Int}}(X::Vector{T})
-    varsvec = Vector{PolyVar}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
-    allvars, maps = myunion(varsvec)
-    nvars = length(allvars)
-    Z = [zeros(Int, nvars) for i in 1:length(X)]
-    offset = 0
-    for (i, x) in enumerate(X)
-        if isa(x, PolyVar)
-            @assert length(maps[i]) == 1
-            z = [1]
-        elseif isa(x, Monomial)
-            z = x.z
-        elseif isa(x, Term)
-            z = x.x.z
-        else
-            @assert isa(x, Int)
-            z = Int[]
-        end
-        Z[i][maps[i]] = z
-    end
-    allvars, Z
-end
-function sortmonovec{T<:Union{PolyType,Int}}(X::Vector{T})
-    allvars, Z = buildZvarsvec(X)
+function sortmonovec{T<:Union{PolyType,Int}}(::Type{PolyVar}, X::Vector{T})
+    allvars, Z = buildZvarsvec(PolyVar, X)
     perm = sortperm(Z, rev=true)
     perm, MonomialVector(allvars, Z[perm])
 end
 function MonomialVector{T<:Union{PolyType,Int}}(X::Vector{T})
-    allvars, Z = buildZvarsvec(X)
+    allvars, Z = buildZvarsvec(PolyVar, X)
     sort!(Z, rev=true)
     MonomialVector(allvars, Z)
 end

@@ -30,7 +30,7 @@ function Measure(a::Vector, x::Vector)
     if length(a) != length(x)
         error("There should be as many coefficient than monomials")
     end
-    perm, X = sortmonovec(x)
+    perm, X = sortmonovec(PolyVar, x)
     Measure(a[perm], X)
 end
 

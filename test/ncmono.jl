@@ -1,7 +1,3 @@
-@testset "Non-commutative monomial" begin
-    @ncpolyvar x y
-    @test (x*x*y^2*x).z == [2, 2, 1]
-end
 @testset "NCMonomial" begin
     @ncpolyvar x
     @test_throws ArgumentError NCMonomial([x], [1,0])

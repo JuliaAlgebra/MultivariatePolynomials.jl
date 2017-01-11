@@ -10,7 +10,9 @@ include("cmono.jl")
 include("ncmono.jl")
 include("mono.jl")
 
+include("cpoly.jl")
 include("poly.jl")
+
 include("rational.jl")
 include("measure.jl")
 include("exp.jl")
