@@ -81,7 +81,7 @@ maxdeg(x::AbstractMonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{AbstractMonomial, AbstractMonomialVector}}(x::T) = x.vars
 
-function buildZvarsvec{PV<:PolyVar, T<:Union{PolyType,Int}}(::Type{PV}, X::Vector{T})
+function buildZvarsvec{PV<:AbstractPolyVar, T<:Union{PolyType,Int}}(::Type{PV}, X::Vector{T})
     varsvec = Vector{PV}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)

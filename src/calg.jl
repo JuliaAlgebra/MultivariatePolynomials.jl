@@ -55,6 +55,22 @@ function (*)(x::PolyVar, y::MonomialVector)
     w, updatez = multiplyvar(y.vars, x)
     MonomialVector(w, updatez.(y.Z))
 end
+function multiplymono(v::Vector{PolyVar}, x::Monomial)
+    if v == x.vars
+        # /!\ no copy done here for efficiency, do not mess up with vars
+        w = v
+        updatez = z -> z + x.z
+    else
+        w, maps = myunion([v, x.vars])
+        updatez = z -> begin
+            newz = zeros(Int, length(w))
+            newz[maps[1]] += z
+            newz[maps[2]] += x.z
+            newz
+        end
+    end
+    w, updatez
+end
 function (*)(x::Monomial, y::Monomial)
     w, updatez = multiplymono(y.vars, x)
     Monomial(w, updatez(y.z))

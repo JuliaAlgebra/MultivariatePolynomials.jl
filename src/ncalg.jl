@@ -8,46 +8,90 @@ function (*)(x::NCPolyVar, y::NCPolyVar)
     end
 end
 
-function multiplyvar(v::Vector{NCPolyVar}, x::NCPolyVar)
-    if v[end] === x
-        multiplyexistingvar(v, x, length(v))
+function multiplyvar(v::Vector{NCPolyVar}, z::Vector{Int}, x::NCPolyVar)
+    i = length(v)
+    while i > 0 && z[i] == 0
+        i -= 1
+    end
+    if v[i] == x
+        multiplyexistingvar(v, x, i)
     else
-        insertvar(v, x, length(v)+1)
+        i += 1
+        while i <= length(v) && v[i] > x
+            i += 1
+        end
+        if i <= length(v) && v[i] == x
+            multiplyexistingvar(v, x, i)
+        else
+            insertvar(v, x, i)
+        end
     end
 end
-function multiplyvar(x::NCPolyVar, v::Vector{NCPolyVar})
-    if v[1] === x
-        multiplyexistingvar(v, x, 1)
+function multiplyvar(x::NCPolyVar, v::Vector{NCPolyVar}, z::Vector{Int})
+    i = 1
+    while i <= length(v) && z[i] == 0
+        i += 1
+    end
+    if v[i] == x
+        multiplyexistingvar(v, x, i)
     else
-        insertvar(v, x, 1)
+        while i > 0 && v[i] < x
+            i -= 1
+        end
+        if i > 0 && v[i] == x
+            multiplyexistingvar(v, x, i)
+        else
+            insertvar(v, x, i+1)
+        end
     end
 end
-
 function (*)(x::NCPolyVar, y::NCMonomial)
-    w, updatez = multiplyvar(x, y.vars)
+    w, updatez = multiplyvar(x, y.vars, y.z)
     NCMonomial(w, updatez(y.z))
 end
 function (*)(y::NCMonomial, x::NCPolyVar)
-    w, updatez = multiplyvar(y.vars, x)
+    w, updatez = multiplyvar(y.vars, y.z, x)
     NCMonomial(w, updatez(y.z))
 end
-function (*)(x::NCPolyVar, y::NCMonomialVector)
-    w, updatez = multiplyvar(x, y.vars)
-    NCMonomialVector(w, updatez.(y.Z))
-end
-function (*)(y::NCMonomialVector, x::NCPolyVar)
-    w, updatez = multiplyvar(y.vars, x)
-    NCMonomialVector(w, updatez.(y.Z))
+
+function multiplymono(v::Vector{NCPolyVar}, x::NCMonomial)
+    w, maps = myunion([v, x.vars])
+    updatez = z -> begin
+        newz = zeros(Int, length(w))
+        newz[maps[1]] += z
+        newz[maps[2]] += x.z
+        newz
+    end
+    w, updatez
 end
 function (*)(x::NCMonomial, y::NCMonomial)
-    w, updatez = multiplymono(y.vars, x)
-    NCMonomial(w, updatez(y.z))
+    i = findlast(z -> z > 0, x.z)
+    if i == 0
+        return y
+    end
+    j = findfirst(z -> z > 0, y.z)
+    if j == 0
+        return x
+    end
+    if x.vars[i] == y.vars[j]
+        w = [x.vars[1:i]; y.vars[j+1:end]]
+        z = [x.z[1:i-1]; x.z[i] + y.z[j]; y.z[j+1:end]]
+    else
+        w = [x.vars[1:i]; y.vars[j:end]]
+        z = [x.z[1:i]; y.z[j:end]]
+    end
+    return NCMonomial(w, z)
+end
+
+function (*)(x::NCPolyVar, y::NCMonomialVector)
+    NCMonomialVector([x * yi for yi in y])
+end
+function (*)(y::NCMonomialVector, x::NCPolyVar)
+    NCMonomialVector([yi * x for yi in y])
 end
 function (*)(x::NCMonomial, y::NCMonomialVector)
-    w, updatez = multiplymono(y.vars, x)
-    NCMonomialVector(w, updatez.(y.Z))
+    NCMonomialVector([x * yi for yi in y])
 end
 function (*)(y::NCMonomialVector, x::NCMonomial)
-    w, updatez = multiplymono(y.vars, x)
-    NCMonomialVector(w, updatez.(y.Z))
+    NCMonomialVector([yi * x for yi in y])
 end

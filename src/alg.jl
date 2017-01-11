@@ -25,20 +25,3 @@ function insertvar{PV<:AbstractPolyVar}(v::Vector{PV}, x::PV, i::Int)
     end
     w, updatez
 end
-
-function multiplymono{PV<:AbstractPolyVar}(v::Vector{PV}, x::AbstractMonomial)
-    if v == x.vars
-        # /!\ no copy done here for efficiency, do not mess up with vars
-        w = v
-        updatez = z -> z + x.z
-    else
-        w, maps = myunion([v, x.vars])
-        updatez = z -> begin
-            newz = zeros(Int, length(w))
-            newz[maps[1]] += z
-            newz[maps[2]] += x.z
-            newz
-        end
-    end
-    w, updatez
-end

@@ -4,6 +4,7 @@ promote_rule{S,T<:TermType}(::Type{T}, ::Type{S}) = VecPolynomial{promote_type(S
 promote_rule{S,T<:PolyType}(::Type{S}, ::Type{T}) = Term{promote_type(S, Int)}
 promote_rule{S,T<:PolyType}(::Type{T}, ::Type{S}) = Term{promote_type(S, Int)}
 promote_rule{S<:Union{Monomial,PolyVar},T<:Union{Monomial,PolyVar}}(::Type{S}, ::Type{T}) = Monomial
+promote_rule{S<:Union{NCMonomial,NCPolyVar},T<:Union{NCMonomial,NCPolyVar}}(::Type{S}, ::Type{T}) = NCMonomial
 promote_rule{S<:TermType,T<:TermType}(::Type{S}, ::Type{T}) = VecPolynomial{promote_type(eltype(S), eltype(T))}
 promote_rule{S<:PolyType,T<:TermType}(::Type{T}, ::Type{S}) = VecPolynomial{promote_type(Int, eltype(T))}
 promote_rule{S<:PolyType,T<:TermType}(::Type{S}, ::Type{T}) = VecPolynomial{promote_type(Int, eltype(T))}
