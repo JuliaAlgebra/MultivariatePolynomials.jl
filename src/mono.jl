@@ -81,6 +81,19 @@ maxdeg(x::AbstractMonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{AbstractMonomial, AbstractMonomialVector}}(x::T) = x.vars
 
+# List exponents in decreasing Graded Lexicographic Order
+function getZfordegs(n, degs, comm::Bool, filter::Function)
+    Z = Vector{Vector{Int}}()
+    for deg in sort(degs, rev=true)
+        fillZfordeg!(Z, n, deg, Val{comm}, filter)
+    end
+    @assert issorted(Z, rev=true)
+    Z
+end
+
+
+monomials{PV<:AbstractPolyVar}(vars::Vector{PV}, degs::Int, filter::Function = x->true) = monomials(vars, [degs], filter)
+
 function buildZvarsvec{PV<:AbstractPolyVar, T<:Union{PolyType,Int}}(::Type{PV}, X::Vector{T})
     varsvec = Vector{PV}[ (isa(x, PolyType) ? vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)

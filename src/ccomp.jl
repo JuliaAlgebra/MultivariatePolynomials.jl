@@ -53,17 +53,6 @@ function isless(x::Vector, y::Vector)
     end
 end
 
-# graded lex ordering
-function isless(x::Monomial, y::Monomial)
-    mycomp(x, y) < 0
-end
-isless(x::Monomial, y::PolyVar) = isless(x, Monomial(y))
-isless(x::PolyVar, y::Monomial) = isless(Monomial(x), y)
-
-function isapproxzero(x; ztol::Real=1e-6)
-    -ztol < x < ztol
-end
-
 function isapproxzero(p::VecPolynomial; ztol::Real=1e-6)
     isapprox(p, zero(p), ztol=ztol)
 end

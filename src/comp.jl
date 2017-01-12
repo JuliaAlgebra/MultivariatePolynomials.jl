@@ -1,7 +1,5 @@
 import Base.==, Base.isless, Base.isapprox
 
-# Comparison of variables
-
 # TODO this should be in Base
 function (==){T}(x::Vector{T}, y::Vector{T})
     if length(x) != length(y)
@@ -21,6 +19,8 @@ end
 # so p::PolyType == x::PolyVar -> x == p
 (==)(p::PolyType, y) = y == p
 
+# Comparison of PolyVar
+
 # TODO equality should be between name ?
 function (==){PV<:AbstractPolyVar}(x::PV, y::PV)
     x === y
@@ -30,7 +30,7 @@ end
 
 isless{PV<:AbstractPolyVar}(x::PV, y::PV) = isless(y.name, x.name)
 
-# Comparison of monomials
+# Comparison of Monomial
 
 # graded lex ordering
 function mycomp{M<:AbstractMonomial}(x::M, y::M)
@@ -73,6 +73,13 @@ end
 (==){M<:AbstractMonomial}(x::AbstractPolyVar, y::M) = M(x) == y
 (==)(p::PolyType, x::AbstractMonomial) = x == p
 
+# graded lex ordering
+function isless{M<:AbstractMonomial}(x::M, y::M)
+    mycomp(x, y) < 0
+end
+isless{M<:AbstractMonomial}(x::M, y::AbstractPolyVar) = isless(x, M(y))
+isless{M<:AbstractMonomial}(x::AbstractPolyVar, y::M) = isless(M(x), y)
+
 # Comparison of MonomialVector
 function (==){MV<:AbstractMonomialVector}(x::MV, y::MV)
     if length(x.Z) != length(y.Z)
@@ -94,3 +101,8 @@ function (==){MV<:AbstractMonomialVector}(x::MV, y::MV)
 end
 (==)(α, x::AbstractMonomialVector) = false
 (==)(p::PolyType, x::AbstractMonomialVector) = false
+
+# Comparison of Term
+function isapproxzero(x; ztol::Real=1e-6)
+    -ztol < x < ztol
+end

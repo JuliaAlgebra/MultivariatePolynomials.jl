@@ -16,10 +16,31 @@ function multiplyvar(v::Vector{NCPolyVar}, z::Vector{Int}, x::NCPolyVar)
     if v[i] == x
         multiplyexistingvar(v, x, i)
     else
+        #   ---->
+        # \  |\  |\
+        #  \ | \ | \
+        #   \|  \|  \
+        # If z[i] > x, we wait either for a rise (v[i] > v[i-1]) or v[i] < x
+        # Otherwise, we first wait for a drop and then wait for the same thing
+        ndrop = 0
+        if v[i] > x
+            droplim1 = 0
+            droplim2 = 1
+        else
+            droplim1 = 1
+            droplim2 = 2
+        end
         i += 1
-        while i <= length(v) && v[i] > x
+        while i <= length(v) && v[i] != x
+            if v[i] > v[i-1]
+                ndrop += 1
+            end
+            if drop >= droplim2 || (drop >= droplim1 && v[i] < x)
+                break
+            end
             i += 1
         end
+
         if i <= length(v) && v[i] == x
             multiplyexistingvar(v, x, i)
         else
@@ -35,7 +56,28 @@ function multiplyvar(x::NCPolyVar, v::Vector{NCPolyVar}, z::Vector{Int})
     if v[i] == x
         multiplyexistingvar(v, x, i)
     else
-        while i > 0 && v[i] < x
+        #   <----
+        # \  |\  |\
+        #  \ | \ | \
+        #   \|  \|  \
+        # If z[i] < x, we wait either for a drop (v[i] < v[i+1]) or v[i] > x
+        # Otherwise, we first wait for a drop and then wait for the same thing
+        ndrop = 0
+        if v[i] < x
+            droplim1 = 0
+            droplim2 = 1
+        else
+            droplim1 = 1
+            droplim2 = 2
+        end
+        i -= 1
+        while i > 0 && v[i] != x
+            if v[i] < v[i+1]
+                ndrop += 1
+            end
+            if drop >= droplim2 || (drop >= droplim1 && v[i] > x)
+                break
+            end
             i -= 1
         end
         if i > 0 && v[i] == x

@@ -14,4 +14,7 @@
     @test mv * x == NCMonomialVector([x^2, y*x, x*y*x])
     @test y^2 * mv == NCMonomialVector([y^2*x, y^3, y^2*x*y])
     @test mv * y^2 == NCMonomialVector([x*y^2, y^3, x*y^3])
+    a = y*x^2
+    @test a.vars == [y, x]
+    @test a.z == [1, 2]
 end

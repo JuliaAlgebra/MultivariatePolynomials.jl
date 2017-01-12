@@ -42,6 +42,40 @@ function getindex(x::NCMonomialVector, i::Integer)
     NCMonomial(x.vars, x.Z[i])
 end
 
+function fillZrec!(Z, z, i, n, deg, filter::Function)
+    if deg == 0
+        if filter(z)
+            push!(Z, copy(z))
+        end
+    else
+        for i in i:i+n-1
+            z[i] += 1
+            fillZrec!(Z, z, i, n, deg-1, filter)
+            z[i] -= 1
+        end
+    end
+end
+function fillZfordeg!(Z, n, deg, ::Type{Val{false}}, filter::Function)
+    z = zeros(Int, deg * n - deg + 1)
+    fillZrec!(Z, z, 1, n, deg, filter)
+end
+
+function getvarsforlength(vars::Vector{NCPolyVar}, len::Int)
+    n = length(vars)
+    map(i -> vars[((i-1) % n) + 1], 1:len)
+end
+function NCMonomialVector(vars::Vector{NCPolyVar}, degs, filter::Function = x->true)
+    Z = getZfordegs(length(vars), degs, false, filter)
+    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
+    NCMonomialVector(v, Z)
+end
+NCMonomialVector(vars::Vector{NCPolyVar}, degs::Int, filter::Function = x->true) = NCMonomialVector(vars, [degs], filter)
+function monomials(vars::Vector{NCPolyVar}, degs::Vector{Int}, filter::Function = x->true)
+    Z = getZfordegs(length(vars), degs, false, filter)
+    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
+    [NCMonomial(v, z) for z in Z]
+end
+
 function sortmonovec{T<:Union{PolyType,Int}}(::Type{NCPolyVar}, X::Vector{T})
     allvars, Z = buildZvarsvec(NCPolyVar, X)
     perm = sortperm(Z, rev=true)

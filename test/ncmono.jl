@@ -19,4 +19,22 @@ end
     X = NCMonomialVector([x, y], [[1, 0], [0, 1]])
     @test X[1] == x
     @test X[2] == y
+    X = NCMonomialVector([x,y], 2)
+    @test X.vars == [x, y, x]
+    @test X.Z == [[2, 0, 0], [1, 1, 0], [0, 2, 0], [0, 1, 1]]
+    X0 = [x^3, x^2*y, x*y^2, x*y*x, y^3, y^2*x, y*x^2, y*x*y]
+    X1 = monomials([x,y], 3)
+    X2 = NCMonomialVector(X0)
+    Z = [[3,0,0,0],[2,1,0,0],[1,2,0,0],[1,1,1,0],[0,3,0,0],[0,2,1,0],[0,1,2,0],[0,1,1,1]]
+    @test typeof(X1) == Vector{NCMonomial}
+    @test typeof(X2) == NCMonomialVector
+    @test length(X1) == length(X2) == length(Z)
+    @test issorted(X1, rev=true)
+    @test issorted(X2, rev=true)
+    @test issorted(Z, rev=true)
+    @test X1 == X0
+    for i in 1:length(Z)
+        @test X1[i].vars == X2[i].vars == [x, y, x, y]
+        @test X1[i].z == X2[i].z == Z[i]
+    end
 end

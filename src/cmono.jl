@@ -48,46 +48,38 @@ function getindex(x::MonomialVector, i::Integer)
     Monomial(x.vars, x.Z[i])
 end
 
-# list them in decreasing Graded Lexicographic Order
-function getZfordegs(n, degs, filter::Function)
-    Z = Vector{Vector{Int}}()
-    for deg in sort(degs, rev=true)
-        z = zeros(Int, n)
-        z[1] = deg
-        while true
-            if filter(z)
-                push!(Z, z)
-                z = copy(z)
-            end
-            if z[end] == deg
+function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function)
+    z = zeros(Int, n)
+    z[1] = deg
+    while true
+        if filter(z)
+            push!(Z, z)
+            z = copy(z)
+        end
+        if z[end] == deg
+            break
+        end
+        sum = 1
+        for j in (n-1):-1:1
+            if z[j] != 0
+                z[j] -= 1
+                z[j+1] += sum
                 break
-            end
-            sum = 1
-            for j in (n-1):-1:1
-                if z[j] != 0
-                    z[j] -= 1
-                    z[j+1] += sum
-                    break
-                else
-                    sum += z[j+1]
-                    z[j+1] = 0
-                end
+            else
+                sum += z[j+1]
+                z[j+1] = 0
             end
         end
     end
-    @assert issorted(Z, rev=true)
-    Z
 end
-
 function MonomialVector(vars::Vector{PolyVar}, degs, filter::Function = x->true)
-    MonomialVector(vars, getZfordegs(length(vars), degs, filter))
+    MonomialVector(vars, getZfordegs(length(vars), degs, true, filter))
 end
 MonomialVector(vars::Vector{PolyVar}, degs::Int, filter::Function = x->true) = MonomialVector(vars, [degs], filter)
-function monomials(vars::Vector{PolyVar}, degs, filter::Function = x->true)
-    Z = getZfordegs(length(vars), degs, filter)
+function monomials(vars::Vector{PolyVar}, degs::Vector{Int}, filter::Function = x->true)
+    Z = getZfordegs(length(vars), degs, true, filter)
     [Monomial(vars, z) for z in Z]
 end
-monomials(vars::Vector{PolyVar}, degs::Int, filter::Function = x->true) = monomials(vars, [degs], filter)
 
 function sortmonovec{T<:Union{PolyType,Int}}(::Type{PolyVar}, X::Vector{T})
     allvars, Z = buildZvarsvec(PolyVar, X)
