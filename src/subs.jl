@@ -76,9 +76,8 @@ function subs(p::VecPolynomial, x::Vector, varorder)
     sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
-function (p::MatPolynomial)(x::Vector, varorder)
-    VecPolynomial(p)(x, varorder)
-end
+(p::MatPolynomial)(x::Vector, varorder) = VecPolynomial(p)(x, varorder)
+subs(p::MatPolynomial, x::Vector, varorder) = subs(VecPolynomial(p), x, varorder)
 
 function (q::RationalPoly)(x::Vector, varorder)
     q.num(x, varorder) / q.den(x, varorder)
