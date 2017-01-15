@@ -1,19 +1,41 @@
+# eval replace all variables by a new value and subs replace some of them.
+# we use different function for that because of type inferability.
+# with eval, Julia knows that all PolyVar will be replaced by values so it can do better inference.
+export subs
+
+function fillmap!(vals, vars, x, varorder)
+    for (i, var) in enumerate(varorder)
+        j = findfirst(vars, var)
+        # If i == 0, that means that the variable is not present
+        # so it is ignored
+        if j > 0
+          vals[j] = x[i]
+        end
+    end
+end
+
 function evalmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
     if vars == varorder
         x
     else
+        # Every variable will be replaced by some value of type T
         vals = Vector{T}(length(vars))
-        for (i, var) in enumerate(varorder)
-            j = findfirst(vars, var)
-            # If i == 0, that means that the variable is not present
-            # so it is ignored
-            if j > 0
-              vals[j] = x[i]
-            end
-        end
+        fillmap!(vals, vars, x, varorder)
         for i in 1:length(vals)
-            @assert isdefined(vals, i) "Variable $(vars[i]) was not assigned a value"
+          @assert isdefined(vals, i) "Variable $(vars[i]) was not assigned a value"
         end
+        vals
+    end
+end
+
+function subsmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
+    if vars == varorder
+        x
+    else
+        # Some variable may not be replaced
+        vals = Vector{promote_type(T, PolyVar)}(length(vars))
+        copy!(vals, vars)
+        fillmap!(vals, vars, x, varorder)
         vals
     end
 end
@@ -49,9 +71,13 @@ function (p::VecPolynomial)(x::Vector, varorder)
     sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
-function (p::MatPolynomial)(x::Vector, varorder)
-    VecPolynomial(p)(x, varorder)
+function subs(p::VecPolynomial, x::Vector, varorder)
+    vals = subsmap(vars(p), x, varorder)
+    sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
+
+(p::MatPolynomial)(x::Vector, varorder) = VecPolynomial(p)(x, varorder)
+subs(p::MatPolynomial, x::Vector, varorder) = subs(VecPolynomial(p), x, varorder)
 
 function (q::RationalPoly)(x::Vector, varorder)
     q.num(x, varorder) / q.den(x, varorder)

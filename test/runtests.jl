@@ -14,3 +14,6 @@ include("subs.jl")
 include("algebraicset.jl")
 
 include("show.jl")
+
+include("example1.jl")
+include("example2.jl")

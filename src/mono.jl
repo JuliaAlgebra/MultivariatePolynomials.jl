@@ -17,7 +17,7 @@ function buildpolyvar(var)
         #tmp = gensym()
         varname = var.args[1]
         prefix = string(var.args[1])
-        idxset = var.args[2]
+        idxset = esc(var.args[2])
         :($(esc(varname)) = polyvecvar($prefix, $idxset))
     end
 end
