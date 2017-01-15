@@ -1,3 +1,13 @@
+@testset "polyvar macro index set" begin
+    n = 3
+    @polyvar x[1:n] y z[1:n-1]
+    @test isa(x, Vector{PolyVar})
+    @test isa(y, PolyVar)
+    @test isa(z, Vector{PolyVar})
+    @test length(x) == 3
+    @test length(z) == 2
+    @test x[1] > x[2] > x[3] > y > z[1] > z[2]
+end
 @testset "PolyVar" begin
     @polyvar x
     @test copy(x) == x

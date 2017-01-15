@@ -26,7 +26,7 @@ p = 2x + 3.0x*y^2 + y
 differentiate(p, x) # compute the derivative of p with respect to x
 differentiate(p, [x, y]) # compute the gradient of p
 p([y, x], [x, y]) # replace any x by y and y by x
-p([x^2], [y]) # replace any occurence of y by x^2
+subs(p, [x^2], [y]) # replace any occurence of y by x^2
 p([1, 2], [x, y]) # evaluate p at [1, 2]
 ```
 Below is an example with `@polyvar x[1:n]`
@@ -36,7 +36,7 @@ A = rand(3, 3)
 @polyvar x[1:n]
 p = dot(x, x) # x_1^2 + x_2^2 + x_3^2
 p(A*x, x) # corresponds to dot(A*x, A*x)
-p([2, 3], [x[1], x[3]]) # x_2^2 + 13
+subs(p, [2, 3], [x[1], x[3]]) # x_2^2 + 13
 ```
 Note that, when doing substitution, it is required to give the `PolyVar` ordering that is meant.
 Indeed, the ordering between the `PolyVar` is not alphabetical but rather by order of creation

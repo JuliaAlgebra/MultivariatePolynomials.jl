@@ -32,4 +32,6 @@ import Base.Test: @inferred
 
     p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
     @inferred p([1.0, 2.0], [x[1], x[2]])
+
+    @test subs(p, [2.0], [x[2]]) == 13x[1] + 2 + 2x[1]^2
 end
