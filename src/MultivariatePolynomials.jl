@@ -5,11 +5,10 @@ module MultivariatePolynomials
 import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one
 
 abstract PolyType
-abstract NCPolyType
 
+include("mono.jl")
 include("cmono.jl")
 include("ncmono.jl")
-include("mono.jl")
 
 include("cpoly.jl")
 include("ncpoly.jl")

@@ -20,7 +20,7 @@ function buildpolyvar(var, comm)
     end
 end
 
-typealias AbstractPolyVar Union{PolyVar, NCPolyVar}
+abstract AbstractPolyVar <: PolyType
 copy(x::AbstractPolyVar) = x
 
 vars(x::AbstractPolyVar) = [x]
@@ -55,14 +55,14 @@ function myunion{PV<:AbstractPolyVar}(varsvec::Vector{Vector{PV}})
     vars, maps
 end
 
-typealias AbstractMonomial Union{Monomial, NCMonomial}
+abstract AbstractMonomial <: PolyType
 # /!\ vars not copied, do not mess with vars
 copy{M<:AbstractMonomial}(m::M) = M(m.vars, copy(m.z))
 deg(x::AbstractMonomial) = sum(x.z)
 nvars(x::AbstractMonomial) = length(x.vars)
 isconstant(x::AbstractMonomial) = deg(x) == 0
 
-typealias AbstractMonomialVector Union{MonomialVector, NCMonomialVector}
+abstract AbstractMonomialVector <: PolyType
 # /!\ vars not copied, do not mess with vars
 copy{MV<:AbstractMonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
 function getindex{MV<:AbstractMonomialVector}(x::MV, I)

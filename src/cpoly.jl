@@ -111,7 +111,7 @@ type MatPolynomial{T} <: TermType{T}
 end
 
 function (::Type{MatPolynomial{T}}){T}(f::Function, x::MonomialVector)
-    MatPolynomial{T}(trimat(f, length(x)), x)
+    MatPolynomial{T}(trimat(T, f, length(x)), x)
 end
 (::Type{MatPolynomial{T}}){T}(f::Function, x::Vector) = MatPolynomial{T}(f, MonomialVector(x))
 

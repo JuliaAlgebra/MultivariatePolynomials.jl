@@ -1,10 +1,13 @@
 export NCTerm, NCVecPolynomial, NCMatPolynomial, NCSOSDecomposition, getmat, monomials, removemonomials, NCTermType
 
-abstract NCTermType{T} <: NCPolyType
-zero(::Type{NCPolyType}) = zero(NCVecPolynomial{Int})
-one(::Type{NCPolyType}) = one(NCVecPolynomial{Int})
-zero(p::NCPolyType) = zero(NCPolyType)
-one(p::NCPolyType) = one(NCPolyType)
+abstract NCTermType{T} <: PolyType
+
+zero(::Type{NCPolyVar}) = zero(NCVecPolynomial{Int})
+zero(::Type{NCMonomial}) = zero(NCVecPolynomial{Int})
+one(::Type{NCPolyVar}) = one(NCVecPolynomial{Int})
+one(::Type{NCMonomial}) = one(NCVecPolynomial{Int})
+zero{PVM <: Union{NCPolyVar, NCMonomial}}(::PVM) = zero(PVM)
+one{PVM <: Union{NCPolyVar, NCMonomial}}(::PVM) = one(PVM)
 
 zero{T}(t::NCTermType{T}) = NCVecPolynomial(T[], NCMonomialVector(vars(t), Vector{Vector{Int}}()))
 zero{T<:NCTermType}(::Type{T}) = NCVecPolynomial(eltype(T)[], NCMonomialVector())
@@ -111,7 +114,7 @@ type NCMatPolynomial{T} <: NCTermType{T}
 end
 
 function (::Type{NCMatPolynomial{T}}){T}(f::Function, x::NCMonomialVector)
-    NCMatPolynomial{T}(trimat(f, length(x)), x)
+    NCMatPolynomial{T}(trimat(T, f, length(x)), x)
 end
 (::Type{NCMatPolynomial{T}}){T}(f::Function, x::Vector) = NCMatPolynomial{T}(f, NCMonomialVector(x))
 

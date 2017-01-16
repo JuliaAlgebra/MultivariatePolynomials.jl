@@ -6,14 +6,14 @@ macro polyvar(args...)
 end
 
 # TODO equality should be between name ?
-immutable PolyVar <: PolyType
+immutable PolyVar <: AbstractPolyVar
     name::AbstractString
 end
 
 # Invariant:
 # vars is increasing
 # z may contain 0's (otherwise, getindex of MonomialVector would be inefficient)
-type Monomial <: PolyType
+type Monomial <: AbstractMonomial
     vars::Vector{PolyVar}
     z::Vector{Int}
 
@@ -28,7 +28,7 @@ Monomial() = Monomial(PolyVar[], Int[])
 Base.convert(::Type{Monomial}, x::PolyVar) = Monomial([x], [1])
 
 # Invariant: Always sorted and no zero vector
-type MonomialVector <: PolyType
+type MonomialVector <: AbstractMonomialVector
     vars::Vector{PolyVar}
     Z::Vector{Vector{Int}}
 

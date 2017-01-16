@@ -89,7 +89,7 @@ function trimap(i, j, n)
     div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
 end
 
-function trimat(f, n)
+function trimat{T}(::Type{T}, f, n)
     Q = Vector{T}(trimap(n, n, n))
     for i in 1:n
         for j in i:n

@@ -4,11 +4,11 @@ macro ncpolyvar(args...)
     reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg, false) for arg in args])
 end
 
-immutable NCPolyVar <: NCPolyType
+immutable NCPolyVar <: AbstractPolyVar
     name::AbstractString
 end
 
-type NCMonomial <: NCPolyType
+type NCMonomial <: AbstractMonomial
     vars::Vector{NCPolyVar}
     z::Vector{Int}
 
@@ -22,7 +22,7 @@ end
 NCMonomial() = NCMonomial(NCPolyVar[], Int[])
 Base.convert(::Type{NCMonomial}, x::NCPolyVar) = NCMonomial([x], [1])
 
-type NCMonomialVector <: NCPolyType
+type NCMonomialVector <: AbstractMonomialVector
     vars::Vector{NCPolyVar}
     Z::Vector{Vector{Int}}
 
@@ -76,12 +76,12 @@ function monomials(vars::Vector{NCPolyVar}, degs::Vector{Int}, filter::Function 
     [NCMonomial(v, z) for z in Z]
 end
 
-function sortmonovec{T<:Union{NCPolyType,Int}}(::Type{NCPolyVar}, X::Vector{T})
+function sortmonovec{T<:Union{NCMonomial,NCPolyVar,Int}}(::Type{NCPolyVar}, X::Vector{T})
     allvars, Z = buildZvarsvec(NCPolyVar, X)
     perm = sortperm(Z, rev=true)
     perm, NCMonomialVector(allvars, Z[perm])
 end
-function NCMonomialVector{T<:Union{NCPolyType,Int}}(X::Vector{T})
+function NCMonomialVector{T<:Union{NCMonomial,NCPolyVar,Int}}(X::Vector{T})
     allvars, Z = buildZvarsvec(NCPolyVar, X)
     sort!(Z, rev=true)
     NCMonomialVector(allvars, Z)
