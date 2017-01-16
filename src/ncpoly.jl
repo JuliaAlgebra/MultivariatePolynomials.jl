@@ -1,4 +1,4 @@
-export NCTerm, NCVecPolynomial, NCMatPolynomial, NCSOSDecomposition, getmat, monomials, removemonomials, NCTermType
+export NCTerm, NCVecPolynomial, NCMatPolynomial, NCSOSDecomposition, NCTermType
 
 abstract NCTermType{T} <: PolyType
 

@@ -10,8 +10,6 @@ include("mono.jl")
 include("cmono.jl")
 include("ncmono.jl")
 
-include("cpoly.jl")
-include("ncpoly.jl")
 include("poly.jl")
 
 include("rational.jl")
