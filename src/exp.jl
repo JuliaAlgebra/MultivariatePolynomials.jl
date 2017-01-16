@@ -1,6 +1,6 @@
 export expectation
 
-function _dot(m::AbstractMeasure, p::AbstractTermContainer, f)
+function _dot{C}(m::Measure{C}, p::TermContainer{C}, f)
     i = 1
     s = 0
     for t in p
@@ -15,13 +15,11 @@ function _dot(m::AbstractMeasure, p::AbstractTermContainer, f)
     end
     s
 end
-dot(m::AbstractMeasure, p::AbstractTermContainer) = _dot(m, p, (*))
-dot(p::AbstractTermContainer, m::AbstractMeasure) = _dot(m, p, (a, b) -> b * a)
+dot(m::Measure, p::TermContainer) = _dot(m, p, (*))
+dot(p::TermContainer, m::Measure) = _dot(m, p, (a, b) -> b * a)
 
-tcfor(::Measure) = TermContainer
-tcfor(::NCMeasure) = NCTermContainer
-dot(m::AbstractMeasure, p::PolyType) = dot(m, tcfor(m)(p))
-dot(p::PolyType, m::AbstractMeasure) = dot(tcfor(m)(p), m)
+dot{C}(m::Measure{C}, p::PolyType{C}) = dot(m, TermContainer{C}(p))
+dot{C}(p::PolyType{C}, m::Measure{C}) = dot(TermContainer{C}(p), m)
 
-expectation(m::AbstractMeasure, p::PolyType) = dot(m, p)
-expectation(p::PolyType, m::AbstractMeasure) = dot(p, m)
+expectation(m::Measure, p::PolyType) = dot(m, p)
+expectation(p::PolyType, m::Measure) = dot(p, m)

@@ -28,18 +28,18 @@ Base.transpose(p::PolyType) = p
 # a PolyVar and a Monomial, this results in type instability
 # Defining the specific methods solve this problem and also make
 # them a lot faster
-^(x::PolyVar, i::Int) = Monomial([x], [i])
-^(x::Monomial, i::Int) = Monomial(x.vars, i*x.z)
+^{C}(x::PolyVar{C}, i::Int) = Monomial{C}([x], [i])
+^(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i*x.z)
 
 # Product between PolyVar and Monomial -> Monomial
-function (*)(x::PolyVar, y::PolyVar)
+function (*)(x::PolyVar{true}, y::PolyVar{true})
     if x === y
-        Monomial([x], [2])
+        Monomial{true}([x], [2])
     else
-        Monomial(x > y ? [x,y] : [y,x], [1,1])
+        Monomial{true}(x > y ? [x,y] : [y,x], [1,1])
     end
 end
-function multiplyvar(v::Vector{PolyVar}, x::PolyVar)
+function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true})
     i = findfirst(w->w <= x, v)
     if i > 0 && v[i] == x
         multiplyexistingvar(v, x, i)
@@ -47,15 +47,15 @@ function multiplyvar(v::Vector{PolyVar}, x::PolyVar)
         insertvar(v, x, i == 0 ? length(v)+1 : i)
     end
 end
-function (*)(x::PolyVar, y::Monomial)
+function (*)(x::PolyVar{true}, y::Monomial{true})
     w, updatez = multiplyvar(y.vars, x)
-    Monomial(w, updatez(y.z))
+    Monomial{true}(w, updatez(y.z))
 end
-function (*)(x::PolyVar, y::MonomialVector)
+function (*)(x::PolyVar{true}, y::MonomialVector{true})
     w, updatez = multiplyvar(y.vars, x)
-    MonomialVector(w, updatez.(y.Z))
+    MonomialVector{true}(w, updatez.(y.Z))
 end
-function multiplymono(v::Vector{PolyVar}, x::Monomial)
+function multiplymono(v::Vector{PolyVar{true}}, x::Monomial{true})
     if v == x.vars
         # /!\ no copy done here for efficiency, do not mess up with vars
         w = v
@@ -71,23 +71,23 @@ function multiplymono(v::Vector{PolyVar}, x::Monomial)
     end
     w, updatez
 end
-function (*)(x::Monomial, y::Monomial)
+function (*)(x::Monomial{true}, y::Monomial{true})
     w, updatez = multiplymono(y.vars, x)
-    Monomial(w, updatez(y.z))
+    Monomial{true}(w, updatez(y.z))
 end
-function (*)(x::Monomial, y::MonomialVector)
+function (*)(x::Monomial{true}, y::MonomialVector{true})
     w, updatez = multiplymono(y.vars, x)
-    MonomialVector(w, updatez.(y.Z))
+    MonomialVector{true}(w, updatez.(y.Z))
 end
-(*)(x::Monomial, y::PolyVar) = y * x
+(*)(x::Monomial{true}, y::PolyVar{true}) = y * x
 
 # non-PolyType * PolyType: specific methods for speed
 *(p::PolyType, α) = α * p
 
-*(α, x::PolyVar)       = Term(α, Monomial(x))
+*{C}(α, x::PolyVar{C}) = Term(α, Monomial{C}(x))
 *(α, x::Monomial)      = Term(α, x)
 *(α, p::MatPolynomial) = α * VecPolynomial(p)
-*{T}(α, x::Term{T})    = Term(T(α)*x.α, x.x)
+*{C, T}(α, x::Term{C, T})    = Term(T(α)*x.α, x.x)
 *(α, p::VecPolynomial) = VecPolynomial(α*p.a, p.x)
 
 # Reverse order to avoid abiguïty with above 5 specific methods
@@ -170,30 +170,30 @@ function myminivect{S,T}(x::S, y::T)
     [U(x), U(y)]
 end
 
-function (+)(x::Term, y::Term)
+function (+){C}(x::Term{C}, y::Term{C})
     if x.x == y.x
-        VecPolynomial([x.α+y.α], [x.x])
+        VecPolynomial{C}([x.α+y.α], [x.x])
     elseif x.x > y.x
-        VecPolynomial(myminivect(x.α,y.α), [x.x,y.x])
+        VecPolynomial{C}(myminivect(x.α,y.α), [x.x,y.x])
     else
-        VecPolynomial(myminivect(y.α,x.α), [y.x,x.x])
+        VecPolynomial{C}(myminivect(y.α,x.α), [y.x,x.x])
     end
 end
 
-function (-)(x::Term, y::Term)
+function (-){C}(x::Term{C}, y::Term{C})
     if x.x == y.x
-        VecPolynomial([x.α-y.α], [x.x])
+        VecPolynomial{C}([x.α-y.α], [x.x])
     elseif x.x > y.x
-        VecPolynomial(myminivect(x.α,-y.α), [x.x,y.x])
+        VecPolynomial{C}(myminivect(x.α,-y.α), [x.x,y.x])
     else
-        VecPolynomial(myminivect(-y.α,x.α), [y.x,x.x])
+        VecPolynomial{C}(myminivect(-y.α,x.α), [y.x,x.x])
     end
 end
 
 (+){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) + Term(y)
 (-){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) - Term(y)
 
-function plusorminus{S,T}(p::TermContainer{S}, q::TermContainer{T}, isplus)
+function plusorminus{C, S, T}(p::TermContainer{C, S}, q::TermContainer{C, T}, isplus)
     varsvec = [vars(p), vars(q)]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)
@@ -226,14 +226,14 @@ function plusorminus{S,T}(p::TermContainer{S}, q::TermContainer{T}, isplus)
         push!(Z, z)
     end
 
-    VecPolynomial(a, MonomialVector(allvars, Z))
+    VecPolynomial(a, MonomialVector{C}(allvars, Z))
 end
 
 
-(+)(x::TermContainer, y::TermContainer) = plusorminus(x, y, true)
-(-)(x::TermContainer, y::TermContainer) = plusorminus(x, y, false)
-(+){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x + Term{T}(y)
-(+){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) + y
+(+){C}(x::TermContainer{C}, y::TermContainer{C}) = plusorminus(x, y, true)
+(-){C}(x::TermContainer{C}, y::TermContainer{C}) = plusorminus(x, y, false)
+(+){C, T, S<:Union{Monomial,PolyVar}}(x::TermContainer{C, T}, y::S) = x + Term{C, T}(y)
+(+){C, T, S<:Union{Monomial,PolyVar}}(x::S, y::TermContainer{C, T}) = Term{C, T}(x) + y
 
 (+)(x::TermContainer, y::MatPolynomial) = x + VecPolynomial(y)
 (+)(x::MatPolynomial, y::TermContainer) = VecPolynomial(x) + y
@@ -252,12 +252,12 @@ iszero(p::MatPolynomial) = isempty(VecPolynomial(p).x)
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add VecPolynomial conversion for type stability
-(+)(x::PolyType, y) = iszero(y) ? VecPolynomial(x) : x + Term(y)
-(+)(x, y::PolyType) = iszero(x) ? VecPolynomial(y) : Term(x) + y
-(-)(x::PolyType, y) = iszero(y) ? VecPolynomial(x) : x - Term(y)
-(-)(x, y::PolyType) = iszero(x) ? VecPolynomial(-y) : Term(x) - y
+(+){C}(x::PolyType{C}, y) = iszero(y) ? VecPolynomial(x) : x + Term{C}(y)
+(+){C}(x, y::PolyType{C}) = iszero(x) ? VecPolynomial(y) : Term{C}(x) + y
+(-){C}(x::PolyType{C}, y) = iszero(y) ? VecPolynomial(x) : x - Term{C}(y)
+(-){C}(x, y::PolyType{C}) = iszero(x) ? VecPolynomial(-y) : Term{C}(x) - y
 
-(-)(x::PolyVar) = Term(-1, Monomial(x))
+(-){C}(x::PolyVar{C}) = Term(-1, Monomial{C}(x))
 (-)(x::Monomial) = Term(-1, x)
 (-)(t::Term) = Term(-t.α, t.x)
 (-)(p::VecPolynomial) = VecPolynomial(-p.a, p.x)

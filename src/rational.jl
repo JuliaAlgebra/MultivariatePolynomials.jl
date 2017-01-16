@@ -1,28 +1,29 @@
 export RationalPoly
 import Base.+, Base.-, Base.*, Base./
 
-immutable RationalPoly{S,T} <: PolyType
-    num::TermContainer{S}
-    den::TermContainer{T}
+immutable RationalPoly{C, S, T} <: PolyType{C}
+    num::TermContainer{C, S}
+    den::TermContainer{C, T}
+end
+iscomm{C, S, T}(r::Type{RationalPoly{C, S, T}}) = C
+
+Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, S, T}) = q
+Base.convert{C, S, T, U, V}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, U, V}) = TermContainer{C, S}(q.num) / TermContainer{C, T}(q.den)
+function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p::TermContainer{C, S})
+    p / one(TermContainer{C, T})
+end
+function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p)
+    Base.convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
 end
 
-Base.convert{S,T}(::Type{RationalPoly{S,T}}, q::RationalPoly{S,T}) = q
-Base.convert{S,T,U,V}(::Type{RationalPoly{S,T}}, q::RationalPoly{U,V}) = TermContainer{S}(q.num) / TermContainer{T}(q.den)
-function Base.convert{S,T}(::Type{RationalPoly{S,T}}, p::TermContainer{S})
-    p / one(TermContainer{T})
+function (/){C, S, T}(num::TermContainer{C, S}, den::TermContainer{C, T})
+    RationalPoly{C, S, T}(num, den)
 end
-function Base.convert{S,T}(::Type{RationalPoly{S,T}}, p)
-    Base.convert(RationalPoly{S,T}, TermContainer{S}(p))
+(/){C}(num::PolyType{C}, den) = num / TermContainer{C}(den)
+function (/){C}(num, den::PolyType{C})
+    TermContainer{C}(num) / den
 end
-
-function (/){S,T}(num::TermContainer{S}, den::TermContainer{T})
-    RationalPoly{S,T}(num, den)
-end
-(/)(num::PolyType, den) = num / TermContainer(den)
-function (/)(num, den::PolyType)
-    TermContainer(num) / den
-end
-(/)(num::PolyType, den::PolyType) = TermContainer(num) / TermContainer(den)
+(/){C}(num::PolyType{C}, den::PolyType{C}) = TermContainer{C}(num) / TermContainer{C}(den)
 
 function (+)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)
@@ -47,11 +48,11 @@ function (*)(p::TermContainer, r::RationalPoly)
 end
 (*)(r::RationalPoly, p::Term) = p * r
 (*)(r::RationalPoly, p::VecPolynomial) = p * r
-(*)(p::PolyType, r::RationalPoly) = TermContainer(p) * r
-(*)(r::RationalPoly, p::PolyType) = r * TermContainer(p)
-(*)(α, r::RationalPoly) = TermContainer(α) * TermContainer(p)
-(*)(r::RationalPoly, α) = r * TermContainer(α)
+(*){C}(p::PolyType{C}, r::RationalPoly{C}) = TermContainer{C}(p) * r
+(*){C}(r::RationalPoly{C}, p::PolyType{C}) = r * TermContainer{C}(p)
+(*){C}(α, r::RationalPoly{C}) = TermContainer{C}(α) * TermContainer{C}(p)
+(*){C}(r::RationalPoly{C}, α) = r * TermContainer{C}(α)
 
 zero(r::RationalPoly) = zero(r.num)
 zero{T<:RationalPoly}(::Type{T}) = zero(VecPolynomial)
-zero{T}(::Type{RationalPoly{T}}) = zero(VecPolynomial{T})
+zero{C, T}(::Type{RationalPoly{C, T}}) = zero(VecPolynomial{C, T})

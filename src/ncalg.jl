@@ -1,14 +1,14 @@
-^(x::NCPolyVar, i::Int) = NCMonomial([x], [i])
+^(x::PolyVar{false}, i::Int) = Monomial{false}([x], [i])
 
-function (*)(x::NCPolyVar, y::NCPolyVar)
+function (*)(x::PolyVar{false}, y::PolyVar{false})
     if x === y
-        NCMonomial([x], [2])
+        Monomial{false}([x], [2])
     else
-        NCMonomial([x, y], [1, 1])
+        Monomial{false}([x, y], [1, 1])
     end
 end
 
-function multiplyvar(v::Vector{NCPolyVar}, z::Vector{Int}, x::NCPolyVar)
+function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false})
     i = length(v)
     while i > 0 && z[i] == 0
         i -= 1
@@ -48,7 +48,7 @@ function multiplyvar(v::Vector{NCPolyVar}, z::Vector{Int}, x::NCPolyVar)
         end
     end
 end
-function multiplyvar(x::NCPolyVar, v::Vector{NCPolyVar}, z::Vector{Int})
+function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int})
     i = 1
     while i <= length(v) && z[i] == 0
         i += 1
@@ -87,16 +87,16 @@ function multiplyvar(x::NCPolyVar, v::Vector{NCPolyVar}, z::Vector{Int})
         end
     end
 end
-function (*)(x::NCPolyVar, y::NCMonomial)
+function (*)(x::PolyVar{false}, y::Monomial{false})
     w, updatez = multiplyvar(x, y.vars, y.z)
-    NCMonomial(w, updatez(y.z))
+    Monomial{false}(w, updatez(y.z))
 end
-function (*)(y::NCMonomial, x::NCPolyVar)
+function (*)(y::Monomial{false}, x::PolyVar{false})
     w, updatez = multiplyvar(y.vars, y.z, x)
-    NCMonomial(w, updatez(y.z))
+    Monomial{false}(w, updatez(y.z))
 end
 
-function multiplymono(v::Vector{NCPolyVar}, x::NCMonomial)
+function multiplymono(v::Vector{PolyVar{false}}, x::Monomial{false})
     w, maps = myunion([v, x.vars])
     updatez = z -> begin
         newz = zeros(Int, length(w))
@@ -106,7 +106,7 @@ function multiplymono(v::Vector{NCPolyVar}, x::NCMonomial)
     end
     w, updatez
 end
-function (*)(x::NCMonomial, y::NCMonomial)
+function (*)(x::Monomial{false}, y::Monomial{false})
     i = findlast(z -> z > 0, x.z)
     if i == 0
         return y
@@ -122,18 +122,18 @@ function (*)(x::NCMonomial, y::NCMonomial)
         w = [x.vars[1:i]; y.vars[j:end]]
         z = [x.z[1:i]; y.z[j:end]]
     end
-    return NCMonomial(w, z)
+    return Monomial{false}(w, z)
 end
 
-function (*)(x::NCPolyVar, y::NCMonomialVector)
-    NCMonomialVector([x * yi for yi in y])
+function (*)(x::PolyVar{false}, y::MonomialVector{false})
+    MonomialVector{false}([x * yi for yi in y])
 end
-function (*)(y::NCMonomialVector, x::NCPolyVar)
-    NCMonomialVector([yi * x for yi in y])
+function (*)(y::MonomialVector{false}, x::PolyVar{false})
+    MonomialVector{false}([yi * x for yi in y])
 end
-function (*)(x::NCMonomial, y::NCMonomialVector)
-    NCMonomialVector([x * yi for yi in y])
+function (*)(x::Monomial{false}, y::MonomialVector{false})
+    MonomialVector{false}([x * yi for yi in y])
 end
-function (*)(y::NCMonomialVector, x::NCMonomial)
-    NCMonomialVector([yi * x for yi in y])
+function (*)(y::MonomialVector{false}, x::Monomial{false})
+    MonomialVector{false}([yi * x for yi in y])
 end

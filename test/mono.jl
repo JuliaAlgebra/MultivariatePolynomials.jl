@@ -2,9 +2,9 @@
     @testset "polyvar macro index set" begin
         n = 3
         @polyvar x[1:n] y z[1:n-1]
-        @test isa(x, Vector{PolyVar})
-        @test isa(y, PolyVar)
-        @test isa(z, Vector{PolyVar})
+        @test isa(x, Vector{PolyVar{true}})
+        @test isa(y, PolyVar{true})
+        @test isa(z, Vector{PolyVar{true}})
         @test length(x) == 3
         @test length(z) == 2
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
@@ -14,20 +14,20 @@
         @test copy(x) == x
         @test nvars(x) == 1
         @test zero(x) == 0
-        @test typeof(zero(x)) == VecPolynomial{Int}
+        @test typeof(zero(x)) == VecPolynomial{true, Int}
         @inferred zero(x)
         @test one(x) == 1
-        @test typeof(one(x)) == VecPolynomial{Int}
+        @test typeof(one(x)) == VecPolynomial{true, Int}
         @inferred one(x)
     end
     @testset "Monomial" begin
         @polyvar x
-        @test_throws ArgumentError Monomial([x], [1,0])
+        @test_throws ArgumentError Monomial{true}([x], [1,0])
         @test zero(x^2) == 0
-        @test typeof(zero(x^2)) == VecPolynomial{Int}
+        @test typeof(zero(x^2)) == VecPolynomial{true, Int}
         @inferred zero(x^2)
         @test one(x^2) == 1
-        @test typeof(one(x^2)) == VecPolynomial{Int}
+        @test typeof(one(x^2)) == VecPolynomial{true, Int}
         @inferred one(x^2)
         @polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]
@@ -37,7 +37,7 @@
     end
     @testset "MonomialVector" begin
         @polyvar x y
-        @test_throws ArgumentError MonomialVector([x], [[1], [1,0]])
+        @test_throws ArgumentError MonomialVector{true}([x], [[1], [1,0]])
         X = [x^2,x*y,y^2]
         for (i, m) in enumerate(monomials([x,y], 2))
             @test m == X[i]

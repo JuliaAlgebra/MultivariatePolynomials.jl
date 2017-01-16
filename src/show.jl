@@ -1,8 +1,8 @@
-function show(io::IO, x::AbstractPolyVar)
+function show(io::IO, x::PolyVar)
     print(io, x.name)
 end
 
-function show(io::IO, x::AbstractMonomial)
+function show(io::IO, x::Monomial)
     if isconstant(x)
         show(io, 1)
     else
@@ -24,7 +24,7 @@ function show(io::IO, x::AbstractMonomial)
     end
 end
 
-function show(io::IO, x::AbstractMonomialVector)
+function show(io::IO, x::MonomialVector)
     print(io, typeof(x))
     print(io, "[ ")
     for (i, m) in enumerate(x)
@@ -36,7 +36,7 @@ function show(io::IO, x::AbstractMonomialVector)
     print(io, " ]")
 end
 
-function Base.show(io::IO, t::AbstractTerm)
+function Base.show(io::IO, t::Term)
     cst = isconstant(t.x)
     if t.α != 1 || cst
         print(io, t.α)

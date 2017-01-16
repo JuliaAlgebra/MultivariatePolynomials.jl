@@ -1,4 +1,6 @@
+using Combinatorics
 import Base.==, Base.isless, Base.isapprox
+export isapproxzero
 
 # TODO this should be in Base
 function (==){T}(x::Vector{T}, y::Vector{T})
@@ -22,18 +24,18 @@ end
 # Comparison of PolyVar
 
 # TODO equality should be between name ?
-function (==){PV<:AbstractPolyVar}(x::PV, y::PV)
+function (==){C}(x::PolyVar{C}, y::PolyVar{C})
     x === y
 end
-(==)(α, x::AbstractPolyVar) = false
-(==)(p::PolyType, x::AbstractPolyVar) = x == p
+(==)(α, x::PolyVar) = false
+(==){C}(p::PolyType{C}, x::PolyVar{C}) = x == p
 
-isless{PV<:AbstractPolyVar}(x::PV, y::PV) = isless(y.name, x.name)
+isless{C}(x::PolyVar{C}, y::PolyVar{C}) = isless(y.name, x.name)
 
 # Comparison of Monomial
 
 # graded lex ordering
-function mycomp{M<:AbstractMonomial}(x::M, y::M)
+function mycomp{C}(x::Monomial{C}, y::Monomial{C})
     degx = deg(x)
     degy = deg(y)
     if degx != degy
@@ -66,22 +68,22 @@ function mycomp{M<:AbstractMonomial}(x::M, y::M)
     end
 end
 
-function (==){M<:AbstractMonomial}(x::M, y::M)
+function (==){C}(x::Monomial{C}, y::Monomial{C})
     mycomp(x, y) == 0
 end
-(==)(α, x::AbstractMonomial) = false
-(==){M<:AbstractMonomial}(x::AbstractPolyVar, y::M) = M(x) == y
-(==)(p::PolyType, x::AbstractMonomial) = x == p
+(==)(α, x::Monomial) = false
+(==){C}(x::PolyVar{C}, y::Monomial{C}) = Monomial{C}(x) == y
+(==){C}(p::PolyType{C}, x::Monomial{C}) = x == p
 
 # graded lex ordering
-function isless{M<:AbstractMonomial}(x::M, y::M)
+function isless{C}(x::Monomial{C}, y::Monomial{C})
     mycomp(x, y) < 0
 end
-isless{M<:AbstractMonomial}(x::M, y::AbstractPolyVar) = isless(x, M(y))
-isless{M<:AbstractMonomial}(x::AbstractPolyVar, y::M) = isless(M(x), y)
+isless{C}(x::Monomial{C}, y::PolyVar{C}) = isless(x, Monomial{C}(y))
+isless{C}(x::PolyVar{C}, y::Monomial{C}) = isless(Monomial{C}(x), y)
 
 # Comparison of MonomialVector
-function (==){MV<:AbstractMonomialVector}(x::MV, y::MV)
+function (==){C}(x::MonomialVector{C}, y::MonomialVector{C})
     if length(x.Z) != length(y.Z)
         return false
     end
@@ -99,10 +101,126 @@ function (==){MV<:AbstractMonomialVector}(x::MV, y::MV)
     end
     return true
 end
-(==)(α, x::AbstractMonomialVector) = false
-(==)(p::PolyType, x::AbstractMonomialVector) = false
+(==)(α, x::MonomialVector) = false
+(==){C}(p::PolyType{C}, x::MonomialVector{C}) = false
 
 # Comparison of Term
 function isapproxzero(x; ztol::Real=1e-6)
     -ztol < x < ztol
 end
+
+(==){C}(y, p::TermContainer{C}) = TermContainer{C}(y) == p
+(==){C}(y::PolyType{C}, p::TermContainer{C}) = TermContainer{C}(y) == p
+
+function (==){C}(s::Term{C}, t::Term{C})
+    (s.α == t.α) && (iszero(s.α) || s.x == t.x)
+end
+function (==){C}(t::Term{C}, p::VecPolynomial{C})
+    if iszero(t.α)
+        isempty(p.a)
+    else
+        length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
+    end
+end
+(==){C}(p::VecPolynomial{C}, t::Term{C}) = t == p
+function (==){C}(p::VecPolynomial{C}, q::VecPolynomial{C})
+    # terms should be sorted and without zeros
+    for (tp,tq) in zip(p,q)
+        if tp.x != tq.x
+            # There should not be zero terms
+            # FIXME if p is Term, it could be zero :/
+            @assert tp.α != 0
+            @assert tq.α != 0
+            return false
+        end
+        if tp.α != tq.α
+            return false
+        end
+    end
+    true
+end
+
+(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+(==)(p, q::RationalPoly) = p*q.den == q.num
+
+function isless(x::Vector, y::Vector)
+    @assert length(x) == length(y)
+    degx = sum(x)
+    degy = sum(y)
+    if degx != degy
+        degx < degy
+    else
+        for (a, b) in zip(x, y)
+            if a < b
+                return true
+            elseif a > b
+                return false
+            end
+        end
+        false
+    end
+end
+
+function isapproxzero(p::VecPolynomial; ztol::Real=1e-6)
+    isapprox(p, zero(p), ztol=ztol)
+end
+
+function isapproxzero(p::RationalPoly; ztol::Real=1e-6)
+    isapproxzero(p.num, ztol=ztol)
+end
+
+function isapprox{C, S, T}(p::VecPolynomial{C, S}, q::VecPolynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+    i = j = 1
+    while i <= length(p.x) || j <= length(q.x)
+        lhs, rhs = 0, 0
+        if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
+            if !isapproxzero(q.a[j], ztol=ztol)
+                return false
+            end
+            j += 1
+        elseif j > length(q.x) || p.x[i] > q.x[j]
+            if !isapproxzero(p.a[i], ztol=ztol)
+                return false
+            end
+            i += 1
+        else
+            if !isapprox(p.a[i], q.a[j], rtol=rtol, atol=atol)
+                return false
+            end
+            i += 1
+            j += 1
+        end
+    end
+    true
+end
+
+function isapprox{C, S, T}(s::Term{C, S}, t::Term{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+    s.x == t.x && isapprox(s.α, t.α, rtol=rtol, atol=atol)
+end
+
+function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+    m = length(p.ps)
+    if length(q.ps) != m
+        false
+    else
+        for σ in permutations(1:m)
+            ok = true
+            for i in 1:m
+                if !isapprox(p.ps[i], q.ps[σ[i]], rtol=rtol, atol=atol, ztol=ztol)
+                    ok = false
+                    break
+                end
+            end
+            if ok
+                return true
+            end
+        end
+        false
+    end
+end
+
+isapprox{C, S, T, U, V}(p::RationalPoly{C, S, T}, q::RationalPoly{C, U, V}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), promote_op(*, S, V)), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num*q.den, q.num*p.den, rtol=rtol, atol=atol, ztol=ztol)
+isapprox{C, S, T, U}(p::RationalPoly{C, S, T}, q::TermContainer{C, U}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num, q*p.den, rtol=rtol, atol=atol, ztol=ztol)
+isapprox{C, S, T, U}(p::TermContainer{C, U}, q::RationalPoly{C, S, T}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p*q.den, q.num, rtol=rtol, atol=atol, ztol=ztol)
+isapprox{C}(p::RationalPoly{C}, q; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p, TermContainer{C}(q), rtol=rtol, atol=atol, ztol=ztol)
+isapprox{C}(p, q::RationalPoly{C}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(TermContainer{C}(p), q, rtol=rtol, atol=atol, ztol=ztol)

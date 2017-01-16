@@ -14,7 +14,7 @@ function fillmap!(vals, vars, x, varorder)
     end
 end
 
-function evalmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
+function evalmap{C, T}(vars, x::Vector{T}, varorder::Vector{PolyVar{C}})
     if vars == varorder
         x
     else
@@ -28,12 +28,12 @@ function evalmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
     end
 end
 
-function subsmap{T}(vars, x::Vector{T}, varorder::Vector{PolyVar})
+function subsmap{C, T}(vars, x::Vector{T}, varorder::Vector{PolyVar{C}})
     if vars == varorder
         x
     else
         # Some variable may not be replaced
-        vals = Vector{promote_type(T, PolyVar)}(length(vars))
+        vals = Vector{promote_type(T, PolyVar{C})}(length(vars))
         copy!(vals, vars)
         fillmap!(vals, vars, x, varorder)
         vals
