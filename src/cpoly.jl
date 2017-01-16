@@ -1,4 +1,4 @@
-export Term, VecPolynomial, MatPolynomial, SOSDecomposition, getmat, monomials, removemonomials, TermType
+export Term, VecPolynomial, MatPolynomial, SOSDecomposition, TermType
 
 abstract TermType{T} <: PolyType
 zero(::Type{PolyType}) = zero(VecPolynomial{Int})
@@ -12,11 +12,8 @@ one{T}(t::TermType{T}) = VecPolynomial([one(T)], MonomialVector(vars(t), [zeros(
 one{T<:TermType}(::Type{T}) = VecPolynomial([one(eltype(T))], MonomialVector(PolyVar[], [Int[]]))
 
 abstract TermContainer{T} <: TermType{T}
-
-#eltype{T<:TermType}(::Type{T}) = T.parameters[1] # not inferrence friendly it seems
 eltype{T}(::Type{TermContainer{T}}) = T
 eltype{T}(::Type{TermType{T}}) = T
-eltype{T}(p::TermType{T}) = T
 
 type Term{T} <: TermContainer{T}
     α::T
@@ -41,18 +38,6 @@ TermContainer{T}(α::T) = TermContainer{T}(α)
 
 Base.convert{T}(::Type{TermContainer{T}}, t::Term) = Term{T}(t)
 Base.convert{T<:TermContainer}(::Type{T}, t::Term) = Term{eltype(T)}(t)
-Base.convert(::Type{Any}, t::Term) = t
-Base.copy{T}(t::Term{T}) = Term{T}(copy(t.α), copy(t.x))
-
-vars(t::Term) = vars(t.x)
-
-eltype{T}(::Type{Term{T}}) = T
-length(::Term) = 1
-isempty(::Term) = false
-start(::Term) = false
-done(::Term, state) = state
-next(t::Term, state) = (t, true)
-getindex(t::Term, I::Int) = t
 
 zero{T}(t::Term{T}) = Term(zero(T), t.x)
 zero{T}(::Type{Term{T}}) = Term(zero(T), Monomial())
@@ -104,20 +89,6 @@ Base.convert{T}(::Type{VecPolynomial{T}}, p::VecPolynomial{T}) = p
 Base.convert{S,T}(::Type{VecPolynomial{T}}, p::VecPolynomial{S}) = VecPolynomial(Vector{T}(p.a), p.x)
 
 Base.convert{T}(::Type{TermContainer{T}}, p::VecPolynomial) = VecPolynomial{T}(p)
-Base.convert(::Type{Any}, p::VecPolynomial) = p
-
-Base.convert(::Type{PolyType}, p::TermContainer) = p
-function Base.convert{S}(::Type{S}, p::TermContainer)
-    s = zero(S)
-    for t in p
-        if sum(abs(t.x.z)) > 0
-            # The polynomial is not constant
-            throw(InexactError())
-        end
-        s += S(t.α)
-    end
-    s
-end
 
 function (::Type{VecPolynomial{T}}){T}(f::Function, x::MonomialVector)
     a = T[f(i) for i in 1:length(x)]
@@ -126,54 +97,12 @@ end
 (::Type{VecPolynomial{T}}){T}(f::Function, x::Vector) = VecPolynomial{T}(f, MonomialVector(x))
 
 function vecpolynomialclean{T}(vars::Vector{PolyVar}, adup::Vector{T}, Zdup::Vector{Vector{Int}})
-    σ = sortperm(Zdup, rev=true)
-    Z = Vector{Vector{Int}}()
-    a = Vector{T}()
-    i = 0
-    j = 1
-    while j <= length(adup)
-        k = σ[j]
-        if j == 1 || Zdup[k] != Zdup[σ[j-1]]
-            push!(Z, Zdup[k])
-            push!(a, adup[k])
-            i += 1
-        else
-            a[i] += adup[k]
-        end
-        j += 1
-    end
+    a, Z = removedups(adup, Zdup)
     VecPolynomial(a, MonomialVector(vars, Z))
 end
 
-vars(p::VecPolynomial) = vars(p.x)
-
 eltype{T}(::Type{VecPolynomial{T}}) = T
-length(p::VecPolynomial) = length(p.a)
-isempty(p::VecPolynomial) = length(p) > 0
-start(::VecPolynomial) = 1
-done(p::VecPolynomial, state) = length(p) < state
-next(p::VecPolynomial, state) = (p[state], state+1)
 getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
-
-extdeg(p::VecPolynomial) = extdeg(p.x)
-mindeg(p::VecPolynomial) = mindeg(p.x)
-maxdeg(p::VecPolynomial) = maxdeg(p.x)
-
-monomials(p::VecPolynomial) = p.x
-function removemonomials(p::VecPolynomial, x::MonomialVector)
-    # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
-    j = 1
-    I = Int[]
-    for (i,t) in enumerate(p)
-        while j <= length(x) && x[j] < t.x
-            j += 1
-        end
-        if j > length(x) || x[j] != t.x
-            push!(I, i)
-        end
-    end
-    VecPolynomial(p.a[I], p.x[I])
-end
 removemonomials(p::VecPolynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
 type MatPolynomial{T} <: TermType{T}
@@ -181,19 +110,8 @@ type MatPolynomial{T} <: TermType{T}
     x::MonomialVector
 end
 
-function trimap(i, j, n)
-    div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
-end
-
 function (::Type{MatPolynomial{T}}){T}(f::Function, x::MonomialVector)
-    n = length(x)
-    Q = Vector{T}(trimap(n, n, n))
-    for i in 1:n
-        for j in i:n
-            Q[trimap(i,j,n)] = f(i,j)
-        end
-    end
-    MatPolynomial{T}(Q, x)
+    MatPolynomial{T}(trimat(f, length(x)), x)
 end
 (::Type{MatPolynomial{T}}){T}(f::Function, x::Vector) = MatPolynomial{T}(f, MonomialVector(x))
 
@@ -201,15 +119,6 @@ function MatPolynomial{T}(Q::Matrix{T}, x::MonomialVector)
     MatPolynomial{T}((i,j) -> Q[i,j], x)
 end
 MatPolynomial(Q::Matrix, x::Vector) = MatPolynomial(Q, MonomialVector(x))
-
-function getindex(p::MatPolynomial, I::NTuple{2,Int})
-    i, j = I
-    if i < j
-        i, j = (j, i)
-    end
-    n = length(p.x)
-    p.Q[trimap(i,j,n)]
-end
 
 function VecPolynomial{T}(p::MatPolynomial{T})
     if isempty(p.Q)
@@ -248,20 +157,6 @@ end
 function SOSDecomposition(ps::Vector)
     T = reduce(promote_type, Int, map(eltype, ps))
     SOSDecomposition{T}(ps)
-end
-length(p::SOSDecomposition) = length(p.ps)
-isempty(p::SOSDecomposition) = isempty(p.ps)
-start(p::SOSDecomposition) = start(p.ps)
-done(p::SOSDecomposition, state) = done(p.ps, state)
-next(p::SOSDecomposition, state) = next(p.ps, state)
-
-function getmat{T}(p::MatPolynomial{T})
-    n = length(p.x)
-    A = Matrix{T}(n, n)
-    for i in 1:n, j in i:n
-        A[j,i] = A[i,j] = p.Q[trimap(i,j,n)]
-    end
-    A
 end
 
 function SOSDecomposition{T}(p::MatPolynomial{T})
