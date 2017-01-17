@@ -3,7 +3,7 @@
         @test eltype(MultivariatePolynomials.TermContainer{true, Int}) == Int
         @test eltype(MultivariatePolynomials.TermType{false, Float64}) == Float64
         @polyvar x
-        @test eltype(MultivariatePolynomials.TermContainer{true}(x)) == Int
+        @test eltype(MultivariatePolynomials.TermContainer(x)) == Int
     end
 
     @testset "Term" begin
@@ -22,8 +22,8 @@
         @inferred one(1.0x)
         @inferred zero(1.0x)
 
-        @test typeof(MultivariatePolynomials.TermContainer{true}(MultivariatePolynomials.TermContainer{true}(1))) == Term{true, Int}
-        @inferred MultivariatePolynomials.TermContainer{true}(MultivariatePolynomials.TermContainer{true}(1))
+        @test typeof(MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))) == Term{true, Int}
+        @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))
     end
     @testset "VecPolynomial" begin
         @test eltype(VecPolynomial{true, Int}) == Int

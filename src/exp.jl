@@ -18,8 +18,8 @@ end
 dot(m::Measure, p::TermContainer) = _dot(m, p, (*))
 dot(p::TermContainer, m::Measure) = _dot(m, p, (a, b) -> b * a)
 
-dot{C}(m::Measure{C}, p::PolyType{C}) = dot(m, TermContainer{C}(p))
-dot{C}(p::PolyType{C}, m::Measure{C}) = dot(TermContainer{C}(p), m)
+dot(m::Measure, p::PolyType) = dot(m, TermContainer(p))
+dot(p::PolyType, m::Measure) = dot(TermContainer(p), m)
 
 expectation(m::Measure, p::PolyType) = dot(m, p)
 expectation(p::PolyType, m::Measure) = dot(p, m)

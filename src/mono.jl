@@ -37,6 +37,8 @@ copy(x::PolyVar) = x
 
 vars(x::PolyVar) = [x]
 nvars(::PolyVar) = 1
+zero{C}(::Type{PolyVar{C}}) = zero(PolyType{C})
+one{C}(::Type{PolyVar{C}}) = one(PolyType{C})
 
 function myunion{PV<:PolyVar}(varsvec::Vector{Vector{PV}})
     n = length(varsvec)
@@ -92,6 +94,8 @@ copy{M<:Monomial}(m::M) = M(m.vars, copy(m.z))
 deg(x::Monomial) = sum(x.z)
 nvars(x::Monomial) = length(x.vars)
 isconstant(x::Monomial) = deg(x) == 0
+zero{C}(::Type{Monomial{C}}) = zero(PolyType{C})
+one{C}(::Type{Monomial{C}}) = one(PolyType{C})
 
 # Invariant: Always sorted and no zero vector
 type MonomialVector{C} <: PolyType{C}

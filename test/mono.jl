@@ -42,6 +42,11 @@
         for (i, m) in enumerate(monomials([x,y], 2))
             @test m == X[i]
         end
+        X = MonomialVector([x, 1, x*y])
+        @test vars(X) == [x, y]
+        @test X.Z == [[1, 1], [1, 0], [0, 0]]
+        @test isa(MonomialVector{true}([1]), MonomialVector{true})
+        @test isa(MonomialVector{false}([1]), MonomialVector{false})
     end
 end
 module newmodule
