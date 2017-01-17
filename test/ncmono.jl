@@ -38,3 +38,27 @@ end
         @test X1[i].z == X2[i].z == Z[i]
     end
 end
+@testset "PolyVar * Monomial" begin
+    @ncpolyvar x y z
+    m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
+    @test vars(m) == [y, z, x, z]
+    @test m.z == [1, 0, 2, 1]
+    m = x * Monomial([z, y, y, z], [0, 0, 2, 1])
+    @test vars(m) == [z, x, y, y, z]
+    @test m.z == [0, 1, 0, 2, 1]
+    m = x * Monomial([y, z, y, z], [0, 0, 2, 1])
+    @test vars(m) == [y, z, x, y, z]
+    @test m.z == [0, 0, 1, 2, 1]
+end
+@testset "Monomial * PolyVar" begin
+    @ncpolyvar x y z
+    m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
+    @test vars(m) == [x, z, x, y]
+    @test m.z == [2, 1, 0, 1]
+    m = Monomial([x, y, y, x], [2, 1, 0, 0]) * z
+    @test vars(m) == [x, y, y, z, x]
+    @test m.z == [2, 1, 0, 1, 0]
+    m = Monomial([x, y, x, y], [2, 1, 0, 0]) * z
+    @test vars(m) == [x, y, z, x, y]
+    @test m.z == [2, 1, 1, 0, 0]
+end

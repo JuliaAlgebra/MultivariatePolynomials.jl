@@ -17,15 +17,16 @@ promote_rule{S<:TermType,T<:TermType}(::Type{S}, ::Type{T}) = VecPolynomial{isco
 promote_rule{S<:PolyType,T<:TermType}(::Type{T}, ::Type{S}) = VecPolynomial{iscomm(T), promote_type(Int, eltype(T))}
 promote_rule{S<:PolyType,T<:TermType}(::Type{S}, ::Type{T}) = VecPolynomial{iscomm(T), promote_type(Int, eltype(T))}
 
-function promote_rule{S,T<:RationalPoly}(::Type{S}, ::Type{T})
-    U = promote_type(S, T.parameters[2], T.parameters[3])
-    RationalPoly{iscomm(T), U, U}
+function promote_rule{V, C, S, T}(::Type{V}, ::Type{RationalPoly{C, S, T}})
+    U = promote_type(V, S)
+    RationalPoly{C, U, T}
 end
 promote_rule{S,T<:RationalPoly}(::Type{T}, ::Type{S}) = promote_rule(S, T)
 promote_rule{S<:PolyType,T<:RationalPoly}(::Type{S}, ::Type{T}) = T
 promote_rule{S<:PolyType,T<:RationalPoly}(::Type{T}, ::Type{S}) = T
 promote_rule{S<:TermType,T<:RationalPoly}(::Type{S}, ::Type{T}) = promote_rule(eltype(S), T)
 promote_rule{S<:TermType,T<:RationalPoly}(::Type{T}, ::Type{S}) = promote_rule(eltype(S), T)
+promote_rule{C, S, T, U, V}(::Type{RationalPoly{C, S, T}}, ::Type{RationalPoly{C, U, V}}) = RationalPoly{C, promote_type(S, U), promote_type(T, V)}
 
 # Hack see https://github.com/JuliaLang/julia/pull/18218
 import Base.promote_op
