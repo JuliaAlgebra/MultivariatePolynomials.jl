@@ -94,7 +94,7 @@ nvars(x::Monomial) = length(x.vars)
 isconstant(x::Monomial) = deg(x) == 0
 
 # Invariant: Always sorted and no zero vector
-type MonomialVector{C} <: PolyType
+type MonomialVector{C} <: PolyType{C}
     vars::Vector{PolyVar{C}}
     Z::Vector{Vector{Int}}
 

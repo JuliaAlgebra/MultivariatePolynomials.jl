@@ -2,6 +2,7 @@ export Measure, zeta, ζ
 
 abstract AbstractMeasure
 
+# If a monomial is not in x, it does not mean that the moment is zero, it means that it is unknown/undefined
 type Measure{C, T}
     a::Vector{T}
     x::MonomialVector{C}
@@ -9,19 +10,6 @@ type Measure{C, T}
     function Measure(a::Vector{T}, x::MonomialVector{C})
         if length(a) != length(x)
             error("There should be as many coefficient than monomials")
-        end
-        zeroidx = Int[]
-        for (i,α) in enumerate(a)
-            if iszero(α)
-                push!(zeroidx, i)
-            end
-        end
-        if !isempty(zeroidx)
-            isnz = ones(Bool, length(a))
-            isnz[zeroidx] = false
-            nzidx = find(isnz)
-            a = a[nzidx]
-            x = x[nzidx]
         end
         new(a, x)
     end
