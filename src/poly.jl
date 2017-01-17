@@ -72,7 +72,7 @@ type VecPolynomial{C, T} <: TermContainer{C, T}
 
     function VecPolynomial(a::Vector{T}, x::MonomialVector{C})
         if length(a) != length(x)
-            error("There should be as many coefficient than monomials")
+            throw(ArgumentError("There should be as many coefficient than monomials"))
         end
         zeroidx = Int[]
         for (i,α) in enumerate(a)
@@ -92,7 +92,7 @@ type VecPolynomial{C, T} <: TermContainer{C, T}
 end
 iscomm{C, T}(::Type{VecPolynomial{C, T}}) = C
 (::Type{VecPolynomial{C, T}}){C, T}(a::Vector{T}, x::Vector) = VecPolynomial{C, T}(a, MonomialVector{C}(x))
-(::Type{VecPolynomial{C, T}}){C, S,T}(a::Vector{S}, x::Vector) = VecPolynomial{C, T}(Vector{T}(a), MonomialVector{C}(x))
+(::Type{VecPolynomial{C, T}}){C, S, T}(a::Vector{S}, x::Vector) = VecPolynomial{C, T}(Vector{T}(a), MonomialVector{C}(x))
 
 Base.copy{C, T}(p::VecPolynomial{C, T}) = VecPolynomial{C, T}(copy(p.a), copy(p.x))
 zero{C, T}(::Type{VecPolynomial{C, T}}) = VecPolynomial(T[], MonomialVector{C}())
@@ -104,7 +104,7 @@ VecPolynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) = VecPolynomial{C, T}(a,
 
 (::Type{VecPolynomial{C}}){C}(α) = VecPolynomial(Term{C}(α))
 VecPolynomial{C}(x::PolyType{C}) = VecPolynomial{C}(x)
-VecPolynomial{C, T}(p::VecPolynomial{C, T}) = p
+VecPolynomial(p::VecPolynomial) = p
 VecPolynomial{C, T}(t::Term{C, T}) = VecPolynomial{C, T}([t.α], [t.x])
 Base.convert{C, T}(::Type{VecPolynomial{C, T}}, x) = VecPolynomial(Term{C, T}(x))
 Base.convert{C, T}(::Type{VecPolynomial{C, T}}, t::Term{C}) = VecPolynomial{C, T}([T(t.α)], [t.x])

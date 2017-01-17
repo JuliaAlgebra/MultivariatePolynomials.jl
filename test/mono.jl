@@ -10,6 +10,8 @@
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
     end
     @testset "PolyVar" begin
+        @test zero(PolyVar{true}) == 0
+        @test one(PolyVar{false}) == 1
         @polyvar x
         @test copy(x) == x
         @test nvars(x) == 1
@@ -21,6 +23,8 @@
         @inferred one(x)
     end
     @testset "Monomial" begin
+        @test zero(PolyVar{false}) == 0
+        @test one(PolyVar{true}) == 1
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
         @test zero(x^2) == 0

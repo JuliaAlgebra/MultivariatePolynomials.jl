@@ -1,5 +1,6 @@
 @testset "Term and Polynomial tests" begin
     @testset "TermContainer and TermType" begin
+        @test zero(MultivariatePolynomials.TermContainer{false, Float64}) == 0
         @test eltype(MultivariatePolynomials.TermContainer{true, Int}) == Int
         @test eltype(MultivariatePolynomials.TermType{false, Float64}) == Float64
         @polyvar x
@@ -28,6 +29,9 @@
     @testset "VecPolynomial" begin
         @test eltype(VecPolynomial{true, Int}) == Int
         @polyvar x
+        @test_throws ArgumentError VecPolynomial{true, Int}([1, 2], [x])
+        @test_throws InexactError VecPolynomial{true, Int}([1.5], [x])
+        @test VecPolynomial(1 + x) == 1 + x
         @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
         @test typeof(one(1 + x)) == VecPolynomial{true, Int}

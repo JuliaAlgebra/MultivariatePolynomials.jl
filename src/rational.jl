@@ -17,7 +17,6 @@ function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p)
 end
 
 (/)(r::RationalPoly, p::TermContainer) = r.num / (r.den * p)
-(/)(r::RationalPoly, p::PolyType) = r / TermContainer(p)
 function (/){C, S, T}(num::TermContainer{C, S}, den::TermContainer{C, T})
     RationalPoly{C, S, T}(num, den)
 end

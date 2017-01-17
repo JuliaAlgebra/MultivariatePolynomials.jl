@@ -5,6 +5,7 @@ promote_rule{S,T<:PolyType}(::Type{S}, ::Type{T}) = Term{iscomm(T), promote_type
 promote_rule{S,T<:PolyType}(::Type{T}, ::Type{S}) = Term{iscomm(T), promote_type(S, Int)}
 
 # Promotion with Term
+promote_rule{C,S,T}(::Type{Term{C, S}}, ::Type{Term{C, T}}) = Term{C, promote_type(S, T)}
 promote_rule{S,C,T}(::Type{S}, ::Type{Term{C, T}}) = Term{C, promote_type(S, T)}
 promote_rule{S,C,T}(::Type{Term{C, T}}, ::Type{S}) = Term{C, promote_type(S, T)}
 promote_rule{C,T}(::Type{Monomial{C}}, ::Type{Term{C, T}}) = Term{C, T}
