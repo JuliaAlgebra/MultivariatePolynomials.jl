@@ -16,6 +16,8 @@ function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p)
     Base.convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
 end
 
+(/)(r::RationalPoly, p::TermContainer) = r.num / (r.den * p)
+(/)(r::RationalPoly, p::PolyType) = r / TermContainer(p)
 function (/){C, S, T}(num::TermContainer{C, S}, den::TermContainer{C, T})
     RationalPoly{C, S, T}(num, den)
 end
@@ -50,5 +52,4 @@ end
 (*){C}(r::RationalPoly{C}, α) = r * TermContainer{C}(α)
 
 zero(r::RationalPoly) = zero(r.num)
-zero{T<:RationalPoly}(::Type{T}) = zero(VecPolynomial)
-zero{C, T}(::Type{RationalPoly{C, T}}) = zero(VecPolynomial{C, T})
+zero{C, S, T}(::Type{RationalPoly{C, S, T}}) = zero(VecPolynomial{C, S})
