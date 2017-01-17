@@ -133,7 +133,6 @@ maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{Monomial, MonomialVector}}(x::T) = x.vars
 
-
 function getindex(x::MonomialVector, i::Integer)
     Monomial(x.vars, x.Z[i])
 end
@@ -248,3 +247,29 @@ end
 typealias VectorOfPolyType{C} Union{PolyType{C},Int}
 MonomialVector{T<:VectorOfPolyType{false}}(X::Vector{T}) = MonomialVector{false}(X)
 MonomialVector{T<:VectorOfPolyType{true}}(X::Vector{T}) = MonomialVector{true}(X)
+
+function mergemonovec{C}(ms::Vector{MonomialVector{C}})
+    m = length(ms)
+    I = ones(Int, length(ms))
+    L = length.(ms)
+    X = Vector{Monomial{C}}()
+    while any(I .<= L)
+        max = Nullable{Monomial{C}}()
+        for i in 1:m
+            if I[i] <= L[i]
+                x = ms[i][I[i]]
+                if isnull(max) || get(max) < x
+                    max = Nullable(x)
+                end
+            end
+        end
+        @assert !isnull(max)
+        push!(X, get(max))
+        for i in 1:m
+            if I[i] <= L[i] && get(max) == ms[i][I[i]]
+                I[i] += 1
+            end
+        end
+    end
+    X
+end

@@ -23,6 +23,8 @@
         @inferred one(1.0x)
         @inferred zero(1.0x)
 
+        @test_throws InexactError Int(2x)
+
         @test typeof(MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))) == Term{true, Int}
         @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))
     end
@@ -70,5 +72,15 @@
         p = VecPolynomial(P)
         @test p.a == [2, 3, 4, 5, 3, 4, 6, 4, 5]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
+    end
+    @testset "SOSDecomposition" begin
+        @test isempty(SOSDecomposition(PolyVar{false}[]))
+        @polyvar x y
+        ps = [1, x + y, x^2, x*y, 1 + x + x^2]
+        P = MatPolynomial(SOSDecomposition(ps))
+        P.Q == [2 0 1 0 1; 0 1 0 0 0; 1 0 2 1 1; 0 0 1 1 0; 1 0 1 0 2]
+        P.x == MonomialVector([x^2, x*y, x, y, 1])
+        @test P == P
+        @test isapprox(MatPolynomial(SOSDecomposition(P)), P)
     end
 end

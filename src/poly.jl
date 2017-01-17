@@ -218,7 +218,7 @@ function getindex(p::MatPolynomial, I::NTuple{2,Int})
     p.Q[trimap(i,j,n)]
 end
 
-function getmat{T}(p::MatPolynomial{T})
+function getmat{C, T}(p::MatPolynomial{C, T})
     n = length(p.x)
     A = Matrix{T}(n, n)
     for i in 1:n, j in i:n
@@ -306,18 +306,41 @@ end
 SOSDecomposition{T<:VectorOfPolyType{false}}(ps::Vector{T}) = SOSDecomposition{false}(ps)
 SOSDecomposition{T<:VectorOfPolyType{true}}(ps::Vector{T}) = SOSDecomposition{true}(ps)
 
-function SOSDecomposition{C, T}(p::MatPolynomial{C, T})
+function Base.convert{C, T}(::Type{MatPolynomial{C, T}}, p::SOSDecomposition)
+    X = mergemonovec(map(p -> p.x, p))
+    m = length(p)
+    n = length(X)
+    Q = zeros(T, m, n)
+    for i in 1:m
+        q = p[i]
+        k = 1
+        for j in 1:n
+            if k <= length(q) && X[j] == q.x[k]
+                Q[i, j] = q.a[k]
+                k += 1
+            end
+        end
+    end
+    MatPolynomial(Q' * Q, X)
+end
+MatPolynomial{C, T}(p::SOSDecomposition{C, T}) = MatPolynomial{C, T}(p)
+
+function Base.convert{C, T}(::Type{SOSDecomposition{C, T}}, p::MatPolynomial)
     n = length(p.x)
     # TODO LDL^T factorization for SDP is missing in Julia
     # it would be nice to have though
     A = getmat(p)
     Q = chol(A)
-    ps = [VecPolynomial{C}(Q[i,:], p.x) for i in 1:n]
-    SOSDecomposition{C}(ps)
+    m = size(Q, 1)
+    ps = [VecPolynomial{C, T}(Q[i,:], p.x) for i in 1:m]
+    SOSDecomposition(ps)
 end
+# Without LDL^T, we need to do float(T)
+SOSDecomposition{C, T}(p::MatPolynomial{C, T}) = SOSDecomposition{C, float(T)}(p)
 
 length(p::SOSDecomposition) = length(p.ps)
 isempty(p::SOSDecomposition) = isempty(p.ps)
 start(p::SOSDecomposition) = start(p.ps)
 done(p::SOSDecomposition, state) = done(p.ps, state)
 next(p::SOSDecomposition, state) = next(p.ps, state)
+getindex(p::SOSDecomposition, i::Int) = p.ps[i]

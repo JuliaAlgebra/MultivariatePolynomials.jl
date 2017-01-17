@@ -143,6 +143,10 @@ end
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 (==)(p, q::RationalPoly) = p*q.den == q.num
 
+function (==)(p::MatPolynomial, q::MatPolynomial)
+    p.x == q.x && p.Q == q.Q
+end
+
 function isless(x::Vector, y::Vector)
     @assert length(x) == length(y)
     degx = sum(x)
@@ -196,6 +200,10 @@ end
 
 function isapprox{C, S, T}(s::Term{C, S}, t::Term{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
     s.x == t.x && isapprox(s.α, t.α, rtol=rtol, atol=atol)
+end
+
+function isapprox(p::MatPolynomial, q::MatPolynomial)
+    p.x == q.x && isapprox(p.Q, q.Q)
 end
 
 function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
