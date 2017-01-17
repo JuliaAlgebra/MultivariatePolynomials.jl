@@ -9,6 +9,13 @@
     @test nvars(X) == 1
     @test X.vars[1] == x
     @test X.z[1] == 1
+    X = Monomial{false}([x], [0])
+    Y = X * x^2
+    @test vars(Y) == [x]
+    @test Y.z == [2]
+    Y = x^2 * X
+    @test vars(Y) == [x]
+    @test Y.z == [2]
 end
 @testset "Non-commutative MonomialVector" begin
     @ncpolyvar x y

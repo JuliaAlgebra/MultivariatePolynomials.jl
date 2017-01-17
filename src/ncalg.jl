@@ -96,16 +96,6 @@ function (*)(y::Monomial{false}, x::PolyVar{false})
     Monomial{false}(w, updatez(y.z))
 end
 
-function multiplymono(v::Vector{PolyVar{false}}, x::Monomial{false})
-    w, maps = myunion([v, x.vars])
-    updatez = z -> begin
-        newz = zeros(Int, length(w))
-        newz[maps[1]] += z
-        newz[maps[2]] += x.z
-        newz
-    end
-    w, updatez
-end
 function (*)(x::Monomial{false}, y::Monomial{false})
     i = findlast(z -> z > 0, x.z)
     if i == 0
