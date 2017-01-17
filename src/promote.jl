@@ -22,8 +22,8 @@ function promote_rule{V, C, S, T}(::Type{V}, ::Type{RationalPoly{C, S, T}})
     RationalPoly{C, U, T}
 end
 promote_rule{S,T<:RationalPoly}(::Type{T}, ::Type{S}) = promote_rule(S, T)
-promote_rule{S<:PolyType,T<:RationalPoly}(::Type{S}, ::Type{T}) = T
-promote_rule{S<:PolyType,T<:RationalPoly}(::Type{T}, ::Type{S}) = T
+promote_rule{PT<:PolyType, C, S, T}(::Type{PT}, ::Type{RationalPoly{C, S, T}}) = RationalPoly{C, S, T}
+promote_rule{PT<:PolyType,T<:RationalPoly}(::Type{T}, ::Type{PT}) = T
 promote_rule{S<:TermType,T<:RationalPoly}(::Type{S}, ::Type{T}) = promote_rule(eltype(S), T)
 promote_rule{S<:TermType,T<:RationalPoly}(::Type{T}, ::Type{S}) = promote_rule(eltype(S), T)
 promote_rule{C, S, T, U, V}(::Type{RationalPoly{C, S, T}}, ::Type{RationalPoly{C, U, V}}) = RationalPoly{C, promote_type(S, U), promote_type(T, V)}
