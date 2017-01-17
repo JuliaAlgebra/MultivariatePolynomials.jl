@@ -48,10 +48,10 @@ end
     end
     @testset "SOSDecomposition equality" begin
         @polyvar x y
-        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
-        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x+y]))
-        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x-y]))
-        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x-y, x+y+1e-8]), ztol=1e-7)
+        @test !isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y]))
+        @test !isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y, x+y]))
+        @test isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y, x-y]))
+        @test isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x-y, x+y+1e-8]), ztol=1e-7)
     end
     @testset "RationalPoly equality" begin
         @polyvar x y

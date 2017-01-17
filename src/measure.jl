@@ -1,39 +1,31 @@
 export Measure, zeta, ζ
 
-type Measure{T}
-  a::Vector{T}
-  x::MonomialVector
+abstract AbstractMeasure
 
-  function Measure(a::Vector{T}, x::MonomialVector)
-    if length(a) != length(x)
-      error("There should be as many coefficient than monomials")
+# If a monomial is not in x, it does not mean that the moment is zero, it means that it is unknown/undefined
+type Measure{C, T}
+    a::Vector{T}
+    x::MonomialVector{C}
+
+    function Measure(a::Vector{T}, x::MonomialVector{C})
+        if length(a) != length(x)
+            error("There should be as many coefficient than monomials")
+        end
+        new(a, x)
     end
-    zeroidx = Int[]
-    for (i,α) in enumerate(a)
-      if iszero(α)
-        push!(zeroidx, i)
-      end
-    end
-    if !isempty(zeroidx)
-      isnz = ones(Bool, length(a))
-      isnz[zeroidx] = false
-      nzidx = find(isnz)
-      a = a[nzidx]
-      x = x[nzidx]
-    end
-    new(a, x)
-  end
 end
 
-Measure{T}(a::Vector{T}, x::MonomialVector) = Measure{T}(a, x)
-function Measure(a::Vector, x::Vector)
+Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) = Measure{C, T}(a, x)
+function (::Type{Measure{C}}){C}(a::Vector, x::Vector)
     if length(a) != length(x)
         error("There should be as many coefficient than monomials")
     end
-    perm, X = sortmonovec(x)
+    perm, X = sortmonovec(PolyVar{C}, x)
     Measure(a[perm], X)
 end
+Measure{T<:VectorOfPolyType{true}}(a::Vector, X::Vector{T}) = Measure{true}(a, X)
+Measure{T<:VectorOfPolyType{false}}(a::Vector, X::Vector{T}) = Measure{false}(a, X)
 
-function ζ{T}(v::Vector{T}, x::MonomialVector, varorder::Vector{PolyVar})
-  Measure(T[m(v, varorder) for m in x], x)
+function ζ{C, T}(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C}})
+    Measure(T[m(v, varorder) for m in x], x)
 end

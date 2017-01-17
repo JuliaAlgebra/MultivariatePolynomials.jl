@@ -1,7 +1,7 @@
 # I do not use it but I import the function to add a method
 export differentiate
 
-function differentiate{T}(p::VecPolynomial{T}, x::PolyVar)
+function differentiate{C, T}(p::VecPolynomial{C, T}, x::PolyVar{C})
     # grlex order preserved
     i = findfirst(vars(p), x)
     if i == 0
@@ -19,7 +19,7 @@ function differentiate{T}(p::VecPolynomial{T}, x::PolyVar)
     end
 end
 
-function differentiate(p::VecPolynomial, xs::Vector{PolyVar})
+function differentiate{C}(p::VecPolynomial{C}, xs::Vector{PolyVar{C}})
     [differentiate(p, x) for x in xs]
 end
 

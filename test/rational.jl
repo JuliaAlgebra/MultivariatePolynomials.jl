@@ -1,8 +1,15 @@
 @testset "RationalPoly" begin
-    @test RationalPoly{Int,Int}(1) == 1
-    @test typeof(RationalPoly{Int,Int}(1)) == RationalPoly{Int,Int}
-    @inferred RationalPoly{Int,Int}(1)
+    @test RationalPoly{true, Int, Int}(1) == 1
+    @test typeof(RationalPoly{false, Int, Int}(1)) == RationalPoly{false, Int, Int}
+    @inferred RationalPoly{true, Int, Int}(1)
     @polyvar x
-    @test typeof(1 / x) == RationalPoly{Int, Int}
+    @test typeof(1 / x) == RationalPoly{true, Int, Int}
     @inferred 1 / x
+    @test typeof([2.0x / x^2, (x+x) / (1 + 2x^2)]) == Vector{RationalPoly{true, Float64, Int}}
+    @test 2 * (1/x * (1-x)) + (1/x * x) * (1/x^2 * x^2) - (1-x)/x == (1-x)/x + 1
+    @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
+    @test typeof(zero(1/x)) == Term{true, Int}
+    @test MultivariatePolynomials.iszero(zero(1/x))
+    @test typeof(zero(RationalPoly{true, Float64, Int})) == VecPolynomial{true, Float64}
+    @test MultivariatePolynomials.iszero(zero(RationalPoly{true, Float64, Int}))
 end
