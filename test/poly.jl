@@ -60,4 +60,11 @@
         @test p.a == [2, 6, 12, 10, 6]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
     end
+    @testset "Non-commutative MatPolynomial" begin
+        @ncpolyvar x y
+        P = MatPolynomial{false, Int}((i,j) -> i + j, [x^2, x*y, y^2])
+        p = VecPolynomial(P)
+        @test p.a == [2, 3, 4, 5, 3, 4, 6, 4, 5]
+        @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
+    end
 end

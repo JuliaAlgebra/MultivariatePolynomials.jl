@@ -240,22 +240,48 @@ function Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::MatPolynomial{C, T})
         zero(VecPolynomial{C, T})
     else
         n = length(p.x)
-        N = trimap(n, n, n)
-        Z = Vector{Vector{Int}}(N)
         U = typeof(2*p.Q[1] + p.Q[1])
-        a = Vector{U}(N)
-        for i in 1:n
-            for j in i:n
-                k = trimap(i, j, n)
-                Z[k] = p.x.Z[i] + p.x.Z[j]
-                if i == j
-                    a[k] = p.Q[k]
-                else
-                    a[k] = 2*p.Q[k]
+        if C
+            N = trimap(n, n, n)
+            Z = Vector{Vector{Int}}(N)
+            a = Vector{U}(N)
+            for i in 1:n
+                for j in i:n
+                    k = trimap(i, j, n)
+                    Z[k] = p.x.Z[i] + p.x.Z[j]
+                    if i == j
+                        a[k] = p.Q[k]
+                    else
+                        a[k] = 2*p.Q[k]
+                    end
                 end
             end
+            v = p.x.vars
+        else
+            N = n^2
+            x = Vector{Monomial}(N)
+            a = Vector{U}(N)
+            offset = 0
+            for i in 1:n
+                # for j in 1:n wouldn't be cache friendly for p.Q
+                for j in i:n
+                    k = trimap(i, j, n)
+                    q = p.Q[k]
+                    x[offset+k] = p.x[i] * p.x[j]
+                    a[offset+k] = q
+                    if i != j
+                        offset += 1
+                        x[offset+k] = p.x[j] * p.x[i]
+                        a[offset+k] = q
+                    end
+                end
+            end
+            perm, X = sortmonovec(PolyVar{false}, x)
+            a = a[perm]
+            v = X.vars
+            Z = X.Z
         end
-        vecpolynomialclean(p.x.vars, a, Z)
+        vecpolynomialclean(v, a, Z)
     end
 end
 VecPolynomial{C, T}(p::MatPolynomial{C, T}) = convert(VecPolynomial{C, T}, p)
