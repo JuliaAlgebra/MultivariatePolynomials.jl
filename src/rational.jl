@@ -48,8 +48,8 @@ function (*)(p::TermContainer, r::RationalPoly)
 end
 (*)(r::RationalPoly, p::Term) = p * r
 (*)(r::RationalPoly, p::VecPolynomial) = p * r
-(*){C}(p::PolyType{C}, r::RationalPoly{C}) = TermContainer{C}(p) * r
-(*){C}(r::RationalPoly{C}, p::PolyType{C}) = r * TermContainer{C}(p)
+(*)(p::PolyType, r::RationalPoly) = TermContainer(p) * r
+(*)(r::RationalPoly, p::PolyType) = r * TermContainer(p)
 (*){C}(α, r::RationalPoly{C}) = TermContainer{C}(α) * TermContainer{C}(p)
 (*){C}(r::RationalPoly{C}, α) = r * TermContainer{C}(α)
 
