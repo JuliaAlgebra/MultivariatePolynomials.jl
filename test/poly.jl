@@ -27,6 +27,7 @@
 
         @test typeof(MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))) == Term{true, Int}
         @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))
+        @test !isempty(1x)
     end
     @testset "VecPolynomial" begin
         @test eltype(VecPolynomial{true, Int}) == Int
@@ -48,6 +49,22 @@
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
+
+        @inferred VecPolynomial(i -> float(i), [x, x*x])
+        p = VecPolynomial(i -> float(i), [x, x*x])
+        @test typeof(p) == VecPolynomial{true, Float64}
+        @test p.a == [2.0, 1.0]
+        @test p.x == MonomialVector([x^2, x])
+
+        @ncpolyvar ncpolyvar u v
+        @inferred VecPolynomial(i -> i, [u, u*u, 1])
+        p = VecPolynomial(i -> i, [u, u*u, 1])
+        @test typeof(p) == VecPolynomial{false, Int}
+        @test p.a == [2, 1, 3]
+        @test p.x == MonomialVector([u^2, u, 1])
+
+        @test removemonomials(u + v*u + 1, [1, u*v]) == v*u + u
+        @test removemonomials(u + u*v + 1, [u*v]) == 1 + u
     end
     @testset "Graded Lex Order" begin
         @polyvar x y z
@@ -65,12 +82,22 @@
         p = VecPolynomial(P)
         @test p.a == [2, 6, 12, 10, 6]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
+        for i in 1:3
+            for j in 1:3
+                @test P[i, j] == i + j
+            end
+        end
     end
     @testset "Non-commutative MatPolynomial" begin
         @ncpolyvar x y
-        P = MatPolynomial{false, Int}((i,j) -> i + j, [x^2, x*y, y^2])
+        P = MatPolynomial([2 3 4;
+                           3 4 5;
+                           4 5 6], [x*y, x^2, y^2])
+        @test P.Q == [4, 3, 5, 2, 4, 6]
+        P = MatPolynomial((i,j) -> i + j, [x*y, x^2, y^2])
+        @test P.Q == [4, 3, 5, 2, 4, 6]
         p = VecPolynomial(P)
-        @test p.a == [2, 3, 4, 5, 3, 4, 6, 4, 5]
+        @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
     end
     @testset "SOSDecomposition" begin

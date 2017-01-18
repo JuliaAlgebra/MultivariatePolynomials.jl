@@ -20,8 +20,8 @@ function (::Type{Measure{C}}){C}(a::Vector, x::Vector)
     if length(a) != length(x)
         error("There should be as many coefficient than monomials")
     end
-    perm, X = sortmonovec(PolyVar{C}, x)
-    Measure(a[perm], X)
+    σ, X = sortmonovec(PolyVar{C}, x)
+    Measure(a[σ], X)
 end
 Measure{T<:VectorOfPolyType{true}}(a::Vector, X::Vector{T}) = Measure{true}(a, X)
 Measure{T<:VectorOfPolyType{false}}(a::Vector, X::Vector{T}) = Measure{false}(a, X)
