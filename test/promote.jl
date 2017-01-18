@@ -18,6 +18,5 @@
     Y = X' * [1 2; 3 4]
     @test Y[1] == x + 3y
     @test Y[2] == 2x + 4y
-    Y = X' * ([1 2; 3 4] * X)
-    @test Y[1] == x^2 + 5x*y + 4y^2
+    @test dot(X, [1 2; 3 4] * X) == x^2 + 5x*y + 4y^2
 end

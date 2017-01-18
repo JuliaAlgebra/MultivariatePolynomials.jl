@@ -135,7 +135,7 @@ Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
 function Base.convert{S}(::Type{S}, p::TermContainer)
     s = zero(S)
     for t in p
-        if sum(abs(t.x.z)) > 0
+        if sum(abs.(t.x.z)) > 0
             # The polynomial is not constant
             throw(InexactError())
         end
