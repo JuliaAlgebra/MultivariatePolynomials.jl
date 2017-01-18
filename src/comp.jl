@@ -109,7 +109,7 @@ function isapproxzero(x; ztol::Real=1e-6)
     -ztol < x < ztol
 end
 
-(==){C}(y, p::TermContainer{C}) = TermContainer{C}(y) == p
+(==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
 (==){C}(y::PolyType{C}, p::TermContainer{C}) = TermContainer{C}(y) == p
 
 function (==){C}(s::Term{C}, t::Term{C})
@@ -125,24 +125,27 @@ end
 (==){C}(p::VecPolynomial{C}, t::Term{C}) = t == p
 function (==){C}(p::VecPolynomial{C}, q::VecPolynomial{C})
     # terms should be sorted and without zeros
-    for (tp,tq) in zip(p,q)
-        if tp.x != tq.x
+    if length(p) != length(q)
+        return false
+    end
+    for i in 1:length(p)
+        if p.x[i] != q.x[i]
             # There should not be zero terms
-            # FIXME if p is Term, it could be zero :/
-            @assert tp.α != 0
-            @assert tq.α != 0
+            @assert p.a[i] != 0
+            @assert q.a[i] != 0
             return false
         end
-        if tp.α != tq.α
+        if p.a[i] != q.a[i]
             return false
         end
     end
-    true
+    return true
 end
 
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 (==)(p, q::RationalPoly) = p*q.den == q.num
 
+(==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
 function (==)(p::MatPolynomial, q::MatPolynomial)
     p.x == q.x && p.Q == q.Q
 end
