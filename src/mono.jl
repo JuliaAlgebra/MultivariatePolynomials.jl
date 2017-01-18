@@ -235,9 +235,13 @@ function buildZvarsvec{PV<:PolyVar, T<:Union{PolyType,Int}}(::Type{PV}, X::Vecto
     allvars, Z
 end
 function sortmonovec{C, T<:Union{PolyType,Int}}(::Type{PolyVar{C}}, X::Vector{T})
-    allvars, Z = buildZvarsvec(PolyVar{C}, X)
-    σ = sortperm(Z, rev=true)
-    σ, MonomialVector{C}(allvars, Z[σ])
+    if isempty(X)
+        Int[], MonomialVector{C}()
+    else
+        allvars, Z = buildZvarsvec(PolyVar{C}, X)
+        σ = sortperm(Z, rev=true)
+        σ, MonomialVector{C}(allvars, Z[σ])
+    end
 end
 typealias VectorOfPolyType{C} Union{PolyType{C},Int}
 sortmonovec{T<:VectorOfPolyType{false}}(x::Vector{T}) = sortmonovec(PolyVar{false}, x)

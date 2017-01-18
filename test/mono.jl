@@ -23,8 +23,8 @@
         @inferred one(x)
     end
     @testset "Monomial" begin
-        @test zero(PolyVar{false}) == 0
-        @test one(PolyVar{true}) == 1
+        @test zero(Monomial{false}) == 0
+        @test one(Monomial{true}) == 1
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
         @test zero(x^2) == 0

@@ -53,7 +53,7 @@ Base.copy{T<:Term}(t::T) = T(copy(t.α), copy(t.x))
 
 vars(t::Term) = vars(t.x)
 
-eltype{T}(::Type{Term{T}}) = T
+eltype{C, T}(::Type{Term{C, T}}) = T
 length(::Term) = 1
 isempty(::Term) = false
 start(::Term) = false
@@ -90,16 +90,25 @@ type VecPolynomial{C, T} <: TermContainer{C, T}
     end
 end
 iscomm{C, T}(::Type{VecPolynomial{C, T}}) = C
-(::Type{VecPolynomial{C, T}}){C, T}(a::Vector{T}, x::Vector) = VecPolynomial{C, T}(a, MonomialVector{C}(x))
-(::Type{VecPolynomial{C, T}}){C, S, T}(a::Vector{S}, x::Vector) = VecPolynomial{C, T}(Vector{T}(a), MonomialVector{C}(x))
 
 Base.copy{C, T}(p::VecPolynomial{C, T}) = VecPolynomial{C, T}(copy(p.a), copy(p.x))
 zero{C, T}(::Type{VecPolynomial{C, T}}) = VecPolynomial(T[], MonomialVector{C}())
 one{C, T}(::Type{VecPolynomial{C, T}}) = VecPolynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
 
-VecPolynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) = VecPolynomial{C, T}(a, x)
-(::Type{VecPolynomial{C}}){C, T}(a::Vector{T}, x::MonomialVector{C}) = VecPolynomial{C, T}(a, x)
-(::Type{VecPolynomial{C}}){C}(a::Vector, x::Vector) = VecPolynomial{C}(a, MonomialVector{C}(x))
+(::Type{VecPolynomial{C, T}}){C, T}(a::Vector, x::MonomialVector) = VecPolynomial{C, T}(Vector{T}(a), x)
+
+function (::Type{VecPolynomial{C, T}}){C, T}(a::Vector, x::Vector)
+    if length(a) != length(x)
+        throw(ArgumentError("There should be as many coefficient than monomials"))
+    end
+    σ, X = sortmonovec(x)
+    VecPolynomial{C, T}(a[σ], X)
+end
+(::Type{VecPolynomial{C}}){C, T}(a::Vector{T}, x) = VecPolynomial{C, T}(a, x)
+
+VecPolynomial{C}(af::Union{Function, Vector}, x::MonomialVector{C}) = VecPolynomial{C}(af, x)
+VecPolynomial{T<:VectorOfPolyType{false}}(af::Union{Function, Vector}, x::Vector{T}) = VecPolynomial{false}(af, x)
+VecPolynomial{T<:VectorOfPolyType{true}}(af::Union{Function, Vector}, x::Vector{T}) = VecPolynomial{true}(af, x)
 
 (::Type{VecPolynomial{C}}){C}(α) = VecPolynomial(Term{C}(α))
 VecPolynomial{C}(x::PolyType{C}) = VecPolynomial{C}(x)
@@ -115,11 +124,9 @@ Base.convert{C, T}(::Type{TermContainer{C, T}}, p::VecPolynomial{C}) = VecPolyno
 function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector)
     σ, X = sortmonovec(PolyVar{C}, x)
     a = T[f(i) for i in σ]
-    VecPolynomial{C, T}(a, x)
+    VecPolynomial{C, T}(a, X)
 end
 (::Type{VecPolynomial{C}}){C}(f::Function, x::Vector) = VecPolynomial{C, Base.promote_op(f, Int)}(f, x)
-VecPolynomial{T<:VectorOfPolyType{false}}(f::Function, x::Vector{T}) = VecPolynomial{false}(f, x)
-VecPolynomial{T<:VectorOfPolyType{true}}(f::Function, x::Vector{T}) = VecPolynomial{true}(f, x)
 
 Base.convert(::Type{Any}, p::VecPolynomial) = p
 
@@ -155,7 +162,7 @@ function removemonomials(p::VecPolynomial, x::MonomialVector)
     j = 1
     I = Int[]
     for (i,t) in enumerate(p)
-        while j <= length(x) && x[j] < t.x
+        while j <= length(x) && x[j] > t.x
             j += 1
         end
         if j > length(x) || x[j] != t.x

@@ -12,12 +12,18 @@
         @test zero(Term{false, Int}).α == 0
         @test one(Term{true, Int}).α == 1
         @polyvar x
+        @test typeof(Term(1x)) == Term{true, Int}
+        @test Term(1x) == 1x
+        @test typeof(Any(1x)) == Term{true, Int}
+        @test Any(1x) == 1x
         @test one(1x) == one(1.0x) == 1
         @test zero(1x) == zero(1.0x) == 0
         @test typeof(one(1x)) == Term{true, Int}
         @test typeof(zero(1x)) == Term{true, Int}
         @test typeof(one(1.0x)) == Term{true, Float64}
         @test typeof(zero(1.0x)) == Term{true, Float64}
+        @test eltype(1x) == Int
+        @test eltype(1.0x^2) == Float64
         @inferred one(1x)
         @inferred zero(1x)
         @inferred one(1.0x)
@@ -33,6 +39,7 @@
         @test eltype(VecPolynomial{true, Int}) == Int
         @polyvar x
         @test_throws ArgumentError VecPolynomial{true, Int}([1, 2], [x])
+        @test_throws ArgumentError VecPolynomial{true, Int}([1, 2], MonomialVector([x]))
         @test_throws InexactError VecPolynomial{true, Int}([1.5], [x])
         @test VecPolynomial(1 + x) == 1 + x
         @test one(1 + x) == one(1.0 + x) == 1
@@ -50,6 +57,11 @@
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
 
+        p = VecPolynomial([4, 9], [x, x*x])
+        p.a == [9, 4]
+        p.x[1] == x^2
+        p.x[2] == x
+
         @inferred VecPolynomial(i -> float(i), [x, x*x])
         p = VecPolynomial(i -> float(i), [x, x*x])
         @test typeof(p) == VecPolynomial{true, Float64}
@@ -63,6 +75,7 @@
         @test p.a == [2, 1, 3]
         @test p.x == MonomialVector([u^2, u, 1])
 
+        @test u + v*u + 1 != v*u + u
         @test removemonomials(u + v*u + 1, [1, u*v]) == v*u + u
         @test removemonomials(u + u*v + 1, [u*v]) == 1 + u
     end
@@ -99,6 +112,9 @@
         p = VecPolynomial(P)
         @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
+        @inferred MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
+        @test typeof(MatPolynomial(Matrix{Float64}(), PolyVar{false}[])) == MatPolynomial{false, Float64}
+        @test MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
     end
     @testset "SOSDecomposition" begin
         @test isempty(SOSDecomposition(PolyVar{false}[]))
