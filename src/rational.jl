@@ -12,6 +12,9 @@ Base.convert{C, S, T, U, V}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, U,
 function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p::TermContainer{C, S})
     p / one(TermContainer{C, T})
 end
+function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p::TermContainer)
+    convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
+end
 function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p)
     Base.convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
 end

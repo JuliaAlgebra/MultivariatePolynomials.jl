@@ -128,13 +128,14 @@ function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector)
 end
 (::Type{VecPolynomial{C}}){C}(f::Function, x::Vector) = VecPolynomial{C, Base.promote_op(f, Int)}(f, x)
 
+# FIXME why did I need it ?
 Base.convert(::Type{Any}, p::VecPolynomial) = p
 
 Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
 function Base.convert{S}(::Type{S}, p::TermContainer)
     s = zero(S)
     for t in p
-        if sum(abs(t.x.z)) > 0
+        if sum(abs.(t.x.z)) > 0
             # The polynomial is not constant
             throw(InexactError())
         end

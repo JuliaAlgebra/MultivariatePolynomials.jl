@@ -4,7 +4,9 @@
     @inferred RationalPoly{true, Int, Int}(1)
     @polyvar x
     @test typeof(1 / x) == RationalPoly{true, Int, Int}
+    @test typeof(1.0 / x) == RationalPoly{true, Float64, Int}
     @inferred 1 / x
+    @inferred 1.0 / x
     @test typeof([2.0x / x^2, (x+x) / (1 + 2x^2)]) == Vector{RationalPoly{true, Float64, Int}}
     @test 2 * (1/x * (1-x)) + (1/x * x) * (1/x^2 * x^2) - (1-x)/x == (1-x)/x + 1
     @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
