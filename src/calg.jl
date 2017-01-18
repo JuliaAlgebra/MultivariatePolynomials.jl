@@ -244,8 +244,8 @@ end
 
 iszero{T}(x::T) = x == zero(T)
 iszero(t::Term) = iszero(t.α)
-iszero(p::VecPolynomial) = isempty(p.x)
-iszero(p::MatPolynomial) = isempty(VecPolynomial(p).x)
+iszero(p::VecPolynomial) = isempty(p)
+iszero(p::MatPolynomial) = isempty(VecPolynomial(p))
 
 (-){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x - Term{T}(y)
 (-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) - y

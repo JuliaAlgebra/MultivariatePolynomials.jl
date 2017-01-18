@@ -146,9 +146,7 @@ end
 (==)(p, q::RationalPoly) = p*q.den == q.num
 
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
-function (==)(p::MatPolynomial, q::MatPolynomial)
-    p.x == q.x && p.Q == q.Q
-end
+(==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
 
 function isless(x::Vector, y::Vector)
     @assert length(x) == length(y)

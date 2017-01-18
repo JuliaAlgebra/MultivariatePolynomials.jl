@@ -109,6 +109,9 @@
             @test P.x[1] == x
             @test P.x[2] == y
         end
+        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
+        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
+        @test P == Q
     end
     @testset "Non-commutative MatPolynomial" begin
         @ncpolyvar x y
@@ -124,6 +127,9 @@
         @inferred MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
         @test typeof(MatPolynomial(Matrix{Float64}(), PolyVar{false}[])) == MatPolynomial{false, Float64}
         @test MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
+        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
+        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
+        @test P != Q
     end
     @testset "SOSDecomposition" begin
         @test isempty(SOSDecomposition(PolyVar{false}[]))
