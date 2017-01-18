@@ -42,7 +42,6 @@ Base.convert{C, S, T}(::Type{TermContainer{C, T}}, α::S) = TermContainer{C, T}(
 (::Type{TermContainer{C}}){C, T}(α::T) = TermContainer{C, T}(α)
 
 Base.convert{C, T}(::Type{TermContainer{C, T}}, t::Term{C}) = Term{C, T}(t)
-Base.convert{T<:TermContainer}(::Type{T}, t::Term) = Term{iscomm(T), eltype(T)}(t)
 
 zero{C, T}(t::Term{C, T}) = Term{C, T}(zero(T), t.x)
 zero{C, T}(::Type{Term{C, T}}) = Term{C, T}(zero(T), Monomial{C}())
@@ -113,11 +112,14 @@ Base.convert{C, S, T}(::Type{VecPolynomial{C, T}}, p::VecPolynomial{C, S}) = Vec
 
 Base.convert{C, T}(::Type{TermContainer{C, T}}, p::VecPolynomial{C}) = VecPolynomial{C, T}(p)
 
-function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::MonomialVector{C})
-    a = T[f(i) for i in 1:length(x)]
+function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector)
+    σ, X = sortmonovec(PolyVar{C}, x)
+    a = T[f(i) for i in σ]
     VecPolynomial{C, T}(a, x)
 end
-(::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector) = VecPolynomial{C, T}(f, MonomialVector{C}(x))
+(::Type{VecPolynomial{C}}){C}(f::Function, x::Vector) = VecPolynomial{C, Base.promote_op(f, Int)}(f, x)
+VecPolynomial{T<:VectorOfPolyType{false}}(f::Function, x::Vector{T}) = VecPolynomial{false}(f, x)
+VecPolynomial{T<:VectorOfPolyType{true}}(f::Function, x::Vector{T}) = VecPolynomial{true}(f, x)
 
 Base.convert(::Type{Any}, p::VecPolynomial) = p
 
@@ -137,7 +139,7 @@ end
 vars(p::VecPolynomial) = vars(p.x)
 
 length(p::VecPolynomial) = length(p.a)
-isempty(p::VecPolynomial) = length(p) > 0
+isempty(p::VecPolynomial) = isempty(p.a)
 start(::VecPolynomial) = 1
 done(p::VecPolynomial, state) = length(p) < state
 next(p::VecPolynomial, state) = (p[state], state+1)
@@ -147,6 +149,7 @@ mindeg(p::VecPolynomial) = mindeg(p.x)
 maxdeg(p::VecPolynomial) = maxdeg(p.x)
 
 monomials(p::VecPolynomial) = p.x
+
 function removemonomials(p::VecPolynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
@@ -159,8 +162,9 @@ function removemonomials(p::VecPolynomial, x::MonomialVector)
             push!(I, i)
         end
     end
-    P(p.a[I], p.x[I])
+    VecPolynomial(p.a[I], p.x[I])
 end
+removemonomials(p::VecPolynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
 function removedups{T}(adup::Vector{T}, Zdup::Vector{Vector{Int}})
     σ = sortperm(Zdup, rev=true)
@@ -188,35 +192,23 @@ end
 
 eltype{C, T}(::Type{VecPolynomial{C, T}}) = T
 getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
-removemonomials{C}(p::VecPolynomial{C}, x::Vector) = removemonomials(p, MonomialVector{C}(x))
 
 type MatPolynomial{C, T} <: TermType{C, T}
     Q::Vector{T}
     x::MonomialVector{C}
 end
 
+# i < j
 function trimap(i, j, n)
     div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
 end
 
-function trimat{T}(::Type{T}, f, n)
-    Q = Vector{T}(trimap(n, n, n))
-    for i in 1:n
-        for j in i:n
-            Q[trimap(i, j, n)] = f(i, j)
-        end
-    end
-    Q
-end
-
 function getindex(p::MatPolynomial, I::NTuple{2,Int})
-    i, j = I
-    if i < j
-        i, j = (j, i)
-    end
     n = length(p.x)
-    p.Q[trimap(i,j,n)]
+    p.Q[trimap(minimum(I), maximum(I), n)]
 end
+# MatPolynomial is not a subtype of AbstractArray so I need to define this too
+getindex(p::MatPolynomial, i, j) = getindex(p, (i, j))
 
 function getmat{C, T}(p::MatPolynomial{C, T})
     n = length(p.x)
@@ -227,16 +219,36 @@ function getmat{C, T}(p::MatPolynomial{C, T})
     A
 end
 
-function (::Type{MatPolynomial{C, T}}){C, T}(f::Function, x::MonomialVector{C})
-    MatPolynomial{C, T}(trimat(T, f, length(x)), x)
+function trimat{T}(::Type{T}, f, n, σ)
+    Q = Vector{T}(trimap(n, n, n))
+    for i in 1:n
+        for j in i:n
+            Q[trimap(i, j, n)] = f(σ[i], σ[j])
+        end
+    end
+    Q
 end
-(::Type{MatPolynomial{C, T}}){C, T}(f::Function, x::Vector) = MatPolynomial{C, T}(f, MonomialVector{C}(x))
+function (::Type{MatPolynomial{C, T}}){C, T}(f::Function, x::MonomialVector{C}, σ=1:length(x))
+    MatPolynomial{C, T}(trimat(T, f, length(x), σ), x)
+end
+function (::Type{MatPolynomial{C, T}}){C, T}(f::Function, x::Vector)
+    σ, X = sortmonovec(x)
+    MatPolynomial{C, T}(f, X, σ)
+end
+(::Type{MatPolynomial{C}}){C}(f::Function, x::Vector) = MatPolynomial{C, Base.promote_op(f, Int)}(f, x)
+MatPolynomial{T<:VectorOfPolyType{false}}(f::Function, x::Vector{T}) = MatPolynomial{false}(f, x)
+MatPolynomial{T<:VectorOfPolyType{true}}(f::Function, x::Vector{T}) = MatPolynomial{true}(f, x)
 
 function MatPolynomial{C, T}(Q::Matrix{T}, x::MonomialVector{C})
-    MatPolynomial{C, T}((i,j) -> Q[i,j], x)
+    MatPolynomial{C, T}((i,j) -> Q[i, j], x)
 end
-MatPolynomial{T<:VectorOfPolyType{false}}(Q::Matrix, x::Vector{T}) = MatPolynomial(Q, MonomialVector{false}(x))
-MatPolynomial{T<:VectorOfPolyType{true}}(Q::Matrix, x::Vector{T}) = MatPolynomial(Q, MonomialVector{true}(x))
+function matpolyperm{C, T}(Q::Matrix{T}, x::MonomialVector{C}, σ)
+    MatPolynomial{C, T}((i,j) -> Q[σ[i], σ[j]], x)
+end
+function MatPolynomial{T}(Q::Matrix{T}, x::Vector)
+    σ, X = sortmonovec(x)
+    matpolyperm(Q, X, σ)
+end
 
 function Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::MatPolynomial{C, T})
     if isempty(p.Q)
@@ -279,8 +291,8 @@ function Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::MatPolynomial{C, T})
                     end
                 end
             end
-            perm, X = sortmonovec(PolyVar{false}, x)
-            a = a[perm]
+            σ, X = sortmonovec(PolyVar{false}, x)
+            a = a[σ]
             v = X.vars
             Z = X.Z
         end
