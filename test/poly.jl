@@ -78,6 +78,9 @@
         @test u + v*u + 1 != v*u + u
         @test removemonomials(u + v*u + 1, [1, u*v]) == v*u + u
         @test removemonomials(u + u*v + 1, [u*v]) == 1 + u
+
+        @inferred VecPolynomial(2u)
+        @inferred VecPolynomial{false, Int}(2.0u)
     end
     @testset "Graded Lex Order" begin
         @polyvar x y z
@@ -99,6 +102,12 @@
             for j in 1:3
                 @test P[i, j] == i + j
             end
+        end
+        for P in (MatPolynomial((i,j) -> i * j, [y, x]),
+                  MatPolynomial([4 2; 2 1], MonomialVector([y, x])))
+            @test P.Q == [4, 2, 1]
+            @test P.x[1] == x
+            @test P.x[2] == y
         end
     end
     @testset "Non-commutative MatPolynomial" begin

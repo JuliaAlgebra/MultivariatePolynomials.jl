@@ -128,6 +128,7 @@ function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector)
 end
 (::Type{VecPolynomial{C}}){C}(f::Function, x::Vector) = VecPolynomial{C, Base.promote_op(f, Int)}(f, x)
 
+# FIXME why did I need it ?
 Base.convert(::Type{Any}, p::VecPolynomial) = p
 
 Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
