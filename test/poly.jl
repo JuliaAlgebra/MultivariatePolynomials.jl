@@ -63,10 +63,13 @@
         p.x[2] == x
 
         @inferred Polynomial(i -> float(i), [x, x*x])
-        p = Polynomial(i -> float(i), [x, x*x])
-        @test typeof(p) == Polynomial{true, Float64}
-        @test p.a == [2.0, 1.0]
-        @test p.x == MonomialVector([x^2, x])
+        @inferred Polynomial(i -> 3 - float(i), MonomialVector([x*x, x]))
+        for p in (Polynomial(i -> float(i), [x, x*x]),
+                  Polynomial(i -> 3 - float(i), MonomialVector([x*x, x])))
+            @test typeof(p) == Polynomial{true, Float64}
+            @test p.a == [2.0, 1.0]
+            @test p.x == MonomialVector([x^2, x])
+        end
 
         @ncpolyvar ncpolyvar u v
         @inferred Polynomial(i -> i, [u, u*u, 1])
@@ -104,6 +107,8 @@
             end
         end
         for P in (MatPolynomial((i,j) -> i * j, [y, x]),
+                  MatPolynomial((i,j) -> (3-i) * (3-j), MonomialVector([y, x])),
+                  MatPolynomial([1 2; 2 4], [y, x]),
                   MatPolynomial([4 2; 2 1], MonomialVector([y, x])))
             @test P.Q == [4, 2, 1]
             @test P.x[1] == x

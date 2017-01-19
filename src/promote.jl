@@ -19,6 +19,10 @@ promote_rule{C,T}(::Type{Term{C, T}}, ::Type{Monomial{C}}) = Term{C, T}
 promote_rule{C,T}(::Type{PolyVar{C}}, ::Type{Term{C, T}}) = Term{C, T}
 promote_rule{C,T}(::Type{Term{C, T}}, ::Type{PolyVar{C}}) = Term{C, T}
 
+# Promotion with Polynomial
+promote_rule{C, S, T}(::Type{Polynomial{C, S}}, ::Type{Term{C, T}}) = Polynomial{C, promote_type(S, T)}
+promote_rule{C, S, T}(::Type{Term{C, T}}, ::Type{Polynomial{C, S}}) = Polynomial{C, promote_type(S, T)}
+
 promote_rule{S<:TermType,T<:TermType}(::Type{S}, ::Type{T}) = Polynomial{iscomm(T), promote_type(eltype(S), eltype(T))}
 promote_rule{S<:PolyType,T<:TermType}(::Type{T}, ::Type{S}) = Polynomial{iscomm(T), promote_type(Int, eltype(T))}
 promote_rule{S<:PolyType,T<:TermType}(::Type{S}, ::Type{T}) = Polynomial{iscomm(T), promote_type(Int, eltype(T))}

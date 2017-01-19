@@ -1,13 +1,13 @@
-export PolyVar, Monomial, MonomialVector, @polyvar, @ncpolyvar
+export PolyVar, Monomial, MonomialVector, @polyvar, @ncpolyvar, VectorOfPolyType
 export monomials, polyvecvar, vars, nvars, extdeg, mindeg, maxdeg
 
-function polyvecvar(prefix, idxset, C::Bool)
-    [PolyVar{C}("$(prefix * string(i))") for i in idxset]
+function polyvecvar{PV}(::Type{PV}, prefix, idxset)
+    [PV("$(prefix * string(i))") for i in idxset]
 end
 
-function buildpolyvar(var, C::Bool)
+function buildpolyvar{PV}(::Type{PV}, var)
     if isa(var, Symbol)
-        :($(esc(var)) = PolyVar{$C}($"$var"))
+        :($(esc(var)) = $PV($"$var"))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
@@ -15,16 +15,16 @@ function buildpolyvar(var, C::Bool)
         varname = var.args[1]
         prefix = string(var.args[1])
         idxset = esc(var.args[2])
-        :($(esc(varname)) = polyvecvar($prefix, $idxset, true))
+        :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
     end
 end
 
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg, true) for arg in args])
+    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{true}, arg) for arg in args])
 end
 macro ncpolyvar(args...)
-    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(arg, false) for arg in args])
+    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{false}, arg) for arg in args])
 end
 
 # TODO equality should be between name ?

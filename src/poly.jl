@@ -121,12 +121,16 @@ Base.convert{C, S, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, S}) = Polynomia
 
 Base.convert{C, T}(::Type{TermContainer{C, T}}, p::Polynomial{C}) = Polynomial{C, T}(p)
 
+function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::MonomialVector{C})
+    a = T[f(i) for i in 1:length(x)]
+    Polynomial{C, T}(a, x)
+end
 function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::Vector)
     σ, X = sortmonovec(PolyVar{C}, x)
     a = T[f(i) for i in σ]
     Polynomial{C, T}(a, X)
 end
-(::Type{Polynomial{C}}){C}(f::Function, x::Vector) = Polynomial{C, Base.promote_op(f, Int)}(f, x)
+(::Type{Polynomial{C}}){C}(f::Function, x) = Polynomial{C, Base.promote_op(f, Int)}(f, x)
 
 # FIXME why did I need it ?
 Base.convert(::Type{Any}, p::Polynomial) = p
@@ -243,9 +247,10 @@ function (::Type{MatPolynomial{C, T}}){C, T}(f::Function, x::Vector)
     σ, X = sortmonovec(x)
     MatPolynomial{C, T}(f, X, σ)
 end
-(::Type{MatPolynomial{C}}){C}(f::Function, x::Vector) = MatPolynomial{C, Base.promote_op(f, Int)}(f, x)
+(::Type{MatPolynomial{C}}){C}(f::Function, x) = MatPolynomial{C, Base.promote_op(f, Int, Int)}(f, x)
 MatPolynomial{T<:VectorOfPolyType{false}}(f::Function, x::Vector{T}) = MatPolynomial{false}(f, x)
 MatPolynomial{T<:VectorOfPolyType{true}}(f::Function, x::Vector{T}) = MatPolynomial{true}(f, x)
+MatPolynomial{C}(f::Function, x::MonomialVector{C}) = MatPolynomial{C}(f, x)
 
 function MatPolynomial{C, T}(Q::Matrix{T}, x::MonomialVector{C})
     MatPolynomial{C, T}((i,j) -> Q[i, j], x)
