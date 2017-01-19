@@ -6,18 +6,22 @@
 [![codecov.io](http://codecov.io/github/blegat/MultivariatePolynomials.jl/coverage.svg?branch=master)](http://codecov.io/github/blegat/MultivariatePolynomials.jl?branch=master)
 
 Basic arithmetic, integration, differentiation and evaluation over sparse multivariate polynomials and sparse multivariate moments.
+Both commutative and non-commutative variables are supported.
 The following types are defined:
 
-* `PolyVar`: A variable. They are created using the `@polyvar` macro, e.g. `@polyvar x y`, `@polyvar x[1:8]`.
-* `Monomial`: A product of variables: e.g. `x*y^2`.
-* `Term{T}`: A product between an element of type `T` and a `Monomial`, e.g `2x`, `3.0x*y^2`.
-* `VecPolynomial{T}`: A sum of `Term{T}`, e.g. `2x + 3.0x*y^2 + y`.
-* `Moment{T}`: The multivariate moment of type `T` of a measure, e.g. `E_μ[x*y^2]` is the moment of `μ` corresponding to the monomial `x*y^2`.
-* `Measure{T}`: A combination of `Moment{T}` of a measure, e.g. the moments of `x`, `x*y^2` and `y`.
+* `PolyVar{C}`: A variable which is commutative with `*` when `C` is `true`. Commutative variables are created using the `@polyvar` macro, e.g. `@polyvar x y`, `@polyvar x[1:8]` and non-commutative variables are created likewise using the `@ncpolyvar` macro.
+* `Monomial{C}`: A product of variables: e.g. `x*y^2`.
+* `Term{C, T}`: A product between an element of type `T` and a `Monomial{C}`, e.g `2x`, `3.0x*y^2`.
+* `VecPolynomial{C, T}`: A sum of `Term{C, T}`, e.g. `2x + 3.0x*y^2 + y`.
+* `Moment{C, T}`: The multivariate moment of type `T` of a measure, e.g. `E_μ[x*y^2]` is the moment of `μ` corresponding to the monomial `x*y^2`.
+* `Measure{C, T}`: A combination of `Moment{C, T}` of a measure, e.g. the moments of `x`, `x*y^2` and `y`.
 
 All common algebraic operations between those types are designed to be as efficient as possible without doing any assumption on `T`.
 Typically, one imagine `T` to be a subtype of `Number` but it can be anything.
 This is useful for example in the package [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) where `T` is often an affine expression of [JuMP](https://github.com/JuliaOpt/JuMP.jl) decision variables.
+The commutativity of `T` with `*` is not assumed, even if it is the coefficient of a monomial of commutative variables.
+However, commutativity of `T` and of the variables `+` is always assumed.
+This allows to keep the terms and moments always sorted (Graded Lexicographic order is used) in polynomial and measure which enables more efficient operations.
 
 Below is a simple usage example
 ```julia
