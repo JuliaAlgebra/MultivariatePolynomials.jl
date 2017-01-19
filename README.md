@@ -54,5 +54,3 @@ Therefore, this order cannot be used for substitution, even as a default (see [h
 * [Polynomials](https://github.com/Keno/Polynomials.jl) for univariate polynomials
 
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
-
-* [MultiPoly](https://github.com/daviddelaat/MultiPoly.jl) another package for sparse multivariate polynomials
