@@ -66,18 +66,18 @@ function (t::Term)(x::Vector, varorder)
     t.α * monoeval(t.x.z, vals)
 end
 
-function (p::VecPolynomial)(x::Vector, varorder)
+function (p::Polynomial)(x::Vector, varorder)
     vals = evalmap(vars(p), x, varorder)
     sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
-function subs(p::VecPolynomial, x::Vector, varorder)
+function subs(p::Polynomial, x::Vector, varorder)
     vals = subsmap(vars(p), x, varorder)
     sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
-(p::MatPolynomial)(x::Vector, varorder) = VecPolynomial(p)(x, varorder)
-subs(p::MatPolynomial, x::Vector, varorder) = subs(VecPolynomial(p), x, varorder)
+(p::MatPolynomial)(x::Vector, varorder) = Polynomial(p)(x, varorder)
+subs(p::MatPolynomial, x::Vector, varorder) = subs(Polynomial(p), x, varorder)
 
 function (q::RationalPoly)(x::Vector, varorder)
     q.num(x, varorder) / q.den(x, varorder)

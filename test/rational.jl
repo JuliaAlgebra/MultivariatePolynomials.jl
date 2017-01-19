@@ -12,6 +12,6 @@
     @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
     @test typeof(zero(1/x)) == Term{true, Int}
     @test MultivariatePolynomials.iszero(zero(1/x))
-    @test typeof(zero(RationalPoly{true, Float64, Int})) == VecPolynomial{true, Float64}
+    @test typeof(zero(RationalPoly{true, Float64, Int})) == Polynomial{true, Float64}
     @test MultivariatePolynomials.iszero(zero(RationalPoly{true, Float64, Int}))
 end

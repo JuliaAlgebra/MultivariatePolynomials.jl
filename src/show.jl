@@ -46,7 +46,7 @@ function Base.show(io::IO, t::Term)
     end
 end
 
-function Base.show(io::IO, p::VecPolynomial)
+function Base.show(io::IO, p::Polynomial)
     for (i, t) in enumerate(p)
         print(io, t)
         if i != length(p)

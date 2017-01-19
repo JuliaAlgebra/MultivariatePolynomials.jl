@@ -86,31 +86,31 @@ end
 
 *{C}(α, x::PolyVar{C}) = Term(α, Monomial{C}(x))
 *(α, x::Monomial)      = Term(α, x)
-*(α, p::MatPolynomial) = α * VecPolynomial(p)
+*(α, p::MatPolynomial) = α * Polynomial(p)
 *{C, T}(α, x::Term{C, T})    = Term(T(α)*x.α, x.x)
-*(α, p::VecPolynomial) = VecPolynomial(α*p.a, p.x)
+*(α, p::Polynomial) = Polynomial(α*p.a, p.x)
 
 # Reverse order to avoid abiguïty with above 5 specific methods
 *(p::PolyType, x::PolyVar) = x * p
 *(p::PolyType, x::Monomial) = x * p
-*(p::PolyType, x::MatPolynomial) = x * VecPolynomial(p)
+*(p::PolyType, x::MatPolynomial) = x * Polynomial(p)
 # The three above are mapped to one of the two below
 *(p::PolyType, q::Term) = TermContainer(p) * q
-*(p::PolyType, q::VecPolynomial) = TermContainer(p) * q
+*(p::PolyType, q::Polynomial) = TermContainer(p) * q
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function *{S<:Union{PolyVar,Monomial}}(x::S, t::Term)
     Term(t.α, x*t.x)
 end
-function *{S<:Union{PolyVar,Monomial},T}(x::S, p::VecPolynomial{T})
+function *{S<:Union{PolyVar,Monomial},T}(x::S, p::Polynomial{T})
     # /!\ No copy of a is done
-    VecPolynomial{T}(p.a, x*p.x)
+    Polynomial{T}(p.a, x*p.x)
 end
 
 # TermContainer * TermContainer
 *(x::Term, y::Term) = Term(x.α*y.α, x.x*y.x)
-*(p::VecPolynomial, t::Term) = t * p
-function *(t::Term, p::VecPolynomial)
+*(p::Polynomial, t::Term) = t * p
+function *(t::Term, p::Polynomial)
     if iszero(t)
         zero(p)
     else
@@ -122,10 +122,10 @@ function *(t::Term, p::VecPolynomial)
             Z[i][maps[1]] = t.x.z
             Z[i][maps[2]] += p.x.Z[i]
         end
-        VecPolynomial(t.α * p.a, MonomialVector(allvars, Z))
+        Polynomial(t.α * p.a, MonomialVector(allvars, Z))
     end
 end
-function *(p::VecPolynomial, q::VecPolynomial)
+function *(p::Polynomial, q::Polynomial)
     if iszero(p)
         zero(q)
     elseif iszero(q)
@@ -172,21 +172,21 @@ end
 
 function (+){C}(x::Term{C}, y::Term{C})
     if x.x == y.x
-        VecPolynomial{C}([x.α+y.α], [x.x])
+        Polynomial{C}([x.α+y.α], [x.x])
     elseif x.x > y.x
-        VecPolynomial{C}(myminivect(x.α,y.α), [x.x,y.x])
+        Polynomial{C}(myminivect(x.α,y.α), [x.x,y.x])
     else
-        VecPolynomial{C}(myminivect(y.α,x.α), [y.x,x.x])
+        Polynomial{C}(myminivect(y.α,x.α), [y.x,x.x])
     end
 end
 
 function (-){C}(x::Term{C}, y::Term{C})
     if x.x == y.x
-        VecPolynomial{C}([x.α-y.α], [x.x])
+        Polynomial{C}([x.α-y.α], [x.x])
     elseif x.x > y.x
-        VecPolynomial{C}(myminivect(x.α,-y.α), [x.x,y.x])
+        Polynomial{C}(myminivect(x.α,-y.α), [x.x,y.x])
     else
-        VecPolynomial{C}(myminivect(-y.α,x.α), [y.x,x.x])
+        Polynomial{C}(myminivect(-y.α,x.α), [y.x,x.x])
     end
 end
 
@@ -226,7 +226,7 @@ function plusorminus{C, S, T}(p::TermContainer{C, S}, q::TermContainer{C, T}, is
         push!(Z, z)
     end
 
-    VecPolynomial(a, MonomialVector{C}(allvars, Z))
+    Polynomial(a, MonomialVector{C}(allvars, Z))
 end
 
 
@@ -235,29 +235,29 @@ end
 (+){C, T, S<:Union{Monomial,PolyVar}}(x::TermContainer{C, T}, y::S) = x + Term{C, T}(y)
 (+){C, T, S<:Union{Monomial,PolyVar}}(x::S, y::TermContainer{C, T}) = Term{C, T}(x) + y
 
-(+)(x::TermContainer, y::MatPolynomial) = x + VecPolynomial(y)
-(+)(x::MatPolynomial, y::TermContainer) = VecPolynomial(x) + y
-(+)(x::MatPolynomial, y::MatPolynomial) = VecPolynomial(x) + VecPolynomial(y)
-(-)(x::TermContainer, y::MatPolynomial) = x - VecPolynomial(y)
-(-)(x::MatPolynomial, y::TermContainer) = VecPolynomial(x) - y
-(-)(x::MatPolynomial, y::MatPolynomial) = VecPolynomial(x) - VecPolynomial(y)
+(+)(x::TermContainer, y::MatPolynomial) = x + Polynomial(y)
+(+)(x::MatPolynomial, y::TermContainer) = Polynomial(x) + y
+(+)(x::MatPolynomial, y::MatPolynomial) = Polynomial(x) + Polynomial(y)
+(-)(x::TermContainer, y::MatPolynomial) = x - Polynomial(y)
+(-)(x::MatPolynomial, y::TermContainer) = Polynomial(x) - y
+(-)(x::MatPolynomial, y::MatPolynomial) = Polynomial(x) - Polynomial(y)
 
 iszero{T}(x::T) = x == zero(T)
 iszero(t::Term) = iszero(t.α)
-iszero(p::VecPolynomial) = isempty(p)
-iszero(p::MatPolynomial) = isempty(VecPolynomial(p))
+iszero(p::Polynomial) = isempty(p)
+iszero(p::MatPolynomial) = isempty(Polynomial(p))
 
 (-){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x - Term{T}(y)
 (-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) - y
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
-# Need to add VecPolynomial conversion for type stability
-(+){C}(x::PolyType{C}, y) = iszero(y) ? VecPolynomial(x) : x + Term{C}(y)
-(+){C}(x, y::PolyType{C}) = iszero(x) ? VecPolynomial(y) : Term{C}(x) + y
-(-){C}(x::PolyType{C}, y) = iszero(y) ? VecPolynomial(x) : x - Term{C}(y)
-(-){C}(x, y::PolyType{C}) = iszero(x) ? VecPolynomial(-y) : Term{C}(x) - y
+# Need to add Polynomial conversion for type stability
+(+){C}(x::PolyType{C}, y) = iszero(y) ? Polynomial(x) : x + Term{C}(y)
+(+){C}(x, y::PolyType{C}) = iszero(x) ? Polynomial(y) : Term{C}(x) + y
+(-){C}(x::PolyType{C}, y) = iszero(y) ? Polynomial(x) : x - Term{C}(y)
+(-){C}(x, y::PolyType{C}) = iszero(x) ? Polynomial(-y) : Term{C}(x) - y
 
 (-){C}(x::PolyVar{C}) = Term(-1, Monomial{C}(x))
 (-)(x::Monomial) = Term(-1, x)
 (-)(t::Term) = Term(-t.α, t.x)
-(-)(p::VecPolynomial) = VecPolynomial(-p.a, p.x)
+(-)(p::Polynomial) = Polynomial(-p.a, p.x)

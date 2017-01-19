@@ -115,15 +115,15 @@ end
 function (==){C}(s::Term{C}, t::Term{C})
     (s.α == t.α) && (iszero(s.α) || s.x == t.x)
 end
-function (==){C}(t::Term{C}, p::VecPolynomial{C})
+function (==){C}(t::Term{C}, p::Polynomial{C})
     if iszero(t.α)
         isempty(p.a)
     else
         length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
     end
 end
-(==){C}(p::VecPolynomial{C}, t::Term{C}) = t == p
-function (==){C}(p::VecPolynomial{C}, q::VecPolynomial{C})
+(==){C}(p::Polynomial{C}, t::Term{C}) = t == p
+function (==){C}(p::Polynomial{C}, q::Polynomial{C})
     # terms should be sorted and without zeros
     if length(p) != length(q)
         return false
@@ -166,7 +166,7 @@ function isless(x::Vector, y::Vector)
     end
 end
 
-function isapproxzero(p::VecPolynomial; ztol::Real=1e-6)
+function isapproxzero(p::Polynomial; ztol::Real=1e-6)
     isapprox(p, zero(p), ztol=ztol)
 end
 
@@ -174,7 +174,7 @@ function isapproxzero(p::RationalPoly; ztol::Real=1e-6)
     isapproxzero(p.num, ztol=ztol)
 end
 
-function isapprox{C, S, T}(p::VecPolynomial{C, S}, q::VecPolynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+function isapprox{C, S, T}(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
         lhs, rhs = 0, 0

@@ -35,19 +35,19 @@
         @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))
         @test !isempty(1x)
     end
-    @testset "VecPolynomial" begin
-        @test eltype(VecPolynomial{true, Int}) == Int
+    @testset "Polynomial" begin
+        @test eltype(Polynomial{true, Int}) == Int
         @polyvar x
-        @test_throws ArgumentError VecPolynomial{true, Int}([1, 2], [x])
-        @test_throws ArgumentError VecPolynomial{true, Int}([1, 2], MonomialVector([x]))
-        @test_throws InexactError VecPolynomial{true, Int}([1.5], [x])
-        @test VecPolynomial(1 + x) == 1 + x
+        @test_throws ArgumentError Polynomial{true, Int}([1, 2], [x])
+        @test_throws ArgumentError Polynomial{true, Int}([1, 2], MonomialVector([x]))
+        @test_throws InexactError Polynomial{true, Int}([1.5], [x])
+        @test Polynomial(1 + x) == 1 + x
         @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
-        @test typeof(one(1 + x)) == VecPolynomial{true, Int}
-        @test typeof(zero(1 + x)) == VecPolynomial{true, Int}
-        @test typeof(one(1.0 + x)) == VecPolynomial{true, Float64}
-        @test typeof(zero(1.0 + x)) == VecPolynomial{true, Float64}
+        @test typeof(one(1 + x)) == Polynomial{true, Int}
+        @test typeof(zero(1 + x)) == Polynomial{true, Int}
+        @test typeof(one(1.0 + x)) == Polynomial{true, Float64}
+        @test typeof(zero(1.0 + x)) == Polynomial{true, Float64}
         @inferred one(1 + x)
         @inferred zero(1 + x)
         @inferred one(1.0 + x)
@@ -57,21 +57,21 @@
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
 
-        p = VecPolynomial([4, 9], [x, x*x])
+        p = Polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
         p.x[1] == x^2
         p.x[2] == x
 
-        @inferred VecPolynomial(i -> float(i), [x, x*x])
-        p = VecPolynomial(i -> float(i), [x, x*x])
-        @test typeof(p) == VecPolynomial{true, Float64}
+        @inferred Polynomial(i -> float(i), [x, x*x])
+        p = Polynomial(i -> float(i), [x, x*x])
+        @test typeof(p) == Polynomial{true, Float64}
         @test p.a == [2.0, 1.0]
         @test p.x == MonomialVector([x^2, x])
 
         @ncpolyvar ncpolyvar u v
-        @inferred VecPolynomial(i -> i, [u, u*u, 1])
-        p = VecPolynomial(i -> i, [u, u*u, 1])
-        @test typeof(p) == VecPolynomial{false, Int}
+        @inferred Polynomial(i -> i, [u, u*u, 1])
+        p = Polynomial(i -> i, [u, u*u, 1])
+        @test typeof(p) == Polynomial{false, Int}
         @test p.a == [2, 1, 3]
         @test p.x == MonomialVector([u^2, u, 1])
 
@@ -79,8 +79,8 @@
         @test removemonomials(u + v*u + 1, [1, u*v]) == v*u + u
         @test removemonomials(u + u*v + 1, [u*v]) == 1 + u
 
-        @inferred VecPolynomial(2u)
-        @inferred VecPolynomial{false, Int}(2.0u)
+        @inferred Polynomial(2u)
+        @inferred Polynomial{false, Int}(2.0u)
     end
     @testset "Graded Lex Order" begin
         @polyvar x y z
@@ -95,7 +95,7 @@
     @testset "MatPolynomial" begin
         @polyvar x y
         P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
-        p = VecPolynomial(P)
+        p = Polynomial(P)
         @test p.a == [2, 6, 12, 10, 6]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
         for i in 1:3
@@ -121,7 +121,7 @@
         @test P.Q == [4, 3, 5, 2, 4, 6]
         P = MatPolynomial((i,j) -> i + j, [x*y, x^2, y^2])
         @test P.Q == [4, 3, 5, 2, 4, 6]
-        p = VecPolynomial(P)
+        p = Polynomial(P)
         @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
         @inferred MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0

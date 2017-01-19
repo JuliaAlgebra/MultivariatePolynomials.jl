@@ -12,7 +12,7 @@ The following types are defined:
 * `PolyVar{C}`: A variable which is commutative with `*` when `C` is `true`. Commutative variables are created using the `@polyvar` macro, e.g. `@polyvar x y`, `@polyvar x[1:8]` and non-commutative variables are created likewise using the `@ncpolyvar` macro.
 * `Monomial{C}`: A product of variables: e.g. `x*y^2`.
 * `Term{C, T}`: A product between an element of type `T` and a `Monomial{C}`, e.g `2x`, `3.0x*y^2`.
-* `VecPolynomial{C, T}`: A sum of `Term{C, T}`, e.g. `2x + 3.0x*y^2 + y`.
+* `Polynomial{C, T}`: A sum of `Term{C, T}`, e.g. `2x + 3.0x*y^2 + y`.
 * `Moment{C, T}`: The multivariate moment of type `T` of a measure, e.g. `E_μ[x*y^2]` is the moment of `μ` corresponding to the monomial `x*y^2`.
 * `Measure{C, T}`: A combination of `Moment{C, T}` of a measure, e.g. the moments of `x`, `x*y^2` and `y`.
 

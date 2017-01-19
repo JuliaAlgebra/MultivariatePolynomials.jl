@@ -39,7 +39,7 @@
 
     @testset "MatPolynomial" begin
         P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
-        p = VecPolynomial(P)
+        p = Polynomial(P)
         @test !MultivariatePolynomials.iszero(P)
         @test MultivariatePolynomials.iszero(P-P)
         @test MultivariatePolynomials.iszero(P-p)

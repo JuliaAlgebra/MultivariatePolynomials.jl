@@ -1,17 +1,17 @@
-export Term, VecPolynomial, MatPolynomial, SOSDecomposition, TermType, getmat, monomials, removemonomials
+export Term, Polynomial, MatPolynomial, SOSDecomposition, TermType, getmat, monomials, removemonomials
 
 abstract TermType{C, T} <: PolyType{C}
 eltype{C, T}(::Type{TermType{C, T}}) = T
 eltype{C, T}(p::TermType{C, T}) = T
-zero{C, T}(t::TermType{C, T}) = VecPolynomial(T[], MonomialVector{C}(vars(t), Vector{Vector{Int}}()))
-#zero{T<:TermType}(::Type{T}) = VecPolynomial(eltype(T)[], MonomialVector{iscomm(T)}())
-one{C, T}(t::TermType{C, T}) = VecPolynomial([one(T)], MonomialVector{C}(vars(t), [zeros(Int, length(vars(t)))]))
-#one{T<:TermType}(::Type{T}) = VecPolynomial([one(eltype(T))], MonomialVector{iscomm(T)}(PolyVar[], [Int[]]))
+zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vector{Vector{Int}}()))
+#zero{T<:TermType}(::Type{T}) = Polynomial(eltype(T)[], MonomialVector{iscomm(T)}())
+one{C, T}(t::TermType{C, T}) = Polynomial([one(T)], MonomialVector{C}(vars(t), [zeros(Int, length(vars(t)))]))
+#one{T<:TermType}(::Type{T}) = Polynomial([one(eltype(T))], MonomialVector{iscomm(T)}(PolyVar[], [Int[]]))
 
 abstract TermContainer{C, T} <: TermType{C, T}
 eltype{C, T}(::Type{TermContainer{C, T}}) = T
-zero{C, T}(::Type{TermContainer{C, T}}) = zero(VecPolynomial{C, T})
-one{C, T}(::Type{TermContainer{C, T}}) = one(VecPolynomial{C, T})
+zero{C, T}(::Type{TermContainer{C, T}}) = zero(Polynomial{C, T})
+one{C, T}(::Type{TermContainer{C, T}}) = one(Polynomial{C, T})
 
 type Term{C, T} <: TermContainer{C, T}
     α::T
@@ -65,11 +65,11 @@ getindex(t::Term, I::Int) = t
 # a and x might be empty: meaning it is the zero polynomial
 # a does not contain any zeros
 # x is increasing in the monomial order (i.e. grlex)
-type VecPolynomial{C, T} <: TermContainer{C, T}
+type Polynomial{C, T} <: TermContainer{C, T}
     a::Vector{T}
     x::MonomialVector{C}
 
-    function VecPolynomial(a::Vector{T}, x::MonomialVector{C})
+    function Polynomial(a::Vector{T}, x::MonomialVector{C})
         if length(a) != length(x)
             throw(ArgumentError("There should be as many coefficient than monomials"))
         end
@@ -89,47 +89,47 @@ type VecPolynomial{C, T} <: TermContainer{C, T}
         new(a, x)
     end
 end
-iscomm{C, T}(::Type{VecPolynomial{C, T}}) = C
+iscomm{C, T}(::Type{Polynomial{C, T}}) = C
 
-Base.copy{C, T}(p::VecPolynomial{C, T}) = VecPolynomial{C, T}(copy(p.a), copy(p.x))
-zero{C, T}(::Type{VecPolynomial{C, T}}) = VecPolynomial(T[], MonomialVector{C}())
-one{C, T}(::Type{VecPolynomial{C, T}}) = VecPolynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
+Base.copy{C, T}(p::Polynomial{C, T}) = Polynomial{C, T}(copy(p.a), copy(p.x))
+zero{C, T}(::Type{Polynomial{C, T}}) = Polynomial(T[], MonomialVector{C}())
+one{C, T}(::Type{Polynomial{C, T}}) = Polynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
 
-(::Type{VecPolynomial{C, T}}){C, T}(a::Vector, x::MonomialVector) = VecPolynomial{C, T}(Vector{T}(a), x)
+(::Type{Polynomial{C, T}}){C, T}(a::Vector, x::MonomialVector) = Polynomial{C, T}(Vector{T}(a), x)
 
-function (::Type{VecPolynomial{C, T}}){C, T}(a::Vector, x::Vector)
+function (::Type{Polynomial{C, T}}){C, T}(a::Vector, x::Vector)
     if length(a) != length(x)
         throw(ArgumentError("There should be as many coefficient than monomials"))
     end
     σ, X = sortmonovec(x)
-    VecPolynomial{C, T}(a[σ], X)
+    Polynomial{C, T}(a[σ], X)
 end
-(::Type{VecPolynomial{C}}){C, T}(a::Vector{T}, x) = VecPolynomial{C, T}(a, x)
+(::Type{Polynomial{C}}){C, T}(a::Vector{T}, x) = Polynomial{C, T}(a, x)
 
-VecPolynomial{C}(af::Union{Function, Vector}, x::MonomialVector{C}) = VecPolynomial{C}(af, x)
-VecPolynomial{T<:VectorOfPolyType{false}}(af::Union{Function, Vector}, x::Vector{T}) = VecPolynomial{false}(af, x)
-VecPolynomial{T<:VectorOfPolyType{true}}(af::Union{Function, Vector}, x::Vector{T}) = VecPolynomial{true}(af, x)
+Polynomial{C}(af::Union{Function, Vector}, x::MonomialVector{C}) = Polynomial{C}(af, x)
+Polynomial{T<:VectorOfPolyType{false}}(af::Union{Function, Vector}, x::Vector{T}) = Polynomial{false}(af, x)
+Polynomial{T<:VectorOfPolyType{true}}(af::Union{Function, Vector}, x::Vector{T}) = Polynomial{true}(af, x)
 
-(::Type{VecPolynomial{C}}){C}(α) = VecPolynomial(Term{C}(α))
-VecPolynomial{C}(x::PolyType{C}) = VecPolynomial{C}(x)
-VecPolynomial(p::VecPolynomial) = p
-VecPolynomial{C, T}(t::Term{C, T}) = VecPolynomial{C, T}([t.α], [t.x])
-Base.convert{C, T}(::Type{VecPolynomial{C, T}}, x) = VecPolynomial(Term{C, T}(x))
-Base.convert{C, T}(::Type{VecPolynomial{C, T}}, t::Term{C}) = VecPolynomial{C, T}([T(t.α)], [t.x])
-Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::VecPolynomial{C, T}) = p
-Base.convert{C, S, T}(::Type{VecPolynomial{C, T}}, p::VecPolynomial{C, S}) = VecPolynomial{C}(Vector{T}(p.a), p.x)
+(::Type{Polynomial{C}}){C}(α) = Polynomial(Term{C}(α))
+Polynomial{C}(x::PolyType{C}) = Polynomial{C}(x)
+Polynomial(p::Polynomial) = p
+Polynomial{C, T}(t::Term{C, T}) = Polynomial{C, T}([t.α], [t.x])
+Base.convert{C, T}(::Type{Polynomial{C, T}}, x) = Polynomial(Term{C, T}(x))
+Base.convert{C, T}(::Type{Polynomial{C, T}}, t::Term{C}) = Polynomial{C, T}([T(t.α)], [t.x])
+Base.convert{C, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) = p
+Base.convert{C, S, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, S}) = Polynomial{C}(Vector{T}(p.a), p.x)
 
-Base.convert{C, T}(::Type{TermContainer{C, T}}, p::VecPolynomial{C}) = VecPolynomial{C, T}(p)
+Base.convert{C, T}(::Type{TermContainer{C, T}}, p::Polynomial{C}) = Polynomial{C, T}(p)
 
-function (::Type{VecPolynomial{C, T}}){C, T}(f::Function, x::Vector)
+function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::Vector)
     σ, X = sortmonovec(PolyVar{C}, x)
     a = T[f(i) for i in σ]
-    VecPolynomial{C, T}(a, X)
+    Polynomial{C, T}(a, X)
 end
-(::Type{VecPolynomial{C}}){C}(f::Function, x::Vector) = VecPolynomial{C, Base.promote_op(f, Int)}(f, x)
+(::Type{Polynomial{C}}){C}(f::Function, x::Vector) = Polynomial{C, Base.promote_op(f, Int)}(f, x)
 
 # FIXME why did I need it ?
-Base.convert(::Type{Any}, p::VecPolynomial) = p
+Base.convert(::Type{Any}, p::Polynomial) = p
 
 Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
 function Base.convert{S}(::Type{S}, p::TermContainer)
@@ -144,21 +144,21 @@ function Base.convert{S}(::Type{S}, p::TermContainer)
     s
 end
 
-vars(p::VecPolynomial) = vars(p.x)
+vars(p::Polynomial) = vars(p.x)
 
-length(p::VecPolynomial) = length(p.a)
-isempty(p::VecPolynomial) = isempty(p.a)
-start(::VecPolynomial) = 1
-done(p::VecPolynomial, state) = length(p) < state
-next(p::VecPolynomial, state) = (p[state], state+1)
+length(p::Polynomial) = length(p.a)
+isempty(p::Polynomial) = isempty(p.a)
+start(::Polynomial) = 1
+done(p::Polynomial, state) = length(p) < state
+next(p::Polynomial, state) = (p[state], state+1)
 
-extdeg(p::VecPolynomial) = extdeg(p.x)
-mindeg(p::VecPolynomial) = mindeg(p.x)
-maxdeg(p::VecPolynomial) = maxdeg(p.x)
+extdeg(p::Polynomial) = extdeg(p.x)
+mindeg(p::Polynomial) = mindeg(p.x)
+maxdeg(p::Polynomial) = maxdeg(p.x)
 
-monomials(p::VecPolynomial) = p.x
+monomials(p::Polynomial) = p.x
 
-function removemonomials(p::VecPolynomial, x::MonomialVector)
+function removemonomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
     I = Int[]
@@ -170,9 +170,9 @@ function removemonomials(p::VecPolynomial, x::MonomialVector)
             push!(I, i)
         end
     end
-    VecPolynomial(p.a[I], p.x[I])
+    Polynomial(p.a[I], p.x[I])
 end
-removemonomials(p::VecPolynomial, x::Vector) = removemonomials(p, MonomialVector(x))
+removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
 function removedups{T}(adup::Vector{T}, Zdup::Vector{Vector{Int}})
     σ = sortperm(Zdup, rev=true)
@@ -195,11 +195,11 @@ function removedups{T}(adup::Vector{T}, Zdup::Vector{Vector{Int}})
 end
 function vecpolynomialclean{C, T}(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector{Vector{Int}})
     a, Z = removedups(adup, Zdup)
-    VecPolynomial{C, T}(a, MonomialVector{C}(vars, Z))
+    Polynomial{C, T}(a, MonomialVector{C}(vars, Z))
 end
 
-eltype{C, T}(::Type{VecPolynomial{C, T}}) = T
-getindex(p::VecPolynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
+eltype{C, T}(::Type{Polynomial{C, T}}) = T
+getindex(p::Polynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
 type MatPolynomial{C, T} <: TermType{C, T}
     Q::Vector{T}
@@ -258,9 +258,9 @@ function MatPolynomial{T}(Q::Matrix{T}, x::Vector)
     matpolyperm(Q, X, σ)
 end
 
-function Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::MatPolynomial{C, T})
+function Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C, T})
     if isempty(p.Q)
-        zero(VecPolynomial{C, T})
+        zero(Polynomial{C, T})
     else
         n = length(p.x)
         U = typeof(2*p.Q[1] + p.Q[1])
@@ -307,17 +307,17 @@ function Base.convert{C, T}(::Type{VecPolynomial{C, T}}, p::MatPolynomial{C, T})
         vecpolynomialclean(v, a, Z)
     end
 end
-VecPolynomial{C, T}(p::MatPolynomial{C, T}) = convert(VecPolynomial{C, T}, p)
-TermContainer(p::MatPolynomial) = VecPolynomial(p)
+Polynomial{C, T}(p::MatPolynomial{C, T}) = convert(Polynomial{C, T}, p)
+TermContainer(p::MatPolynomial) = Polynomial(p)
 
 type SOSDecomposition{C, T} <: TermType{C, T}
-    ps::Vector{VecPolynomial{C, T}}
-    function SOSDecomposition(ps::Vector{VecPolynomial{C, T}})
+    ps::Vector{Polynomial{C, T}}
+    function SOSDecomposition(ps::Vector{Polynomial{C, T}})
         new(ps)
     end
 end
 function (::Type{SOSDecomposition{C, T}}){C, T}(ps::Vector)
-    SOSDecomposition(Vector{VecPolynomial{C, T}}(ps))
+    SOSDecomposition(Vector{Polynomial{C, T}}(ps))
 end
 function (::Type{SOSDecomposition{C}}){C}(ps::Vector)
     T = reduce(promote_type, Int, map(eltype, ps))
@@ -352,7 +352,7 @@ function Base.convert{C, T}(::Type{SOSDecomposition{C, T}}, p::MatPolynomial)
     A = getmat(p)
     Q = chol(A)
     m = size(Q, 1)
-    ps = [VecPolynomial{C, T}(Q[i,:], p.x) for i in 1:m]
+    ps = [Polynomial{C, T}(Q[i,:], p.x) for i in 1:m]
     SOSDecomposition(ps)
 end
 # Without LDL^T, we need to do float(T)

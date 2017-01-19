@@ -6,8 +6,8 @@ import Base: show, length, getindex, vect, isless, isempty, start, done, next, c
 
 abstract PolyType{C}
 iscomm{C}(::PolyType{C}) = C
-zero{C}(::Type{PolyType{C}}) = zero(VecPolynomial{C, Int})
-one{C}(::Type{PolyType{C}}) = one(VecPolynomial{C, Int})
+zero{C}(::Type{PolyType{C}}) = zero(Polynomial{C, Int})
+one{C}(::Type{PolyType{C}}) = one(Polynomial{C, Int})
 zero{C}(p::PolyType{C}) = zero(PolyType{C})
 one{C}(p::PolyType{C}) = one(PolyType{C})
 

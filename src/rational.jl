@@ -35,7 +35,7 @@ end
 function (+)(p::TermContainer, r::RationalPoly)
     (p*r.den + r.num) / r.den
 end
-(+)(r::RationalPoly, p::VecPolynomial) = p + r
+(+)(r::RationalPoly, p::Polynomial) = p + r
 (+)(r::RationalPoly, t::Term) = t + r
 function (-)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den - r.den*s.num) / (r.den * s.den)
@@ -45,7 +45,7 @@ end
 
 (*)(r::RationalPoly, s::RationalPoly) = (r.num*s.num) / (r.den*s.den)
 (*)(p::TermContainer, r::RationalPoly) = p == r.den ? r.num : (p * r.num) / r.den
-(*)(r::RationalPoly, p::VecPolynomial) = p == r.den ? r.num : (r.num * p) / r.den
+(*)(r::RationalPoly, p::Polynomial) = p == r.den ? r.num : (r.num * p) / r.den
 (*)(r::RationalPoly, t::Term)          = t == r.den ? r.num : (r.num * t) / r.den
 (*)(p::PolyType, r::RationalPoly) = TermContainer(p) * r
 (*)(r::RationalPoly, p::Monomial) = r * TermContainer(p)
@@ -54,4 +54,4 @@ end
 (*){C}(r::RationalPoly{C}, α) = r * TermContainer{C}(α)
 
 zero(r::RationalPoly) = zero(r.num)
-zero{C, S, T}(::Type{RationalPoly{C, S, T}}) = zero(VecPolynomial{C, S})
+zero{C, S, T}(::Type{RationalPoly{C, S, T}}) = zero(Polynomial{C, S})

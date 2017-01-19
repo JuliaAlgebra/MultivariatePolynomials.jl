@@ -16,10 +16,10 @@
         @test copy(x) == x
         @test nvars(x) == 1
         @test zero(x) == 0
-        @test typeof(zero(x)) == VecPolynomial{true, Int}
+        @test typeof(zero(x)) == Polynomial{true, Int}
         @inferred zero(x)
         @test one(x) == 1
-        @test typeof(one(x)) == VecPolynomial{true, Int}
+        @test typeof(one(x)) == Polynomial{true, Int}
         @inferred one(x)
     end
     @testset "Monomial" begin
@@ -28,10 +28,10 @@
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
         @test zero(x^2) == 0
-        @test typeof(zero(x^2)) == VecPolynomial{true, Int}
+        @test typeof(zero(x^2)) == Polynomial{true, Int}
         @inferred zero(x^2)
         @test one(x^2) == 1
-        @test typeof(one(x^2)) == VecPolynomial{true, Int}
+        @test typeof(one(x^2)) == Polynomial{true, Int}
         @inferred one(x^2)
         @polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]
