@@ -33,6 +33,8 @@ immutable PolyVar{C} <: PolyType{C}
 end
 iscomm{C}(::Type{PolyVar{C}}) = C
 
+Base.hash(x::PolyVar, u::UInt64) = hash(x.name, u)
+
 copy(x::PolyVar) = x
 
 vars(x::PolyVar) = [x]
@@ -89,6 +91,23 @@ Base.convert{C}(::Type{Monomial{C}}, x::PolyVar{C}) = Monomial{C}([x], [1])
 Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) = Monomial{C}(vars, z)
 Monomial{C}(x::PolyVar{C}) = Monomial{C}(x)
 
+# Generate canonical reperesentation by removing variables that are not used
+function canonical(m::Monomial)
+    list = m.z .> 0
+    Monomial(vars(m)[list], m.z[list])
+end
+
+function Base.hash(x::Monomial, u::UInt64)
+    cx = canonical(x)
+    if length(vars(cx)) == 0
+        hash(1, u)
+    elseif length(vars(cx)) == 1 && cx.z[1] == 1
+        hash(cx.vars[1], u)
+    else
+        hash(vars(cx), hash(cx.z, u))
+    end
+end
+
 # /!\ vars not copied, do not mess with vars
 copy{M<:Monomial}(m::M) = M(m.vars, copy(m.z))
 deg(x::Monomial) = sum(x.z)
@@ -114,6 +133,26 @@ type MonomialVector{C} <: PolyType{C}
 end
 MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) = MonomialVector{C}(vars, Z)
 (::Type{MonomialVector{C}}){C}() = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
+
+# Generate canonical reperesentation by removing variables that are not used
+function canonical(m::MonomialVector)
+    v = zeros(Bool, length(vars(m)))
+    for z in m.Z
+        v = [v[i] || z[i] > 0 for i in eachindex(v)]
+    end
+    MonomialVector(vars(m)[v], [z[v] for z in m.Z])
+end
+
+function Base.hash(m::MonomialVector, u::UInt64)
+    cm = canonical(m)
+    if length(cm.Z) == 0
+        hash(0, u)
+    elseif length(cm.Z) == 1
+        hash(Monomial(vars(cm), cm.Z[1]), u)
+    else
+        hash(vars(cm), hash(cm.Z, hash(u)))
+    end
+end
 
 # /!\ vars not copied, do not mess with vars
 copy{MV<:MonomialVector}(m::MV) = MV(m.vars, copy(m.Z))

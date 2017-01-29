@@ -17,6 +17,9 @@ type Term{C, T} <: TermContainer{C, T}
     α::T
     x::Monomial{C}
 end
+
+Base.hash(t::Term, u::UInt64) = t.α == 1 ? hash(t.x, u) : hash(t.x, hash(t.α, u))
+
 iscomm{C, T}(::Type{Term{C, T}}) = C
 Term(t::Term) = t
 (::Type{Term{C}}){C}(x::Monomial{C}) = Term{C, Int}(x)
@@ -90,6 +93,16 @@ type Polynomial{C, T} <: TermContainer{C, T}
     end
 end
 iscomm{C, T}(::Type{Polynomial{C, T}}) = C
+
+function Base.hash(p::Polynomial, u::UInt64)
+    if length(p.a) == 0
+        hash(0, u)
+    elseif length(p.a) == 1
+        hash(Term(p.a[1], Monomial(p.x[1])))
+    else
+        hash(p.a, hash(p.x, hash(u)))
+    end
+end
 
 Base.copy{C, T}(p::Polynomial{C, T}) = Polynomial{C, T}(copy(p.a), copy(p.x))
 zero{C, T}(::Type{Polynomial{C, T}}) = Polynomial(T[], MonomialVector{C}())
