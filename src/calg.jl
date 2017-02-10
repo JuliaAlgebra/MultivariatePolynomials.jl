@@ -242,11 +242,6 @@ end
 (-)(x::MatPolynomial, y::TermContainer) = Polynomial(x) - y
 (-)(x::MatPolynomial, y::MatPolynomial) = Polynomial(x) - Polynomial(y)
 
-iszero{T}(x::T) = x == zero(T)
-iszero(t::Term) = iszero(t.α)
-iszero(p::Polynomial) = isempty(p)
-iszero(p::MatPolynomial) = isempty(Polynomial(p))
-
 (-){S<:Union{Monomial,PolyVar},T}(x::TermContainer{T}, y::S) = x - Term{T}(y)
 (-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermContainer{T}) = Term{T}(x) - y
 

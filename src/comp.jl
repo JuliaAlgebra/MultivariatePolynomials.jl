@@ -2,6 +2,15 @@ using Combinatorics
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
+if VERSION < v"0.6.0-dev"
+    iszero{T}(x::T) = x == zero(T)
+else
+    import Base.iszero
+end
+iszero(t::Term) = iszero(t.α)
+iszero(p::Polynomial) = isempty(p)
+iszero(p::MatPolynomial) = isempty(Polynomial(p))
+
 # TODO this should be in Base
 function (==){T}(x::Vector{T}, y::Vector{T})
     if length(x) != length(y)
