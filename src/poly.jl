@@ -55,6 +55,7 @@ Base.convert(::Type{Any}, t::Term) = t
 Base.copy{T<:Term}(t::T) = T(copy(t.α), copy(t.x))
 
 vars(t::Term) = vars(t.x)
+nvars(t::Term) = nvars(t.x)
 
 eltype{C, T}(::Type{Term{C, T}}) = T
 length(::Term) = 1
@@ -162,6 +163,7 @@ function Base.convert{S}(::Type{S}, p::TermContainer)
 end
 
 vars(p::Polynomial) = vars(p.x)
+nvars(p::Polynomial) = nvars(p.x)
 
 length(p::Polynomial) = length(p.a)
 isempty(p::Polynomial) = isempty(p.a)

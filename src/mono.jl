@@ -171,6 +171,7 @@ mindeg(x::MonomialVector) = minimum(sum.(x.Z))
 maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
 
 vars{T<:Union{Monomial, MonomialVector}}(x::T) = x.vars
+nvars(x::MonomialVector) = length(x.vars)
 
 function getindex(x::MonomialVector, i::Integer)
     Monomial(x.vars, x.Z[i])

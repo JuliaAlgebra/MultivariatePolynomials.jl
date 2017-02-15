@@ -24,6 +24,8 @@
         @test typeof(zero(1.0x)) == Term{true, Float64}
         @test eltype(1x) == Int
         @test eltype(1.0x^2) == Float64
+        @test nvars(0.0x) == 1
+        @test nvars(1x) == 1
         @inferred one(1x)
         @inferred zero(1x)
         @inferred one(1.0x)
@@ -56,6 +58,8 @@
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
+        @test nvars(x + y - x) == 2
+        @test nvars(x + x^2) == 1
 
         p = Polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
