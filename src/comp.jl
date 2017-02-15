@@ -152,6 +152,8 @@ function (==){C}(p::Polynomial{C}, q::Polynomial{C})
 end
 
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+# Solve ambiguity with (::PolyType, ::Any)
+(==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
 (==)(p, q::RationalPoly) = p*q.den == q.num
 
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)

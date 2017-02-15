@@ -23,11 +23,13 @@ end
 function (/){C, S, T}(num::TermContainer{C, S}, den::TermContainer{C, T})
     RationalPoly{C, S, T}(num, den)
 end
-(/){C}(num::PolyType{C}, den) = num / TermContainer{C}(den)
 function (/){C}(num, den::PolyType{C})
     TermContainer{C}(num) / den
 end
 (/){C}(num::PolyType{C}, den::PolyType{C}) = TermContainer{C}(num) / TermContainer{C}(den)
+
+# Polynomial divided by coefficient is a polynomial not a rational polynomial
+(/){C}(num::PolyType{C}, den) = num * (1 / den)
 
 function (+)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)
