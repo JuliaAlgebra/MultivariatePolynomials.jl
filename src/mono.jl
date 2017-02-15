@@ -33,7 +33,7 @@ immutable PolyVar{C} <: PolyType{C}
 end
 iscomm{C}(::Type{PolyVar{C}}) = C
 
-Base.hash(x::PolyVar, u::UInt64) = hash(x.name, u)
+Base.hash(x::PolyVar, u::UInt) = hash(x.name, u)
 
 copy(x::PolyVar) = x
 
@@ -97,7 +97,7 @@ function canonical(m::Monomial)
     Monomial(vars(m)[list], m.z[list])
 end
 
-function Base.hash(x::Monomial, u::UInt64)
+function Base.hash(x::Monomial, u::UInt)
     cx = canonical(x)
     if length(vars(cx)) == 0
         hash(1, u)
@@ -143,7 +143,7 @@ function canonical(m::MonomialVector)
     MonomialVector(vars(m)[v], [z[v] for z in m.Z])
 end
 
-function Base.hash(m::MonomialVector, u::UInt64)
+function Base.hash(m::MonomialVector, u::UInt)
     cm = canonical(m)
     if length(cm.Z) == 0
         hash(0, u)
