@@ -68,7 +68,8 @@ end
 
 function (p::Polynomial)(x::Vector, varorder)
     vals = evalmap(vars(p), x, varorder)
-    sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
+    # I need to check for izero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
+    iszero(p) ? zero(Base.promote_op(*, eltype(p), eltype(vals))) : sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
 function subs(p::Polynomial, x::Vector, varorder)

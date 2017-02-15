@@ -1,5 +1,9 @@
 import Base.Test: @inferred
 
+if VERSION < v"0.6.0-dev"
+    import MultivariatePolynomials.iszero
+end
+
 @testset "Substitution" begin
     @polyvar x[1:3]
 
@@ -35,4 +39,8 @@ import Base.Test: @inferred
     @inferred p([1.0, 2.0], [x[1], x[2]])
 
     @test subs(p, [2.0], [x[2]]) == 13x[1] + 2 + 2x[1]^2
+
+    p = x[1] - x[1]
+    @test iszero(p)
+    @test iszero(p([1], [x[1]]))
 end
