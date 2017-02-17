@@ -63,3 +63,19 @@ end
         @test !isapprox(2.001,  (2x) / x, rtol=1e-4)
     end
 end
+@testset "Equality between a Polynomial and a type not defining zero #22" begin
+    @polyvar x
+    # Polynomial of multiple terms
+    p = x + x^2
+    @test p != nothing
+    @test p != Dict{Int,Int}()
+    # Polynomial of one term
+    p = x + x^2 - x
+    @test p != nothing
+    @test p != Dict{Int,Int}()
+    # Polynomial of no term
+    # Waiting Julia v0.6 with Base.iszero to fix this
+    #p = x - x
+    #@test p != nothing
+    #@test p != Dict{Int,Int}()
+end
