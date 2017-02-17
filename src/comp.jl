@@ -125,8 +125,8 @@ function (==){C}(s::Term{C}, t::Term{C})
     (s.α == t.α) && (iszero(s.α) || s.x == t.x)
 end
 function (==){C}(t::Term{C}, p::Polynomial{C})
-    if iszero(t.α)
-        isempty(p.a)
+    if isempty(p.a)
+        iszero(t.α)
     else
         length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
     end
