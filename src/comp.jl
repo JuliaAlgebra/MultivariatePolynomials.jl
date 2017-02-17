@@ -32,14 +32,13 @@ end
 
 # Comparison of PolyVar
 
-# TODO equality should be between name ?
 function (==){C}(x::PolyVar{C}, y::PolyVar{C})
-    x === y
+    x.id == y.id
 end
 (==)(α, x::PolyVar) = false
 (==){C}(p::PolyType{C}, x::PolyVar{C}) = x == p
 
-isless{C}(x::PolyVar{C}, y::PolyVar{C}) = isless(y.name, x.name)
+isless{C}(x::PolyVar{C}, y::PolyVar{C}) = isless(y.id, x.id)
 
 # Comparison of Monomial
 

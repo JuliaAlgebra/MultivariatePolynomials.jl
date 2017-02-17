@@ -27,13 +27,19 @@ macro ncpolyvar(args...)
     reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{false}, arg) for arg in args])
 end
 
-# TODO equality should be between name ?
 immutable PolyVar{C} <: PolyType{C}
+    id::Int
     name::AbstractString
+    function PolyVar(name::AbstractString)
+        # gensym returns something like Symbol("##42")
+        # we first remove "##" and then parse it into an Int
+        id = parse(Int, string(gensym())[3:end])
+        new(id, name)
+    end
 end
 iscomm{C}(::Type{PolyVar{C}}) = C
 
-Base.hash(x::PolyVar, u::UInt) = hash(x.name, u)
+Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
 
 copy(x::PolyVar) = x
 
