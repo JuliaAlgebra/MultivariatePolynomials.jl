@@ -1,6 +1,9 @@
 export Measure, zeta, ζ
 
-abstract AbstractMeasure
+type Moment{C, T}
+    α::T
+    x::Monomial{C}
+end
 
 # If a monomial is not in x, it does not mean that the moment is zero, it means that it is unknown/undefined
 type Measure{C, T}
@@ -28,4 +31,9 @@ Measure{T<:VectorOfPolyType{false}}(a::Vector, X::Vector{T}) = Measure{false}(a,
 
 function ζ{C, T}(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C}})
     Measure(T[m(v, varorder) for m in x], x)
+end
+
+function MatMesure{C, T}
+    Q::Vector{T}
+    x::MonomialVector{C}
 end
