@@ -10,5 +10,7 @@
     @test hash(MonomialVector([z, y, x], [[3, 0, 0], [1,0,1]])) == hash(MonomialVector([z, x], [[3, 0], [1, 1]]))
     @test hash(Monomial([z, y, x], [3, 0, 0])) == hash(Monomial([z, x], [3, 0]))
     @test hash(1) == hash(one(x))
+    @test hash(1) == hash(Monomial([x, y], [0, 0]))
+    @test hash(2) != hash(Monomial([x, y], [0, 0]))
     @test hash(0.0) == hash(x-x)
 end

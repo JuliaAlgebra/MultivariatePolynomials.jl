@@ -18,6 +18,8 @@ end
 @testset "Equality" begin
     @testset "Monomial equality" begin
         @polyvar x y
+        @test 1 == Monomial([x, y], [0, 0])
+        @test 2 != Monomial([x, y], [0, 0])
         @test 2 != x
         @test 2 != x*y
         @test 2 != MonomialVector([x, y], 1)

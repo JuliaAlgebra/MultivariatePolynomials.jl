@@ -79,7 +79,7 @@ end
 function (==){C}(x::Monomial{C}, y::Monomial{C})
     mycomp(x, y) == 0
 end
-(==)(α, x::Monomial) = false
+(==)(α, x::Monomial) = isconstant(x) && α == 1
 (==){C}(x::PolyVar{C}, y::Monomial{C}) = Monomial{C}(x) == y
 (==){C}(p::PolyType{C}, x::Monomial{C}) = x == p
 
