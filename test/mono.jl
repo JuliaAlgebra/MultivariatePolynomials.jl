@@ -51,6 +51,10 @@
         @test X.Z == [[1, 1], [1, 0], [0, 0]]
         @test isa(MonomialVector{true}([1]), MonomialVector{true})
         @test isa(MonomialVector{false}([1]), MonomialVector{false})
+        @test X[2:3][1] == x
+        @test X[2:3][2] == 1
+        @test X[[3, 2]][1] == x
+        @test X[[3, 2]][2] == 1
     end
 end
 module newmodule

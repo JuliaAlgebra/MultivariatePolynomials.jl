@@ -163,7 +163,7 @@ end
 # /!\ vars not copied, do not mess with vars
 copy{MV<:MonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
 function getindex{MV<:MonomialVector}(x::MV, I)
-    MV(x.vars, x.Z[I])
+    MV(x.vars, x.Z[sort(I)])
 end
 
 length(x::MonomialVector) = length(x.Z)
