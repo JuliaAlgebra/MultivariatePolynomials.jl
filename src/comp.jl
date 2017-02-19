@@ -1,4 +1,3 @@
-using Combinatorics
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
@@ -217,24 +216,38 @@ function isapprox(p::MatPolynomial, q::MatPolynomial)
     p.x == q.x && isapprox(p.Q, q.Q)
 end
 
+function permcomp(f, m)
+    picked = IntSet()
+    for i in 1:m
+        k = 0
+        for j in 1:m
+            if !(j in picked) && f(i, j)
+                k = j
+                break
+            end
+        end
+        if k == 0
+            return false
+        end
+        push!(picked, k)
+    end
+    true
+end
+
 function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
     m = length(p.ps)
     if length(q.ps) != m
         false
     else
-        for σ in permutations(1:m)
-            ok = true
-            for i in 1:m
-                if !isapprox(p.ps[i], q.ps[σ[i]], rtol=rtol, atol=atol, ztol=ztol)
-                    ok = false
-                    break
-                end
-            end
-            if ok
-                return true
-            end
-        end
+        permcomp((i, j) -> isapprox(p.ps[i], q.ps[j], rtol=rtol, atol=atol, ztol=ztol), m)
+    end
+end
+function isapprox{C, S, T}(μ::AtomicMeasure{C, S}, ν::AtomicMeasure{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0)
+    m = length(μ.λ)
+    if length(ν.λ) != m
         false
+    else
+        permcomp((i, j) -> isapprox(μ.λ[i], ν.λ[j], rtol=rtol, atol=atol) && isapprox(μ.vals[i], ν.vals[j], rtol=rtol, atol=atol), m)
     end
 end
 

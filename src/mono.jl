@@ -1,5 +1,5 @@
 export PolyVar, Monomial, MonomialVector, @polyvar, @ncpolyvar, VectorOfPolyType
-export monomials, polyvecvar, vars, nvars, extdeg, mindeg, maxdeg
+export monomials, polyvecvar, vars, nvars, extdeg, mindeg, maxdeg, multisearch
 
 function polyvecvar{PV}(::Type{PV}, prefix, idxset)
     [PV("$(prefix * string(i))") for i in idxset]
@@ -162,9 +162,8 @@ end
 
 # /!\ vars not copied, do not mess with vars
 copy{MV<:MonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
-function getindex{MV<:MonomialVector}(x::MV, I)
-    MV(x.vars, x.Z[sort(I)])
-end
+Base.getindex(x::MonomialVector, I::Vector{Bool}) = MonomialVector(x.vars, x.Z[I])
+Base.getindex(x::MonomialVector, I) = MonomialVector(x.vars, x.Z[sort(I)])
 
 length(x::MonomialVector) = length(x.Z)
 isempty(x::MonomialVector) = length(x) == 0
@@ -324,4 +323,34 @@ function mergemonovec{C}(ms::Vector{MonomialVector{C}})
         end
     end
     X
+end
+
+function multisearch(y::MonomialVector, x::MonomialVector)
+    allvars, maps = myunion([vars(x), vars(y)])
+    zx = zeros(Int, length(allvars))
+    zy = zeros(Int, length(allvars))
+    idxs = zeros(Int, length(x))
+    j = 1
+    for i in 1:length(x)
+        zx[maps[1]] = x.Z[i]
+        found = false
+        while j <= length(y)
+            zy[maps[2]] = y.Z[j]
+            if zx == zy
+                found = true
+                break
+            elseif zx > zy
+                break
+            end
+            j += 1
+        end
+        if found
+            idxs[i] = j
+        end
+    end
+    idxs
+end
+function multisearch(y::MonomialVector, x::Vector)
+    σ, X = sortmonovec(x)
+    multisearch(y, X)[σ]
 end
