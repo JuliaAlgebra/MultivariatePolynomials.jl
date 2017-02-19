@@ -246,6 +246,14 @@ function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T};
         permcomp((i, j) -> isapprox(p.ps[i], q.ps[j], rtol=rtol, atol=atol, ztol=ztol), m)
     end
 end
+function isapprox{C, S, T}(μ::AtomicMeasure{C, S}, ν::AtomicMeasure{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0)
+    m = length(μ.λ)
+    if length(ν.λ) != m
+        false
+    else
+        permcomp((i, j) -> isapprox(μ.λ[i], ν.λ[j], rtol=rtol, atol=atol) && isapprox(μ.vals[i], ν.vals[j], rtol=rtol, atol=atol), m)
+    end
+end
 
 isapprox{C, S, T, U, V}(p::RationalPoly{C, S, T}, q::RationalPoly{C, U, V}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), promote_op(*, S, V)), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num*q.den, q.num*p.den, rtol=rtol, atol=atol, ztol=ztol)
 isapprox{C, S, T, U}(p::RationalPoly{C, S, T}, q::TermContainer{C, U}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num, q*p.den, rtol=rtol, atol=atol, ztol=ztol)

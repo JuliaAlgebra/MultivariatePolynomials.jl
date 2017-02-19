@@ -241,13 +241,15 @@ end
 # MatPolynomial is not a subtype of AbstractArray so I need to define this too
 getindex(p::MatPolynomial, i, j) = getindex(p, (i, j))
 
-function getmat{C, T}(p::MatPolynomial{C, T})
-    n = length(p.x)
+function _getmat{T}(Q::Vector{T}, n)
     A = Matrix{T}(n, n)
     for i in 1:n, j in i:n
-        A[j,i] = A[i,j] = p.Q[trimap(i,j,n)]
+        A[j,i] = A[i,j] = Q[trimap(i, j, n)]
     end
     A
+end
+function getmat{C, T}(p::MatPolynomial{C, T})
+    _getmat(p.Q, length(p.x))
 end
 
 function trimat{T}(::Type{T}, f, n, σ)
