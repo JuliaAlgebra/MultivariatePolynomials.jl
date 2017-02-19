@@ -67,6 +67,12 @@ end
         @test isapprox((2x) / x, 2.001, rtol=1e-2)
         @test !isapprox(2.001,  (2x) / x, rtol=1e-4)
     end
+    @testset "AtomicMeasure equality" begin
+        @polyvar x y
+        @test isapprox(AtomicMeasure([x, y], [1, 2], [[1, 2], [0, 1]]), AtomicMeasure([x, y], [2, 1], [[0, 1], [1, 2]]))
+        @test !isapprox(AtomicMeasure([x, y], [1, 2], [[1, 2], [0, 1]]), AtomicMeasure([x, y], [1, 2], [[0, 1], [1, 2]]))
+        @test !isapprox(AtomicMeasure([x, y], [1, 2], [[1, 2], [0, 1]]), AtomicMeasure([x, y], [1], [[1, 2]]))
+    end
 end
 @testset "Equality between a Polynomial and a type not defining zero #22" begin
     @polyvar x

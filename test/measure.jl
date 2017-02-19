@@ -4,6 +4,12 @@
     @test_throws ErrorException Measure([1, 2, 3, 4], MonomialVector([x, x*y, y]))
     m = Measure([1, 0, 2, 3], [x^2*y^2, y*x^2, x*y*x^2, x*y^2])
     @test m.a == [2, 1, 0, 3]
+    @test_throws ArgumentError Measure([1], [x]) + Measure([1], [y])
+end
+
+@testset "MatMeasure" begin
+    @polyvar x y
+    @test_throws ArgumentError MatMeasure(Measure([1], [x]), [y])
 end
 
 # [HL05] Henrion, D. & Lasserre, J-B.
