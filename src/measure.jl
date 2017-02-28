@@ -33,7 +33,7 @@ function ζ{C, T}(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C
     Measure(T[m(v, varorder) for m in x], x)
 end
 
-function MatMesure{C, T}
+type MatMesure{C, T}
     Q::Vector{T}
     x::MonomialVector{C}
 end
