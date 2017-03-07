@@ -1,6 +1,6 @@
 import Base.Test: @inferred
 
-if VERSION < v"0.6.0-dev"
+if !isdefined(Base, :iszero)
     import MultivariatePolynomials.iszero
 end
 

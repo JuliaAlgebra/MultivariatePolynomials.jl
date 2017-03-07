@@ -1,10 +1,11 @@
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
-if VERSION < v"0.6.0-dev"
-    iszero{T}(x::T) = x == zero(T)
-else
+# iszero is only available in Julia v0.6
+if isdefined(Base, :iszero)
     import Base.iszero
+else
+    iszero{T}(x::T) = x == zero(T)
 end
 iszero(t::Term) = iszero(t.α)
 iszero(p::Polynomial) = isempty(p)
