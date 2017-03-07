@@ -8,8 +8,12 @@
     @test (-2)*x == -(2*x)
     @test x * x == x^2
     @test 4x == 2.0(2x)
-    @test eltype(2.0(2x)) == Int
     @test x * (2x) == 2x^2
+    @inferred 2.0 * (2x)
+    @test eltype(2.0 * (2x)) == Float64
+    @inferred 1.5 * (2x)
+    @test typeof(1.5 * (2x)) == Term{true, Float64}
+    @test 1.5 * (2x) == 3x
 
     @testset "Inference" begin
         @inferred x^2
