@@ -11,8 +11,9 @@ iszero(t::Term) = iszero(t.α)
 iszero(p::Polynomial) = isempty(p)
 iszero(p::MatPolynomial) = isempty(Polynomial(p))
 
-# TODO this should be in Base
-function (==){T}(x::Vector{T}, y::Vector{T})
+# TODO This should be in Base with T instead of PolyVar{C}.
+# See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
+function (==){C}(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}})
     if length(x) != length(y)
         false
     else
