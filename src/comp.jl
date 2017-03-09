@@ -117,6 +117,8 @@ function isapproxzero(x; ztol::Real=1e-6)
     -ztol < x < ztol
 end
 
+# See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+(==)(α::Void, x::TermType) = false
 (==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
 (==){C}(y::PolyType{C}, p::TermContainer{C}) = TermContainer{C}(y) == p
 
