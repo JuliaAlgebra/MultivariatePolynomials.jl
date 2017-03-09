@@ -133,7 +133,7 @@ type MonomialVector{C} <: PolyType{C}
                 throw(ArgumentError("There should be as many vars than exponents"))
             end
         end
-        @assert issorted(Z, rev=true)
+        @assert issorted(Z, rev=true, lt=grlex)
         new(vars, Z)
     end
 end
@@ -230,7 +230,7 @@ function getZfordegs(n, degs::AbstractVector{Int}, C::Bool, filter::Function)
     for deg in sort(degs, rev=true)
         fillZfordeg!(Z, n, deg, Val{C}, filter)
     end
-    @assert issorted(Z, rev=true)
+    @assert issorted(Z, rev=true, lt=grlex)
     Z
 end
 function MonomialVector(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
@@ -285,7 +285,7 @@ function sortmonovec{C, T<:Union{PolyType,Int}}(::Type{PolyVar{C}}, X::Vector{T}
         Int[], MonomialVector{C}()
     else
         allvars, Z = buildZvarsvec(PolyVar{C}, X)
-        σ = sortperm(Z, rev=true)
+        σ = sortperm(Z, rev=true, lt=grlex)
         σ, MonomialVector{C}(allvars, Z[σ])
     end
 end
@@ -294,7 +294,7 @@ sortmonovec{T<:VectorOfPolyType{false}}(x::Vector{T}) = sortmonovec(PolyVar{fals
 sortmonovec{T<:VectorOfPolyType{true}}(x::Vector{T}) = sortmonovec(PolyVar{true}, x)
 function (::Type{MonomialVector{C}}){C}(X::Vector)
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
-    sort!(Z, rev=true)
+    sort!(Z, rev=true, lt=grlex)
     MonomialVector{C}(allvars, Z)
 end
 MonomialVector{T<:VectorOfPolyType{false}}(X::Vector{T}) = MonomialVector{false}(X)

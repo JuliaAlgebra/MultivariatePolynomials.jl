@@ -158,7 +158,7 @@ end
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
 (==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
 
-function isless(x::Vector, y::Vector)
+function grlex(x::Vector{Int}, y::Vector{Int})
     @assert length(x) == length(y)
     degx = sum(x)
     degy = sum(y)

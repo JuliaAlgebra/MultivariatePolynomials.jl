@@ -194,7 +194,7 @@ end
 removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
 function removedups{T}(adup::Vector{T}, Zdup::Vector{Vector{Int}})
-    σ = sortperm(Zdup, rev=true)
+    σ = sortperm(Zdup, rev=true, lt=grlex)
     Z = Vector{Vector{Int}}()
     a = Vector{T}()
     i = 0
