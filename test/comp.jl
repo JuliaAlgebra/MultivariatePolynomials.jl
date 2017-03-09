@@ -79,8 +79,8 @@ end
     @test p != nothing
     @test p != Dict{Int,Int}()
     # Polynomial of no term
-    # Waiting Julia v0.6 with Base.iszero to fix this
-    #p = x - x
-    #@test p != nothing
+    # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+    p = x - x
+    @test p != nothing
     #@test p != Dict{Int,Int}()
 end
