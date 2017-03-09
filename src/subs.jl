@@ -66,15 +66,22 @@ function (t::Term)(x::Vector, varorder)
     t.α * monoeval(t.x.z, vals)
 end
 
-function (p::Polynomial)(x::Vector, varorder)
+function (p::Polynomial{C, T}){C, T, S}(x::Vector{S}, varorder)
     vals = evalmap(vars(p), x, varorder)
     # I need to check for izero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
-    iszero(p) ? zero(Base.promote_op(*, eltype(p), eltype(vals))) : sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
+    iszero(p) ? zero(Base.promote_op(*, S, T)) : sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
 end
 
-function subs(p::Polynomial, x::Vector, varorder)
+function subs{C, T, S}(p::Polynomial{C, T}, x::Vector{S}, varorder)
+    Tin = S <: PolyType ? S : eltype(S)
+    Tout = Base.promote_op(*, T, Tin)
     vals = subsmap(vars(p), x, varorder)
-    sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
+    # I need to check for izero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
+    if iszero(p)
+        zero(Polynomial{C, Tout})
+    else
+        Polynomial{C, Tout}(sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p)))
+    end
 end
 
 (p::MatPolynomial)(x::Vector, varorder) = Polynomial(p)(x, varorder)
