@@ -101,6 +101,9 @@
     end
     @testset "MatPolynomial" begin
         @polyvar x y
+        zP = zero(MatPolynomial{true, Int})
+        @test isempty(zP.Q)
+        @test zP == 0
         P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
         p = Polynomial(P)
         @test p.a == [2, 6, 12, 10, 6]

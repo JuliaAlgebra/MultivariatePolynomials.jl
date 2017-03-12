@@ -225,6 +225,8 @@ type MatPolynomial{C, T} <: TermType{C, T}
     x::MonomialVector{C}
 end
 
+zero{C, T}(::Type{MatPolynomial{C, T}}) = MatPolynomial(T[], MonomialVector{C}())
+
 # i < j
 function trimap(i, j, n)
     div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
