@@ -124,6 +124,13 @@
         P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
         Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
         @test P == Q
+        p = MatPolynomial([2 3; 3 2], [x, y])
+        @test typeof(Polynomial(p)) == Polynomial{true, Int}
+        @test typeof(Polynomial{true}(p)) == Polynomial{true, Int}
+        @test typeof(Polynomial{true, Int}(p)) == Polynomial{true, Int}
+        @test typeof(MultivariatePolynomials.TermContainer(p)) == Polynomial{true, Int}
+        @test typeof(MultivariatePolynomials.TermContainer{true}(p)) == Polynomial{true, Int}
+        @test typeof(MultivariatePolynomials.TermContainer{true, Int}(p)) == Polynomial{true, Int}
     end
     @testset "Non-commutative MatPolynomial" begin
         @ncpolyvar x y
