@@ -106,29 +106,28 @@ function (::Type{Measure{C, T}}){C, T}(μ::AtomicMeasure{C, T}, x::MonomialVecto
     sum(μ.λ[i] * ζ(μ.vals[i], x, μ.vars) for i in 1:length(μ.vals))
 end
 
-function extractatoms(μ::MatMeasure, tol::Real, shift::Real)
-    # We reverse the ordering so that the first columns corresponds to low order monomials
-    # so that we have more chance that low order monomials are in β and then more chance
-    # v[i] * β to be in μ.x
-    M = getmat(μ)[end:-1:1, end:-1:1]
-    m = size(M, 1)
-    v = vars(μ)
-    n = nvars(μ)
-    r = rank(M, tol)
-    V = chol(M + shift * eye(m))[1:r, :]
-#   F = svdfact(M)
-#   S = F.S
-#   r = sum(F.S .> tol)
-#   V = F.U[:, 1:r] .* repmat(sqrt.(S[1:r])', size(F.U, 1), 1)
-    U = rref(V)'
-    @assert size(U) == (m, r)
-    β = μ.x[[m+1-findfirst(j -> U[j, i] != 0, 1:m) for i in 1:r]]
-    for i in 1:n
+# Solve the system
+# y = [U 0] * y
+# where y = x[end:-1:1]
+# which is
+# y = U * β
+function solve_system(U, x)
+    m, r = size(U)
+    @assert m == length(x)
+    n = nvars(x)
+    v = vars(x)
+    pivots = [findfirst(j -> U[j, i] != 0, 1:m) for i in 1:r]
+    if any(pivots .== 0)
+        keep = pivots .> 0
+        pivots = pivots[keep]
+        r = length(pivots)
+        U = U[:, keep]
     end
-    function multisearch_check(x)
-        idxs = multisearch(μ.x, x)
+    β = x[m+1-pivots]
+    function multisearch_check(y)
+        idxs = multisearch(x, y)
         if any(idxs .== 0)
-            error("Missing monomials $(x[idxs .== 0]) in $(μ.x)")
+            error("Missing monomials $(y[idxs .== 0]) in $(x)")
         end
         idxs
     end
@@ -144,8 +143,26 @@ function extractatoms(μ::MatMeasure, tol::Real, shift::Real)
             vals[j][i] = dot(qj, Ns[i] * qj)
         end
     end
+    r, vals
+end
+
+function extractatoms(μ::MatMeasure, tol::Real, shift::Real, ɛ::Real=-1)
+    # We reverse the ordering so that the first columns corresponds to low order monomials
+    # so that we have more chance that low order monomials are in β and then more chance
+    # v[i] * β to be in μ.x
+    M = getmat(μ)[end:-1:1, end:-1:1]
+    m = size(M, 1)
+    r = rank(M, tol)
+    V = chol(M + shift * eye(m))[1:r, :]
+#   F = svdfact(M)
+#   S = F.S
+#   r = sum(F.S .> tol)
+#   V = F.U[:, 1:r] .* repmat(sqrt.(S[1:r])', size(F.U, 1), 1)
+    rref!(V, ɛ == -1 ? sqrt(eps(norm(V, Inf))) : ɛ)
+    r, vals = solve_system(V', μ.x)
     # Determine weights
     Ms = similar(M, r, r)
+    v = vars(μ)
     for i in 1:r
         vi = ζ(vals[i], μ.x, v)
         Ms[:, i] = vi.a[end:-1:end-r+1] * vi.a[end]
