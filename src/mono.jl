@@ -339,7 +339,7 @@ function multisearch(y::MonomialVector, x::MonomialVector)
             if zx == zy
                 found = true
                 break
-            elseif zx > zy
+            elseif grlex(zy, zx)
                 break
             end
             j += 1
