@@ -125,7 +125,9 @@ Polynomial{T<:VectorOfPolyType{false}}(af::Union{Function, Vector}, x::Vector{T}
 Polynomial{T<:VectorOfPolyType{true}}(af::Union{Function, Vector}, x::Vector{T}) = Polynomial{true}(af, x)
 
 (::Type{Polynomial{C}}){C}(α) = Polynomial(Term{C}(α))
-Polynomial{C}(x::PolyType{C}) = Polynomial{C}(x)
+Polynomial{C}(x::PolyType{C}) = Polynomial(Term{C}(x))
+(::Type{Polynomial{C}}){C}(p::PolyType{C}) = Polynomial(p)
+
 Polynomial(p::Polynomial) = p
 Polynomial{C, T}(t::Term{C, T}) = Polynomial{C, T}([t.α], [t.x])
 Base.convert{C, T}(::Type{Polynomial{C, T}}, x) = Polynomial(Term{C, T}(x))
@@ -194,7 +196,7 @@ end
 removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
 function removedups{T}(adup::Vector{T}, Zdup::Vector{Vector{Int}})
-    σ = sortperm(Zdup, rev=true)
+    σ = sortperm(Zdup, rev=true, lt=grlex)
     Z = Vector{Vector{Int}}()
     a = Vector{T}()
     i = 0
@@ -224,6 +226,8 @@ type MatPolynomial{C, T} <: TermType{C, T}
     Q::Vector{T}
     x::MonomialVector{C}
 end
+
+zero{C, T}(::Type{MatPolynomial{C, T}}) = MatPolynomial(T[], MonomialVector{C}())
 
 # i < j
 function trimap(i, j, n)
@@ -331,6 +335,8 @@ function Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C, T})
 end
 Polynomial{C, T}(p::MatPolynomial{C, T}) = convert(Polynomial{C, T}, p)
 TermContainer(p::MatPolynomial) = Polynomial(p)
+(::Type{TermContainer{C}}){C}(p::MatPolynomial{C}) = Polynomial{C}(p)
+(::Type{TermContainer{C, T}}){C, T}(p::MatPolynomial{C}) = Polynomial(p)
 
 type SOSDecomposition{C, T} <: TermType{C, T}
     ps::Vector{Polynomial{C, T}}

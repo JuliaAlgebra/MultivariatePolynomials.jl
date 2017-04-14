@@ -87,7 +87,7 @@ end
 *{C}(α, x::PolyVar{C}) = Term(α, Monomial{C}(x))
 *(α, x::Monomial)      = Term(α, x)
 *(α, p::MatPolynomial) = α * Polynomial(p)
-*{C, T}(α, x::Term{C, T})    = Term(T(α)*x.α, x.x)
+*(α, x::Term)    = Term(α*x.α, x.x)
 *(α, p::Polynomial) = Polynomial(α*p.a, p.x)
 
 # Reverse order to avoid abiguïty with above 5 specific methods

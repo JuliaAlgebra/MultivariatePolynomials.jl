@@ -1,17 +1,19 @@
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
-if VERSION < v"0.6.0-dev"
-    iszero{T}(x::T) = x == zero(T)
-else
+# iszero is only available in Julia v0.6
+if isdefined(Base, :iszero)
     import Base.iszero
+else
+    iszero{T}(x::T) = x == zero(T)
 end
 iszero(t::Term) = iszero(t.α)
 iszero(p::Polynomial) = isempty(p)
 iszero(p::MatPolynomial) = isempty(Polynomial(p))
 
-# TODO this should be in Base
-function (==){T}(x::Vector{T}, y::Vector{T})
+# TODO This should be in Base with T instead of PolyVar{C}.
+# See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
+function (==){C}(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}})
     if length(x) != length(y)
         false
     else
@@ -116,8 +118,10 @@ function isapproxzero(x; ztol::Real=1e-6)
     -ztol < x < ztol
 end
 
+# See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+(==)(α::Void, x::TermType) = false
 (==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
-(==){C}(y::PolyType{C}, p::TermContainer{C}) = TermContainer{C}(y) == p
+(==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 
 function (==){C}(s::Term{C}, t::Term{C})
     (s.α == t.α) && (iszero(s.α) || s.x == t.x)
@@ -157,7 +161,7 @@ end
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
 (==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
 
-function isless(x::Vector, y::Vector)
+function grlex(x::Vector{Int}, y::Vector{Int})
     @assert length(x) == length(y)
     degx = sum(x)
     degy = sum(y)

@@ -51,6 +51,10 @@ end
         @test !isapprox(3*y^2 + x^2, x^2 + 1e-1*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
         @test !isapprox(3.0*y^2 + x + x^2, x + 3*y^2, rtol=1e-2, ztol=1e-2)
     end
+    @testset "MatPolynomial equality" begin
+        @polyvar x y
+        @test MatPolynomial([2 3; 3 2], [x, y]) == 2x^2 + 2y^2 + 6x*y
+    end
     @testset "SOSDecomposition equality" begin
         @polyvar x y
         @test !isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y]))
@@ -85,8 +89,8 @@ end
     @test p != nothing
     @test p != Dict{Int,Int}()
     # Polynomial of no term
-    # Waiting Julia v0.6 with Base.iszero to fix this
-    #p = x - x
-    #@test p != nothing
+    # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+    p = x - x
+    @test p != nothing
     #@test p != Dict{Int,Int}()
 end

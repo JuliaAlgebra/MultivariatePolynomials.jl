@@ -1,9 +1,9 @@
 # Multivariate Polynomials
 
-[![Build Status](https://travis-ci.org/blegat/MultivariatePolynomials.jl.svg?branch=master)](https://travis-ci.org/blegat/MultivariatePolynomials.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/4l5i8sbxev8405jl?svg=true)](https://ci.appveyor.com/project/blegat/multivariatepolynomials-jl)
-[![Coverage Status](https://coveralls.io/repos/github/blegat/MultivariatePolynomials.jl/badge.svg?branch=master)](https://coveralls.io/github/blegat/MultivariatePolynomials.jl?branch=master)
-[![codecov.io](http://codecov.io/github/blegat/MultivariatePolynomials.jl/coverage.svg?branch=master)](http://codecov.io/github/blegat/MultivariatePolynomials.jl?branch=master)
+| **PackageEvaluator** | **Build Status** |
+|:--------------------:|:----------------:|
+| [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
+| [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
 
 Basic arithmetic, integration, differentiation and evaluation over sparse multivariate polynomials and sparse multivariate moments.
 Both commutative and non-commutative variables are supported.
@@ -54,3 +54,17 @@ Therefore, this order cannot be used for substitution, even as a default (see [h
 * [Polynomials](https://github.com/Keno/Polynomials.jl) for univariate polynomials
 
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
+
+[pkg-0.5-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.5.svg
+[pkg-0.5-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
+[pkg-0.6-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.6.svg
+[pkg-0.6-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
+
+[build-img]: https://travis-ci.org/blegat/MultivariatePolynomials.jl.svg?branch=master
+[build-url]: https://travis-ci.org/blegat/MultivariatePolynomials.jl
+[winbuild-img]: https://ci.appveyor.com/api/projects/status/4l5i8sbxev8405jl?svg=true
+[winbuild-url]: https://ci.appveyor.com/project/blegat/multivariatepolynomials-jl
+[coveralls-img]: https://coveralls.io/repos/github/blegat/MultivariatePolynomials.jl/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/blegat/MultivariatePolynomials.jl?branch=master
+[codecov-img]: http://codecov.io/github/blegat/MultivariatePolynomials.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/blegat/MultivariatePolynomials.jl?branch=master

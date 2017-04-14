@@ -24,6 +24,23 @@ end
     @test isapprox(atoms, ν)
 end
 
+@testset "[HL05] Section 3.3.1" begin
+    @polyvar x y z
+    U = [1 0 0 0 0 0;
+         0 1 0 0 0 0;
+         0 0 1 0 0 0;
+         2 0 0 0 0 0; # z^2 = 2z
+         0 0 0 1 0 0;
+         0 2 0 0 0 0; # y^2 = 2y
+         0 0 0 0 1 0;
+         0 0 0 0 0 1;
+         0 0 2 0 0 0] # x^2 = 2x
+    # β will be [z, y, x, y*z, x*z, x*y]
+    x = MonomialVector([z, y, x, z^2, y*z, y^2, x*z, x*y, x^2])
+    # x*β contains x*y*z, x^2*z, x^2*y which are not present so it show fail
+    @test_throws ErrorException MultivariatePolynomials.solve_system(U, x)
+end
+
 #   @testset "[HL05] Section 4" begin
 #       @polyvar x y
 #       μ = Measure([1/9,     0,     1/9,     0, 1/9,   0,     0,     0,   0, 1/3,   0, 1/3, 0, 0, 1],

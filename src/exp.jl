@@ -8,7 +8,7 @@ function _dot{C}(m::Measure{C}, p::TermContainer{C}, f)
             i += 1
         end
         if i > length(m.x)
-            error("The polynomial $p has a monomial for which the expectation is not known in $m")
+            error("The polynomial $p has a nonzero term $t with monomial $(t.x) for which the expectation is not known in $m")
         end
         s += f(m.a[i], t.α)
         i += 1
