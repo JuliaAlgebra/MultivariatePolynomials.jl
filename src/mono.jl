@@ -162,7 +162,7 @@ end
 
 # /!\ vars not copied, do not mess with vars
 copy{MV<:MonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
-Base.getindex(x::MonomialVector, I::Vector{Bool}) = MonomialVector(x.vars, x.Z[I])
+Base.getindex(x::MonomialVector, I::AbstractVector{Bool}) = MonomialVector(x.vars, x.Z[I])
 Base.getindex(x::MonomialVector, I) = MonomialVector(x.vars, x.Z[sort(I)])
 
 length(x::MonomialVector) = length(x.Z)

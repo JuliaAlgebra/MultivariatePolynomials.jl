@@ -152,8 +152,10 @@ function extractatoms(μ::MatMeasure, tol::Real, shift::Real, ɛ::Real=-1)
     # v[i] * β to be in μ.x
     M = getmat(μ)[end:-1:1, end:-1:1]
     m = size(M, 1)
-    r = rank(M, tol)
-    V = chol(M + shift * eye(m))[1:r, :]
+    #r = rank(M, tol)
+    U = chol(M + shift * eye(m))
+    V = U[map(i -> abs(U[i, i]) > tol, 1:m), :]
+    r = size(V, 1)
 #   F = svdfact(M)
 #   S = F.S
 #   r = sum(F.S .> tol)
