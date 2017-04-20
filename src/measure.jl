@@ -172,4 +172,3 @@ function extractatoms(μ::MatMeasure, tol::Real, shift::Real, ɛ::Real=-1)
     λ = Ms \ M[1:r, 1]
     AtomicMeasure(v, λ, vals)
 end
-extractatoms(μ::Measure) = extractatoms(MatMeasure(μ))
