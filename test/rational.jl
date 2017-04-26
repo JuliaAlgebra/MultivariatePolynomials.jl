@@ -11,9 +11,9 @@
     @test 2 * (1/x * (1-x)) + (1/x * x) * (1/x^2 * x^2) - (1-x)/x == (1-x)/x + 1
     @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
     @test typeof(zero(1/x)) == Term{true, Int}
-    @test MultivariatePolynomials.iszero(zero(1/x))
+    @test iszero(zero(1/x))
     @test typeof(zero(RationalPoly{true, Float64, Int})) == Polynomial{true, Float64}
-    @test MultivariatePolynomials.iszero(zero(RationalPoly{true, Float64, Int}))
+    @test iszero(zero(RationalPoly{true, Float64, Int}))
     @test typeof(x / 2) == Term{true, Float64}
     @test typeof((x + x^2) / 3.0) == Polynomial{true, Float64}
     @test nothing != x / (x^2 + 1)

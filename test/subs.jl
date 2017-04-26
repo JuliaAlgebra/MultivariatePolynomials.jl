@@ -1,9 +1,5 @@
 import Base.Test: @inferred
 
-if !isdefined(Base, :iszero)
-    import MultivariatePolynomials.iszero
-end
-
 @testset "Substitution" begin
     @polyvar x[1:3]
 

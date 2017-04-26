@@ -38,7 +38,7 @@ end
     @test length(X1) == length(X2) == length(Z)
     @test issorted(X1, rev=true)
     @test issorted(X2, rev=true)
-    @test issorted(Z, rev=true, lt=MultivariatePolynomials.grlex)
+    @test issorted(Z, rev=true, lt=DynamicPolynomials.grlex)
     @test X1 == X0
     for i in 1:length(Z)
         @test X1[i].vars == X2[i].vars == [x, y, x, y]

@@ -1,10 +1,10 @@
 @testset "Term and Polynomial tests" begin
     @testset "TermContainer and TermType" begin
-        @test zero(MultivariatePolynomials.TermContainer{false, Float64}) == 0
-        @test eltype(MultivariatePolynomials.TermContainer{true, Int}) == Int
-        @test eltype(MultivariatePolynomials.TermType{false, Float64}) == Float64
+        @test zero(DynamicPolynomials.TermContainer{false, Float64}) == 0
+        @test eltype(DynamicPolynomials.TermContainer{true, Int}) == Int
+        @test eltype(DynamicPolynomials.TermType{false, Float64}) == Float64
         @polyvar x
-        @test eltype(MultivariatePolynomials.TermContainer(x)) == Int
+        @test eltype(DynamicPolynomials.TermContainer(x)) == Int
     end
 
     @testset "Term" begin
@@ -33,8 +33,8 @@
 
         @test_throws InexactError Int(2x)
 
-        @test typeof(MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))) == Term{true, Int}
-        @inferred MultivariatePolynomials.TermContainer(MultivariatePolynomials.TermContainer{true}(1))
+        @test typeof(DynamicPolynomials.TermContainer(DynamicPolynomials.TermContainer{true}(1))) == Term{true, Int}
+        @inferred DynamicPolynomials.TermContainer(DynamicPolynomials.TermContainer{true}(1))
         @test !isempty(1x)
     end
     @testset "Polynomial" begin
@@ -130,9 +130,9 @@
         @test typeof(Polynomial(p)) == Polynomial{true, Int}
         @test typeof(Polynomial{true}(p)) == Polynomial{true, Int}
         @test typeof(Polynomial{true, Int}(p)) == Polynomial{true, Int}
-        @test typeof(MultivariatePolynomials.TermContainer(p)) == Polynomial{true, Int}
-        @test typeof(MultivariatePolynomials.TermContainer{true}(p)) == Polynomial{true, Int}
-        @test typeof(MultivariatePolynomials.TermContainer{true, Int}(p)) == Polynomial{true, Int}
+        @test typeof(DynamicPolynomials.TermContainer(p)) == Polynomial{true, Int}
+        @test typeof(DynamicPolynomials.TermContainer{true}(p)) == Polynomial{true, Int}
+        @test typeof(DynamicPolynomials.TermContainer{true, Int}(p)) == Polynomial{true, Int}
         p = x + y
         Q = MatPolynomial([true false; false true], [x, y])
         P = MatPolynomial([1 2; 2 1], [x, y])
