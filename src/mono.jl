@@ -30,7 +30,7 @@ end
 immutable PolyVar{C} <: PolyType{C}
     id::Int
     name::AbstractString
-    function PolyVar{C}(name::AbstractString) where {C}
+    function PolyVar{C}(name::AbstractString) where C
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
@@ -150,7 +150,7 @@ type MonomialVector{C} <: PolyType{C}
     vars::Vector{PolyVar{C}}
     Z::Vector{Vector{Int}}
 
-    function MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C}
+    function MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where C
         for z in Z
             if length(vars) != length(z)
                 throw(ArgumentError("There should be as many vars than exponents"))
@@ -313,7 +313,7 @@ function sortmonovec{C, T<:Union{PolyType,Int}}(::Type{PolyVar{C}}, X::Vector{T}
         σ, MonomialVector{C}(allvars, Z[σ])
     end
 end
-VectorOfPolyType{C} = Union{PolyType{C},Int}
+const VectorOfPolyType{C} = Union{PolyType{C},Int}
 sortmonovec{T<:VectorOfPolyType{false}}(x::Vector{T}) = sortmonovec(PolyVar{false}, x)
 sortmonovec{T<:VectorOfPolyType{true}}(x::Vector{T}) = sortmonovec(PolyVar{true}, x)
 function (::Type{MonomialVector{C}}){C}(X::Vector)

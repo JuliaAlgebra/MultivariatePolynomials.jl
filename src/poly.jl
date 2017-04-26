@@ -3,7 +3,7 @@ export monomial, monomials, removeleadingterm, removemonomials
 export leadingcoef, leadingmonomial, leadingterm
 export getmat, divides
 
-@compat abstract type TermType{C, T} <: PolyType{C} end
+abstract type TermType{C, T} <: PolyType{C} end
 eltype{C, T}(::Type{TermType{C, T}}) = T
 eltype{C, T}(p::TermType{C, T}) = T
 zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vector{Vector{Int}}()))
@@ -11,7 +11,7 @@ zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vecto
 one{C, T}(t::TermType{C, T}) = Polynomial([one(T)], MonomialVector{C}(vars(t), [zeros(Int, length(vars(t)))]))
 #one{T<:TermType}(::Type{T}) = Polynomial([one(eltype(T))], MonomialVector{iscomm(T)}(PolyVar[], [Int[]]))
 
-@compat abstract type TermContainer{C, T} <: TermType{C, T} end
+abstract type TermContainer{C, T} <: TermType{C, T} end
 eltype{C, T}(::Type{TermContainer{C, T}}) = T
 zero{C, T}(::Type{TermContainer{C, T}}) = zero(Polynomial{C, T})
 one{C, T}(::Type{TermContainer{C, T}}) = one(Polynomial{C, T})
@@ -80,7 +80,8 @@ type Polynomial{C, T} <: TermContainer{C, T}
     x::MonomialVector{C}
 
     function Polynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
-        if length(a) != length(x) throw(ArgumentError("There should be as many coefficient than monomials"))
+        if length(a) != length(x)
+            throw(ArgumentError("There should be as many coefficient than monomials"))
         end
         zeroidx = Int[]
         for (i,α) in enumerate(a)
