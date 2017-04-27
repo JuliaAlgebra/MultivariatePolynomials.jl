@@ -2,9 +2,6 @@
 #   @testset "polyvar macro index set" begin
 #       n = 3
 #       @polyvar x[1:n] y z[1:n-1]
-#       @test isa(x, Vector{PolyVar{true}})
-#       @test isa(y, PolyVar{true})
-#       @test isa(z, Vector{PolyVar{true}})
 #       @test length(x) == 3
 #       @test length(z) == 2
 #       @test x[1] > x[2] > x[3] > y > z[1] > z[2]
@@ -18,39 +15,24 @@
         @test one(x) == 1
         @inferred one(x)
     end
-#   @testset "Monomial" begin
-#       @test zero(Monomial{false}) == 0
-#       @test one(Monomial{true}) == 1
-#       @polyvar x
-#       @test_throws ArgumentError Monomial{true}([x], [1,0])
-#       @test zero(x^2) == 0
-#       @test typeof(zero(x^2)) == Polynomial{true, Int}
-#       @inferred zero(x^2)
-#       @test one(x^2) == 1
-#       @test typeof(one(x^2)) == Polynomial{true, Int}
-#       @inferred one(x^2)
+    @testset "Monomial" begin
+        @polyvar x
+        @test zero(x^2) == 0
+        @inferred zero(x^2)
+        @test one(x^2) == 1
+        @inferred one(x^2)
 #       @polyvar y[1:7]
 #       m = y[1] * y[3] * y[5] * y[7]
 #       @test issorted(vars(y[2] * m), rev=true)
 #       @test issorted(vars(m * y[4]), rev=true)
 #       @test issorted(vars(y[6] * m), rev=true)
-#   end
+    end
 #   @testset "MonomialVector" begin
 #       @polyvar x y
-#       @test_throws ArgumentError MonomialVector{true}([x], [[1], [1,0]])
 #       X = [x^2,x*y,y^2]
-#       for (i, m) in enumerate(monomials([x,y], 2))
+#       for (i, m) in enumerate(monomials([x, y], 2))
 #           @test m == X[i]
 #       end
-#       X = MonomialVector([x, 1, x*y])
-#       @test vars(X) == [x, y]
-#       @test X.Z == [[1, 1], [1, 0], [0, 0]]
-#       @test isa(MonomialVector{true}([1]), MonomialVector{true})
-#       @test isa(MonomialVector{false}([1]), MonomialVector{false})
-#       @test X[2:3][1] == x
-#       @test X[2:3][2] == 1
-#       @test X[[3, 2]][1] == x
-#       @test X[[3, 2]][2] == 1
 #   end
 end
 module newmodule

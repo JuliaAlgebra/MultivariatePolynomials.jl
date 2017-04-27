@@ -5,7 +5,7 @@ using TypedPolynomials
 
 include("mono.jl")
 #include("ncmono.jl")
-#include("poly.jl")
+include("poly.jl")
 #include("rational.jl")
 #include("measure.jl")
 #include("exp.jl")
