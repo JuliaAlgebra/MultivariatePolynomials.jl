@@ -6,6 +6,7 @@ import Base: *, +, -, /, ^, ==,
     promote_rule, convert, show, isless, size, getindex,
     one, zero, transpose, isapprox, @pure, dot, copy
 
+include("utils.jl")
 include("types.jl")
 include("operators.jl")
 #include("show.jl")
