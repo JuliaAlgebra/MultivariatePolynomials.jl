@@ -86,5 +86,5 @@ end
     # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
     p = x - x
     @test p != nothing
-    #@test p != Dict{Int,Int}()
+    @test p != Dict{Int,Int}()
 end

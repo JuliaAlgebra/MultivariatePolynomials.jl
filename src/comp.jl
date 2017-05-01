@@ -120,6 +120,8 @@ end
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 (==)(α::Void, x::TermType) = false
+(==)(α::Dict, x::TermType) = false
+(==)(x::TermType, α::Dict) = false
 (==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
 (==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 
@@ -157,6 +159,9 @@ end
 # Solve ambiguity with (::PolyType, ::Any)
 (==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
 (==)(p, q::RationalPoly) = p*q.den == q.num
+# IJulia output, see https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+(==)(α::Void, x::RationalPoly) = false
+(==)(α::Dict, x::RationalPoly) = false
 
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
 (==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)

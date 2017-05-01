@@ -16,4 +16,8 @@
     @test MultivariatePolynomials.iszero(zero(RationalPoly{true, Float64, Int}))
     @test typeof(x / 2) == Term{true, Float64}
     @test typeof((x + x^2) / 3.0) == Polynomial{true, Float64}
+    @test nothing != x / (x^2 + 1)
+    @test (x^2 + 1) / (2x) != nothing
+    @test Dict{Int,Int}() != x / (x^2 + 1)
+    @test (x^2 + 1) / (2x) != Dict{Int,Int}()
 end
