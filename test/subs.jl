@@ -21,11 +21,6 @@ end
     q = p([1 -1; 1 1] * x[1:2], x[1:2])
     @test q == 2p
 
-    q = (x[1] + 1) / (x[1] + 2)
-    @test isapproxzero(q([-1], [x[1]]))
-    @test !isapproxzero(q([1], [x[1]]))
-    @test isapprox(q([1], [x[1]]), 2/3)
-
     t = 2.0 * x[1] * x[2]^2
     @test t([1, 2, 3], x) == 8.0
     @test t([1, 3], [x[2], x[1]]) == 6.0
@@ -51,4 +46,12 @@ end
     @test iszero(p([1], [x[1]]))
     @inferred subs(p, [1], [x[1]])
     @test iszero(subs(p, [1], [x[1]]))
+
+    q = (x[1] + 1) / (x[1] + 2)
+    @test isapproxzero(q([-1], [x[1]]))
+    @test !isapproxzero(q([1], [x[1]]))
+    @test isapprox(q([1], [x[1]]), 2/3)
+
+    q = (x[1] + x[3]) / (x[2] - 1)
+    @test subs(q, [x[2], x[1]], x[1:2]) == (x[2] + x[3]) / (x[1] - 1)
 end

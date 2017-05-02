@@ -90,3 +90,4 @@ subs(p::MatPolynomial, x::Vector, varorder) = subs(Polynomial(p), x, varorder)
 function (q::RationalPoly)(x::Vector, varorder)
     q.num(x, varorder) / q.den(x, varorder)
 end
+subs(q::RationalPoly, x::Vector, varorder) = subs(q.num, x, varorder) / subs(q.den, x, varorder)
