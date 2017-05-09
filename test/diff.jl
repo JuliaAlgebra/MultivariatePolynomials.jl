@@ -4,4 +4,5 @@
     @test differentiate(x*y + 3y^2 , [x, y]) == [y, x+6y]
     @test differentiate(1 / x , [x, y]) == [-1/x^2, 0]
     @test differentiate((x - y) / (x * y) , [x, y]) == [y^2 / (x * y)^2, -x^2 / (x * y)^2]
+    @test differentiate(x^2-y+x*y, x, 2) == 2
 end

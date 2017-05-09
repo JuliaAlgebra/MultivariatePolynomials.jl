@@ -37,3 +37,11 @@ differentiate(p::RationalPoly, x::PolyVar) = (differentiate(p.num, x) * p.den - 
 function differentiate{C}(p::PolyType{C}, xs::Vector{PolyVar{C}})
     [differentiate(p, x) for x in xs]
 end
+
+function differentiate(p::Polynomial, x, deg::Int)
+    deg < 0 && throw(DomainError("Cannot compute a negative derivative of a polynomial"))
+    for i in 1:deg
+        p = differentiate(p, x)
+    end
+    p
+end
