@@ -39,9 +39,15 @@ function differentiate{C}(p::PolyType{C}, xs::Vector{PolyVar{C}})
 end
 
 function differentiate(p::Polynomial, x, deg::Int)
-    deg < 0 && throw(DomainError("Cannot compute a negative derivative of a polynomial"))
-    for i in 1:deg
-        p = differentiate(p, x)
+    if deg < 0
+        throw(DomainError("Cannot compute a negative derivative of a polynomial"))
+    elseif deg == 0
+        return p
+    else
+        return differentiate(differentiate(p, x), x, deg-1)
     end
-    p
 end
+
+differentiate(p::PolyVar, x, deg)       = differentiate(Polynomial(p), x, deg)
+differentiate(p::Term, x, deg)          = differentiate(Polynomial(p), x, deg)
+differentiate(p::MatPolynomial, x, deg) = differentiate(Polynomial(p), x, deg)
