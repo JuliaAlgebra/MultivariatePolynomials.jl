@@ -49,7 +49,7 @@ Base.promote_op{C, T}(differentiate, ::Type{MatPolynomial{C, T}}, ::Type{PolyVar
 
 function differentiate(p::PolyType, x, deg::Int)
     if deg < 0
-        throw(DomainError("Cannot compute a negative derivative of a polynomial"))
+        throw(DomainError())
     elseif deg == 0
         # Need the conversion with promote_op to be type stable for PolyVar, Monomial and MatPolynomial
         return Base.promote_op(differentiate, typeof(p), typeof(x))(p)

@@ -12,9 +12,7 @@
     p = x^2-y+x*y
     @test differentiate(p, x, 2) == 2
     @test differentiate(p, x, 0) === p
-    # -> Cannot `convert` an object of type String to an object of type DomainError
-    # it seems DomainError does not accept any argument
-    #@test_throws DomainError differentiate(p, x, -1)
+    @test_throws DomainError differentiate(p, x, -1)
     @test differentiate(x, x, 1) == 1
     @inferred differentiate(x, x, 0)
     @inferred differentiate(x, x, 1)
