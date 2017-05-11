@@ -42,17 +42,18 @@ function differentiate{C}(p::PolyType{C}, xs::Vector{PolyVar{C}})
     [differentiate(p, x) for x in xs]
 end
 
-# In Julia v0.5, it returns Any
-Base.promote_op{C}(differentiate, ::Type{PolyVar{C}}, ::Type{PolyVar{C}}) = Term{true, Int}
-Base.promote_op{C}(differentiate, ::Type{Monomial{C}}, ::Type{PolyVar{C}}) = Term{true, Int}
-Base.promote_op{C, T}(differentiate, ::Type{MatPolynomial{C, T}}, ::Type{PolyVar{C}}) = Polynomial{true, Base.promote_op(*, T, Int)}
+# In Julia v0.5, Base.promote_op returns Any for PolyVar, Monomial and MatPolynomial
+_diff_promote_op(S, T) = Base.promote_op(differentiate, S, T)
+_diff_promote_op{C}(::Type{PolyVar{C}}, ::Type{PolyVar{C}}) = Term{true, Int}
+_diff_promote_op{C}(::Type{Monomial{C}}, ::Type{PolyVar{C}}) = Term{true, Int}
+_diff_promote_op{C, T}(::Type{MatPolynomial{C, T}}, ::Type{PolyVar{C}}) = Polynomial{true, Base.promote_op(*, T, Int)}
 
 function differentiate(p::PolyType, x, deg::Int)
     if deg < 0
         throw(DomainError())
     elseif deg == 0
         # Need the conversion with promote_op to be type stable for PolyVar, Monomial and MatPolynomial
-        return Base.promote_op(differentiate, typeof(p), typeof(x))(p)
+        return _diff_promote_op(typeof(p), typeof(x))(p)
     else
         return differentiate(differentiate(p, x), x, deg-1)
     end
