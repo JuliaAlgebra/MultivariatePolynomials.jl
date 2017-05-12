@@ -15,6 +15,7 @@ include("ncalg.jl")
 include("diff.jl")
 include("subs.jl")
 include("algebraicset.jl")
+include("norm.jl")
 include("hash.jl")
 
 include("show.jl")
