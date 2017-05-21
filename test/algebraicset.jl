@@ -1,5 +1,6 @@
 @testset "Algebraic set" begin
     @polyvar x y
+    @test isa(FullSpace(), FullSpace)
     V = AlgebraicSet()
     @test_throws ArgumentError addinequality!(V, x*y)
     S = BasicSemialgebraicSet()

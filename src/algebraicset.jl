@@ -1,5 +1,5 @@
 export AbstractSemialgebraicSet, AbstractBasicSemialgebraicSet, AbstractAlgebraicSet
-export AlgebraicSet, BasicSemialgebraicSet, addequality!, addinequality!
+export FullSpace, AlgebraicSet, BasicSemialgebraicSet, addequality!, addinequality!
 # Semialgebraic set described by polynomials with coefficients in T
 abstract AbstractSemialgebraicSet
 
@@ -7,6 +7,9 @@ abstract AbstractBasicSemialgebraicSet <: AbstractSemialgebraicSet
 abstract AbstractAlgebraicSet <: AbstractBasicSemialgebraicSet
 
 addinequality!(S::AbstractAlgebraicSet, p) = throw(ArgumentError("Cannot add inequality to an algebraic set"))
+
+immutable FullSpace <: AbstractAlgebraicSet
+end
 
 type AlgebraicSet <: AbstractAlgebraicSet
     p::Vector
