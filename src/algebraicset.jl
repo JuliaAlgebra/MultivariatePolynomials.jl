@@ -19,6 +19,7 @@ function (::Type{AlgebraicSet})()
 end
 
 addequality!(V::AlgebraicSet, p) = push!(V.p, p)
+Base.intersect(S::AlgebraicSet, T::AlgebraicSet) = AlgebraicSet([S.p; T.p])
 
 type BasicSemialgebraicSet <: AbstractBasicSemialgebraicSet
     V::AlgebraicSet
@@ -30,3 +31,7 @@ end
 
 addequality!(S::BasicSemialgebraicSet, p) = addequality!(S.V, p)
 addinequality!(S::BasicSemialgebraicSet, p) = push!(S.p, p)
+
+Base.intersect(S::BasicSemialgebraicSet, T::BasicSemialgebraicSet) = BasicSemialgebraicSet(S.V ∩ T.V, [S.p; T.p])
+Base.intersect(S::BasicSemialgebraicSet, T::AlgebraicSet) = BasicSemialgebraicSet(S.V ∩ T, copy(S.p))
+Base.intersect(T::AlgebraicSet, S::BasicSemialgebraicSet) = intersect(S, T)
