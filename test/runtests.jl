@@ -1,4 +1,4 @@
-using MultivariatePolynomials
+#using MultivariatePolynomials
 using Base.Test
 
 using TypedPolynomials
@@ -22,5 +22,5 @@ include("poly.jl")
 #
 #include("show.jl")
 #
-#include("example1.jl")
-#include("example2.jl")
+include("example1.jl")
+include("example2.jl")

@@ -2,10 +2,10 @@
     @testset "Term" begin
         @polyvar x
         @test Any(1x) == 1x
-        @test_broken one(1x) == one(1.0x) == 1
+        @test one(1x) == one(1.0x) == 1
         @test zero(1x) == zero(1.0x) == 0
-        @test_broken nvars(0.0x) == 1
-        @test_broken nvars(1x) == 1
+        @test nvars(0.0x) == 1
+        @test nvars(1x) == 1
         #@inferred one(1x)
         @inferred zero(1x)
         #@inferred one(1.0x)
@@ -15,7 +15,7 @@
     end
     @testset "Polynomial" begin
         @polyvar x
-        @test_broken one(1 + x) == one(1.0 + x) == 1
+        @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
         #@inferred one(1 + x)
         @inferred zero(1 + x)
@@ -23,11 +23,11 @@
         @inferred zero(1.0 + x)
         @polyvar y
 
-        @test_broken maxdeg(x*y + 2 + x^2*y + x + y) == 3
-        @test_broken mindeg(x*y + 2 + x^2*y + x + y) == 0
-        @test_broken extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
-        @test_broken nvars(x + y - x) == 2
-        @test_broken nvars(x + x^2) == 1
+        @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
+        @test mindeg(x*y + 2 + x^2*y + x + y) == 0
+        @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
+        @test nvars(x + y - x) == 2
+        @test nvars(x + x^2) == 1
 
         p = Polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
