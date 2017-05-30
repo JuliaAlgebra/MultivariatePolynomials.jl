@@ -55,6 +55,8 @@
         @test X[2:3][2] == 1
         @test X[[3, 2]][1] == x
         @test X[[3, 2]][2] == 1
+        @test X[[false, true, false]][1] == x
+        @test multisearch(X, [x, x*y, y]) == [2, 1, 0]
     end
 end
 module newmodule
