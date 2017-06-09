@@ -226,6 +226,7 @@ type MatPolynomial{C, T} <: TermType{C, T}
     Q::Vector{T}
     x::MonomialVector{C}
 end
+iscomm{C, T}(::Type{MatPolynomial{C, T}}) = C
 
 zero{C, T}(::Type{MatPolynomial{C, T}}) = MatPolynomial(T[], MonomialVector{C}())
 

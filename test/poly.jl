@@ -103,8 +103,10 @@
         @polyvar x y
         zP = zero(MatPolynomial{true, Int})
         @test isempty(zP.Q)
+        @test iscomm(zP)
         @test zP == 0
         P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
+        @test iscomm(P)
         p = Polynomial(P)
         @test p.a == [2, 6, 12, 10, 6]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
