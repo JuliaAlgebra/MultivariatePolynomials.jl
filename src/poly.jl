@@ -227,6 +227,8 @@ type MatPolynomial{C, T} <: TermType{C, T}
     x::MonomialVector{C}
 end
 iscomm{C, T}(::Type{MatPolynomial{C, T}}) = C
+# When taking the promotion of a MatPolynomial of JuMP.Variable with a Polynomial JuMP.Variable, it should be a Polynomial of AffExpr
+eltype{C, T}(::Type{MatPolynomial{C, T}}) = Base.promote_op(+, T, T)
 
 zero{C, T}(::Type{MatPolynomial{C, T}}) = MatPolynomial(T[], MonomialVector{C}())
 
@@ -283,6 +285,7 @@ function MatPolynomial{T}(Q::Matrix{T}, x::Vector)
     matpolyperm(Q, X, σ)
 end
 
+Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C}) = convert(Polynomial{C, T}, Polynomial(p))
 function Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C, T})
     if isempty(p.Q)
         zero(Polynomial{C, T})
