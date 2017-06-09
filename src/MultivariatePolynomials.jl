@@ -2,6 +2,8 @@ __precompile__()
 
 module MultivariatePolynomials
 
+using Compat
+
 import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one
 
 @compat abstract type PolyType{C} end
