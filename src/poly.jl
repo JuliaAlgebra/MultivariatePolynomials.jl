@@ -1,6 +1,6 @@
 export Term, Polynomial, MatPolynomial, SOSDecomposition, TermType, getmat, monomials, removemonomials
 
-abstract TermType{C, T} <: PolyType{C}
+@compat abstract type TermType{C, T} <: PolyType{C} end
 eltype{C, T}(::Type{TermType{C, T}}) = T
 eltype{C, T}(p::TermType{C, T}) = T
 zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vector{Vector{Int}}()))
@@ -8,7 +8,7 @@ zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vecto
 one{C, T}(t::TermType{C, T}) = Polynomial([one(T)], MonomialVector{C}(vars(t), [zeros(Int, length(vars(t)))]))
 #one{T<:TermType}(::Type{T}) = Polynomial([one(eltype(T))], MonomialVector{iscomm(T)}(PolyVar[], [Int[]]))
 
-abstract TermContainer{C, T} <: TermType{C, T}
+@compat abstract type TermContainer{C, T} <: TermType{C, T} end
 eltype{C, T}(::Type{TermContainer{C, T}}) = T
 zero{C, T}(::Type{TermContainer{C, T}}) = zero(Polynomial{C, T})
 one{C, T}(::Type{TermContainer{C, T}}) = one(Polynomial{C, T})
