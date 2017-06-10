@@ -133,7 +133,10 @@
         @test typeof(MultivariatePolynomials.TermContainer(p)) == Polynomial{true, Int}
         @test typeof(MultivariatePolynomials.TermContainer{true}(p)) == Polynomial{true, Int}
         @test typeof(MultivariatePolynomials.TermContainer{true, Int}(p)) == Polynomial{true, Int}
-        @test isa([x + y, MatPolynomial([true false; false true], [x, y])], Vector{Polynomial{true, Int}})
+        p = x + y
+        Q = MatPolynomial([true false; false true], [x, y])
+        @test isa([p, Q], Vector{Polynomial{true, Int}})
+        @test isa([p Q; Q p], Matrix{Polynomial{true, Int}})
     end
     @testset "Non-commutative MatPolynomial" begin
         @ncpolyvar x y
@@ -146,9 +149,9 @@
         p = Polynomial(P)
         @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
         @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
-        @inferred MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
-        @test typeof(MatPolynomial(Matrix{Float64}(), PolyVar{false}[])) == MatPolynomial{false, Float64}
-        @test MatPolynomial(Matrix{Float64}(), PolyVar{false}[]) == 0
+        @inferred MatPolynomial(Matrix{Float64}(0, 0), PolyVar{false}[]) == 0
+        @test typeof(MatPolynomial(Matrix{Float64}(0, 0), PolyVar{false}[])) == MatPolynomial{false, Float64}
+        @test MatPolynomial(Matrix{Float64}(0, 0), PolyVar{false}[]) == 0
         P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
         Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
         @test P != Q
