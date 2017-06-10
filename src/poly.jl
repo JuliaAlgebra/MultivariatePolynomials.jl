@@ -155,6 +155,7 @@ Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
 
 # needed to build [p Q; Q p] where p is a polynomial and Q is a matpolynomial in Julia v0.5
 Base.convert{C}(::Type{TermType{C}}, p::TermContainer{C}) = p
+Base.convert{C, T}(::Type{TermType{C, T}}, p::TermContainer{C, T}) = p
 
 function Base.convert{S}(::Type{S}, p::TermContainer)
     s = zero(S)

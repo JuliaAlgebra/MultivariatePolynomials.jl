@@ -135,8 +135,10 @@
         @test typeof(MultivariatePolynomials.TermContainer{true, Int}(p)) == Polynomial{true, Int}
         p = x + y
         Q = MatPolynomial([true false; false true], [x, y])
+        P = MatPolynomial([1 2; 2 1], [x, y])
         @test isa([p, Q], Vector{Polynomial{true, Int}})
         @test isa([p Q; Q p], Matrix{Polynomial{true, Int}})
+        @test isa([p P; P 0], Matrix{Polynomial{true, Int}})
     end
     @testset "Non-commutative MatPolynomial" begin
         @ncpolyvar x y
