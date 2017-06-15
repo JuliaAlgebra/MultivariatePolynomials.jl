@@ -32,6 +32,8 @@ include("subs.jl")
 include("algebraicset.jl")
 include("norm.jl")
 
+include("div.jl")
+
 include("show.jl")
 
 end # module

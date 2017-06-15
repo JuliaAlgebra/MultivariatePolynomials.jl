@@ -10,7 +10,7 @@ type Measure{C, T}
     a::Vector{T}
     x::MonomialVector{C}
 
-    function Measure(a::Vector{T}, x::MonomialVector{C})
+    function Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
         if length(a) != length(x)
             error("There should be as many coefficient than monomials")
         end
