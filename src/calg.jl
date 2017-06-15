@@ -4,21 +4,7 @@
 # Any op T # ambig with Polytype op Any
 # PolyType op T # breaks ambig
 
-import Base.(^), Base.dot, Base.(.+), Base.(.-), Base.(.*), Base.(./), Base.(.^)
-
-(.+)(p::PolyType, α) = p+α
-(.+)(α, p::PolyType) = α+p
-(.+)(p::PolyType, q::PolyType) = p+q
-(.-)(p::PolyType, α) = p-α
-(.-)(α, p::PolyType) = α-p
-(.-)(p::PolyType, q::PolyType) = p-q
-(.*)(p::PolyType, α) = p*α
-(.*)(α, p::PolyType) = α*p
-(.*)(p::PolyType, q::PolyType) = p*q
-(./)(p::PolyType, α) = p/α
-(./)(α, p::PolyType) = α/p
-(./)(p::PolyType, q::PolyType) = p/q
-(.^)(p::PolyType, i::Int) = p^i
+import Base.(^), Base.dot
 
 import Base.transpose
 Base.transpose(p::PolyType) = p
@@ -55,28 +41,28 @@ function (*)(x::PolyVar{true}, y::MonomialVector{true})
     w, updatez = multiplyvar(y.vars, x)
     MonomialVector{true}(w, updatez.(y.Z))
 end
-function multiplymono(v::Vector{PolyVar{true}}, x::Monomial{true})
+function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op)
     if v == x.vars
         # /!\ no copy done here for efficiency, do not mess up with vars
         w = v
-        updatez = z -> z + x.z
+        updatez = z -> op(z, x.z)
     else
         w, maps = myunion([v, x.vars])
         updatez = z -> begin
             newz = zeros(Int, length(w))
-            newz[maps[1]] += z
-            newz[maps[2]] += x.z
+            newz[maps[1]] = op(newz[maps[1]], z)
+            newz[maps[2]] = op(newz[maps[2]], x.z)
             newz
         end
     end
     w, updatez
 end
 function (*)(x::Monomial{true}, y::Monomial{true})
-    w, updatez = multiplymono(y.vars, x)
+    w, updatez = multdivmono(y.vars, x, +)
     Monomial{true}(w, updatez(y.z))
 end
 function (*)(x::Monomial{true}, y::MonomialVector{true})
-    w, updatez = multiplymono(y.vars, x)
+    w, updatez = multdivmono(y.vars, x, +)
     MonomialVector{true}(w, updatez.(y.Z))
 end
 (*)(x::Monomial{true}, y::PolyVar{true}) = y * x

@@ -17,6 +17,7 @@ include("subs.jl")
 include("algebraicset.jl")
 include("norm.jl")
 include("hash.jl")
+include("div.jl")
 
 include("show.jl")
 

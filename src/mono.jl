@@ -30,7 +30,7 @@ end
 immutable PolyVar{C} <: PolyType{C}
     id::Int
     name::AbstractString
-    function PolyVar(name::AbstractString)
+    function PolyVar{C}(name::AbstractString) where {C}
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
@@ -84,7 +84,7 @@ type Monomial{C} <: PolyType{C}
     vars::Vector{PolyVar{C}}
     z::Vector{Int}
 
-    function Monomial(vars::Vector{PolyVar{C}}, z::Vector{Int})
+    function Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) where {C}
         if length(vars) != length(z)
             throw(ArgumentError("There should be as many vars than exponents"))
         end
@@ -122,12 +122,35 @@ isconstant(x::Monomial) = deg(x) == 0
 zero{C}(::Type{Monomial{C}}) = zero(PolyType{C})
 one{C}(::Type{Monomial{C}}) = one(PolyType{C})
 
+monomial(m::Monomial) = m
+# Does m1 divides m2 ?
+function divides(m1::Monomial, m2::Monomial)
+    i = j = 1
+    while i <= length(m1.z) && j <= length(m2.z)
+        if m1.vars[i] == m2.vars[j]
+            if m1.z[i] > m2.z[j]
+                return false
+            end
+            i += 1
+            j += 1
+        elseif m1.vars[i] > m2.vars[j]
+            if !iszero(m1.z[i])
+                return false
+            end
+            i += 1
+        else
+            j += 1
+        end
+    end
+    i > length(m1.z)
+end
+
 # Invariant: Always sorted and no zero vector
 type MonomialVector{C} <: PolyType{C}
     vars::Vector{PolyVar{C}}
     Z::Vector{Vector{Int}}
 
-    function MonomialVector(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}})
+    function MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C}
         for z in Z
             if length(vars) != length(z)
                 throw(ArgumentError("There should be as many vars than exponents"))
@@ -166,11 +189,12 @@ function getindex{MV<:MonomialVector}(x::MV, I)
     MV(x.vars, x.Z[sort(I)])
 end
 
-length(x::MonomialVector) = length(x.Z)
-isempty(x::MonomialVector) = length(x) == 0
-start(::MonomialVector) = 1
-done(x::MonomialVector, state) = length(x) < state
-next(x::MonomialVector, state) = (x[state], state+1)
+Base.endof(x::MonomialVector) = length(x)
+Base.length(x::MonomialVector) = length(x.Z)
+Base.isempty(x::MonomialVector) = length(x) == 0
+Base.start(::MonomialVector) = 1
+Base.done(x::MonomialVector, state) = length(x) < state
+Base.next(x::MonomialVector, state) = (x[state], state+1)
 
 extdeg(x::MonomialVector) = extrema(sum.(x.Z))
 mindeg(x::MonomialVector) = minimum(sum.(x.Z))
@@ -289,7 +313,7 @@ function sortmonovec{C, T<:Union{PolyType,Int}}(::Type{PolyVar{C}}, X::Vector{T}
         σ, MonomialVector{C}(allvars, Z[σ])
     end
 end
-typealias VectorOfPolyType{C} Union{PolyType{C},Int}
+VectorOfPolyType{C} = Union{PolyType{C},Int}
 sortmonovec{T<:VectorOfPolyType{false}}(x::Vector{T}) = sortmonovec(PolyVar{false}, x)
 sortmonovec{T<:VectorOfPolyType{true}}(x::Vector{T}) = sortmonovec(PolyVar{true}, x)
 function (::Type{MonomialVector{C}}){C}(X::Vector)
