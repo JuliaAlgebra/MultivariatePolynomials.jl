@@ -1,9 +1,9 @@
 export expectation
 
-function _dot{C}(m::Measure{C}, p::TermContainer{C}, f)
+function _dot(m::Measure, p::APL, f)
     i = 1
     s = 0
-    for t in p
+    for t in terms(p)
         while i <= length(m.x) && t.x != m.x[i]
             i += 1
         end
@@ -15,11 +15,8 @@ function _dot{C}(m::Measure{C}, p::TermContainer{C}, f)
     end
     s
 end
-dot(m::Measure, p::TermContainer) = _dot(m, p, (*))
-dot(p::TermContainer, m::Measure) = _dot(m, p, (a, b) -> b * a)
+Base.dot(m::Measure, p::APL) = _dot(m, p, (*))
+Base.dot(p::APL, m::Measure) = _dot(m, p, (a, b) -> b * a)
 
-dot(m::Measure, p::PolyType) = dot(m, TermContainer(p))
-dot(p::PolyType, m::Measure) = dot(TermContainer(p), m)
-
-expectation(m::Measure, p::PolyType) = dot(m, p)
-expectation(p::PolyType, m::Measure) = dot(p, m)
+expectation(m::Measure, p::APL) = dot(m, p)
+expectation(p::APL, m::Measure) = dot(p, m)

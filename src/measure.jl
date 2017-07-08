@@ -1,16 +1,16 @@
 export Measure, zeta, ζ
 
-type Moment{C, T}
+type Moment{T, MT <: AbstractMonomial}
     α::T
-    x::Monomial{C}
+    x::MT
 end
 
 # If a monomial is not in x, it does not mean that the moment is zero, it means that it is unknown/undefined
-type Measure{C, T}
+type Measure{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}}
     a::Vector{T}
-    x::MonomialVector{C}
+    x::MVT
 
-    function Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
+    function Measure{T, MT, MVT}(a::Vector{T}, x::MVT) where {T, MT, MVT}
         if length(a) != length(x)
             error("There should be as many coefficient than monomials")
         end
@@ -18,22 +18,13 @@ type Measure{C, T}
     end
 end
 
-Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) = Measure{C, T}(a, x)
-function (::Type{Measure{C}}){C}(a::Vector, x::Vector)
-    if length(a) != length(x)
-        error("There should be as many coefficient than monomials")
-    end
-    σ, X = sortmonovec(PolyVar{C}, x)
-    Measure(a[σ], X)
-end
-Measure{T<:VectorOfPolyType{true}}(a::Vector, X::Vector{T}) = Measure{true}(a, X)
-Measure{T<:VectorOfPolyType{false}}(a::Vector, X::Vector{T}) = Measure{false}(a, X)
+Measure{T, MT <: AbstractMonomial}(a::Vector{T}, x::AbstractVector{MT}) = Measure{T, MT, monovectype(x)}(monovec(a, x)...)
 
-function ζ{C, T}(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C}})
+function ζ{T, MT <: AbstractMonomial, PVT <: AbstractVariable}(v::Vector{T}, x::AbstractVector{MT}, varorder::AbstractVector{PVT})
     Measure(T[m(v, varorder) for m in x], x)
 end
 
-type MatMeasure{C, T}
+type MatMeasure{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}}
     Q::Vector{T}
-    x::MonomialVector{C}
+    x::MVT
 end
