@@ -45,5 +45,5 @@ end
 (*)(p, r::RationalPoly)       = p == r.den ? r.num : (p * r.num) / r.den
 (*)(r::RationalPoly, p)       = p == r.den ? r.num : (r.num * p) / r.den
 
-zero{NT}(::RationalPoly{NT}) = zero(NT)
-zero{NT, DT}(::Type{RationalPoly{NT, DT}}) = zero(NT)
+Base.zero{NT}(::RationalPoly{NT}) = zero(NT)
+Base.zero{NT, DT}(::Type{RationalPoly{NT, DT}}) = zero(NT)

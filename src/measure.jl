@@ -11,9 +11,7 @@ type Measure{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}}
     x::MVT
 
     function Measure{T, MT, MVT}(a::Vector{T}, x::MVT) where {T, MT, MVT}
-        if length(a) != length(x)
-            error("There should be as many coefficient than monomials")
-        end
+        @assert length(a) == length(x)
         new(a, x)
     end
 end

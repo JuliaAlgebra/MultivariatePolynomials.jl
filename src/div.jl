@@ -1,19 +1,29 @@
+"""
+    divides(t1::AbstractTermLike, t2::AbstractTermLike)
+
+Returns whether the monomial of t1 divides the monomial of t2.
+
+# Examples
+
+Calling `divides(3x*y, 2x^2*y)` should return true but calling `divides(x*y, y)` should return false.
+"""
+function divides(t1::AbstractTermLike, t2::AbstractTermLike)
+    divides(monomial(t1), monomial(t2))
+end
+divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
+
 # _div(a, b) assumes that b divides a
-function _div(m1::Monomial{true}, m2::Monomial{true})
-    w, updatez = multdivmono(m1.vars, m2, -)
-    Monomial{true}(w, updatez(m1.z))
+function _div(t::AbstractTerm, m::AbstractMonomial)
+    coefficient(t1) * _div(monomial(t), m)
 end
-function _div(t::Term, m::Monomial)
-    t1.α * _div(monomial(t), m)
-end
-function _div(t1::Term, t2::Term)
-    (t1.α / t2.α) * _div(monomial(t1), monomial(t2))
+function _div(t1::AbstractTerm, t2::AbstractTerm)
+    (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))
 end
 
 proddiff(x, y) = x*y - x*y
 
-function Base.divrem{C, T, S}(f::Polynomial{C, T}, g::Polynomial{C, S})
-    rf = Polynomial{C, promote_op(proddiff, T, S)}(f)
+function Base.divrem{T, S}(f::APL{T}, g::APL{S})
+    rf = changecoefficienttype(f, promote_op(proddiff, T, S))
     q = r = zero(f - g / 2)
     lt = leadingterm(g)
     rg = removeleadingterm(g)
@@ -36,5 +46,5 @@ function Base.divrem{C, T, S}(f::Polynomial{C, T}, g::Polynomial{C, S})
     end
     q, r
 end
-Base.div(f::PolyType, g::PolyType) = divrem(f, g)[1]
-Base.rem(f::PolyType, g::PolyType) = divrem(f, g)[2]
+Base.div(f::APL, g::APL) = divrem(f, g)[1]
+Base.rem(f::APL, g::APL) = divrem(f, g)[2]

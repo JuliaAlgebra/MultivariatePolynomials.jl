@@ -11,22 +11,22 @@ addinequality!(S::AbstractAlgebraicSet, p) = throw(ArgumentError("Cannot add ine
 immutable FullSpace <: AbstractAlgebraicSet
 end
 
-type AlgebraicSet <: AbstractAlgebraicSet
-    p::Vector
+type AlgebraicSet{T, PT<:APL{T}} <: AbstractAlgebraicSet
+    p::Vector{PT}
 end
-function (::Type{AlgebraicSet})()
-    AlgebraicSet(Any[])
+function AlgebraicSet{T, PT}() where {T, PT<:APL{T}}
+    AlgebraicSet(PT[])
 end
 
 addequality!(V::AlgebraicSet, p) = push!(V.p, p)
 Base.intersect(S::AlgebraicSet, T::AlgebraicSet) = AlgebraicSet([S.p; T.p])
 
-type BasicSemialgebraicSet <: AbstractBasicSemialgebraicSet
-    V::AlgebraicSet
-    p::Vector
+type BasicSemialgebraicSet{T, PT<:APL{T}} <: AbstractBasicSemialgebraicSet
+    V::AlgebraicSet{T, PT}
+    p::Vector{PT}
 end
-function (::Type{BasicSemialgebraicSet})()
-    BasicSemialgebraicSet(AlgebraicSet(), Any[])
+function BasicSemialgebraicSet{T, PT}() where {T, PT<:APL{T}}
+    BasicSemialgebraicSet(AlgebraicSet{T, PT}(), PT[])
 end
 
 addequality!(S::BasicSemialgebraicSet, p) = addequality!(S.V, p)

@@ -1,6 +1,6 @@
-#include("mono.jl")
+include("mono.jl")
 #include("ncmono.jl")
-#include("poly.jl")
+include("poly.jl")
 #include("rational.jl")
 include("measure.jl")
 include("exp.jl")
@@ -13,6 +13,7 @@ include("exp.jl")
 #include("subs.jl")
 #include("algebraicset.jl")
 #include("hash.jl")
+#include("div.jl")
 
 include("show.jl")
 

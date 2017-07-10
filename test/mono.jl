@@ -27,12 +27,13 @@
         @test issorted(vars(m * y[4]), rev=true)
         @test issorted(vars(y[6] * m), rev=true)
     end
-    @testset "MonomialVector" begin
+    @testset "Monomial Vector" begin
         @polyvar x y
-        X = [x^2,x*y,y^2]
+        X = [x^2, x*y, y^2]
         for (i, m) in enumerate(monomials([x, y], 2))
             @test m == X[i]
         end
+        @test length(monovec([y, x])) == 2
     end
 end
 module newmodule

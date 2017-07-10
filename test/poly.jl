@@ -29,45 +29,70 @@
         @test nvars(x + y - x) == 2
         @test nvars(x + x^2) == 1
 
-        p = Polynomial([4, 9], [x, x*x])
+        p = polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
         p.x[1] == x^2
         p.x[2] == x
+        @test p == dot([4, 9], [x, x*x])
 
         @inferred Polynomial(i -> float(i), [x, x*x])
-        @inferred Polynomial(i -> 3 - float(i), MonomialVector([x*x, x]))
+        @inferred Polynomial(i -> 3 - float(i), monovec([x*x, x]))
         for p in (Polynomial(i -> float(i), [x, x*x]),
-                  Polynomial(i -> 3 - float(i), MonomialVector([x*x, x])))
-            @test typeof(p) == Polynomial{true, Float64}
+                  Polynomial(i -> 3 - float(i), monovec([x*x, x])))
             @test p.a == [2.0, 1.0]
-            @test p.x == MonomialVector([x^2, x])
+            @test p.x == monovec([x^2, x])
         end
     end
-#   @testset "MatPolynomial" begin
-#       @polyvar x y
-#       P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
-#       p = Polynomial(P)
-#       @test p.a == [2, 6, 12, 10, 6]
-#       @test p.x == MonomialVector([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
-#       for i in 1:3
-#           for j in 1:3
-#               @test P[i, j] == i + j
-#           end
-#       end
-#       for P in (MatPolynomial((i,j) -> i * j, [y, x]),
-#                 MatPolynomial((i,j) -> (3-i) * (3-j), MonomialVector([y, x])),
-#                 MatPolynomial([1 2; 2 4], [y, x]),
-#                 MatPolynomial([4 2; 2 1], MonomialVector([y, x])))
-#           @test P.Q == [4, 2, 1]
-#           @test P.x[1] == x
-#           @test P.x[2] == y
-#       end
-#       P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
-#       Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
-#       @test P == Q
-#   end
+    @testset "MatPolynomial" begin
+        @polyvar x y
+        P = MatPolynomial{Int}((i,j) -> i + j, [x^2, x*y, y^2])
+        zP = zero(typeof(P))
+        @test isempty(zP.Q)
+        @test zP == 0
+        p = polynomial(P)
+        @test p.a == [2, 6, 12, 10, 6]
+        @test p.x == monovec([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
+        for i in 1:3
+            for j in 1:3
+                @test P[i, j] == i + j
+            end
+        end
+        for P in (MatPolynomial((i,j) -> i * j, [y, x]),
+                  MatPolynomial((i,j) -> (3-i) * (3-j), monovec([y, x])),
+                  MatPolynomial([1 2; 2 4], [y, x]),
+                  MatPolynomial([4 2; 2 1], monovec([y, x])))
+            @test P.Q.Q == [4, 2, 1]
+            @test P.x[1] == x
+            @test P.x[2] == y
+        end
+        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
+        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
+        @test P == Q
+        p = MatPolynomial([2 3; 3 2], [x, y])
+        @test polynomial(p) isa AbstractPolynomial
+        @test polynomial(p, Int) isa AbstractPolynomial
+    end
+    @testset "Non-commutative MatPolynomial" begin
+        @ncpolyvar x y
+        P = MatPolynomial([2 3 4;
+                           3 4 5;
+                           4 5 6], [x*y, x^2, y^2])
+        @test P.Q.Q == [4, 3, 5, 2, 4, 6]
+        P = MatPolynomial((i,j) -> i + j, [x*y, x^2, y^2])
+        @test P.Q.Q == [4, 3, 5, 2, 4, 6]
+        p = polynomial(P)
+        @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
+        @test p.x == monovec([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
+        @inferred MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) == 0
+        @test MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) isa AbstractPolynomialLike{Float64}
+        @test MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) == 0
+        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
+        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
+        @test P != Q
+    end
 #   @testset "SOSDecomposition" begin
 #       @polyvar x y
+#       @test isempty(SOSDecomposition(typeof(x)[]))
 #       ps = [1, x + y, x^2, x*y, 1 + x + x^2]
 #       P = MatPolynomial(SOSDecomposition(ps))
 #       P.Q == [2 0 1 0 1; 0 1 0 0 0; 1 0 2 1 1; 0 0 1 1 0; 1 0 1 0 2]
