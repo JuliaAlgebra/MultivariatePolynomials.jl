@@ -21,7 +21,14 @@
         @inferred zero(1 + x)
         #@inferred one(1.0 + x)
         @inferred zero(1.0 + x)
+
+        @test (1.0 + x) * x == x^2 + x
+        @test term(1, x) * (1 - x) == 1 - x
+        @test promote_type(typeof(1-x), typeof(x)) <: AbstractPolynomial{Int}
+        @test x != 1 - x
+
         @polyvar y
+
 
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0

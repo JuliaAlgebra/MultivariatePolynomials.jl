@@ -1,4 +1,4 @@
-export polynomial, polynomialtype, terms, monomials
+export polynomial, polynomialtype, terms, nterms, monomials
 export mindeg, maxdeg, extdeg
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
