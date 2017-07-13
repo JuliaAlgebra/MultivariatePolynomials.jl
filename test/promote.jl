@@ -12,6 +12,7 @@
     @test eltype([2.0x, x/y]) <: RationalPoly{<:AbstractTerm{Float64}, <:AbstractTerm{Int}}
     @test eltype([2.0x, x/y, 1y]) <: RationalPoly{<:AbstractTerm{Float64}, <:AbstractTerm{Int}}
     @test eltype([2x+y, x/2.0y, x+1y]) <: RationalPoly{<:AbstractPolynomial{Int}, <:AbstractTerm{Float64}}
+    @test eltype([-1/x^2, 1]) <: RationalPoly{<:AbstractTerm{Int}, <:AbstractTerm{Int}}
 
     X = [x, y]
     Y = [1 2; 3 4] * X

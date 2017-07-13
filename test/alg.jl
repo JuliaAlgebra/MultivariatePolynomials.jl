@@ -1,6 +1,6 @@
 @testset "Algebra" begin
     @polyvar x y
-    @test 2 .- ((1.+(-x)) .* 4) ./ 2 == x.^2 .* (1 ./ x) .* 2
+    @test 2 .- ((1 .+ (-x)) .* 4) ./ 2 == x.^2 .* (1 ./ x) .* 2
     @test dot(0, x^2 - 2*x^2) == dot((x^2 - x)', x^2 - x^2)
     @test 2 .* x .+ 2 == (x + 3) .+ (x .- 1)
     @test ((x + y) .- y) ./ y == x / y

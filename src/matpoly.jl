@@ -35,6 +35,7 @@ end
 # When taking the promotion of a MatPolynomial of JuMP.Variable with a Polynomial JuMP.Variable, it should be a Polynomial of AffExpr
 coefficienttype{T}(::Type{<:MatPolynomial{T}}) = Base.promote_op(+, T, T)
 polynomialtype{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = polynomialtype(coefficienttype(MatPolynomial{T, MT, MVT}), MT)
+polynomialtype{S, T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}, ::Type{S}) = polynomialtype(S, MT)
 
 Base.zero{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), monovec(MT))
 
