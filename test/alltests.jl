@@ -11,7 +11,7 @@ include("alg.jl")
 #include("ncalg.jl")
 include("diff.jl")
 #include("subs.jl")
-#include("algebraicset.jl")
+include("algebraicset.jl")
 include("hash.jl")
 include("div.jl")
 
