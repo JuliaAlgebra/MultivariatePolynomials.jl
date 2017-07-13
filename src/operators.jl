@@ -55,10 +55,10 @@ multconstant(t::AbstractTerm, α)    = (coefficient(t)*α) * monomials(t)
 (*)(t::AbstractTerm, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
 (*)(t1::AbstractTerm, t2::AbstractTerm) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
 
-transpose(v::AbstractVariable) = v
-transpose(m::AbstractMonomial) = m
-transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
-transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
+Base.transpose(v::AbstractVariable) = v
+Base.transpose(m::AbstractMonomial) = m
+Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
+Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 
 dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
 dot(x, p::AbstractPolynomialLike) = x' * p

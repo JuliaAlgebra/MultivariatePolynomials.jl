@@ -27,7 +27,7 @@ include("poly.jl")
 
 include("rational.jl")
 
-#include("promote.jl")
+include("promote.jl")
 
 include("measure.jl")
 include("exp.jl")

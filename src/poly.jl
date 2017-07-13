@@ -1,4 +1,4 @@
-export polynomial, polynomialtype, terms, nterms, monomials
+export polynomial, polynomialtype, terms, nterms, coefficients, monomials
 export mindeg, maxdeg, extdeg
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
@@ -43,6 +43,8 @@ Creates a polynomial equal to `dot(a, mv)`.
 
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
+polynomial(ts::AbstractVector{<:AbstractTerm}) = polynomial(coefficient.(ts), monomial.(ts))
+
 polynomial{T}(Q::AbstractMatrix{T}, mv::AbstractVector) = polynomial(Q, mv, T)
 
 polynomialtype(p::APL) = Base.promote_op(polynomial, p)

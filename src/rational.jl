@@ -8,11 +8,15 @@ end
 
 Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, q::RationalPoly{NT, DT}) = q
 Base.convert{NTout, DTout, NTin, DTin}(::Type{RationalPoly{NTout, DTout}}, q::RationalPoly{NTin, DTin}) = convert(NTout, q.num) / convert(DTout, q.den)
-function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p::NT)
-    p / one(DT)
+#function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p::NT)
+#    p / one(DT)
+#end
+function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p::APL)
+    convert(NT, p) / one(DT)
 end
-function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p)
-    convert(RationalPoly{NT, DT}, convert(NT, p))
+function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, α)
+    convert(NT, α) / one(DT)
+    #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
 
 (/)(r::RationalPoly, p) = r.num / (r.den * p)
