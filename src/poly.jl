@@ -9,10 +9,8 @@ Base.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
 function Base.hash(p::AbstractPolynomial, u::UInt)
     if iszero(p)
         hash(0, u)
-    elseif nterms(p) == 1
-        hash(term(p))
     else
-        hash(coefficients(p), hash(monomial(p), hash(u)))
+        reduce((u, t) -> hash(t, u), u, terms(p))
     end
 end
 

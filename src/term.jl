@@ -1,6 +1,14 @@
 export term, termtype, zeroterm, coefficient, monomial, exponent, deg, isconstant, divides
 
-Base.hash(t::AbstractTerm, u::UInt) = coefficient(t) == 1 ? hash(monomial(t), u) : hash(monomial(t), hash(coefficient(t), u))
+function Base.hash(t::AbstractTerm, u::UInt)
+    if iszero(t)
+        hash(0, u)
+    elseif coefficient(t) == 1
+        hash(monomial(t), u)
+    else
+        hash(monomial(t), hash(coefficient(t), u))
+    end
+end
 
 Base.zero{T, TT<:AbstractTermLike{T}}(::Type{TT}) = zero(T) * constantmonomial(TT)
 Base.one{T, TT<:AbstractTermLike{T}}(::Type{TT}) = one(T) * constantmonomial(TT)

@@ -1,4 +1,4 @@
-export name, monovec, monovectype, sortmonovec, mergemonovec
+export name, constantmonomial, monovec, monovectype, sortmonovec, mergemonovec
 
 Base.copy(x::AbstractVariable) = x
 
