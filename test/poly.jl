@@ -42,10 +42,10 @@
         p.x[2] == x
         @test p == dot([4, 9], [x, x*x])
 
-        @inferred Polynomial(i -> float(i), [x, x*x])
-        @inferred Polynomial(i -> 3 - float(i), monovec([x*x, x]))
-        for p in (Polynomial(i -> float(i), [x, x*x]),
-                  Polynomial(i -> 3 - float(i), monovec([x*x, x])))
+        @inferred polynomial(i -> float(i), [x, x*x])
+        @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
+        for p in (polynomial(i -> float(i), [x, x*x]),
+                  polynomial(i -> 3 - float(i), monovec([x*x, x])))
             @test p.a == [2.0, 1.0]
             @test p.x == monovec([x^2, x])
         end

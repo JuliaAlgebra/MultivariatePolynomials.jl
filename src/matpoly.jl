@@ -33,7 +33,8 @@ type MatPolynomial{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}} <: Abst
     x::MVT
 end
 # When taking the promotion of a MatPolynomial of JuMP.Variable with a Polynomial JuMP.Variable, it should be a Polynomial of AffExpr
-coefficienttype{T}(::Type{MatPolynomial{T}}) = Base.promote_op(+, T, T)
+coefficienttype{T}(::Type{<:MatPolynomial{T}}) = Base.promote_op(+, T, T)
+polynomialtype{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = polynomialtype(coefficienttype(MatPolynomial{T, MT, MVT}), MT)
 
 Base.zero{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), monovec(MT))
 
@@ -76,6 +77,7 @@ type SOSDecomposition{T, PT <: AbstractPolynomialLike{T}} <: AbstractPolynomialL
     end
 end
 SOSDecomposition{T, PT <: AbstractPolynomialLike{T}}(ps::Vector{PT}) = SOSDecomposition{T, PT}(ps)
+polynomialtype{T, PT}(::Type{SOSDecomposition{T, PT}}) = polynomialtype(PT)
 #function SOSDecomposition(ps::Vector)
 #    T = reduce(promote_type, Int, map(eltype, ps))
 #    SOSDecomposition{T}(ps)

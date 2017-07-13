@@ -1,3 +1,6 @@
+Base.promote_rule{PT<:APL, PS<:APL}(::Type{PT}, ::Type{PS}) = promote_rule(polynomialtype(PT), polynomialtype(PS))
+Base.promote_rule{PT<:APL}(::Type{PT}, ::Type{PT}) = PT
+
 promote_rule_constant{T, U, V}(::Type{T}, ::Type{RationalPoly{U, V}}) = RationalPoly{promote_rule(T, U), V}
 
 Base.promote_rule{T, PT<:APL}(::Type{PT}, ::Type{T}) = promote_rule_constant(T, PT)

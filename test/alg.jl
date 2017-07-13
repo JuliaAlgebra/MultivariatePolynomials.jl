@@ -4,15 +4,15 @@
     @test dot(0, x^2 - 2*x^2) == dot((x^2 - x)', x^2 - x^2)
     @test 2 .* x .+ 2 == (x + 3) .+ (x .- 1)
     @test ((x + y) .- y) ./ y == x / y
-    @test -2*x + dot(-x - x^2, 0) + MatPolynomial{true, Int}((i,j)->1, [1,x]) == -(-x^2 - 1)
+    @test -2*x + dot(-x - x^2, 0) + MatPolynomial{Int}((i,j)->1, [1,x]) == -(-x^2 - 1)
     @test (-2)*x == -(2*x)
     @test x * x == x^2
     @test 4x == 2.0(2x)
     @test x * (2x) == 2x^2
     @inferred 2.0 * (2x)
-    @test eltype(2.0 * (2x)) == Float64
+    #@test eltype(2.0 * (2x)) == Float64
     @inferred 1.5 * (2x)
-    @test typeof(1.5 * (2x)) == Term{true, Float64}
+    @test 1.5 * (2x) isa AbstractTerm{Float64}
     @test 1.5 * (2x) == 3x
 
     @testset "Inference" begin
@@ -42,8 +42,8 @@
     @test iszero((0*x) * (x*y * (x^2 + y^2)))
 
     @testset "MatPolynomial" begin
-        P = MatPolynomial{true, Int}((i,j) -> i + j, [x^2, x*y, y^2])
-        p = Polynomial(P)
+        P = MatPolynomial{Int}((i,j) -> i + j, [x^2, x*y, y^2])
+        p = polynomial(P)
         @test !iszero(P)
         @test iszero(P-P)
         @test iszero(P-p)
