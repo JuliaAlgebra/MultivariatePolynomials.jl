@@ -58,10 +58,10 @@ function MatPolynomial{T}(Q::AbstractMatrix{T}, x)
     MatPolynomial(Q, X, σ)
 end
 
-function Base.convert{T, PT <: AbstractPolynomial{T}}(::Type{PT}, p::MatPolynomial)
-    # eltype(p) may be different than T and polynomial(p) may be different than PT (different module)
-    convert(PT, polynomial(p))
-end
+#function Base.convert{T, PT <: AbstractPolynomial{T}}(::Type{PT}, p::MatPolynomial)
+#    # coefficienttype(p) may be different than T and polynomial(p) may be different than PT (different module)
+#    convert(PT, polynomial(p))
+#end
 function polynomial(p::MatPolynomial)
     polynomial(getmat(p), p.x)
 end

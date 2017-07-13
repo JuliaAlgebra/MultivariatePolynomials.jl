@@ -18,20 +18,20 @@ end
 @testset "Equality" begin
     @testset "Monomial equality" begin
         @polyvar x y
-        @test 1 == Monomial([x, y], [0, 0])
-        @test 2 != Monomial([x, y], [0, 0])
+        #@test 1 == constantmonomial([x, y])
+        #@test 2 != constantmonomial([x, y])
         @test 2 != x
         @test 2 != x*y
-        @test 2 != MonomialVector([x, y], 1)
-        @test x != MonomialVector([x, y], 1)
+        #@test 2 != MonomialVector([x, y], 1)
+        #@test x != MonomialVector([x, y], 1)
         @test x*y != x
         @test 1x*y == x*y
         @test 2x*y != x*y
-        @test x == Monomial(x)
-        @test Monomial([x, y], [1, 0]) == x
-        @test x != Monomial([x, y], [0, 1])
-        @test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
-        @test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
+        @test x == monomial(x)
+        #@test Monomial([x, y], [1, 0]) == x
+        #@test x != Monomial([x, y], [0, 1])
+        #@test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
+        #@test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
         z = x
         @polyvar x
         @test z != x
@@ -57,10 +57,10 @@ end
     end
     @testset "SOSDecomposition equality" begin
         @polyvar x y
-        @test !isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y]))
-        @test !isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y, x+y]))
-        @test isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x+y, x-y]))
-        @test isapprox(SOSDecomposition{true}([x+y, x-y]), SOSDecomposition{true}([x-y, x+y+1e-8]), ztol=1e-7)
+        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
+        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x+y]))
+        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x-y]))
+        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x-y, x+y+1e-8]), ztol=1e-7)
     end
     @testset "RationalPoly equality" begin
         @polyvar x y

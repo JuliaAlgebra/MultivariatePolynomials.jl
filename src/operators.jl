@@ -16,12 +16,15 @@ end
 for op in [:+, :-, :*, :(==)]
     @eval $op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
+isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
 
 # @eval $op(p::APL, α) = $op(promote(p, α)...) would be less efficient
 for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant), (:(==), :eqconstant)]
     @eval $op(p::APL, α) = $fun(p, α)
     @eval $op(α, p::APL) = $fun(α, p)
 end
+isapprox(p::APL, α; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
+isapprox(α, p::APL; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
 
 (-)(m::AbstractMonomialLike) = (-1) * m
 (-)(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)

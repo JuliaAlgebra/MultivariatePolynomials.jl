@@ -1,3 +1,5 @@
+export isapproxzero
+
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
@@ -90,11 +92,20 @@ end
 (==)(p::APL, q::MatPolynomial) = p == polynomial(q)
 (==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
 
+function isapproxzero(α; ztol::Real=1e-6)
+    -ztol < α < ztol
+end
+
+isapproxzero(m::AbstractMonomialLike; kwargs...) = false
+isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwargs...)
+isapproxzero(p::APL; kwargs...) = isapprox(p, zero(p); kwargs...)
+isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
+
 isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
 isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; kwargs...) = compare_terms(p1, p2, (x, y) -> isapprox(x, y; kwargs...))
 
-function isapprox(p::MatPolynomial, q::MatPolynomial)
-    p.x == q.x && isapprox(p.Q, q.Q)
+function isapprox(p::MatPolynomial, q::MatPolynomial; kwargs...)
+    p.x == q.x && isapprox(p.Q, q.Q; kwargs...)
 end
 
 function permcomp(f, m)
@@ -115,21 +126,17 @@ function permcomp(f, m)
     true
 end
 
-function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+function isapprox(p::SOSDecomposition, q::SOSDecomposition; kwargs...)
     m = length(p.ps)
     if length(q.ps) != m
         false
     else
-        permcomp((i, j) -> isapprox(p.ps[i], q.ps[j], rtol=rtol, atol=atol, ztol=ztol), m)
+        permcomp((i, j) -> isapprox(p.ps[i], q.ps[j]; kwargs...), m)
     end
 end
 
-function isapproxzero(p::RationalPoly; ztol::Real=1e-6)
-    isapproxzero(p.num, ztol=ztol)
-end
-
-isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den, kwargs...)
-isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den, kwargs...)
-isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num, rtol=rtol, atol=atol, ztol=ztol)
-isapprox{C}(p::RationalPoly{C}, q; kwargs...) = isapprox(p, polynomial(q), kwargs...)
-isapprox{C}(p, q::RationalPoly{C}; kwargs...) = isapprox(polynomial(p), q, kwargs...)
+isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
+isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
+isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num; kwargs...)
+isapprox{C}(q::RationalPoly{C}, α; kwargs...) = isapprox(q, term(α, q.den); kwargs...)
+isapprox{C}(α, q::RationalPoly{C}; kwargs...) = isapprox(term(α, q.den), q; kwargs...)
