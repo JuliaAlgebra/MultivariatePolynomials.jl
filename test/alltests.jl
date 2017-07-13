@@ -13,7 +13,7 @@ include("diff.jl")
 #include("subs.jl")
 #include("algebraicset.jl")
 include("hash.jl")
-#include("div.jl")
+include("div.jl")
 
 include("show.jl")
 

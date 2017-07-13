@@ -23,7 +23,7 @@ end
 proddiff(x, y) = x*y - x*y
 
 function Base.divrem{T, S}(f::APL{T}, g::APL{S})
-    rf = changecoefficienttype(f, promote_op(proddiff, T, S))
+    rf = changecoefficienttype(f, Base.promote_op(proddiff, T, S))
     q = r = zero(f - g / 2)
     lt = leadingterm(g)
     rg = removeleadingterm(g)

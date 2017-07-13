@@ -15,7 +15,7 @@
         @polyvar x y z
         # See page 60
         p = 4x*y^2*z + 4z^2 + 7x^2*z^2 - 5x^3
-        @test leadingcoef(p) == 7
+        @test leadingcoefficient(p) == 7
         @test leadingmonomial(p) == x^2*z^2
         @test leadingterm(p) == 7x^2*z^2
     end
