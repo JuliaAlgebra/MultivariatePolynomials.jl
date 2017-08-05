@@ -24,14 +24,15 @@ const APL{T} = AbstractPolynomialLike{T}
 include("mono.jl")
 include("term.jl")
 include("poly.jl")
+include("matpoly.jl")
 
 include("rational.jl")
 
 include("promote.jl")
+include("substitution.jl")
 
 include("measure.jl")
 include("exp.jl")
-include("matpoly.jl")
 
 include("operators.jl")
 include("comp.jl")

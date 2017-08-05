@@ -30,6 +30,8 @@ Base.convert{PT<:APL}(::Type{PT}, p::PT) = p
 
 coefficienttype{T}(::Type{<:APL{T}}) = T
 coefficienttype{T}(::APL{T}) = T
+#coefficienttype{T}(::Type{T}) = T
+#coefficienttype{T}(::T) = T
 
 changecoefficienttype{TT<:AbstractTermLike, T}(::Type{TT}, ::Type{T}) = termtype(TT, T)
 changecoefficienttype{PT<:AbstractPolynomial, T}(::Type{PT}, ::Type{T}) = polynomialtype(PT, T)

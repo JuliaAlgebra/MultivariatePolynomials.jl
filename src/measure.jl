@@ -18,8 +18,8 @@ end
 
 Measure{T, MT <: AbstractMonomial}(a::Vector{T}, x::AbstractVector{MT}) = Measure{T, MT, monovectype(x)}(monovec(a, x)...)
 
-function ζ{T, MT <: AbstractMonomial, PVT <: AbstractVariable}(v::Vector{T}, x::AbstractVector{MT}, varorder::AbstractVector{PVT})
-    Measure(T[m(v, varorder) for m in x], x)
+function ζ{MT <: AbstractMonomial}(x::AbstractVector{MT}, s::AbstractSubstitution...)
+    Measure([m(s...) for m in x], x)
 end
 
 type MatMeasure{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}}
