@@ -24,7 +24,7 @@ function (/){NT <: APL, DT <: APL}(num::NT, den::DT)
     RationalPoly{NT, DT}(num, den)
 end
 function (/)(num, den::APL)
-    term(num, den) / den
+    constantterm(num, den) / den
 end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients

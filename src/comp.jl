@@ -138,5 +138,5 @@ end
 isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
 isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
 isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num; kwargs...)
-isapprox{C}(q::RationalPoly{C}, α; kwargs...) = isapprox(q, term(α, q.den); kwargs...)
-isapprox{C}(α, q::RationalPoly{C}; kwargs...) = isapprox(term(α, q.den), q; kwargs...)
+isapprox{C}(q::RationalPoly{C}, α; kwargs...) = isapprox(q, constantterm(α, q.den); kwargs...)
+isapprox{C}(α, q::RationalPoly{C}; kwargs...) = isapprox(constantterm(α, q.den), q; kwargs...)

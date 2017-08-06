@@ -24,7 +24,7 @@
         @inferred zero(1.0 + x)
 
         @test (1.0 + x) * x == x^2 + x
-        @test term(1, x) * (1 - x) == 1 - x
+        @test constantterm(1, x) * (1 - x) == 1 - x
         @test promote_type(typeof(1-x), typeof(x)) <: AbstractPolynomial{Int}
         @test x != 1 - x
 

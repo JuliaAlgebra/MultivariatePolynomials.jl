@@ -1,4 +1,4 @@
-export term, termtype, zeroterm, coefficient, monomial, exponent, deg, isconstant, divides
+export constantterm, term, termtype, zeroterm, coefficient, monomial, powers, exponents, exponent, deg, isconstant, divides
 
 function Base.hash(t::AbstractTerm, u::UInt)
     if iszero(t)
@@ -18,16 +18,23 @@ Base.one{T}(t::AbstractTermLike{T}) = one(T) * constantmonomial(t)
 monomial(m::AbstractMonomial) = m
 
 """
+    constantterm(α, p::AbstractPolynomialLike)
+
+Creates a constant term with coefficient α and the same variables as p.
+
+    constantterm{PT<:AbstractPolynomialType}(α, ::Type{PT}
+
+Creates a constant term of the term type of a polynomial of type `PT`.
+"""
+constantterm(α, p) = α * constantmonomial(p)
+
+"""
     term(p::AbstractPolynomialLike)
 
 Converts the polynomial `p` to a term.
 When applied on a polynomial, it throws an error if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
-
-    term(α, p::AbstractPolynomialLike)
-
-Creates a constant term with coefficient α and the same variables as p.
 """
 function term(p::APL)
     if nterms(p) == 0
@@ -64,6 +71,8 @@ Returns the monomial of the term `t`.
 Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
+
+function powers end
 
 """
     exponent(t::AbstractTermLike, var::AbstractVariable)

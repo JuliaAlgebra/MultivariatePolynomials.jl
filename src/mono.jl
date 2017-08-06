@@ -12,12 +12,11 @@ function name end
 """
     constantmonomial(p::AbstractPolynomialType)
 
-Returns a constant monomial of the monomial type of `p`.
+Returns a constant monomial of the monomial type of `p` with the same variables as `p`.
 
     constantmonomial{PT<:AbstractPolynomialType}(::Type{PT})
 
 Returns a constant monomial of the monomial type of a polynomial of type `PT`.
-
 """
 function constantmonomial end
 

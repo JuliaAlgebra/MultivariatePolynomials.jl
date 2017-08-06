@@ -1,4 +1,5 @@
 export polynomial, polynomialtype, terms, nterms, coefficients, monomials
+export coefficienttype, monomialtype
 export mindeg, maxdeg, extdeg
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
@@ -33,6 +34,9 @@ coefficienttype{T}(::APL{T}) = T
 #coefficienttype{T}(::Type{T}) = T
 #coefficienttype{T}(::T) = T
 
+monomialtype{T}(::Type{<:APL{T}}) = T
+monomialtype{T}(::APL{T}) = T
+
 changecoefficienttype{TT<:AbstractTermLike, T}(::Type{TT}, ::Type{T}) = termtype(TT, T)
 changecoefficienttype{PT<:AbstractPolynomial, T}(::Type{PT}, ::Type{T}) = polynomialtype(PT, T)
 
@@ -46,6 +50,10 @@ Converts `p` to a value with polynomial type.
     polynomial(a::AbstractVector, mv::AbstractVector{<:AbstractMonomialLike})
 
 Creates a polynomial equal to `dot(a, mv)`.
+
+    polynomial(terms::AbstractVector{<:AbstractTerm})
+
+Creates a polynomial equal to `sum(terms)`.
 
 ### Examples
 
