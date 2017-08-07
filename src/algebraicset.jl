@@ -21,7 +21,7 @@ end
 function AlgebraicSet{T, PT}() where {T, PT<:APL{T}}
     AlgebraicSet(PT[])
 end
-AlgebraicSet{T, PT<:APL{T}}(p::Vector{PT}) = AlgebraicSet{T, PT}(p)
+AlgebraicSet(p::Vector{PT}) where {T, PT<:APL{T}} = AlgebraicSet{T, PT}(p)
 
 addequality!(V::AlgebraicSet, p) = push!(V.p, p)
 Base.intersect(S::AlgebraicSet, T::AlgebraicSet) = AlgebraicSet([S.p; T.p])

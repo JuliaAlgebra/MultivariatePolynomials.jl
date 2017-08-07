@@ -49,17 +49,24 @@ multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 multconstant(α, p::AbstractPolynomialLike) = multconstant(α, polynomial(p))
 multconstant(p::AbstractPolynomialLike, α) = multconstant(polynomial(p), α)
 
-multconstant(α, t::AbstractTerm)    = (α*coefficient(t)) * monomial(t)
-multconstant(t::AbstractTerm, α)    = (coefficient(t)*α) * monomial(t)
-(*)(m::AbstractMonomialLike, t::AbstractTerm) = coefficient(t) * (m * monomial(t))
-(*)(t::AbstractTerm, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
-(*)(t1::AbstractTerm, t2::AbstractTerm) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
+multconstant(α, t::AbstractTermLike)    = (α*coefficient(t)) * monomial(t)
+multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
+
+(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(promote(m1, m2)...)
+#(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
+
+(*)(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * monomial(t))
+(*)(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
+(*)(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
+
+(*)(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
+(*)(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
 
 Base.transpose(v::AbstractVariable) = v
 Base.transpose(m::AbstractMonomial) = m
 Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
 Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 
-dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-dot(x, p::AbstractPolynomialLike) = x' * p
-dot(p::AbstractPolynomialLike, x) = p' * x
+Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+Base.dot(x, p::AbstractPolynomialLike) = x' * p
+Base.dot(p::AbstractPolynomialLike, x) = p' * x

@@ -10,10 +10,10 @@ function Base.hash(t::AbstractTerm, u::UInt)
     end
 end
 
-Base.zero{T, TT<:AbstractTermLike{T}}(::Type{TT}) = zero(T) * constantmonomial(TT)
-Base.one{T, TT<:AbstractTermLike{T}}(::Type{TT}) = one(T) * constantmonomial(TT)
-Base.zero{T}(t::AbstractTermLike{T}) = zero(T) * constantmonomial(t)
-Base.one{T}(t::AbstractTermLike{T}) = one(T) * constantmonomial(t)
+Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constantmonomial(TT)
+Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = one(T) * constantmonomial(TT)
+Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constantmonomial(t)
+Base.one(t::AbstractTermLike{T}) where {T} = one(T) * constantmonomial(t)
 
 monomial(m::AbstractMonomial) = m
 
@@ -72,7 +72,7 @@ Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
 
-function powers end
+powers(t::AbstractTermLike) = tuplezip(vars(t), exponents(t))
 
 """
     exponent(t::AbstractTermLike, var::AbstractVariable)

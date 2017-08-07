@@ -1,26 +1,26 @@
 export RationalPoly
 import Base.+, Base.-, Base.*, Base./
 
-immutable RationalPoly{NT <: APL, DT <: APL}
+struct RationalPoly{NT <: APL, DT <: APL}
     num::NT
     den::DT
 end
 
-Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, q::RationalPoly{NT, DT}) = q
-Base.convert{NTout, DTout, NTin, DTin}(::Type{RationalPoly{NTout, DTout}}, q::RationalPoly{NTin, DTin}) = convert(NTout, q.num) / convert(DTout, q.den)
-#function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p::NT)
+Base.convert(::Type{RationalPoly{NT, DT}}, q::RationalPoly{NT, DT}) where {NT, DT} = q
+Base.convert(::Type{RationalPoly{NTout, DTout}}, q::RationalPoly{NTin, DTin}) where {NTout, DTout, NTin, DTin} = convert(NTout, q.num) / convert(DTout, q.den)
+#function Base.convert(::Type{RationalPoly{NT, DT}}, p::NT) where {NT, DT}
 #    p / one(DT)
 #end
-function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, p::APL)
+function Base.convert(::Type{RationalPoly{NT, DT}}, p::APL) where {NT, DT}
     convert(NT, p) / one(DT)
 end
-function Base.convert{NT, DT}(::Type{RationalPoly{NT, DT}}, α)
+function Base.convert(::Type{RationalPoly{NT, DT}}, α) where {NT, DT}
     convert(NT, α) / one(DT)
     #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
 
 (/)(r::RationalPoly, p) = r.num / (r.den * p)
-function (/){NT <: APL, DT <: APL}(num::NT, den::DT)
+function (/)(num::NT, den::DT) where {NT <: APL, DT <: APL}
     RationalPoly{NT, DT}(num, den)
 end
 function (/)(num, den::APL)
@@ -58,5 +58,5 @@ _minus(s::RationalPoly, p::APL) = (s.num - p * s.den) / s.den
 (*)(α, r::RationalPoly)               = α == r.den ? r.num : (α * r.num) / r.den
 (*)(r::RationalPoly, α)               = α == r.den ? r.num : (r.num * α) / r.den
 
-Base.zero{NT}(::RationalPoly{NT}) = zero(NT)
-Base.zero{NT, DT}(::Type{RationalPoly{NT, DT}}) = zero(NT)
+Base.zero(::RationalPoly{NT}) where {NT} = zero(NT)
+Base.zero(::Type{RationalPoly{NT, DT}}) where {NT, DT} = zero(NT)

@@ -3,7 +3,7 @@ export isapproxzero
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
-Base.iszero(p::MatPolynomial) = isempty(polynomial(p))
+Base.iszero(p::MatPolynomial) = iszero(polynomial(p))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
@@ -28,8 +28,15 @@ polyeqterm(p::APL, t) = polyeqterm(polynomial(p), t)
 
 eqconstant(α, v::AbstractVariable) = false
 eqconstant(v::AbstractVariable, α) = false
-eqconstant(α, t::AbstractTermLike) = α == coefficient(t) && isconstant(t)
-eqconstant(t::AbstractTermLike, α) = α == coefficient(t) && isconstant(t)
+function _termeqconstant(t::AbstractTermLike, α)
+    if iszero(t)
+        iszero(α)
+    else
+        α == coefficient(t) && isconstant(t)
+    end
+end
+eqconstant(α, t::AbstractTermLike) = _termeqconstant(t, α)
+eqconstant(t::AbstractTermLike, α) = _termeqconstant(t, α)
 eqconstant(α, p::APL) = polyeqterm(p, α)
 eqconstant(p::APL, α) = polyeqterm(p, α)
 
@@ -51,10 +58,10 @@ function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, op)
     t1 = terms(p1)
     t2 = terms(p2)
     while true
-        while i1 <= length(t1) && coefficient(t1[i1]) == 0
+        while i1 <= length(t1) && iszero(coefficient(t1[i1]))
             i1 += 1
         end
-        while i2 <= length(t2) && coefficient(t2[i2]) == 0
+        while i2 <= length(t2) && iszero(coefficient(t2[i2]))
             i2 += 1
         end
         if i1 > length(t1) && i2 > length(t2)
@@ -101,10 +108,10 @@ isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwar
 isapproxzero(p::APL; kwargs...) = isapprox(p, zero(p); kwargs...)
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
-isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
-isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; kwargs...) = compare_terms(p1, p2, (x, y) -> isapprox(x, y; kwargs...))
+Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
+Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; kwargs...) = compare_terms(p1, p2, (x, y) -> isapprox(x, y; kwargs...))
 
-function isapprox(p::MatPolynomial, q::MatPolynomial; kwargs...)
+function Base.isapprox(p::MatPolynomial, q::MatPolynomial; kwargs...)
     p.x == q.x && isapprox(p.Q, q.Q; kwargs...)
 end
 
@@ -138,5 +145,5 @@ end
 isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
 isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
 isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num; kwargs...)
-isapprox{C}(q::RationalPoly{C}, α; kwargs...) = isapprox(q, constantterm(α, q.den); kwargs...)
-isapprox{C}(α, q::RationalPoly{C}; kwargs...) = isapprox(constantterm(α, q.den), q; kwargs...)
+isapprox(q::RationalPoly{C}, α; kwargs...) where {C} = isapprox(q, constantterm(α, q.den); kwargs...)
+isapprox(α, q::RationalPoly{C}; kwargs...) where {C} = isapprox(constantterm(α, q.den), q; kwargs...)

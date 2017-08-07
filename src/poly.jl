@@ -16,7 +16,7 @@ function Base.hash(p::AbstractPolynomial, u::UInt)
 end
 
 # Conversion polynomial -> scalar
-function Base.convert{S}(::Type{S}, p::APL)
+function Base.convert(::Type{S}, p::APL) where {S}
     s = zero(S)
     for t in p
         if !isconstant(t)
@@ -27,20 +27,20 @@ function Base.convert{S}(::Type{S}, p::APL)
     end
     s
 end
-Base.convert{PT<:APL}(::Type{PT}, p::PT) = p
+Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
 
-coefficienttype{T}(::Type{<:APL{T}}) = T
-coefficienttype{T}(::APL{T}) = T
-#coefficienttype{T}(::Type{T}) = T
-#coefficienttype{T}(::T) = T
+coefficienttype(::Type{<:APL{T}}) where {T} = T
+coefficienttype(::APL{T}) where {T} = T
+#coefficienttype(::Type{T}) where {T} = T
+#coefficienttype(::T) where {T} = T
 
-monomialtype{T}(::Type{<:APL{T}}) = T
-monomialtype{T}(::APL{T}) = T
+monomialtype(::Type{<:APL{T}}) where {T} = T
+monomialtype(::APL{T}) where {T} = T
 
-changecoefficienttype{TT<:AbstractTermLike, T}(::Type{TT}, ::Type{T}) = termtype(TT, T)
-changecoefficienttype{PT<:AbstractPolynomial, T}(::Type{PT}, ::Type{T}) = polynomialtype(PT, T)
+changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
+changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
 
-changecoefficienttype{PT<:APL, T}(p::PT, ::Type{T}) = changecoefficienttype(PT, T)(p)
+changecoefficienttype(p::PT, ::Type{T}) where {PT<:APL, T} = changecoefficienttype(PT, T)(p)
 
 """
     polynomial(p::AbstractPolynomialLike)
@@ -61,7 +61,7 @@ Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x
 """
 polynomial(ts::AbstractVector{<:AbstractTerm}) = polynomial(coefficient.(ts), monomial.(ts))
 
-polynomial{T}(Q::AbstractMatrix{T}, mv::AbstractVector) = polynomial(Q, mv, T)
+polynomial(Q::AbstractMatrix{T}, mv::AbstractVector) where {T} = polynomial(Q, mv, T)
 
 polynomialtype(p::APL) = Base.promote_op(polynomial, p)
 
@@ -75,6 +75,7 @@ Returns an iterator over the nonzero terms of the polynomial `p` sorted in the d
 Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy, 2x]``.
 """
 terms(t::AbstractTermLike) = (term(t),)
+terms(p::AbstractPolynomialLike) = terms(polynomial(p))
 
 """
     nterms(p::AbstractPolynomialLike)
@@ -118,8 +119,9 @@ Calling `monomials((x, y), [1, 3], m -> exponent(m, y) != 1)` should return `[x^
 """
 function monomials end
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    mindeg(p::AbstractPolynomialLike)
 
 Returns the minimal total degree of the monomials of `p`, i.e. `minimum(deg, terms(p))`.
 
@@ -130,8 +132,9 @@ function mindeg(p::AbstractPolynomialLike)
     minimum(deg, terms(p))
 end
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    maxdeg(p::AbstractPolynomialLike)
 
 Returns the maximal total degree of the monomials of `p`, i.e. `maximum(deg, terms(p))`.
 
@@ -142,8 +145,9 @@ function maxdeg(p::AbstractPolynomialLike)
     maximum(deg, terms(p))
 end
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    extdeg(p::AbstractPolynomialLike)
 
 Returns the extremal total degrees of the monomials of `p`, i.e. `(mindeg(p), maxdeg(p))`.
 
@@ -168,8 +172,9 @@ function leadingterm(p::AbstractPolynomialLike)
 end
 leadingterm(t::AbstractTermLike) = term(t)
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    leadingcoefficient(p::AbstractPolynomialLike)
 
 Returns the coefficient of the leading term of `p`, i.e. `coefficient(leadingterm(p))`.
 
@@ -181,8 +186,9 @@ function leadingcoefficient(p::AbstractPolynomialLike)
     coefficient(leadingterm(p))
 end
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    leadingmonomial(p::AbstractPolynomialLike)
 
 Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `first(monomials(p))`.
 
@@ -196,8 +202,9 @@ function leadingmonomial(p::AbstractPolynomialLike)
     monomial(leadingterm(p))
 end
 
+#$(SIGNATURES)
 """
-$(SIGNATURES)
+    removeleadingterm(p::AbstractPolynomialLike)
 
 Returns a polynomial with the leading term removed in the polynomial `p`.
 
@@ -218,7 +225,7 @@ Returns a polynomial with the terms having their monomial in the monomial vector
 
 Calling `removemonomials(4x^2*y + x*y + 2x, [x*y])` should return ``4x^2*y + 2x``.
 """
-function removemonomials{MT <: AbstractMonomialLike}(p::AbstractPolynomialLike, mv::AbstractVector{MT})
+function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) where {MT <: AbstractMonomialLike}
     smv = monovec(mv) # Make sure it is sorted
     i = 1
     q = zero(p)

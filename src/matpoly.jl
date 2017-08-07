@@ -11,7 +11,7 @@ function trimap(i, j, n)
     div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
 end
 
-function trimat{T}(::Type{T}, f, n, σ)
+function trimat(::Type{T}, f, n, σ) where {T}
     Q = Vector{T}(trimap(n, n, n))
     for i in 1:n
         for j in i:n
@@ -28,20 +28,20 @@ function Base.getindex(Q::SymMatrix, I::NTuple{2, Int})
 end
 Base.getindex(Q::SymMatrix, I...) = Q[I]
 
-type MatPolynomial{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}} <: AbstractPolynomialLike{T} # should be AbstractPolynomialLike{eltype(T)} but it doesn't work
+struct MatPolynomial{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}} <: AbstractPolynomialLike{T} # should be AbstractPolynomialLike{eltype(T)} but it doesn't work
     Q::SymMatrix{T}
     x::MVT
 end
 # When taking the promotion of a MatPolynomial of JuMP.Variable with a Polynomial JuMP.Variable, it should be a Polynomial of AffExpr
-coefficienttype{T}(::Type{<:MatPolynomial{T}}) = Base.promote_op(+, T, T)
-polynomialtype{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = polynomialtype(coefficienttype(MatPolynomial{T, MT, MVT}), MT)
-polynomialtype{S, T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}, ::Type{S}) = polynomialtype(S, MT)
+coefficienttype(::Type{<:MatPolynomial{T}}) where {T} = Base.promote_op(+, T, T)
+polynomialtype(::Type{MatPolynomial{T, MT, MVT}}) where {T, MT, MVT} = polynomialtype(coefficienttype(MatPolynomial{T, MT, MVT}), MT)
+polynomialtype(::Type{MatPolynomial{T, MT, MVT}}, ::Type{S}) where {S, T, MT, MVT} = polynomialtype(S, MT)
 
-Base.zero{T, MT, MVT}(::Type{MatPolynomial{T, MT, MVT}}) = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), monovec(MT))
+Base.zero(::Type{MatPolynomial{T, MT, MVT}}) where {T, MT, MVT} = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), monovec(MT))
 
 Base.getindex(p::MatPolynomial, I...) = getindex(p.Q, I...)
 
-getmat{T}(p::MatPolynomial{T}) = p.Q
+getmat(p::MatPolynomial{T}) where {T} = p.Q
 
 function MatPolynomial{T}(f::Function, x::AbstractVector{MT}, σ) where {T, MT}
     MatPolynomial{T, MT, monovectype(x)}(trimat(T, f, length(x), σ), x)
@@ -52,10 +52,10 @@ function MatPolynomial{T}(f::Function, x::AbstractVector{MT}) where {T, MT}
 end
 MatPolynomial(f::Function, x) = MatPolynomial{Base.promote_op(f, Int, Int)}(f, x)
 
-function MatPolynomial{T}(Q::AbstractMatrix{T}, x, σ)
+function MatPolynomial(Q::AbstractMatrix{T}, x, σ) where {T}
     MatPolynomial{T}((i,j) -> Q[σ[i], σ[j]], x)
 end
-function MatPolynomial{T}(Q::AbstractMatrix{T}, x)
+function MatPolynomial(Q::AbstractMatrix{T}, x) where {T}
     σ, X = sortmonovec(x)
     MatPolynomial(Q, X, σ)
 end
@@ -67,24 +67,24 @@ end
 function polynomial(p::MatPolynomial)
     polynomial(getmat(p), p.x)
 end
-function polynomial{S}(p::MatPolynomial, ::Type{S})
+function polynomial(p::MatPolynomial, ::Type{S}) where {S}
     polynomial(getmat(p), p.x, S)
 end
 
-type SOSDecomposition{T, PT <: AbstractPolynomialLike{T}} <: AbstractPolynomialLike{T} # If promote_op((x, y) -> x * y + x * y, T, T) != T then it might not be true
+struct SOSDecomposition{T, PT <: AbstractPolynomialLike{T}} <: AbstractPolynomialLike{T} # If promote_op((x, y) -> x * y + x * y, T, T) != T then it might not be true
     ps::Vector{PT}
     function SOSDecomposition{T, PT}(ps::Vector{PT}) where {T, PT}
         new(ps)
     end
 end
-SOSDecomposition{T, PT <: AbstractPolynomialLike{T}}(ps::Vector{PT}) = SOSDecomposition{T, PT}(ps)
-polynomialtype{T, PT}(::Type{SOSDecomposition{T, PT}}) = polynomialtype(PT)
+SOSDecomposition(ps::Vector{PT}) where {T, PT <: AbstractPolynomialLike{T}} = SOSDecomposition{T, PT}(ps)
+polynomialtype(::Type{SOSDecomposition{T, PT}}) where {T, PT} = polynomialtype(PT)
 #function SOSDecomposition(ps::Vector)
 #    T = reduce(promote_type, Int, map(eltype, ps))
 #    SOSDecomposition{T}(ps)
 #end
 
-function MatPolynomial{T}(p::SOSDecomposition{T})
+function MatPolynomial(p::SOSDecomposition{T}) where {T}
     X = mergemonovec(map(monomials, p))
     m = length(p)
     n = length(X)
@@ -113,7 +113,7 @@ function SOSDecomposition(p::MatPolynomial)
     SOSDecomposition(ps)
 end
 # Without LDL^T, we need to do float(T)
-SOSDecomposition{C, T}(p::MatPolynomial{C, T}) = SOSDecomposition{C, float(T)}(p)
+SOSDecomposition(p::MatPolynomial{C, T}) where {C, T} = SOSDecomposition{C, float(T)}(p)
 
 Base.length(p::SOSDecomposition) = length(p.ps)
 Base.isempty(p::SOSDecomposition) = isempty(p.ps)

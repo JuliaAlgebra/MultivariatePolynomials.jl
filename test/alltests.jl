@@ -1,3 +1,4 @@
+include("zip.jl")
 include("mono.jl")
 #include("ncmono.jl")
 include("poly.jl")

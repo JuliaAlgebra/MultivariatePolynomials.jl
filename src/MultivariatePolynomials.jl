@@ -2,7 +2,7 @@ __precompile__()
 
 module MultivariatePolynomials
 
-using DocStringExtensions
+#using DocStringExtensions
 
 import Base: *, +, -, /, ^, ==,
     promote_rule, convert, show, isless, size, getindex,
@@ -21,6 +21,7 @@ abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 
 const APL{T} = AbstractPolynomialLike{T}
 
+include("zip.jl")
 include("mono.jl")
 include("term.jl")
 include("poly.jl")

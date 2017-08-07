@@ -14,14 +14,14 @@ function name end
 
 Returns a constant monomial of the monomial type of `p` with the same variables as `p`.
 
-    constantmonomial{PT<:AbstractPolynomialType}(::Type{PT})
+    constantmonomial(::Type{PT}) where {PT<:AbstractPolynomialType}
 
 Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """
 function constantmonomial end
 
 """
-    monovec{MT<:AbstractMonomialLike}(X::AbstractVector(MT)}
+    monovec(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}}
 
 Returns the vector of monomials `X` in decreasing order and without any duplicates.
 
@@ -32,7 +32,7 @@ Calling `monovec` on ``[xy, x, xy, x^2y, x]`` should return ``[x^2y, xy, x]``.
 function monovec end
 
 """
-    monovectype{MT<:AbstractMonomialLike}(X::AbstractVector(MT)}
+    monovectype(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}}
 
 Returns the return type of `monovec`.
 """
@@ -40,7 +40,7 @@ function monovectype end
 
 # If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
 """
-    sortmonovec{MT<:AbstractMonomialLike}(X::AbstractVector(MT)}
+    sortmonovec(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}
 
 Returns `σ`, the orders in which one must take the monomials in `X` to make them sorted and without any duplicate and the sorted vector of monomials, i.e. it returns `(σ, X[σ])`.
 
