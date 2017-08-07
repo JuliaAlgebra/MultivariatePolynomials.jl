@@ -112,9 +112,9 @@ deg(t::AbstractTermLike) = sum(exponents(t))
 """
     isconstant(m::AbstractMonomialLike)
 
-Returns whether the monomial
+Returns whether the monomial is constant.
 """
-isconstant(t::AbstractTermLike) = deg(t) == 0
+isconstant(t::AbstractTermLike) = all(iszero.(exponents(t)))
 isconstant(v::AbstractVariable) = false
 
 """

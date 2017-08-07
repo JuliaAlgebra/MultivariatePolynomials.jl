@@ -9,6 +9,7 @@
     @test x * x == x^2
     @test 4x == 2.0(2x)
     @test x * (2x) == 2x^2
+    @inferred 2 * (2x)
     @inferred 2.0 * (2x)
     #@test eltype(2.0 * (2x)) == Float64
     @inferred 1.5 * (2x)
