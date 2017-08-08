@@ -1,8 +1,7 @@
 @testset "PolyVar and Monomial tests" begin
     @testset "polyvar macro index set" begin
         Mod.@polyvar x y z
-        n = 3
-        Mod.@polyvar x[1:n] y z[1:n-1]
+        Mod.@polyvar x[1:3] y z[1:2]
         @test length(x) == 3
         @test length(z) == 2
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
@@ -12,19 +11,19 @@
         @test copy(x) == x
         @test nvariables(x) == 1
         @test zero(x) == 0
-        @test zero(x) isa AbstractTerm{Int}
+        @test zero(x) isa AbstractPolynomialLike{Int} # Term in DynamicPolynomials, Polynomial in TypedPolynomials
         @inferred zero(x)
         @test one(x) == 1
-        @test one(x) isa AbstractTerm{Int}
+        @test one(x) isa AbstractTermLike{Int} # Term in DynamicPolynomials, Monomial in TypedPolynomials
         @inferred one(x)
     end
     @testset "Monomial" begin
         Mod.@polyvar x
         @test zero(x^2) == 0
-        @test zero(x^2) isa AbstractTerm{Int}
+        @test zero(x^2) isa AbstractPolynomialLike{Int} # Term in DynamicPolynomials, Polynomial in TypedPolynomials
         @inferred zero(x^2)
         @test one(x^2) == 1
-        @test one(x^2) isa AbstractTerm{Int}
+        @test one(x^2) isa AbstractTermLike{Int} # Term in DynamicPolynomials, Monomial in TypedPolynomials
         @inferred one(x^2)
         Mod.@polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]
@@ -35,7 +34,7 @@
     @testset "Monomial Vector" begin
         Mod.@polyvar x y
         X = [x^2, x*y, y^2]
-        for (i, m) in enumerate(monomials([x, y], 2))
+        for (i, m) in enumerate(monomials((x, y), 2))
             @test m == X[i]
         end
         @test length(monovec([y, x])) == 2
