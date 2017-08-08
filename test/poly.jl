@@ -4,8 +4,8 @@
         @test Any(1x) == 1x
         @test one(1x) == one(1.0x) == 1
         @test zero(1x) == zero(1.0x) == 0
-        @test nvars(0.0x) == 1
-        @test nvars(1x) == 1
+        @test nvariables(0.0x) == 1
+        @test nvariables(1x) == 1
         #@inferred one(1x)
         @inferred zero(1x)
         #@inferred one(1.0x)
@@ -33,8 +33,8 @@
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
-        @test nvars(x + y - x) == 2
-        @test nvars(x + x^2) == 1
+        @test nvariables(x + y - x) == 2
+        @test nvariables(x + x^2) == 1
 
         p = polynomial([4, 9], [x, x*x])
         p.a == [9, 4]

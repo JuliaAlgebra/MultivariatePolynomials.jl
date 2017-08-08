@@ -9,7 +9,7 @@
     @testset "PolyVar" begin
         @polyvar x
         @test copy(x) == x
-        @test nvars(x) == 1
+        @test nvariables(x) == 1
         @test zero(x) == 0
         @test zero(x) isa AbstractTerm{Int}
         @inferred zero(x)
@@ -27,9 +27,9 @@
         @inferred one(x^2)
         @polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]
-        @test issorted(vars(y[2] * m), rev=true)
-        @test issorted(vars(m * y[4]), rev=true)
-        @test issorted(vars(y[6] * m), rev=true)
+        @test issorted(variables(y[2] * m), rev=true)
+        @test issorted(variables(m * y[4]), rev=true)
+        @test issorted(variables(y[6] * m), rev=true)
     end
     @testset "Monomial Vector" begin
         @polyvar x y

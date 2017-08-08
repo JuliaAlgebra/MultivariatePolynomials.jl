@@ -3,7 +3,7 @@ export coefficienttype, monomialtype
 export mindeg, maxdeg, extdeg
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
-export vars, nvars
+export variables, nvariables
 
 Base.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
 
@@ -242,31 +242,31 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
 end
 
 """
-    vars(p::AbstractPolynomialLike)
+    variables(p::AbstractPolynomialLike)
 
 Returns the tuple of the variables of `p` in decreasing order. It could contain variables of zero degree, see the example section.
 
 ### Examples
 
-Calling `vars(x^2*y)` should return `(x, y)` and calling `vars(x)` should return `(x,)`.
+Calling `variables(x^2*y)` should return `(x, y)` and calling `variables(x)` should return `(x,)`.
 Note that the variables of `m` does not necessarily have nonzero exponent.
-For instance, `vars([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
+For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
 """
-function vars end
+function variables end
 
-vars(x::AbstractVariable) = (x,)
+variables(x::AbstractVariable) = (x,)
 
 """
-    nvars(p::AbstractPolynomialLike)
+    nvariables(p::AbstractPolynomialLike)
 
-Returns the number of variables in `p`, i.e. `length(vars(p))`. It could be more than the number of variables with nonzero exponent (see [the Examples section of `vars`](@ref MultivariatePolynomials.vars)).
+Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero exponent (see [the Examples section of `variables`](@ref MultivariatePolynomials.variables)).
 
 ### Examples
 
-Calling `nvars(x^2*y)` should return at least 2 and calling `nvars(x)` should return at least 1.
+Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
-function nvars(p::AbstractPolynomialLike)
-    length(vars(p))
+function nvariables(p::AbstractPolynomialLike)
+    length(variables(p))
 end
 
-nvars(::AbstractVariable) = 1
+nvariables(::AbstractVariable) = 1

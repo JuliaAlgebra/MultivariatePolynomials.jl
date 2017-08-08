@@ -72,7 +72,7 @@ Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
 
-powers(t::AbstractTermLike) = tuplezip(vars(t), exponents(t))
+powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
 
 """
     exponent(t::AbstractTermLike, var::AbstractVariable)

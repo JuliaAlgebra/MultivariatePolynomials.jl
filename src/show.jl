@@ -7,7 +7,7 @@ function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
         print(io, "1")
     else
-        for (var, exp) in zip(vars(m), exponents(m))
+        for (var, exp) in zip(variables(m), exponents(m))
             if !iszero(exp)
                 print(io, var)
                 if !isone(exp)
