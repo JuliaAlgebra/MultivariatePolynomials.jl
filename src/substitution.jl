@@ -1,3 +1,4 @@
+# Base on the TypedPolynomials/abstract/substition.jl written by Robin Deits
 export subs
 
 # TODO Vararg{<:...} -> Vararg{...}
