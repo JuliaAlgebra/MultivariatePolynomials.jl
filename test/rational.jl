@@ -2,7 +2,7 @@
     #@test RationalPoly{true, Int, Int}(1) == 1
     #@test typeof(RationalPoly{false, Int, Int}(1)) == RationalPoly{false, Int, Int}
     #@inferred RationalPoly{true, Int, Int}(1)
-    @polyvar x
+    Mod.@polyvar x
     @test 1 / x isa RationalPoly
     @test 1.0 / x isa RationalPoly
     @inferred 1 / x

@@ -1,5 +1,5 @@
 @testset "Non-commutative Monomial" begin
-    @ncpolyvar x
+    Mod.@ncpolyvar x
     @test_throws ArgumentError Monomial{false}([x], [1,0])
     X = Monomial{false}()
     @test nvariables(X) == 0

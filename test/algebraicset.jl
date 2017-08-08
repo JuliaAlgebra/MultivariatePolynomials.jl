@@ -1,5 +1,5 @@
 @testset "Algebraic set" begin
-    @polyvar x y
+    Mod.@polyvar x y
     @test isa(FullSpace(), FullSpace)
     V = @set x * y == 1
     @test V isa AlgebraicSet{Int}
@@ -8,7 +8,7 @@
     addequality!(S, x^2 - y)
     addinequality!(S, x + y - 1)
     @test S isa BasicSemialgebraicSet{Int}
-    @test typeof(Int32(2)*x^2*y) == Term{true, Int32}
+    @test Int32(2)*x^2*y isa AbstractTerm{Int32}
     S = (@set Int32(2)*x^2*y == 0 && 1.0x^2*y >= 0 && (6//3)*x^2*y == -y && 1.5x+y >= 0)
     S2 = S ∩ V
     S3 = V ∩ S

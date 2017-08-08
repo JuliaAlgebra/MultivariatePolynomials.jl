@@ -1,6 +1,6 @@
 @testset "Term and Polynomial tests" begin
     @testset "Term" begin
-        @polyvar x
+        Mod.@polyvar x
         @test Any(1x) == 1x
         @test one(1x) == one(1.0x) == 1
         @test zero(1x) == zero(1.0x) == 0
@@ -14,7 +14,7 @@
         #@test_throws InexactError Int(2x)
     end
     @testset "Polynomial" begin
-        @polyvar x
+        Mod.@polyvar x
         @test polynomial(1 + x) == 1 + x
         @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
@@ -28,7 +28,7 @@
         @test promote_type(typeof(1-x), typeof(x)) <: AbstractPolynomial{Int}
         @test x != 1 - x
 
-        @polyvar y
+        Mod.@polyvar y
 
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
@@ -53,7 +53,7 @@
         @test transpose(x + y) == x + y
     end
     @testset "Graded Lex Order" begin
-        @polyvar x y z
+        Mod.@polyvar x y z
         p = 3*y^2 + 2*y*x
         @test coefficients(p) == [2, 3]
         @test monomials(p) == monovec([x*y, y^2])
@@ -63,7 +63,7 @@
         @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
     end
     @testset "MatPolynomial" begin
-        @polyvar x y
+        Mod.@polyvar x y
         P = MatPolynomial{Int}((i,j) -> i + j, [x^2, x*y, y^2])
         zP = zero(typeof(P))
         @test isempty(zP.Q)
@@ -91,26 +91,8 @@
         @test polynomial(p) isa AbstractPolynomial
         @test polynomial(p, Int) isa AbstractPolynomial
     end
-    @testset "Non-commutative MatPolynomial" begin
-        @ncpolyvar x y
-        P = MatPolynomial([2 3 4;
-                           3 4 5;
-                           4 5 6], [x*y, x^2, y^2])
-        @test P.Q.Q == [4, 3, 5, 2, 4, 6]
-        P = MatPolynomial((i,j) -> i + j, [x*y, x^2, y^2])
-        @test P.Q.Q == [4, 3, 5, 2, 4, 6]
-        p = polynomial(P)
-        @test p.a == [4, 3, 5, 4, 3, 2, 6, 5, 4]
-        @test p.x == monovec([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
-        @inferred MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) == 0
-        @test MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) isa AbstractPolynomialLike{Float64}
-        @test MatPolynomial(Matrix{Float64}(0, 0), typeof(x)[]) == 0
-        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
-        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
-        @test P != Q
-    end
 #   @testset "SOSDecomposition" begin
-#       @polyvar x y
+#       Mod.@polyvar x y
 #       @test isempty(SOSDecomposition(typeof(x)[]))
 #       ps = [1, x + y, x^2, x*y, 1 + x + x^2]
 #       P = MatPolynomial(SOSDecomposition(ps))

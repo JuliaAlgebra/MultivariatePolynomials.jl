@@ -1,5 +1,5 @@
 @testset "Example 2" begin
-    @polyvar x[1:3]
+    Mod.@polyvar x[1:3]
     p = sum(x .* x)
     @test p == x[1]^2 + x[2]^2 + x[3]^2
     @test subs(p, x[1]=>2, x[3]=>3) == x[2]^2 + 13

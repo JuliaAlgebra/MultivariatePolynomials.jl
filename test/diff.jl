@@ -1,5 +1,5 @@
 @testset "Differentiation" begin
-    @polyvar x y
+    Mod.@polyvar x y
     @test differentiate(true*x+true*x^2, y) == 0
     @inferred differentiate(true*x+true*x^2, y)
     @test differentiate(MatPolynomial{Int}((i,j)->1, [x]), y) == 0

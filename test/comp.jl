@@ -1,5 +1,5 @@
 @testset "Graded Lex Order" begin
-    @polyvar x y z
+    Mod.@polyvar x y z
     @test x > y > z
     @test x^2*y > y^3 > z
     @test y^2 >= x
@@ -17,7 +17,7 @@
 end
 @testset "Equality" begin
     @testset "Monomial equality" begin
-        @polyvar x y
+        Mod.@polyvar x y
         #@test 1 == constantmonomial([x, y])
         #@test 2 != constantmonomial([x, y])
         @test 2 != x
@@ -33,11 +33,11 @@ end
         #@test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
         #@test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
         z = x
-        @polyvar x
+        Mod.@polyvar x
         @test z != x
     end
     @testset "Polynomial equality" begin
-        @polyvar x y
+        Mod.@polyvar x y
         @test 2*x*y + 3*y^2 == 3*y^2 + 2*y*x
         @test 3*x*y + 2*y^2 != 3*y^2 + 2*y*x
         @test x + y != x * (1 + y)
@@ -52,18 +52,18 @@ end
         @test !isapprox(3.0*y^2 + x + x^2, x + 3*y^2, rtol=1e-2, ztol=1e-2)
     end
     @testset "MatPolynomial equality" begin
-        @polyvar x y
+        Mod.@polyvar x y
         @test MatPolynomial([2 3; 3 2], [x, y]) == 2x^2 + 2y^2 + 6x*y
     end
     @testset "SOSDecomposition equality" begin
-        @polyvar x y
+        Mod.@polyvar x y
         @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
         @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x+y]))
         @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x-y]))
         @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x-y, x+y+1e-8]), ztol=1e-7)
     end
     @testset "RationalPoly equality" begin
-        @polyvar x y
+        Mod.@polyvar x y
         @test isapprox((1+1e-8)x, (x*y)/y, rtol=1e-7)
         @test isapproxzero(((1+1e-8)x - x)/y, ztol=1e-7)
         @test !isapproxzero(((1+1e-8)x - y)/y, ztol=1e-9)
@@ -73,7 +73,7 @@ end
     end
 end
 @testset "Equality between a Polynomial and a type not defining zero #22" begin
-    @polyvar x
+    Mod.@polyvar x
     # Polynomial of multiple terms
     p = x + x^2
     @test p != nothing

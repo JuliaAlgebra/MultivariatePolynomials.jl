@@ -1,6 +1,8 @@
 using Base.Test
 
 using MultivariatePolynomials
-using DynamicPolynomials
+import DynamicPolynomials
 
-include("alltests.jl")
+const Mod = DynamicPolynomials
+include("commutativetests.jl")
+#include("noncommutativetests.jl")

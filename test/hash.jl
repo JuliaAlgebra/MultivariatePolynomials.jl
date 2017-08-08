@@ -1,5 +1,5 @@
 @testset "Hashing" begin
-    @polyvar x y z
+    Mod.@polyvar x y z
     @test hash(x) != hash(y)
     @test hash(1x) == hash(1.0x)
     @test hash(1x+3y) == hash(1.0x+3.0y)

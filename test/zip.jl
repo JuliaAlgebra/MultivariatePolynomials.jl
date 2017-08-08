@@ -1,8 +1,7 @@
 import MultivariatePolynomials: pairzip, tuplezip
 
-# Tests taken from TypedPolynomials
 @testset "pairzip" begin
-    @polyvar x y z
+    Mod.@polyvar x y z
 
     @test @inferred(pairzip((x, y), (1, 2))) == (x=>1, y=>2)
     @test_throws ArgumentError pairzip((x, y, z), (1, 2))
@@ -12,7 +11,7 @@ import MultivariatePolynomials: pairzip, tuplezip
 end
 
 @testset "tuplezip" begin
-    @polyvar x y z
+    Mod.@polyvar x y z
 
     @test @inferred(tuplezip((x, y), (1, 2))) == ((x, 1), (y, 2))
     @test_throws ArgumentError tuplezip((x, y, z), (1, 2))

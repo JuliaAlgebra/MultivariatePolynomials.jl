@@ -1,5 +1,5 @@
 @testset "Expectation" begin
-    @polyvar x[1:3]
+    Mod.@polyvar x[1:3]
     p = x[3] - 2x[1]*x[2]^2 + 3x[3]*x[1] - 5x[1]^3
     v = (1,2,3)
     m = ζ(monomials(p), x=>v)

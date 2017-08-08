@@ -1,5 +1,5 @@
 @testset "Example 1" begin
-    @polyvar x y
+    Mod.@polyvar x y
     p = 2x + 3.0x*y^2 + y
     @test differentiate(p, x) == 2 + 3y^2
     @test differentiate.(p, (x, y)) == (2 + 3y^2, 6x*y + 1)

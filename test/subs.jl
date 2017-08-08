@@ -1,7 +1,7 @@
 import Base.Test: @inferred
 
 @testset "Substitution" begin
-    @polyvar x[1:3]
+    Mod.@polyvar x[1:3]
 
     a = (x[1])(x[1]=>x[2])
     b = x[2]

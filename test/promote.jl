@@ -1,5 +1,5 @@
 @testset "Promotion" begin
-    @polyvar x y
+    Mod.@polyvar x y
     @inferred x*y+x
     @test [x, x*y+x, x] isa Vector{<:AbstractPolynomial{Int}}
     @test eltype([1, x/y, x]) <: RationalPoly{<:AbstractTerm{Int}, <:AbstractTerm{Int}}
