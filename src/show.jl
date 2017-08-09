@@ -31,7 +31,7 @@ function Base.show(io::IO, t::AbstractTerm)
     end
 end
 
-function Base.show{T}(io::IO, p::AbstractPolynomial{T})
+function Base.show(io::IO, p::AbstractPolynomial{T}) where T
     ts = terms(p)
     if isempty(ts)
         print(io, zero(T))
