@@ -21,7 +21,7 @@ Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 function constantmonomial end
 
 """
-    monovec(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}}
+    monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
 Returns the vector of monomials `X` in decreasing order and without any duplicates.
 
@@ -29,18 +29,25 @@ Returns the vector of monomials `X` in decreasing order and without any duplicat
 
 Calling `monovec` on ``[xy, x, xy, x^2y, x]`` should return ``[x^2y, xy, x]``.
 """
-function monovec end
+function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
+    Y = sort(X, rev=true)
+    dups = find(i -> Y[i] == Y[i-1], 2:length(Y))
+    deleteat!(Y, dups)
+    Y
+end
+monovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = monovec(AbstractVector{monomialtype(TT)}(X))
 
 """
-    monovectype(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}}
+    monovectype(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
 Returns the return type of `monovec`.
 """
-function monovectype end
+monovectype(X::AbstractVector{MT}) where {MT<:AbstractMonomial} = Vector{MT}
+monovectype(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovectype(AbstractVector{monomialtype(TT)}(X))
 
 # If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
 """
-    sortmonovec(X::AbstractVector(MT) where {MT<:AbstractMonomialLike}
+    sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
 Returns `σ`, the orders in which one must take the monomials in `X` to make them sorted and without any duplicate and the sorted vector of monomials, i.e. it returns `(σ, X[σ])`.
 
@@ -48,15 +55,21 @@ Returns `σ`, the orders in which one must take the monomials in `X` to make the
 
 Calling `sortmonovec` on ``[xy, x, xy, x^2y, x]`` should return ``([4, 1, 2], [x^2y, xy, x])``.
 """
-function sortmonovec end
+function sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
+    σ = sortperm(X, rev=true)
+    dups = find(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
+    deleteat!(σ, dups)
+    σ, X[σ]
+end
+sortmonovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = sortmonovec(AbstractVector{monomialtype(TT)}(X))
 
 """
-    mergemonovec{MT<:AbstractMonomialLike, MVT<:AbstractVector{MT}}(X::Vector{MVT}}
+    mergemonovec{MT<:AbstractMonomialLike, MVT<:AbstractVector{MT}}(X::AbstractVector{MVT}}
 
-Returns the vector of monomials in the entries of `X` in decreasing order and without any duplicates, i.e. `monovec(vat(X...))
+Returns the vector of monomials in the entries of `X` in decreasing order and without any duplicates, i.e. `monovec(vcat(X...))`
 
 ### Examples
 
 Calling `mergemonovec` on ``[[xy, x, xy], [x^2y, x]]`` should return ``[x^2y, xy, x]``.
 """
-function mergemonovec end
+mergemonovec(X) = monovec(vcat(X...))

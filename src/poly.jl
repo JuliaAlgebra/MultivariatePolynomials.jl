@@ -18,7 +18,7 @@ end
 # Conversion polynomial -> scalar
 function Base.convert(::Type{S}, p::APL) where {S}
     s = zero(S)
-    for t in p
+    for t in terms(p)
         if !isconstant(t)
             # The polynomial is not constant
             throw(InexactError())
@@ -28,14 +28,20 @@ function Base.convert(::Type{S}, p::APL) where {S}
     s
 end
 Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
+function Base.convert(::Type{MT}, t::AbstractTerm) where {MT<:AbstractMonomial}
+    if isone(coefficient(t))
+        monomial(t)
+    else
+        error("Cannot convert a term with a coefficient that is not one into a monomial")
+    end
+end
 
 coefficienttype(::Type{<:APL{T}}) where {T} = T
 coefficienttype(::APL{T}) where {T} = T
 #coefficienttype(::Type{T}) where {T} = T
 #coefficienttype(::T) where {T} = T
 
-monomialtype(::Type{<:APL{T}}) where {T} = T
-monomialtype(::APL{T}) where {T} = T
+function monomialtype end
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
