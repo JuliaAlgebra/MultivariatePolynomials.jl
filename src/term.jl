@@ -64,9 +64,11 @@ Returns the type of the terms of `p` but with coefficient type `T`.
     termtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}
 
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
-
 """
 termtype(p::APL) = Base.promote_op(first ∘ terms, p)
+termtype(::Type{V}, ::Type{C}) where {V <: AbstractVariable, C} = termtype(monomialtype(V), C)
+termtype(::Type{T}) where T <: AbstractTerm = T
+termtype(::Type{M}) where M<:AbstractMonomialLike = termtype(M, Int)
 
 """
     coefficient(t::AbstractTermLike)

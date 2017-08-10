@@ -32,9 +32,6 @@ end
         #@test x != Monomial([x, y], [0, 1])
         #@test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
         #@test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
-        z = x
-        Mod.@polyvar x
-        @test z != x
     end
     @testset "Polynomial equality" begin
         Mod.@polyvar x y

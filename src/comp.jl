@@ -52,16 +52,16 @@ end
 (==)(p::AbstractPolynomial, t::AbstractTerm) = polyeqterm(p, t)
 (==)(t::AbstractTerm, p::AbstractPolynomial) = polyeqterm(p, t)
 
-function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, op)
+function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, isz, op)
     i1 = 1
     i2 = 1
     t1 = terms(p1)
     t2 = terms(p2)
     while true
-        while i1 <= length(t1) && iszero(coefficient(t1[i1]))
+        while i1 <= length(t1) && isz(coefficient(t1[i1]))
             i1 += 1
         end
-        while i2 <= length(t2) && iszero(coefficient(t2[i2]))
+        while i2 <= length(t2) && isz(coefficient(t2[i2]))
             i2 += 1
         end
         if i1 > length(t1) && i2 > length(t2)
@@ -89,7 +89,7 @@ end
 #    end
 #    return true
 #end
-(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, ==)
+(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, iszero, ==)
 
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 # Solve ambiguity with (::PolyType, ::Any)
@@ -105,11 +105,11 @@ end
 
 isapproxzero(m::AbstractMonomialLike; kwargs...) = false
 isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwargs...)
-isapproxzero(p::APL; kwargs...) = isapprox(p, zero(p); kwargs...)
+isapproxzero(p::APL; kwargs...) = all(isapproxzero.(terms(p); kwargs...))
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
-Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; kwargs...) = compare_terms(p1, p2, (x, y) -> isapprox(x, y; kwargs...))
+Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; ztol::Real=1e-6, kwargs...) = compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol), (x, y) -> isapprox(x, y; kwargs...))
 
 function Base.isapprox(p::MatPolynomial, q::MatPolynomial; kwargs...)
     p.x == q.x && isapprox(p.Q, q.Q; kwargs...)

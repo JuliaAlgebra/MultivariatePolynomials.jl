@@ -86,6 +86,8 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
 end
 
 polynomialtype(p::APL) = Base.promote_op(polynomial, p)
+polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
+polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
 
 """
     terms(p::AbstractPolynomialLike)

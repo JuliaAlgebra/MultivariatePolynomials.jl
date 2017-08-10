@@ -1,15 +1,15 @@
-Base.promote_rule(::Type{PT}, ::Type{PS}) where {PT<:APL, PS<:APL} = promote_rule(polynomialtype(PT), polynomialtype(PS))
+Base.promote_rule(::Type{PT}, ::Type{PS}) where {PT<:APL, PS<:APL} = promote_type(polynomialtype(PT), polynomialtype(PS))
 Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:APL} = PT
 
-promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_rule(T, NT), promote_rule(DT, termtype(DT))}
+promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
 
 Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 Base.promote_rule(::Type{T}, ::Type{PT}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 Base.promote_rule(::Type{T}, ::Type{RT}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 Base.promote_rule(::Type{RT}, ::Type{T}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 
-promote_rule_rational(::Type{PT}, ::Type{RationalPoly{S, T}}) where {PT<:APL, S, T} = RationalPoly{promote_rule(PT, S), promote_rule(T, termtype(T))}
-promote_rule_rational(::Type{RationalPoly{S, T}}, ::Type{RationalPoly{U, V}}) where {S, T, U, V} = RationalPoly{promote_rule(S, U), promote_rule(T, V)}
+promote_rule_rational(::Type{PT}, ::Type{RationalPoly{S, T}}) where {PT<:APL, S, T} = RationalPoly{promote_type(PT, S), promote_type(T, termtype(T))}
+promote_rule_rational(::Type{RationalPoly{S, T}}, ::Type{RationalPoly{U, V}}) where {S, T, U, V} = RationalPoly{promote_type(S, U), promote_type(T, V)}
 
 Base.promote_rule(::Type{RS}, ::Type{RT}) where {RS<:RationalPoly, RT<:RationalPoly} = promote_rule_rational(RS, RT)
 Base.promote_rule(::Type{PT}, ::Type{RT}) where {PT<:APL, RT<:RationalPoly} = promote_rule_rational(PT, RT)

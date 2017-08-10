@@ -39,6 +39,14 @@ function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 end
 monovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = monovec(AbstractVector{monomialtype(TT)}(X))
 
+function monovec(a, x)
+    if length(a) != length(x)
+        throw(ArgumentError("There should be as many coefficient than monomials"))
+    end
+    σ, X = sortmonovec(x)
+    (a[σ], X)
+end
+
 """
     monovectype(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 

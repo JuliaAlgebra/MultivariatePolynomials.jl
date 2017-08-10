@@ -13,6 +13,10 @@ function isless(t1::AbstractTerm, t2::AbstractTerm)
     end
 end
 
+function convertconstant end
+convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
+convert(::Type{P}, p::APL) where P<:AbstractPolynomial = convert(P, polynomial(p))
+
 for op in [:+, :-, :*, :(==)]
     @eval $op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
