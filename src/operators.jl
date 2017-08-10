@@ -32,6 +32,7 @@ isapprox(α, p::APL; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
 
 (-)(m::AbstractMonomialLike) = (-1) * m
 (-)(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
+(-)(p::APL) = polynomial((-).(terms(p)))
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
@@ -71,6 +72,6 @@ Base.transpose(m::AbstractMonomial) = m
 Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
 Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 
-Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = (@show p1; p1' * p2)
-Base.dot(x, p::AbstractPolynomialLike) = (@show p; x' * p)
-Base.dot(p::AbstractPolynomialLike, x) = (@show p; p' * x)
+Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+Base.dot(x, p::AbstractPolynomialLike) = x' * p
+Base.dot(p::AbstractPolynomialLike, x) = p' * x
