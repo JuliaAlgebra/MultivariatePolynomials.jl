@@ -20,6 +20,8 @@ Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """
 function constantmonomial end
 
+emptymonovec(::Type{PT}) where PT = monomialtype(PT)[]
+
 """
     monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
@@ -42,8 +44,8 @@ monovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = monovec(AbstractVector
 
 Returns the return type of `monovec`.
 """
-monovectype(X::AbstractVector{MT}) where {MT<:AbstractMonomial} = Vector{MT}
-monovectype(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovectype(AbstractVector{monomialtype(TT)}(X))
+monovectype(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovectype(TT)
+monovectype(::Type{PT}) where {PT <: APL} = Vector{monomialtype(PT)}
 
 # If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
 """

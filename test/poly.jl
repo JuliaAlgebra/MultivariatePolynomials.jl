@@ -37,17 +37,17 @@
         @test nvariables(x + x^2) == 1
 
         p = polynomial([4, 9], [x, x*x])
-        p.a == [9, 4]
-        p.x[1] == x^2
-        p.x[2] == x
+        @test coefficients(p) == [9, 4]
+        @test monomials(p)[1] == x^2
+        @test monomials(p)[2] == x
         @test p == dot([4, 9], [x, x*x])
 
         @inferred polynomial(i -> float(i), [x, x*x])
         @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
         for p in (polynomial(i -> float(i), [x, x*x]),
                   polynomial(i -> 3 - float(i), monovec([x*x, x])))
-            @test p.a == [2.0, 1.0]
-            @test p.x == monovec([x^2, x])
+            @test coefficients(p) == [2.0, 1.0]
+            @test monomials(p) == monovec([x^2, x])
         end
 
         @test transpose(x + y) == x + y
@@ -69,8 +69,8 @@
         @test isempty(zP.Q)
         @test zP == 0
         p = polynomial(P)
-        @test p.a == [2, 6, 12, 10, 6]
-        @test p.x == monovec([x^4, x^3*y, x^2*y^2, x*y^3, y^4])
+        @test coefficients(p) == [2, 6, 12, 10, 6]
+        @test monomials(p) == [x^4, x^3*y, x^2*y^2, x*y^3, y^4]
         for i in 1:3
             for j in 1:3
                 @test P[i, j] == i + j
@@ -88,8 +88,8 @@
         Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
         @test P == Q
         p = MatPolynomial([2 3; 3 2], [x, y])
-        @test polynomial(p) isa AbstractPolynomial
-        @test polynomial(p, Int) isa AbstractPolynomial
+        @test polynomial(p) isa AbstractPolynomial{Int}
+        @test polynomial(p, Float64) isa AbstractPolynomial{Float64}
     end
 #   @testset "SOSDecomposition" begin
 #       Mod.@polyvar x y

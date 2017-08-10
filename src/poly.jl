@@ -15,6 +15,7 @@ function Base.hash(p::AbstractPolynomial, u::UInt)
     end
 end
 
+Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
 function Base.convert(::Type{S}, p::APL) where {S}
     s = zero(S)
@@ -41,7 +42,7 @@ coefficienttype(::APL{T}) where {T} = T
 #coefficienttype(::Type{T}) where {T} = T
 #coefficienttype(::T) where {T} = T
 
-function monomialtype end
+monomialtype(::Type{M}) where M<:AbstractMonomial = M
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
@@ -53,6 +54,10 @@ changecoefficienttype(p::PT, ::Type{T}) where {PT<:APL, T} = changecoefficientty
 
 Converts `p` to a value with polynomial type.
 
+    polynomial(p::AbstractPolynomialLike, ::Type{T}) where T
+
+Converts `p` to a value with polynomial type with coefficient type `T`.
+
     polynomial(a::AbstractVector, mv::AbstractVector{<:AbstractMonomialLike})
 
 Creates a polynomial equal to `dot(a, mv)`.
@@ -61,13 +66,24 @@ Creates a polynomial equal to `dot(a, mv)`.
 
 Creates a polynomial equal to `sum(terms)`.
 
+    polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike})
+
+Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
+
 ### Examples
 
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
+polynomial(p::AbstractPolynomial) = p
 polynomial(ts::AbstractVector{<:AbstractTerm}) = polynomial(coefficient.(ts), monomial.(ts))
-
-polynomial(Q::AbstractMatrix{T}, mv::AbstractVector) where {T} = polynomial(Q, mv, T)
+polynomial(a::AbstractVector, x::AbstractVector) = polynomial([α * m for (α, m) in zip(a, x)])
+polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial([f(i) * mv[i] for i in 1:length(mv)])
+function polynomial(Q::AbstractMatrix, mv::AbstractVector)
+    dot(mv, Q * mv)
+end
+function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
+    polynomial(polynomial(Q, mv), T)
+end
 
 polynomialtype(p::APL) = Base.promote_op(polynomial, p)
 
@@ -106,7 +122,7 @@ Returns an iterator over the coefficients of `p` of the nonzero terms of the pol
 
 Calling `coefficients` on ``4x^2y + xy + 2x`` should return an iterator of ``[4, 1, 2]``.
 """
-function coefficients end
+coefficients(p::APL) = coefficient.(terms(p))
 
 """
     monomials(p::AbstractPolynomialLike)
@@ -123,7 +139,7 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 
 Calling `monomials((x, y), [1, 3], m -> exponent(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
-function monomials end
+monomials(p::APL) = monomial.(terms(p))
 
 #$(SIGNATURES)
 """

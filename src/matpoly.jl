@@ -23,10 +23,14 @@ end
 
 Base.size(Q::SymMatrix) = (Q.n, Q.n)
 
-function Base.getindex(Q::SymMatrix, I::NTuple{2, Int})
-    Q.Q[trimap(minimum(I), maximum(I), Q.n)]
+function Base.getindex(Q::SymMatrix, i, j)
+    Q.Q[trimap(min(i, j), max(i, j), Q.n)]
 end
-Base.getindex(Q::SymMatrix, I...) = Q[I]
+function Base.getindex(Q::SymMatrix, k)
+    i, j = divrem(k-1, Q.n)
+    Q[i+1, j+1]
+end
+Base.getindex(Q::SymMatrix, I::Tuple) = Q[I...]
 
 struct MatPolynomial{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}} <: AbstractPolynomialLike{T} # should be AbstractPolynomialLike{eltype(T)} but it doesn't work
     Q::SymMatrix{T}
@@ -37,7 +41,7 @@ coefficienttype(::Type{<:MatPolynomial{T}}) where {T} = Base.promote_op(+, T, T)
 polynomialtype(::Type{MatPolynomial{T, MT, MVT}}) where {T, MT, MVT} = polynomialtype(coefficienttype(MatPolynomial{T, MT, MVT}), MT)
 polynomialtype(::Type{MatPolynomial{T, MT, MVT}}, ::Type{S}) where {S, T, MT, MVT} = polynomialtype(S, MT)
 
-Base.zero(::Type{MatPolynomial{T, MT, MVT}}) where {T, MT, MVT} = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), monovec(MT))
+Base.zero(::Type{MatPolynomial{T, MT, MVT}}) where {T, MT, MVT} = MatPolynomial{T, MT, monovectype(MT)}(SymMatrix{T}(T[], 0), emptymonovec(MT))
 
 Base.getindex(p::MatPolynomial, I...) = getindex(p.Q, I...)
 

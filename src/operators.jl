@@ -67,6 +67,6 @@ Base.transpose(m::AbstractMonomial) = m
 Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
 Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 
-Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-Base.dot(x, p::AbstractPolynomialLike) = x' * p
-Base.dot(p::AbstractPolynomialLike, x) = p' * x
+Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = (@show p1; p1' * p2)
+Base.dot(x, p::AbstractPolynomialLike) = (@show p; x' * p)
+Base.dot(p::AbstractPolynomialLike, x) = (@show p; p' * x)

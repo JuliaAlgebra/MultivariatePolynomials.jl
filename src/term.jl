@@ -48,6 +48,24 @@ end
 term(t::AbstractTerm) = t
 term(m::AbstractMonomialLike) = 1 * m
 
+"""
+    termtype(p::AbstractPolynomialLike)
+
+Returns the type of the terms of `p`.
+
+    termtype(::Type{PT}) where PT<:AbstractPolynomialLike
+
+Returns the type of the terms of a polynomial of type `PT`.
+
+    termtype(p::AbstractPolynomialLike, ::Type{T}) where T
+
+Returns the type of the terms of `p` but with coefficient type `T`.
+
+    termtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}
+
+Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
+
+"""
 termtype(p::APL) = Base.promote_op(first ∘ terms, p)
 
 """
