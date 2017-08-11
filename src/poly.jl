@@ -15,28 +15,6 @@ function Base.hash(p::AbstractPolynomial, u::UInt)
     end
 end
 
-Base.convert(::Type{Any}, p::APL) = p
-# Conversion polynomial -> scalar
-function Base.convert(::Type{S}, p::APL) where {S}
-    s = zero(S)
-    for t in terms(p)
-        if !isconstant(t)
-            # The polynomial is not constant
-            throw(InexactError())
-        end
-        s += S(coefficient(t))
-    end
-    s
-end
-Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
-function Base.convert(::Type{MT}, t::AbstractTerm) where {MT<:AbstractMonomial}
-    if isone(coefficient(t))
-        monomial(t)
-    else
-        error("Cannot convert a term with a coefficient that is not one into a monomial")
-    end
-end
-
 coefficienttype(::Type{<:APL{T}}) where {T} = T
 coefficienttype(::APL{T}) where {T} = T
 #coefficienttype(::Type{T}) where {T} = T
@@ -48,6 +26,16 @@ changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = t
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
 
 changecoefficienttype(p::PT, ::Type{T}) where {PT<:APL, T} = changecoefficienttype(PT, T)(p)
+
+abstract type ListState end
+abstract type UnsortedState <: ListState end
+struct MessyState <: UnsortedState end
+# No duplicates or zeros
+struct UniqState <: UnsortedState end
+sortstate(::MessyState) = SortedState()
+sortstate(::UniqState) = SortedUniqState()
+struct SortedState <: ListState end
+struct SortedUniqState <: ListState end
 
 """
     polynomial(p::AbstractPolynomialLike)
@@ -62,9 +50,9 @@ Converts `p` to a value with polynomial type with coefficient type `T`.
 
 Creates a polynomial equal to `dot(a, mv)`.
 
-    polynomial(terms::AbstractVector{<:AbstractTerm})
+    polynomial(terms::AbstractVector{<:AbstractTerm}, s::ListState=MessyState())
 
-Creates a polynomial equal to `sum(terms)`.
+Creates a polynomial equal to `sum(terms)` where `terms` are guaranteed to be in state `s`.
 
     polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike})
 
@@ -75,8 +63,9 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
 polynomial(p::AbstractPolynomial) = p
-polynomial(ts::AbstractVector{<:AbstractTerm}) = polynomial(coefficient.(ts), monomial.(ts))
-polynomial(a::AbstractVector, x::AbstractVector) = polynomial([α * m for (α, m) in zip(a, x)])
+polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+polynomial(ts::AbstractVector{<:AbstractTerm}, s::ListState=MessyState()) = polynomial(coefficient.(ts), monomial.(ts), s)
+polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
 polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial([f(i) * mv[i] for i in 1:length(mv)])
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
     dot(mv, Q * mv)
@@ -88,6 +77,24 @@ end
 polynomialtype(p::APL) = Base.promote_op(polynomial, p)
 polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
 polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
+
+function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
+    result = T[]
+    sizehint!(result, length(ts))
+    for t in ts
+        if !iszero(t)
+            if isempty(result) || monomial(t) != monomial(last(result))
+                push!(result, t)
+            else
+                # t + ts would be a polynomial with DynamicPolynomials
+                result[end] = (coefficient(last(result)) + coefficient(t)) * monomial(t)
+            end
+        end
+    end
+    result
+end
+polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedState) = polynomial(uniqterms(ts), SortedUniqState())
+polynomial(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState) = polynomial(sort(ts, lt=(>)), sortstate(s))
 
 """
     terms(p::AbstractPolynomialLike)

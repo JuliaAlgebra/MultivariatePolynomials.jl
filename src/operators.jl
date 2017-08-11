@@ -13,10 +13,6 @@ function isless(t1::AbstractTerm, t2::AbstractTerm)
     end
 end
 
-function convertconstant end
-convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
-convert(::Type{P}, p::APL) where P<:AbstractPolynomial = convert(P, polynomial(p))
-
 for op in [:+, :-, :*, :(==)]
     @eval $op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
@@ -75,3 +71,11 @@ Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
 Base.dot(x, p::AbstractPolynomialLike) = x' * p
 Base.dot(p::AbstractPolynomialLike, x) = p' * x
+
+# Amazingly, this works! Thanks, StaticArrays.jl!
+"""
+Convert a tuple of variables into a static vector to allow array-like usage.
+The element type of the vector will be Monomial{vars, length(vars)}.
+"""
+Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
+# vec(vars::Tuple{Vararg{<:TypedVariable}}) = SVector(vars)

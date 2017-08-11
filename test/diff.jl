@@ -15,6 +15,10 @@
     @test differentiate(x, x, 1) == 1
     #@inferred differentiate(x, x, 0) # FIXME failing at the moment
     @inferred differentiate(x, x, 1)
+    @test differentiate(4x*y^3, y) == 12x*y^2
+    @inferred differentiate(4x*y^3, y)
+    @test differentiate(differentiate(x*y^4, y), y) == 12x*y^2
+    @inferred differentiate(differentiate(x*y^4, y), y)
     @test differentiate(x*y^4, y, 3) == 24x*y
     @inferred differentiate(x*y^4, y, 3)
     @test differentiate(x*y^4, y, 0) == x*y^4

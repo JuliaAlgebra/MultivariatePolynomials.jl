@@ -47,10 +47,11 @@ Base.getindex(p::MatPolynomial, I...) = getindex(p.Q, I...)
 
 getmat(p::MatPolynomial{T}) where {T} = p.Q
 
-function MatPolynomial{T}(f::Function, x::AbstractVector{MT}, σ) where {T, MT}
+function MatPolynomial{T}(f::Function, x::AbstractVector{MT}, σ) where {T, MT<:AbstractMonomial}
     MatPolynomial{T, MT, monovectype(x)}(trimat(T, f, length(x), σ), x)
 end
-function MatPolynomial{T}(f::Function, x::AbstractVector{MT}) where {T, MT}
+MatPolynomial{T}(f::Function, x::AbstractVector, σ) where T = MatPolynomial{T}(f, monomial.(x), σ)
+function MatPolynomial{T}(f::Function, x::AbstractVector) where T
     σ, X = sortmonovec(x)
     MatPolynomial{T}(f, X, σ)
 end

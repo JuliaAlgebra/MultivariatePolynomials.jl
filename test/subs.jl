@@ -14,7 +14,7 @@ import Base.Test: @inferred
     @test Int(p(x => (5, x[1]*x[2], 4))) == 42
 
     p = x[1]^2 + x[2]^2
-    q = p(x[1:2] => [1 -1; 1 1] * x[1:2])
+    q = p(x[1:2] => [1 -1; 1 1] * vec(x[1:2]))
     @test q == 2p
 
     t = 2.0 * x[1] * x[2]^2
@@ -29,7 +29,7 @@ import Base.Test: @inferred
     @test subs(p, x => ones(3)) == 31
 
     p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
-    @inferred p([x[1], x[2]] => (1.0, 2.0))
+    @inferred p((x[1], x[2]) => (1.0, 2.0))
 
     @inferred subs(p, x[2] => 2.0)
     @test subs(p, x[2] => 2.0) == 13x[1] + 2 + 2x[1]^2

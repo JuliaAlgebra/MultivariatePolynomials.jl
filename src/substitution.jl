@@ -53,16 +53,21 @@ substitute(st::AST, m::AbstractMonomial, s::Substitutions) = powersubstitute(st,
 substitute(st::AST, t::AbstractTerm, s::Substitutions) = coefficient(t) * substitute(st, monomial(t), s)
 
 ## Polynomials
+_polynomial(α) = α
+_polynomial(p::APL) = polynomial(p)
 function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
-    ts = terms(p)
-    @assert length(ts) >= 1
-    r1 = substitute(st, ts[1], s)
-    R = Base.promote_op(+, typeof(r1), typeof(r1))
-    result::R = convert(R, r1)
-    for i in 2:length(ts)
-        result += substitute(st, ts[i], s)
+    if iszero(p)
+        _polynomial(substitute(st, zero(termtype(p)), s))
+    else
+        ts = terms(p)
+        r1 = substitute(st, ts[1], s)
+        R = Base.promote_op(+, typeof(r1), typeof(r1))
+        result::R = convert(R, r1)
+        for i in 2:length(ts)
+            result += substitute(st, ts[i], s)
+        end
+        result
     end
-    result
 end
 
 ## Fallbacks

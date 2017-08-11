@@ -29,6 +29,7 @@ include("matpoly.jl")
 
 include("rational.jl")
 
+include("conversion.jl")
 include("promote.jl")
 include("substitution.jl")
 

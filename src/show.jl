@@ -38,7 +38,11 @@ function Base.show(io::IO, p::AbstractPolynomial{T}) where T
     else
         print(io, first(ts))
         for t in Iterators.drop(ts, 1)
-            print(io, " + ", t)
+            if coefficient(t) < 0
+                print(io, " - ", abs(coefficient(t)) * monomial(t))
+            else
+                print(io, " + ", t)
+            end
         end
     end
 end

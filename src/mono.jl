@@ -72,6 +72,7 @@ function sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
     σ, X[σ]
 end
 sortmonovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = sortmonovec(AbstractVector{monomialtype(TT)}(X))
+sortmonovec(X::Tuple) = sortmonovec(vec(X))
 
 """
     mergemonovec{MT<:AbstractMonomialLike, MVT<:AbstractVector{MT}}(X::AbstractVector{MVT}}
