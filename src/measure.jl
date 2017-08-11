@@ -21,8 +21,3 @@ Measure(a::Vector{T}, x::AbstractVector{MT}) where {T, MT <: AbstractMonomial} =
 function ζ(x::AbstractVector{MT}, s::AbstractSubstitution...) where {MT <: AbstractMonomial}
     Measure([m(s...) for m in x], x)
 end
-
-struct MatMeasure{T, MT <: AbstractMonomial, MVT <: AbstractVector{MT}}
-    Q::Vector{T}
-    x::MVT
-end
