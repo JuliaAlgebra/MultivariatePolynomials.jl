@@ -3,7 +3,6 @@ export isapproxzero
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
-Base.iszero(p::MatPolynomial) = iszero(polynomial(p))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
@@ -96,9 +95,6 @@ end
 (==)(p::APL, q::RationalPoly) = p*q.den == q.num
 (==)(p, q::RationalPoly) = p*q.den == q.num
 
-(==)(p::APL, q::MatPolynomial) = p == polynomial(q)
-(==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
-
 function isapproxzero(α; ztol::Real=1e-6)
     -ztol < α < ztol
 end
@@ -110,10 +106,6 @@ isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
 Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; ztol::Real=1e-6, kwargs...) = compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol), (x, y) -> isapprox(x, y; kwargs...))
-
-function Base.isapprox(p::MatPolynomial, q::MatPolynomial; kwargs...)
-    p.x == q.x && isapprox(p.Q, q.Q; kwargs...)
-end
 
 function permcomp(f, m)
     picked = IntSet()
@@ -131,15 +123,6 @@ function permcomp(f, m)
         push!(picked, k)
     end
     true
-end
-
-function isapprox(p::SOSDecomposition, q::SOSDecomposition; kwargs...)
-    m = length(p.ps)
-    if length(q.ps) != m
-        false
-    else
-        permcomp((i, j) -> isapprox(p.ps[i], q.ps[j]; kwargs...), m)
-    end
 end
 
 isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)

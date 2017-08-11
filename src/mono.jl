@@ -1,4 +1,4 @@
-export name, constantmonomial, monovec, monovectype, sortmonovec, mergemonovec
+export name, constantmonomial, emptymonovec, monovec, monovectype, sortmonovec, mergemonovec
 
 Base.copy(x::AbstractVariable) = x
 
@@ -8,6 +8,25 @@ Base.copy(x::AbstractVariable) = x
 Returns the name of a variable.
 """
 function name end
+
+_hashpowers(u::UInt) = u
+function _hashpowers(u::UInt, power::Tuple, powers...)
+    if iszero(power[2])
+        _hashpowers(u, powers...)
+    else
+        _hashpowers(hash(power, u), powers...)
+    end
+end
+function Base.hash(m::AbstractMonomial, u::UInt)
+    nnz = count(!iszero, exponents(m))
+    if iszero(nnz)
+        hash(1, u)
+    elseif isone(nnz) && isone(deg(m))
+        hash(variable(m), u)
+    else
+        _hashpowers(u, powers(m)...)
+    end
+end
 
 """
     constantmonomial(p::AbstractPolynomialType)

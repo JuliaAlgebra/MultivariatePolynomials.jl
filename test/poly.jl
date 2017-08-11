@@ -62,43 +62,4 @@
         @test coefficients(f) == [7, 4, -5, 4]
         @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
     end
-    @testset "MatPolynomial" begin
-        Mod.@polyvar x y
-        P = MatPolynomial{Int}((i,j) -> i + j, [x^2, x*y, y^2])
-        zP = zero(typeof(P))
-        @test isempty(zP.Q)
-        @test zP == 0
-        p = polynomial(P)
-        @test coefficients(p) == [2, 6, 12, 10, 6]
-        @test monomials(p) == [x^4, x^3*y, x^2*y^2, x*y^3, y^4]
-        for i in 1:3
-            for j in 1:3
-                @test P[i, j] == i + j
-            end
-        end
-        for P in (MatPolynomial((i,j) -> i * j, [y, x]),
-                  MatPolynomial((i,j) -> (3-i) * (3-j), monovec([y, x])),
-                  MatPolynomial([1 2; 2 4], [y, x]),
-                  MatPolynomial([4 2; 2 1], monovec([y, x])))
-            @test P.Q.Q == [4, 2, 1]
-            @test P.x[1] == x
-            @test P.x[2] == y
-        end
-        P = MatPolynomial((i,j) -> ((i,j) == (1,1) ? 2 : 0), [x*y, x^2, y^2])
-        Q = MatPolynomial([0 1; 1 0], [x^2, y^2])
-        @test P == Q
-        p = MatPolynomial([2 3; 3 2], [x, y])
-        @test polynomial(p) isa AbstractPolynomial{Int}
-        @test polynomial(p, Float64) isa AbstractPolynomial{Float64}
-    end
-#   @testset "SOSDecomposition" begin
-#       Mod.@polyvar x y
-#       @test isempty(SOSDecomposition(typeof(x)[]))
-#       ps = [1, x + y, x^2, x*y, 1 + x + x^2]
-#       P = MatPolynomial(SOSDecomposition(ps))
-#       P.Q == [2 0 1 0 1; 0 1 0 0 0; 1 0 2 1 1; 0 0 1 1 0; 1 0 1 0 2]
-#       P.x == [x^2, x*y, x, y, 1]
-#       @test P == P
-#       @test isapprox(MatPolynomial(SOSDecomposition(P)), P)
-#   end
 end

@@ -25,7 +25,6 @@ include("zip.jl")
 include("mono.jl")
 include("term.jl")
 include("poly.jl")
-include("matpoly.jl")
 
 include("rational.jl")
 
@@ -41,8 +40,6 @@ include("comp.jl")
 
 include("diff.jl")
 include("div.jl")
-
-include("algebraicset.jl")
 
 include("show.jl")
 

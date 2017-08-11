@@ -2,7 +2,6 @@
     Mod.@polyvar x y
     @test differentiate(true*x+true*x^2, y) == 0
     @inferred differentiate(true*x+true*x^2, y)
-    @test differentiate(MatPolynomial{Int}((i,j)->1, [x]), y) == 0
     @test differentiate(x*y + 3y^2 , [x, y]) == [y, x+6y]
     @inferred differentiate(x*y + 3y^2 , x)
     @inferred differentiate(x*y + 3y^2 , [x, y])
@@ -24,8 +23,6 @@
     @test differentiate(x*y^4, y, 0) == x*y^4
     @test differentiate(2x^2, x, 2) == 4
     @inferred differentiate(2x^2, x, 2)
-    @test differentiate(MatPolynomial{Int}((i,j)->1, [x, y]), y, 1) == 2x + 2y
-    #@inferred differentiate(MatPolynomial{Int}((i,j)->1, [x, y]), y, 0) # FIXME failing at the moment
     @inferred differentiate(2x^2 + x*y + y^2, [x, y])
     p = differentiate(2x^2 + 3x*y + y^2, [x, y], 2)
     @test isa(p, Matrix{<:AbstractPolynomial{Int}})

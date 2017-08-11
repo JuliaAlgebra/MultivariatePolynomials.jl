@@ -48,17 +48,6 @@ end
         @test !isapprox(3*y^2 + x^2, x^2 + 1e-1*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
         @test !isapprox(3.0*y^2 + x + x^2, x + 3*y^2, rtol=1e-2, ztol=1e-2)
     end
-    @testset "MatPolynomial equality" begin
-        Mod.@polyvar x y
-        @test MatPolynomial([2 3; 3 2], [x, y]) == 2x^2 + 2y^2 + 6x*y
-    end
-    @testset "SOSDecomposition equality" begin
-        Mod.@polyvar x y
-        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y]))
-        @test !isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x+y]))
-        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x+y, x-y]))
-        @test isapprox(SOSDecomposition([x+y, x-y]), SOSDecomposition([x-y, x+y+1e-8]), ztol=1e-7)
-    end
     @testset "RationalPoly equality" begin
         Mod.@polyvar x y
         @test isapprox((1+1e-8)x, (x*y)/y, rtol=1e-7)

@@ -37,13 +37,6 @@ plusconstant(α, p::APL) = plusconstant(p, α)
 minusconstant(p::APL, α) = iszero(α) ? polynomial(p) : p - constantterm(α, p)
 minusconstant(α, p::APL) = iszero(α) ? polynomial(-p) : constantterm(α, p) - p
 
-(+)(x::APL, y::MatPolynomial) = x + polynomial(y)
-(+)(x::MatPolynomial, y::APL) = polynomial(x) + y
-(+)(x::MatPolynomial, y::MatPolynomial) = polynomial(x) + polynomial(y)
-(-)(x::APL, y::MatPolynomial) = x - polynomial(y)
-(-)(x::MatPolynomial, y::APL) = polynomial(x) - y
-(-)(x::MatPolynomial, y::MatPolynomial) = polynomial(x) - polynomial(y)
-
 # Coefficients and variables commute
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
 multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)

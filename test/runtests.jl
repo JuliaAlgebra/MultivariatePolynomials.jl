@@ -3,10 +3,10 @@ using Base.Test
 using MultivariatePolynomials
 
 import DynamicPolynomials
-const Mod = DynamicPolynomials
-include("commutativetests.jl")
+Mod = DynamicPolynomials
+#include("commutativetests.jl")
 #include("noncommutativetests.jl")
 
-#import TypedPolynomials
-#const Mod = TypedPolynomials
+import TypedPolynomials
+Mod = TypedPolynomials
 #include("commutativetests.jl")

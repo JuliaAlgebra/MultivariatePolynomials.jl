@@ -25,7 +25,7 @@ monomialtype(::Type{M}) where M<:AbstractMonomial = M
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
 
-changecoefficienttype(p::PT, ::Type{T}) where {PT<:APL, T} = changecoefficienttype(PT, T)(p)
+changecoefficienttype(p::PT, ::Type{T}) where {PT<:APL, T} = convert(changecoefficienttype(PT, T), p)
 
 abstract type ListState end
 abstract type UnsortedState <: ListState end
@@ -244,7 +244,8 @@ Returns a polynomial with the leading term removed in the polynomial `p`.
 Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 """
 function removeleadingterm(p::AbstractPolynomialLike)
-    polynomial(Iterators.drop(terms(p), 1))
+    # Iterators.drop returns an Interators.Drop which is not an AbstractVector
+    polynomial(terms(p)[2:end])
 end
 
 #$(SIGNATURES)

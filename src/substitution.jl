@@ -89,5 +89,4 @@ with eval, Julia knows that all PolyVar will be replaced by values so it can do 
 """
 subs(p, s::AbstractSubstitution...) = substitute(Subs(), p, s)
 
-(p::MatPolynomial)(s::AbstractSubstitution...) = polynomial(p)(s...)
 (p::RationalPoly)(s::AbstractSubstitution...) = p.num(s...) / p.den(s...)

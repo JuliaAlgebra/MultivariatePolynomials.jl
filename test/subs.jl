@@ -21,13 +21,6 @@ import Base.Test: @inferred
     @test t(x => [1, 2, 3]) == 8.0
     @test t((x[2], x[1]) => [1, 3]) == 6.0
 
-    P = [1 2 3; 2 4 5; 3 5 6]
-    p = MatPolynomial(P, x)
-    #@inferred p(x => ones(3))
-    @test p(x => ones(3)) == 31
-    #@inferred subs(p, x => ones(3))
-    @test subs(p, x => ones(3)) == 31
-
     p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
     @inferred p((x[1], x[2]) => (1.0, 2.0))
 
