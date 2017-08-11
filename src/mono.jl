@@ -28,6 +28,9 @@ function Base.hash(m::AbstractMonomial, u::UInt)
     end
 end
 
+Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
+Base.one(t::AbstractMonomialLike) = constantmonomial(t)
+
 """
     constantmonomial(p::AbstractPolynomialType)
 

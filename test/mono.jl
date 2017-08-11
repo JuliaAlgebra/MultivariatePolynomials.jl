@@ -11,19 +11,19 @@
         @test copy(x) == x
         @test nvariables(x) == 1
         @test zero(x) == 0
-        @test zero(x) isa AbstractPolynomialLike{Int} # Term in DynamicPolynomials, Polynomial in TypedPolynomials
+        @test zero(x) isa AbstractTerm{Int}
         @inferred zero(x)
         @test one(x) == 1
-        @test one(x) isa AbstractTermLike{Int} # Term in DynamicPolynomials, Monomial in TypedPolynomials
+        @test one(x) isa AbstractMonomial
         @inferred one(x)
     end
     @testset "Monomial" begin
         Mod.@polyvar x
         @test zero(x^2) == 0
-        @test zero(x^2) isa AbstractPolynomialLike{Int} # Term in DynamicPolynomials, Polynomial in TypedPolynomials
+        @test zero(x^2) isa AbstractTerm{Int}
         @inferred zero(x^2)
         @test one(x^2) == 1
-        @test one(x^2) isa AbstractTermLike{Int} # Term in DynamicPolynomials, Monomial in TypedPolynomials
+        @test one(x^2) isa AbstractMonomial
         @inferred one(x^2)
         Mod.@polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]

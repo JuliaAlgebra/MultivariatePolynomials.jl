@@ -301,4 +301,4 @@ function nvariables(p::AbstractPolynomialLike)
     length(variables(p))
 end
 
-nvariables(::AbstractVariable) = 1
+nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
