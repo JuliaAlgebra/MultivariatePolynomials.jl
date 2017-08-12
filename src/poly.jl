@@ -268,7 +268,7 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
         while i <= length(smv) && smv[i] > m
             i += 1
         end
-        if i <= length(smv) && smv[i] == m
+        if i > length(smv) || smv[i] != m
             q += t
         end
     end

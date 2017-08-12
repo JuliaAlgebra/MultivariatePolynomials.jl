@@ -55,6 +55,8 @@
         end
 
         @test transpose(x + y) == x + y
+
+        @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
     end
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z

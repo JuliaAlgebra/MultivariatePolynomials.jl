@@ -32,9 +32,6 @@ include("conversion.jl")
 include("promote.jl")
 include("substitution.jl")
 
-include("measure.jl")
-include("exp.jl")
-
 include("operators.jl")
 include("comp.jl")
 
