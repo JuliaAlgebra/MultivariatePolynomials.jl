@@ -9,6 +9,8 @@ pairzip(::Tuple{}, ::Tuple) = throw(ArgumentError("args must be equal in length"
 pairzip(::Tuple, ::Tuple{}) = throw(ArgumentError("args must be equal in length"))
 pairzip(t::Tuple, u::Tuple) = (t[1] => u[1], pairzip(Base.tail(t), Base.tail(u))...)
 pairzip(p::Pair{<:Tuple, <:Tuple}) = pairzip(p.first, p.second)
+# inefficient but convenient method to allow subs(p, (x, y)=>[1, 2])
+pairzip(p::Pair) = pairzip(Tuple(p.first), Tuple(p.second))
 
 tuplezip(::Tuple{}, ::Tuple{}) = ()
 tuplezip(::Tuple{}, ::Tuple) = throw(ArgumentError("args must be equal in length"))

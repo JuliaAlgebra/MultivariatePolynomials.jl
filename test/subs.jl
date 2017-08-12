@@ -3,6 +3,10 @@ import Base.Test: @inferred
 @testset "Substitution" begin
     Mod.@polyvar x[1:3]
 
+    @test subs(2, x[1]=>3) == 2
+    @test iszero((x[1]-x[1])(x[1]=>x[2]))
+    @test subs(CustomPoly(x[1]+x[2]), x[2]=>x[1]) == 2x[1]
+
     a = (x[1])(x[1]=>x[2])
     b = x[2]
     @test (x[1])(x[1]=>x[2]) == x[2]

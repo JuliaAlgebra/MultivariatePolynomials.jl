@@ -24,13 +24,7 @@ is equivalent to:
 
     subs(polynomial, (x=>1, y=>2))
 """
-substitute(st::AST, p::APL, s::MultiSubstitution) = substitute(st, p, pairzip(s))
-
-# inefficient but convenient method to allow subs(p, (x, y)=>[1, 2])
-substitute(st::AST, p::APL, s::MultiVectorSubstitution) = substitute(st, p, s.first => Tuple(s.second))
-substitute(st::AST, p::APL, s::VectorMultiSubstitution) = substitute(st, p, Tuple(s.first) => s.second)
-substitute(st::AST, p::APL, s::VectorMultiVectorSubstitution) = substitute(st, p, Tuple(s.first) => Tuple(s.second))
-
+substitute(st::AST, p::APL, s::AbstractMultiSubstitution) = substitute(st, p, pairzip(s))
 
 # Evaluate the stream
 # If I do s2..., then
