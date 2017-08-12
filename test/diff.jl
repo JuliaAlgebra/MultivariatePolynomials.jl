@@ -1,5 +1,7 @@
 @testset "Differentiation" begin
     Mod.@polyvar x y
+    @test differentiate(3, y) == 0
+    @test differentiate([x, y], y) == [0, 1]
     @test differentiate(true*x+true*x^2, y) == 0
     @inferred differentiate(true*x+true*x^2, y)
     @test differentiate(x*y + 3y^2 , [x, y]) == [y, x+6y]

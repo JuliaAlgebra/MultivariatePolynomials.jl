@@ -35,6 +35,8 @@ function differentiate(ps::AbstractArray{PT, N}, xs) where {N, PT<:ARPL}
     end
     qs
 end
+differentiate(ps::AbstractArray{<:ARPL}, v::AbstractVariable) = differentiate.(ps, v)
+
 differentiate(p::ARPL, xs) = [differentiate(p, x) for x in xs]
 
 # differentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial

@@ -82,5 +82,9 @@
         @test σ[2] in (1, 3)
         @test σ[3] in (2, 5)
         @test mergemonovec([[x*y, x, x*y], [x^2*y, x]]) == [x^2*y, x*y, x]
+        @test_throws ArgumentError monovec([1, 2], [x^2])
+        σ, X = sortmonovec((y, x))
+        @test σ == [2, 1]
+        @test X == [x, y]
     end
 end

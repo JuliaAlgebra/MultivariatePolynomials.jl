@@ -70,6 +70,8 @@ MultivariatePolynomials.terms(p::CustomPoly) = terms(p.p)
             @test 3 != 4x / 2x
             @test 4x / 2x == 2
             @test 3 != 4x / 2x
+            @test 1 - 1/x == (x - 1) / x
+            @test 1 - 1/x != (1 - x) / x
             @test x + x/x == 1 + x^2/x
             @test x - x/x == -(1 - x^2/x)
             @test (1+x)/x - 1 == 1/x

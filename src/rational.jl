@@ -46,10 +46,10 @@ function (-)(r::RationalPoly, s::RationalPoly)
 end
 _minus(p, s::RationalPoly) = (p * s.den - s.num) / s.den
 _minus(s::RationalPoly, p) = (s.num - p * s.den) / s.den
-(-)(p::APL, r::RationalPoly) = _minus(r, p)
+(-)(p::APL, r::RationalPoly) = _minus(p, r)
 (-)(r::RationalPoly, p::APL) = _minus(r, p)
 (-)(r::RationalPoly, α) = _minus(r, α)
-(-)(α, r::RationalPoly) = _minus(r, α)
+(-)(α, r::RationalPoly) = _minus(α, r)
 (-)(r::RationalPoly) = (-r.num) / r.den
 
 (*)(r::RationalPoly, s::RationalPoly) = (r.num*s.num) / (r.den*s.den)
