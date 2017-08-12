@@ -1,3 +1,9 @@
+struct CustomPoly{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
+    p::P
+end
+CustomPoly(p::AbstractPolynomial{T}) where T = CustomPoly{T, typeof(p)}(p)
+MultivariatePolynomials.terms(p::CustomPoly) = terms(p.p)
+
 @testset "Comparison" begin
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
@@ -36,6 +42,13 @@
         end
         @testset "Polynomial equality" begin
             Mod.@polyvar x y
+            @test polynomial(CustomPoly(x + 1 - x)) isa AbstractPolynomial
+            @test MultivariatePolynomials.eqconstant(polynomial(CustomPoly(x + 1 - x)), 1)
+            @test MultivariatePolynomials.eqconstant(CustomPoly(x + 1 - x), 1)
+            @test CustomPoly(x + 1 - x) == 1
+            @test 2 != CustomPoly(x + 1 - x)
+            @test x^2 == CustomPoly(x - x + x^2)
+            @test CustomPoly(-x + x^2) != x^2
             @test 2*x*y + 3*y^2 == 3*y^2 + 2*y*x
             @test 3*x*y + 2*y^2 != 3*y^2 + 2*y*x
             @test x + y != x * (1 + y)
@@ -51,6 +64,12 @@
         end
         @testset "RationalPoly equality" begin
             Mod.@polyvar x y
+            @test (x^2 - x - 6) / (x + 2) != x + 3
+            @test x - 3 == (x^2 - x - 6) / (x + 2)
+            @test (x^2 - x - 6) / (x - 3) == x + 2
+            @test 3 != 4x / 2x
+            @test 4x / 2x == 2
+            @test 3 != 4x / 2x
             @test isapprox((1+1e-8)x, (x*y)/y, rtol=1e-7)
             @test isapproxzero(((1+1e-8)x - x)/y, ztol=1e-7)
             @test !isapproxzero(((1+1e-8)x - y)/y, ztol=1e-9)
@@ -63,7 +82,9 @@
         Mod.@polyvar x
         # Polynomial of multiple terms
         p = x + x^2
+        @test nothing != p
         @test p != nothing
+        @test Dict{Int,Int}() != p
         @test p != Dict{Int,Int}()
         # Polynomial of one term
         p = x + x^2 - x

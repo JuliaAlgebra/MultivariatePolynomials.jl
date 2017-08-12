@@ -8,9 +8,14 @@
     end
     @testset "PolyVar" begin
         Mod.@polyvar x
+        @test 1 != x
+        @test x != 0
         @test copy(x) == x
         @test nvariables(x) == 1
+        @test !isapproxzero(x)
+        @test !iszero(x)
         @test zero(x) == 0
+        @test iszero(zero(x))
         @test zero(x) isa AbstractTerm{Int}
         @inferred zero(x)
         @test one(x) == 1

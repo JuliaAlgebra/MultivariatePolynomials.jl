@@ -18,6 +18,10 @@
         @test polynomial(1 + x) == 1 + x
         @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
+        @test 1 != 1 + x
+        @test 2x == x + x^2 + x - x^2
+        @test x + x^2 - x^2 - x != 2x
+        @test x^2 + x != x^2 + x + 1
         #@inferred one(1 + x)
         @inferred zero(1 + x)
         #@inferred one(1.0 + x)

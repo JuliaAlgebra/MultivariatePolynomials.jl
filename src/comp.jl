@@ -93,7 +93,9 @@ end
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 # Solve ambiguity with (::PolyType, ::Any)
 (==)(p::APL, q::RationalPoly) = p*q.den == q.num
-(==)(p, q::RationalPoly) = p*q.den == q.num
+(==)(q::RationalPoly, p::APL) = p == q
+(==)(α, q::RationalPoly) = α*q.den == q.num
+(==)(q::RationalPoly, α) = α == q
 
 function isapproxzero(α; ztol::Real=1e-6)
     -ztol < α < ztol
@@ -106,24 +108,6 @@ isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
 Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; ztol::Real=1e-6, kwargs...) = compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol), (x, y) -> isapprox(x, y; kwargs...))
-
-function permcomp(f, m)
-    picked = IntSet()
-    for i in 1:m
-        k = 0
-        for j in 1:m
-            if !(j in picked) && f(i, j)
-                k = j
-                break
-            end
-        end
-        if k == 0
-            return false
-        end
-        push!(picked, k)
-    end
-    true
-end
 
 isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
 isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)

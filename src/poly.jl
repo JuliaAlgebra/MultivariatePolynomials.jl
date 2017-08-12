@@ -63,6 +63,8 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
 polynomial(p::AbstractPolynomial) = p
+polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
+polynomial(p::APL{T}) where T = polynomial(p, T)
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 polynomial(ts::AbstractVector{<:AbstractTerm}, s::ListState=MessyState()) = polynomial(coefficient.(ts), monomial.(ts), s)
 polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
@@ -74,7 +76,7 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomialtype(p::APL) = Base.promote_op(polynomial, p)
+polynomialtype(::Union{P, Type{P}}) where P<:APL = Base.promote_op(polynomial, P)
 polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
 polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
 
