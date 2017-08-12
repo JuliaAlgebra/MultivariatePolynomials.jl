@@ -31,7 +31,7 @@ build_script:
   - C:\projects\julia\bin\julia -e "versioninfo();
       Pkg.clone(pwd(), \"MultivariatePolynomials\");
       Pkg.clone(\"https://github.com/blegat/DynamicPolynomials.jl\");
-      Pkg.clone(\"https://github.com/blegat/TypedPolynomials.jl\");
+      Pkg.clone(\"https://github.com/rdeits/TypedPolynomials.jl\");
       Pkg.checkout(\"TypedPolynomials\", \"typed\");'
       Pkg.build(\"MultivariatePolynomials\")"
 
