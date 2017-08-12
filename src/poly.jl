@@ -66,7 +66,7 @@ polynomial(p::AbstractPolynomial) = p
 polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
 polynomial(p::APL{T}) where T = polynomial(p, T)
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
-polynomial(ts::AbstractVector{<:AbstractTerm}, s::ListState=MessyState()) = polynomial(coefficient.(ts), monomial.(ts), s)
+polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
 polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
 polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial([f(i) * mv[i] for i in 1:length(mv)])
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
@@ -100,7 +100,7 @@ function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     result
 end
 polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedState) = polynomial(uniqterms(ts), SortedUniqState())
-polynomial(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState) = polynomial(sort(ts, lt=(>)), sortstate(s))
+polynomial(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState()) = polynomial(sort(ts, lt=(>)), sortstate(s))
 
 """
     terms(p::AbstractPolynomialLike)

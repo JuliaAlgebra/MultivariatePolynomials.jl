@@ -31,6 +31,7 @@
         Mod.@polyvar x
 
         @test terms(polynomial([1, x^2, x, 2x^2])) == [3x^2, x, 1]
+        @test terms(polynomial([x, 3x^4, 2], MP.UniqState())) == [3x^4, x, 2]
         @test terms(polynomial([x^3, 2x^3, x^2, -2x^2, x^2, x, 2, -2], MP.SortedState())) == [3x^3, x]
 
         @test polynomial(1 + x) == 1 + x
@@ -87,6 +88,9 @@
         @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
 
         @test_throws InexactError push!([1], x+1)
+
+        @test polynomial([1 2; 3 4], [x^2, y]) == x^4 + 5x^2*y + 4y^2
+        @test polynomial([1 2; 3 4], [x^2, y], Float64) isa AbstractPolynomial{Float64}
     end
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
