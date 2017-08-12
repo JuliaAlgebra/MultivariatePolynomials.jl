@@ -32,7 +32,7 @@ build_script:
       Pkg.clone(pwd(), \"MultivariatePolynomials\");
       Pkg.clone(\"https://github.com/blegat/DynamicPolynomials.jl\");
       Pkg.clone(\"https://github.com/rdeits/TypedPolynomials.jl\");
-      Pkg.checkout(\"TypedPolynomials\", \"typed\");'
+      Pkg.checkout(\"TypedPolynomials\", \"typed\");
       Pkg.build(\"MultivariatePolynomials\")"
 
 test_script:
