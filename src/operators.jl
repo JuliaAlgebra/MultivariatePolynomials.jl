@@ -23,8 +23,8 @@ for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant)
     @eval $op(p::APL, α) = $fun(p, α)
     @eval $op(α, p::APL) = $fun(α, p)
 end
-isapprox(p::APL, α; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
-isapprox(α, p::APL; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
+isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
+isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
 (-)(m::AbstractMonomialLike) = (-1) * m
 (-)(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)

@@ -51,9 +51,9 @@ MultivariatePolynomials.terms(p::CustomPoly) = terms(p.p)
             @test polynomial(CustomTerms(x + 1 - x)) isa AbstractPolynomial
             @test MultivariatePolynomials.eqconstant(polynomial(CustomTerms(x + 1 - x)), 1)
             @test MultivariatePolynomials.eqconstant(CustomTerms(x + 1 - x), 1)
-            @test CustomPoly(x + 1 - x) == 1
+            @test 2 * CustomPoly(x + 1 - x) == 2
             @test 2 != CustomTerms(x + 1 - x)
-            @test x^2 == CustomTerms(x - x + x^2)
+            @test 3x^2 == CustomTerms(x - x + x^2) * 3
             @test CustomPoly(-x + x^2) != x^2
             @test 2*x*y + 3*y^2 == 3*y^2 + 2*y*x
             @test 3*x*y + 2*y^2 != 3*y^2 + 2*y*x
@@ -67,6 +67,8 @@ MultivariatePolynomials.terms(p::CustomPoly) = terms(p.p)
             @test isapprox(3*y^2 + x^2, x^2 + 1e-3*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
             @test !isapprox(3*y^2 + x^2, x^2 + 1e-1*x*y + 3*y^2, rtol=1e-2, ztol=1e-2)
             @test !isapprox(3.0*y^2 + x + x^2, x + 3*y^2, rtol=1e-2, ztol=1e-2)
+            @test isapprox(x+1-x, 1+1e-8, rtol=1e-7)
+            @test !isapprox(1+1e-8, x+1-x, rtol=1e-9)
         end
         @testset "RationalPoly equality" begin
             Mod.@polyvar x y
