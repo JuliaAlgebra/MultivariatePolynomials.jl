@@ -1,3 +1,5 @@
+export variable
+
 function convertconstant end
 convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
 convert(::Type{P}, p::APL) where P<:AbstractPolynomial = convert(P, polynomial(p))

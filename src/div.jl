@@ -14,7 +14,7 @@ divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 
 # _div(a, b) assumes that b divides a
 function _div(t::AbstractTerm, m::AbstractMonomial)
-    coefficient(t1) * _div(monomial(t), m)
+    coefficient(t) * _div(monomial(t), m)
 end
 function _div(t1::AbstractTerm, t2::AbstractTerm)
     (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))

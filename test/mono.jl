@@ -21,6 +21,16 @@
         @test one(x) == 1
         @test one(x) isa AbstractMonomial
         @inferred one(x)
+
+        Mod.@polyvar y
+        @test MP.exponent(x, x) == 1
+        @test MP.exponent(x, y) == 0
+        @test length(MP.exponents(x)) == 1
+        @test first(MP.exponents(x)) == 1
+        @test isconstant(x) == false
+
+        @test divides(x, x) == true
+        @test divides(x, y) == false
     end
     @testset "Monomial" begin
         Mod.@polyvar x
@@ -35,6 +45,18 @@
         @test issorted(variables(y[2] * m), rev=true)
         @test issorted(variables(m * y[4]), rev=true)
         @test issorted(variables(y[6] * m), rev=true)
+
+        @test MP.exponent(x * y[2]^2, x) == 1
+        @test MP.exponent(x * y[2]^2, y[1]) == 0
+        @test MP.exponent(x * y[2]^2, y[2]) == 2
+
+        @test_throws ErrorException variable(x^2)
+        @test_throws ErrorException variable(x*y[1])
+        @test_throws ErrorException variable(constantmonomial(typeof(x)))
+        @test variable(x^1) == x
+        @test variable(x^1) isa AbstractVariable
+
+        @test MP._div(2x^2*y[1]^3, x*y[1]^2) == 2x*y[1]
     end
     @testset "Monomial Vector" begin
         Mod.@polyvar x y

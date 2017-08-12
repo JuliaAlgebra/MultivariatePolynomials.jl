@@ -9,6 +9,7 @@ include("diff.jl")
 include("subs.jl")
 include("hash.jl")
 include("div.jl")
+include("norm.jl")
 
 include("show.jl")
 

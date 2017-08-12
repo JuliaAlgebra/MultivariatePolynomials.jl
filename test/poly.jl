@@ -11,11 +11,26 @@
         #@inferred one(1.0x)
         @inferred zero(1.0x)
 
-        #@test_throws InexactError Int(2x)
+        @test leadingterm(2x^2) == 2x^2
+        @test nterms(2x^2) == 1
+
+        @test term(x) isa AbstractTerm
+        @test term(x^2) == x^2
+        @test term(1x^2) isa AbstractTerm
+        @test term(1x) == x
+
+        Mod.@polyvar y
+        @test MP.exponent(2x^2, x) == 2
+        @test MP.exponent(2x^2, y) == 0
+        @test MP.exponent(2x^2, y) == 0
+
+        @test_throws InexactError push!([1], 2x)
+        @test_throws ErrorException push!([x^2], 2x)
     end
     @testset "Polynomial" begin
         Mod.@polyvar x
         @test polynomial(1 + x) == 1 + x
+        @test leadingterm(1 + x) == x
         @test one(1 + x) == one(1.0 + x) == 1
         @test zero(1 + x) == zero(1.0 + x) == 0
         @test 1 != 1 + x
@@ -27,16 +42,25 @@
         #@inferred one(1.0 + x)
         @inferred zero(1.0 + x)
 
+        @test terms(polynomial(1 + x + x^2 - x + x^2)) == [2x^2, 1]
+
         @test (1.0 + x) * x == x^2 + x
         @test constantterm(1, x) * (1 - x) == 1 - x
         @test promote_type(typeof(1-x), typeof(x)) <: AbstractPolynomial{Int}
         @test x != 1 - x
+
+        @test term(x + x^2 - x) isa AbstractTerm
+        @test term(x + x^2 - x) == x^2
+        @test term(x - x) isa AbstractTerm
+        @test iszero(term(x - x))
+        @test_throws ErrorException term(x + x^2)
 
         Mod.@polyvar y
 
         @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
         @test mindeg(x*y + 2 + x^2*y + x + y) == 0
         @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
+        @test leadingterm(x*y + 2 + x^2*y + x + y) == x^2*y
         @test nvariables(x + y - x) == 2
         @test nvariables(x + x^2) == 1
 
@@ -57,6 +81,8 @@
         @test transpose(x + y) == x + y
 
         @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
+
+        @test_throws InexactError push!([1], x+1)
     end
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z

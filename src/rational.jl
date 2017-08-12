@@ -1,6 +1,7 @@
 export RationalPoly
 import Base.+, Base.-, Base.*, Base./
 
+# TODO We should take gcd between numerator and denominator
 struct RationalPoly{NT <: APL, DT <: APL}
     num::NT
     den::DT
@@ -43,20 +44,19 @@ end
 function (-)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den - r.den*s.num) / (r.den * s.den)
 end
-_minus(p::APL, s::RationalPoly) = (p * s.den - s.num) / s.den
-_minus(s::RationalPoly, p::APL) = (s.num - p * s.den) / s.den
+_minus(p, s::RationalPoly) = (p * s.den - s.num) / s.den
+_minus(s::RationalPoly, p) = (s.num - p * s.den) / s.den
 (-)(p::APL, r::RationalPoly) = _minus(r, p)
 (-)(r::RationalPoly, p::APL) = _minus(r, p)
 (-)(r::RationalPoly, α) = _minus(r, α)
 (-)(α, r::RationalPoly) = _minus(r, α)
+(-)(r::RationalPoly) = (-r.num) / r.den
 
 (*)(r::RationalPoly, s::RationalPoly) = (r.num*s.num) / (r.den*s.den)
-# Not type stable, currently it is a hack for SumOfSquares/test/SOSdemo2.jl:line 22
-# We should take gcd between numerator and denominator instead and in sosdemo2, we should cast to polynomial manually
-(*)(p::APL, r::RationalPoly)          = p == r.den ? r.num : (p * r.num) / r.den
-(*)(r::RationalPoly, p::APL)          = p == r.den ? r.num : (r.num * p) / r.den
-(*)(α, r::RationalPoly)               = α == r.den ? r.num : (α * r.num) / r.den
-(*)(r::RationalPoly, α)               = α == r.den ? r.num : (r.num * α) / r.den
+(*)(p::APL, r::RationalPoly)          = (p * r.num) / r.den
+(*)(r::RationalPoly, p::APL)          = (r.num * p) / r.den
+(*)(α, r::RationalPoly)               = (α * r.num) / r.den
+(*)(r::RationalPoly, α)               = (r.num * α) / r.den
 
 Base.zero(::RationalPoly{NT}) where {NT} = zero(NT)
 Base.zero(::Type{RationalPoly{NT, DT}}) where {NT, DT} = zero(NT)

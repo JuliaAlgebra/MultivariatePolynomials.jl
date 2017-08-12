@@ -107,7 +107,7 @@ Returns an iterator over the nonzero terms of the polynomial `p` sorted in the d
 
 Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy, 2x]``.
 """
-terms(t::AbstractTermLike) = (term(t),)
+terms(t::AbstractTermLike) = [term(t)]
 terms(p::AbstractPolynomialLike) = terms(polynomial(p))
 
 """
@@ -247,7 +247,7 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 """
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
-    polynomial(terms(p)[2:end])
+    polynomial(terms(p)[2:end], SortedUniqState())
 end
 
 #$(SIGNATURES)
@@ -288,8 +288,6 @@ For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two 
 """
 function variables end
 
-variables(x::AbstractVariable) = (x,)
-
 """
     nvariables(p::AbstractPolynomialLike)
 
@@ -299,8 +297,4 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
-function nvariables(p::AbstractPolynomialLike)
-    length(variables(p))
-end
-
 nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1

@@ -21,7 +21,10 @@
     end
     @testset "Division examples" begin
         Mod.@polyvar x y
+        @test iszero(@inferred MP.proddiff(2x*y, 3y^2*x))
         @test div(x*y^2 + 1, x*y + 1) == y
         @test rem(x*y^2 + 1, x*y + 1) == -y + 1
+        @test div(x*y^2 + x, y) == x*y
+        @test rem(x*y^2 + x, y) == x
     end
 end

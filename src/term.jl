@@ -105,6 +105,14 @@ Calling `exponent(x^2*y, x)` should return 2 and calling `exponent(x^2*y, y)` sh
 """
 exponent(t::AbstractTerm, var::AbstractVariable) = exponent(monomial(t), var)
 exponent(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
+function exponent(m::AbstractMonomial, v::AbstractVariable)
+    i = findfirst(variables(m), v)
+    if iszero(i)
+        0
+    else
+        exponents(m)[i]
+    end
+end
 
 """
     exponents(t::AbstractTermLike)

@@ -1,6 +1,7 @@
 using Base.Test
 
 using MultivariatePolynomials
+const MP = MultivariatePolynomials
 
 import DynamicPolynomials
 Mod = DynamicPolynomials
