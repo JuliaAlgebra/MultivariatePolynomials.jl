@@ -88,8 +88,12 @@ function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
             if isempty(result) || monomial(t) != monomial(last(result))
                 push!(result, t)
             else
-                # t + ts would be a polynomial with DynamicPolynomials
-                result[end] = (coefficient(last(result)) + coefficient(t)) * monomial(t)
+                coef = coefficient(last(result)) + coefficient(t)
+                if iszero(coef)
+                    pop!(result)
+                else
+                    result[end] = coef * monomial(t)
+                end
             end
         end
     end

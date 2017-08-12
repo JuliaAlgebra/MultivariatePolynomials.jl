@@ -25,7 +25,7 @@ _vec_diff_promote_op(::Type{PT}, ::VT, xs...) where {PT, VT}          = _diff_pr
 _vec_diff_promote_op(::Type{PT}, xs::Tuple) where PT = _vec_diff_promote_op(PT, xs...)
 
 # even if I annotate with ::Array{_diff_promote_op(T, PolyVar{C}), N+1}, it cannot detect the type since it seems to be unable to determine the dimension N+1 :(
-function differentiate(ps::AbstractArray{PT, N}, xs) where {N, PT<:ARPL}
+function differentiate(ps::AbstractArray{PT, N}, xs::Union{AbstractArray, Tuple}) where {N, PT<:ARPL}
     qs = Array{_vec_diff_promote_op(PT, xs), N+1}(length(xs), size(ps)...)
     for (i, x) in enumerate(xs)
         for j in linearindices(ps)
@@ -35,7 +35,6 @@ function differentiate(ps::AbstractArray{PT, N}, xs) where {N, PT<:ARPL}
     end
     qs
 end
-differentiate(ps::AbstractArray{<:ARPL}, v::AbstractVariable) = differentiate.(ps, v)
 
 differentiate(p::ARPL, xs) = [differentiate(p, x) for x in xs]
 

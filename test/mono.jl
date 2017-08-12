@@ -1,3 +1,4 @@
+const MP = MultivariatePolynomials
 @testset "PolyVar and Monomial tests" begin
     @testset "polyvar macro index set" begin
         Mod.@polyvar x y z

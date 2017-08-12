@@ -29,6 +29,7 @@ isapprox(α, p::APL; kwargs...) = isapproxconstant(promote(p, α)...; kwargs...)
 (-)(m::AbstractMonomialLike) = (-1) * m
 (-)(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
 (-)(p::APL) = polynomial((-).(terms(p)))
+(+)(p::Union{APL, RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
@@ -55,6 +56,23 @@ multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
 
 (*)(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
 (*)(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
+
+for op in [:+, :-]
+    @eval begin
+        $op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
+        $op(t1::AbstractTerm, t2::AbstractTerm) = $op(promote(t1, t2)...)
+        function $op(t1::T, t2::T) where T <: AbstractTerm
+            if monomial(t1) == monomial(t2)
+                ts = [$op(coefficient(t1), coefficient(t2)) * monomial(t1)]
+            elseif t1 > t2
+                ts = [t1, $op(t2)]
+            else
+                ts = [$op(t2), t1]
+            end
+            polynomial(ts, SortedUniqState())
+        end
+    end
+end
 
 Base.transpose(v::AbstractVariable) = v
 Base.transpose(m::AbstractMonomial) = m

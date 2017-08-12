@@ -29,6 +29,10 @@
     end
     @testset "Polynomial" begin
         Mod.@polyvar x
+
+        @test terms(polynomial([1, x^2, x, 2x^2])) == [3x^2, x, 1]
+        @test terms(polynomial([x^3, 2x^3, x^2, -2x^2, x^2, x, 2, -2], MP.SortedState())) == [3x^3, x]
+
         @test polynomial(1 + x) == 1 + x
         @test leadingterm(1 + x) == x
         @test one(1 + x) == one(1.0 + x) == 1
