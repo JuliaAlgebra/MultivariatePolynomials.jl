@@ -2,8 +2,9 @@ function show(io::IO, v::AbstractVariable)
     print(io, name(v))
 end
 
-
-_isone(x::T) where T = x == one(T)
+if VERSION < v"0.7.0-DEV.1319"
+    isone(x::T) where T = x == one(T)
+end
 
 function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
@@ -12,7 +13,7 @@ function show(io::IO, m::AbstractMonomial)
         for (var, exp) in zip(variables(m), exponents(m))
             if !iszero(exp)
                 print(io, var)
-                if !_isone(exp)
+                if !isone(exp)
                     print(io, "^", exp)
                 end
             end
@@ -24,7 +25,7 @@ function Base.show(io::IO, t::AbstractTerm)
     if isconstant(t)
         print(io, coefficient(t))
     else
-        if !_isone(coefficient(t))
+        if !isone(coefficient(t))
             print(io, coefficient(t))
         end
         if !iszero(t)
