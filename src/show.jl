@@ -31,11 +31,11 @@ function Base.show(io::IO, t::AbstractTerm)
     end
 end
 
-lessthanone(x::Real) = x < 0
-lessthanone(x::Complex) = false
+isnegative(x::Real) = x < 0
+isnegative(x::Complex) = false
 
-printcoeff(io::IO, coeff::Real, monomial) = print(io, abs(coeff) * monomial)
-printcoeff(io::IO, coeff::Complex, monomial) = print(io, "(", coeff, ")", monomial)
+print_coeff_monomial(io::IO, coeff::Real, mon) = print(io, abs(coeff) * mon)
+print_coeff_monomial(io::IO, coeff::Complex, mon) = print(io, "(", coeff, ")", mon)
 
 function Base.show(io::IO, p::AbstractPolynomial{T}) where T
     ts = terms(p)
@@ -44,12 +44,12 @@ function Base.show(io::IO, p::AbstractPolynomial{T}) where T
     else
         print(io, first(ts))
         for t in Iterators.drop(ts, 1)
-            if lessthanone(coefficient(t))
+            if isnegative(coefficient(t))
                 print(io, " - ")
             else
                 print(io, " + ")
             end
-            printcoeff(io, coefficient(t), monomial(t))
+            print_coeff_monomial(io, coefficient(t), monomial(t))
         end
     end
 end
