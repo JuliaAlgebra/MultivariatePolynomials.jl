@@ -1,46 +1,32 @@
 # I do not use it but I import the function to add a method
 export differentiate
 
-differentiate(p::PolyVar, x)  = differentiate(Term(p), x)
-differentiate(p::Monomial, x) = differentiate(Term(p), x)
+# Fallback for everything else
+_diff_promote_op(::Type{T}, ::Type{<:AbstractVariable}) where T = T
+differentiate(α::T, v::AbstractVariable) where T = zero(T)
 
-function differentiate{C, T}(t::Term{C, T}, x::PolyVar{C})
-    i = findfirst(vars(t), x)
-    if i == 0 || t.x.z[i] == 0
-        S = Base.promote_op(*, T, Int)
-        zero(Term{C, S})
-    else
-        z = copy(t.x.z)
-        z[i] -= 1
-        Term(t.α * t.x.z[i], Monomial(vars(t), z))
-    end
-end
+_diff_promote_op(::Type{<:AbstractVariable}, ::Type{<:AbstractVariable}) = Int
+differentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 : 0
 
-function differentiate{C, T}(p::Polynomial{C, T}, x::PolyVar{C})
-    # grlex order preserved
-    i = findfirst(vars(p), x)
-    S = Base.promote_op(*, T, Int)
-    if i == 0
-        zero(Polynomial{C, S})
-    else
-        keep = find([z[i] > 0 for z in p.x.Z])
-        Z = [copy(p.x.Z[i]) for i in keep]
-        a = Vector{S}(length(keep))
-        for j in 1:length(Z)
-            a[j] = p.a[keep[j]] * Z[j][i]
-            Z[j][i] -= 1
-        end
-        Polynomial(a, MonomialVector(vars(p), Z))
-    end
-end
+_diff_promote_op(::Type{TT}, ::Type{<:AbstractVariable}) where {T, TT<:AbstractTermLike{T}} = changecoefficienttype(TT, Base.promote_op(*, T, Int))
+differentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * differentiate(monomial(t), v)
 
-differentiate(p::MatPolynomial, x) = differentiate(Polynomial(p), x)
+_diff_promote_op(::Type{PT}, ::Type{<:AbstractVariable}) where {T, PT<:APL{T}} = polynomialtype(PT, Base.promote_op(*, T, Int))
+# The polynomial function will take care of removing the zeros
+differentiate(p::APL, v::AbstractVariable) = polynomial(differentiate.(terms(p), v), SortedState())
 
-differentiate(p::RationalPoly, x::PolyVar) = (differentiate(p.num, x) * p.den - p.num * differentiate(p.den, x)) / p.den^2
+differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) * p.den - p.num * differentiate(p.den, v)) / p.den^2
+
+const ARPL = Union{APL, RationalPoly}
+
+_vec_diff_promote_op(::Type{PT}, ::AbstractVector{VT}) where {PT, VT} = _diff_promote_op(PT, VT)
+_vec_diff_promote_op(::Type{PT}, ::NTuple{N, VT}) where {PT, N, VT}   = _diff_promote_op(PT, VT)
+_vec_diff_promote_op(::Type{PT}, ::VT, xs...) where {PT, VT}          = _diff_promote_op(PT, VT)
+_vec_diff_promote_op(::Type{PT}, xs::Tuple) where PT = _vec_diff_promote_op(PT, xs...)
 
 # even if I annotate with ::Array{_diff_promote_op(T, PolyVar{C}), N+1}, it cannot detect the type since it seems to be unable to determine the dimension N+1 :(
-function differentiate{N, C, T<:PolyType{C}}(ps::AbstractArray{T, N}, xs::Union{AbstractVector{PolyVar{C}}, Tuple})
-    qs = Array{_diff_promote_op(T, PolyVar{C}), N+1}(length(xs), size(ps)...)
+function differentiate(ps::AbstractArray{PT, N}, xs::Union{AbstractArray, Tuple}) where {N, PT<:ARPL}
+    qs = Array{_vec_diff_promote_op(PT, xs), N+1}(length(xs), size(ps)...)
     for (i, x) in enumerate(xs)
         for j in linearindices(ps)
             J = ind2sub(ps, j)
@@ -49,22 +35,23 @@ function differentiate{N, C, T<:PolyType{C}}(ps::AbstractArray{T, N}, xs::Union{
     end
     qs
 end
-function differentiate{C}(p::PolyType{C}, xs::Union{AbstractVector{PolyVar{C}}, Tuple})
-    [differentiate(p, x) for x in xs]
-end
+
+differentiate(p::ARPL, xs) = [differentiate(p, x) for x in xs]
+
+# differentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
+differentiate(p::ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
 
 # In Julia v0.5, Base.promote_op returns Any for PolyVar, Monomial and MatPolynomial
 # Even on Julia v0.6 and Polynomial, Base.promote_op returns Any...
-_diff_promote_op(S, T) = Base.promote_op(differentiate, S, T)
-_diff_promote_op{C}(::Union{Type{PolyVar{C}}, Type{Monomial{C}}}, ::Type{PolyVar{C}}) = Term{true, Int}
-_diff_promote_op{C, T}(::Union{Type{Polynomial{C, T}}, Type{MatPolynomial{C, T}}}, ::Type{PolyVar{C}}) = Polynomial{true, Base.promote_op(*, T, Int)}
+_diff_promote_op(::Type{PT}, ::Type{VT}) where {PT, VT} = Base.promote_op(differentiate, PT, VT)
+_diff_promote_op(::Type{MT}, ::Type{<:AbstractVariable}) where {MT<:AbstractMonomialLike} = termtype(MT, Int)
 
-function differentiate{T<:PolyType}(p::Union{T, AbstractArray{T}}, x, deg::Int)
+function differentiate(p, x, deg::Int)
     if deg < 0
         throw(DomainError())
     elseif deg == 0
         # Need the conversion with promote_op to be type stable for PolyVar, Monomial and MatPolynomial
-        return _diff_promote_op(typeof(p), typeof(x))(p)
+        return convert(_diff_promote_op(typeof(p), typeof(x)), p)
     else
         return differentiate(differentiate(p, x), x, deg-1)
     end

@@ -2,36 +2,40 @@ __precompile__()
 
 module MultivariatePolynomials
 
-using Compat
+#using DocStringExtensions
 
-import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one
+import Base: *, +, -, /, ^, ==,
+    promote_rule, convert, show, isless, size, getindex,
+    one, zero, transpose, isapprox, @pure, dot, copy
 
-@compat abstract type PolyType{C} end
-export iscomm
-iscomm{C}(::PolyType{C}) = C
-zero{C}(::Type{PolyType{C}}) = zero(Polynomial{C, Int})
-one{C}(::Type{PolyType{C}}) = one(Polynomial{C, Int})
-zero{C}(p::PolyType{C}) = zero(PolyType{C})
-one{C}(p::PolyType{C}) = one(PolyType{C})
+export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
+abstract type AbstractPolynomialLike{T} end
+abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
+abstract type AbstractMonomialLike <: AbstractTermLike{Int} end
 
+export AbstractVariable, AbstractMonomial, AbstractTerm, AbstractPolynomial
+abstract type AbstractVariable <: AbstractMonomialLike end
+abstract type AbstractMonomial <: AbstractMonomialLike end
+abstract type AbstractTerm{T} <: AbstractTermLike{T} end
+abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
+
+const APL{T} = AbstractPolynomialLike{T}
+
+include("zip.jl")
 include("mono.jl")
+include("term.jl")
 include("poly.jl")
-include("rational.jl")
-include("measure.jl")
-include("exp.jl")
-include("promote.jl")
 
+include("rational.jl")
+
+include("conversion.jl")
+include("promote.jl")
+include("substitution.jl")
+
+include("operators.jl")
 include("comp.jl")
 
-include("alg.jl")
-include("calg.jl")
-include("ncalg.jl")
-
 include("diff.jl")
-include("subs.jl")
-include("algebraicset.jl")
-include("norm.jl")
-
 include("div.jl")
 
 include("show.jl")

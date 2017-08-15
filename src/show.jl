@@ -1,67 +1,48 @@
-function show(io::IO, x::PolyVar)
-    print(io, x.name)
+function show(io::IO, v::AbstractVariable)
+    print(io, name(v))
 end
 
-function show(io::IO, x::Monomial)
-    if isconstant(x)
-        show(io, 1)
+isone(x::T) where T = x == one(T)
+function show(io::IO, m::AbstractMonomial)
+    if isconstant(m)
+        print(io, "1")
     else
-        needsep = false
-        for i in 1:nvars(x)
-            if x.z[i] > 0
-                if needsep
-                    print(io, '*')
-                end
-                show(io, x.vars[i])
-                if x.z[i] > 1
-                    print(io, '^')
-                    print(io, x.z[i])
-                else
-                    needsep = true
+        for (var, exp) in zip(variables(m), exponents(m))
+            if !iszero(exp)
+                print(io, var)
+                if !isone(exp)
+                    print(io, "^", exp)
                 end
             end
         end
     end
 end
 
-function show(io::IO, x::MonomialVector)
-    print(io, typeof(x))
-    print(io, "[ ")
-    for (i, m) in enumerate(x)
-        print(io, m)
-        if i != length(x)
-            print(io, ", ")
+function Base.show(io::IO, t::AbstractTerm)
+    if isconstant(t)
+        print(io, coefficient(t))
+    else
+        if !isone(coefficient(t))
+            print(io, coefficient(t))
         end
-    end
-    print(io, " ]")
-end
-
-function Base.show(io::IO, t::Term)
-    cst = isconstant(t.x)
-    if t.α != 1 || cst
-        print(io, t.α)
-    end
-    if !cst
-        print(io, t.x)
-    end
-end
-
-function Base.show(io::IO, p::Polynomial)
-    for (i, t) in enumerate(p)
-        print(io, t)
-        if i != length(p)
-            print(io, " + ")
+        if !iszero(t)
+            print(io, monomial(t))
         end
     end
 end
 
-function Base.show(io::IO, p::SOSDecomposition)
-    for (i, q) in enumerate(p)
-        print(io, "(")
-        print(io, q)
-        print(io, ")^2")
-        if i != length(p)
-            print(io, " + ")
+function Base.show(io::IO, p::AbstractPolynomial{T}) where T
+    ts = terms(p)
+    if isempty(ts)
+        print(io, zero(T))
+    else
+        print(io, first(ts))
+        for t in Iterators.drop(ts, 1)
+            if coefficient(t) < 0
+                print(io, " - ", abs(coefficient(t)) * monomial(t))
+            else
+                print(io, " + ", t)
+            end
         end
     end
 end

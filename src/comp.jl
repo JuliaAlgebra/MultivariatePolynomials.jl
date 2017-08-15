@@ -1,259 +1,116 @@
-import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
-# iszero is only available in Julia v0.6
-if isdefined(Base, :iszero)
-    import Base.iszero
-else
-    iszero{T}(x::T) = x == zero(T)
-end
-iszero(t::Term) = iszero(t.α)
-iszero(p::Polynomial) = isempty(p)
-iszero(p::MatPolynomial) = isempty(Polynomial(p))
-
-# TODO This should be in Base with T instead of PolyVar{C}.
-# See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==){C}(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}})
-    if length(x) != length(y)
-        false
-    else
-        #for (xi, yi) in zip(x, y)
-        for i in 1:length(x)
-            if x[i] != y[i]
-                return false
-            end
-        end
-        true
-    end
-end
-
-# Technique: the higher catch the calls when it is rhs
-# so p::PolyType == x::PolyVar -> x == p
-(==)(p::PolyType, y) = y == p
-
-# Comparison of PolyVar
-
-function (==){C}(x::PolyVar{C}, y::PolyVar{C})
-    x.id == y.id
-end
-(==)(α, x::PolyVar) = false
-(==){C}(p::PolyType{C}, x::PolyVar{C}) = x == p
-
-isless{C}(x::PolyVar{C}, y::PolyVar{C}) = isless(y.id, x.id)
-
-# Comparison of Monomial
-
-# graded lex ordering
-function mycomp{C}(x::Monomial{C}, y::Monomial{C})
-    degx = deg(x)
-    degy = deg(y)
-    if degx != degy
-        degx - degy
-    else
-        i = j = 1
-        # since they have the same degree,
-        # if we get j > nvars(y), the rest in x.z should be zeros
-        while i <= nvars(x) && j <= nvars(y)
-            if x.vars[i] > y.vars[j]
-                if x.z[i] == 0
-                    i += 1
-                else
-                    return 1
-                end
-            elseif x.vars[i] < y.vars[j]
-                if y.z[j] == 0
-                    j += 1
-                else
-                    return -1
-                end
-            elseif x.z[i] != y.z[j]
-                return x.z[i] - y.z[j]
-            else
-                i += 1
-                j += 1
-            end
-        end
-        0
-    end
-end
-
-function (==){C}(x::Monomial{C}, y::Monomial{C})
-    mycomp(x, y) == 0
-end
-(==)(α, x::Monomial) = isconstant(x) && α == 1
-(==){C}(x::PolyVar{C}, y::Monomial{C}) = Monomial{C}(x) == y
-(==){C}(p::PolyType{C}, x::Monomial{C}) = x == p
-
-# graded lex ordering
-function isless{C}(x::Monomial{C}, y::Monomial{C})
-    mycomp(x, y) < 0
-end
-isless{C}(x::Monomial{C}, y::PolyVar{C}) = isless(x, Monomial{C}(y))
-isless{C}(x::PolyVar{C}, y::Monomial{C}) = isless(Monomial{C}(x), y)
-
-# Comparison of MonomialVector
-function (==){C}(x::MonomialVector{C}, y::MonomialVector{C})
-    if length(x.Z) != length(y.Z)
-        return false
-    end
-    allvars, maps = myunion([vars(x), vars(y)])
-    # Should be sorted in the same order since the non-common
-    # polyvar should have exponent 0
-    for (a, b) in zip(x.Z, y.Z)
-        A = zeros(length(allvars))
-        B = zeros(length(allvars))
-        A[maps[1]] = a
-        B[maps[2]] = b
-        if A != B
-            return false
-        end
-    end
-    return true
-end
-(==)(α, x::MonomialVector) = false
-(==){C}(p::PolyType{C}, x::MonomialVector{C}) = false
-
-# Comparison of Term
-function isapproxzero(x; ztol::Real=1e-6)
-    -ztol < x < ztol
-end
+Base.iszero(v::AbstractVariable) = false
+Base.iszero(m::AbstractMonomial) = false
+Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-(==)(α::Void, x::TermType) = false
-(==)(α::Dict, x::TermType) = false
-(==)(x::TermType, α::Dict) = false
-(==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
-(==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
+# avoids the call to be transfered to eqconstant
+(==)(α::Void, x::APL) = false
+(==)(x::APL, α::Void) = false
+(==)(α::Dict, x::APL) = false
+(==)(x::APL, α::Dict) = false
+(==)(α::Void, x::RationalPoly) = false
+(==)(x::RationalPoly, α::Void) = false
+(==)(α::Dict, x::RationalPoly) = false
+(==)(x::RationalPoly, α::Dict) = false
 
-function (==){C}(s::Term{C}, t::Term{C})
-    (s.α == t.α) && (iszero(s.α) || s.x == t.x)
-end
-function (==){C}(t::Term{C}, p::Polynomial{C})
-    if isempty(p.a)
-        iszero(t.α)
+function polyeqterm(p::AbstractPolynomial, t)
+    if iszero(p)
+        iszero(t)
     else
-        length(p.a) == 1 && p.a[1] == t.α && p.x[1] == t.x
+        # terms/nterms ignore zero terms
+        nterms(p) == 1 && leadingterm(p) == t
     end
 end
-(==){C}(p::Polynomial{C}, t::Term{C}) = t == p
-function (==){C}(p::Polynomial{C}, q::Polynomial{C})
-    # terms should be sorted and without zeros
-    if length(p) != length(q)
-        return false
+polyeqterm(p::APL, t) = polyeqterm(polynomial(p), t)
+
+eqconstant(α, v::AbstractVariable) = false
+eqconstant(v::AbstractVariable, α) = false
+function _termeqconstant(t::AbstractTermLike, α)
+    if iszero(t)
+        iszero(α)
+    else
+        α == coefficient(t) && isconstant(t)
     end
-    for i in 1:length(p)
-        if p.x[i] != q.x[i]
-            # There should not be zero terms
-            @assert p.a[i] != 0
-            @assert q.a[i] != 0
-            return false
-        end
-        if p.a[i] != q.a[i]
-            return false
-        end
-    end
-    return true
 end
+eqconstant(α, t::AbstractTermLike) = _termeqconstant(t, α)
+eqconstant(t::AbstractTermLike, α) = _termeqconstant(t, α)
+eqconstant(α, p::APL) = polyeqterm(p, α)
+eqconstant(p::APL, α) = polyeqterm(p, α)
+
+function (==)(t1::AbstractTerm, t2::AbstractTerm)
+    c1 = coefficient(t1)
+    c2 = coefficient(t2)
+    if iszero(c1)
+        iszero(c2)
+    else
+        c1 == c2 && monomial(t1) == monomial(t2)
+    end
+end
+(==)(p::AbstractPolynomial, t::AbstractTerm) = polyeqterm(p, t)
+(==)(t::AbstractTerm, p::AbstractPolynomial) = polyeqterm(p, t)
+
+function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, isz, op)
+    i1 = 1
+    i2 = 1
+    t1 = terms(p1)
+    t2 = terms(p2)
+    while true
+        while i1 <= length(t1) && isz(coefficient(t1[i1]))
+            i1 += 1
+        end
+        while i2 <= length(t2) && isz(coefficient(t2[i2]))
+            i2 += 1
+        end
+        if i1 > length(t1) && i2 > length(t2)
+            return true
+        end
+        if i1 > length(t1) || i2 > length(t2)
+            return false
+        end
+        if !op(t1[i1], t2[i2])
+            return false
+        end
+        i1 += 1
+        i2 += 1
+    end
+end
+
+# Can there be zero term in TypedPolynomials ?
+#function (==)(p1::AbstractPolynomial, p2::AbstractPolynomial)
+#    nterms(p1) != nterms(p2) && return false
+#    for (t1, t2) in zip(terms(p1), terms(p2))
+#        @assert !iszero(t1) && !iszero(t2) # There should be no zero term
+#        if t1 != t2
+#            return false
+#        end
+#    end
+#    return true
+#end
+(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, iszero, ==)
 
 (==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 # Solve ambiguity with (::PolyType, ::Any)
-(==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
-(==)(p, q::RationalPoly) = p*q.den == q.num
-# IJulia output, see https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-(==)(α::Void, x::RationalPoly) = false
-(==)(α::Dict, x::RationalPoly) = false
+(==)(p::APL, q::RationalPoly) = p*q.den == q.num
+(==)(q::RationalPoly, p::APL) = p == q
+(==)(α, q::RationalPoly) = α*q.den == q.num
+(==)(q::RationalPoly, α) = α == q
 
-(==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
-(==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)
-
-function grlex(x::Vector{Int}, y::Vector{Int})
-    @assert length(x) == length(y)
-    degx = sum(x)
-    degy = sum(y)
-    if degx != degy
-        degx < degy
-    else
-        for (a, b) in zip(x, y)
-            if a < b
-                return true
-            elseif a > b
-                return false
-            end
-        end
-        false
-    end
+function isapproxzero(α; ztol::Real=1e-6)
+    -ztol < α < ztol
 end
 
-function isapproxzero(p::Polynomial; ztol::Real=1e-6)
-    isapprox(p, zero(p), ztol=ztol)
-end
+isapproxzero(m::AbstractMonomialLike; kwargs...) = false
+isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwargs...)
+isapproxzero(p::APL; kwargs...) = all(isapproxzero.(terms(p); kwargs...))
+isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
-function isapproxzero(p::RationalPoly; ztol::Real=1e-6)
-    isapproxzero(p.num, ztol=ztol)
-end
+Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
+Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; ztol::Real=1e-6, kwargs...) = compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol), (x, y) -> isapprox(x, y; kwargs...))
 
-function isapprox{C, S, T}(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
-    i = j = 1
-    while i <= length(p.x) || j <= length(q.x)
-        lhs, rhs = 0, 0
-        if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
-            if !isapproxzero(q.a[j], ztol=ztol)
-                return false
-            end
-            j += 1
-        elseif j > length(q.x) || p.x[i] > q.x[j]
-            if !isapproxzero(p.a[i], ztol=ztol)
-                return false
-            end
-            i += 1
-        else
-            if !isapprox(p.a[i], q.a[j], rtol=rtol, atol=atol)
-                return false
-            end
-            i += 1
-            j += 1
-        end
-    end
-    true
-end
-
-function isapprox{C, S, T}(s::Term{C, S}, t::Term{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
-    s.x == t.x && isapprox(s.α, t.α, rtol=rtol, atol=atol)
-end
-
-function isapprox(p::MatPolynomial, q::MatPolynomial)
-    p.x == q.x && isapprox(p.Q, q.Q)
-end
-
-function permcomp(f, m)
-    picked = IntSet()
-    for i in 1:m
-        k = 0
-        for j in 1:m
-            if !(j in picked) && f(i, j)
-                k = j
-                break
-            end
-        end
-        if k == 0
-            return false
-        end
-        push!(picked, k)
-    end
-    true
-end
-
-function isapprox{C, S, T}(p::SOSDecomposition{C, S}, q::SOSDecomposition{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
-    m = length(p.ps)
-    if length(q.ps) != m
-        false
-    else
-        permcomp((i, j) -> isapprox(p.ps[i], q.ps[j], rtol=rtol, atol=atol, ztol=ztol), m)
-    end
-end
-
-isapprox{C, S, T, U, V}(p::RationalPoly{C, S, T}, q::RationalPoly{C, U, V}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), promote_op(*, S, V)), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num*q.den, q.num*p.den, rtol=rtol, atol=atol, ztol=ztol)
-isapprox{C, S, T, U}(p::RationalPoly{C, S, T}, q::TermContainer{C, U}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p.num, q*p.den, rtol=rtol, atol=atol, ztol=ztol)
-isapprox{C, S, T, U}(p::TermContainer{C, U}, q::RationalPoly{C, S, T}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p*q.den, q.num, rtol=rtol, atol=atol, ztol=ztol)
-isapprox{C}(p::RationalPoly{C}, q; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(p, TermContainer{C}(q), rtol=rtol, atol=atol, ztol=ztol)
-isapprox{C}(p, q::RationalPoly{C}; rtol::Real=Base.rtoldefault(promote_op(*, U, T), S), atol::Real=0, ztol::Real=1e-6) = isapprox(TermContainer{C}(p), q, rtol=rtol, atol=atol, ztol=ztol)
+isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
+isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
+isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num; kwargs...)
+isapprox(q::RationalPoly{C}, α; kwargs...) where {C} = isapprox(q, constantterm(α, q.den); kwargs...)
+isapprox(α, q::RationalPoly{C}; kwargs...) where {C} = isapprox(constantterm(α, q.den), q; kwargs...)

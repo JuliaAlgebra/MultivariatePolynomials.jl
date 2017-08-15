@@ -1,20 +1,20 @@
 @testset "Non-commutative Monomial" begin
-    @ncpolyvar x
+    Mod.@ncpolyvar x
     @test_throws ArgumentError Monomial{false}([x], [1,0])
     X = Monomial{false}()
-    @test nvars(X) == 0
+    @test nvariables(X) == 0
     @test isempty(X.vars)
     @test isempty(X.z)
     X = Monomial{false}(x)
-    @test nvars(X) == 1
+    @test nvariables(X) == 1
     @test X.vars[1] == x
     @test X.z[1] == 1
     X = Monomial{false}([x], [0])
     Y = X * x^2
-    @test vars(Y) == [x]
+    @test variables(Y) == [x]
     @test Y.z == [2]
     Y = x^2 * X
-    @test vars(Y) == [x]
+    @test variables(Y) == [x]
     @test Y.z == [2]
 end
 @testset "Non-commutative MonomialVector" begin
@@ -38,7 +38,7 @@ end
     @test length(X1) == length(X2) == length(Z)
     @test issorted(X1, rev=true)
     @test issorted(X2, rev=true)
-    @test issorted(Z, rev=true, lt=MultivariatePolynomials.grlex)
+    @test issorted(Z, rev=true, lt=DynamicPolynomials.grlex)
     @test X1 == X0
     for i in 1:length(Z)
         @test X1[i].vars == X2[i].vars == [x, y, x, y]
@@ -48,24 +48,24 @@ end
 @testset "PolyVar * Monomial" begin
     @ncpolyvar x y z
     m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
-    @test vars(m) == [y, z, x, z]
+    @test variables(m) == [y, z, x, z]
     @test m.z == [1, 0, 2, 1]
     m = x * Monomial([z, y, y, z], [0, 0, 2, 1])
-    @test vars(m) == [z, x, y, y, z]
+    @test variables(m) == [z, x, y, y, z]
     @test m.z == [0, 1, 0, 2, 1]
     m = x * Monomial([y, z, y, z], [0, 0, 2, 1])
-    @test vars(m) == [y, z, x, y, z]
+    @test variables(m) == [y, z, x, y, z]
     @test m.z == [0, 0, 1, 2, 1]
 end
 @testset "Monomial * PolyVar" begin
     @ncpolyvar x y z
     m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
-    @test vars(m) == [x, z, x, y]
+    @test variables(m) == [x, z, x, y]
     @test m.z == [2, 1, 0, 1]
     m = Monomial([x, y, y, x], [2, 1, 0, 0]) * z
-    @test vars(m) == [x, y, y, z, x]
+    @test variables(m) == [x, y, y, z, x]
     @test m.z == [2, 1, 0, 1, 0]
     m = Monomial([x, y, x, y], [2, 1, 0, 0]) * z
-    @test vars(m) == [x, y, z, x, y]
+    @test variables(m) == [x, y, z, x, y]
     @test m.z == [2, 1, 1, 0, 0]
 end

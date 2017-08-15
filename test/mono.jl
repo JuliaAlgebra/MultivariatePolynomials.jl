@@ -1,70 +1,91 @@
+const MP = MultivariatePolynomials
 @testset "PolyVar and Monomial tests" begin
     @testset "polyvar macro index set" begin
-        n = 3
-        @polyvar x[1:n] y z[1:n-1]
-        @test isa(x, Vector{PolyVar{true}})
-        @test isa(y, PolyVar{true})
-        @test isa(z, Vector{PolyVar{true}})
+        Mod.@polyvar x y z
+        Mod.@polyvar x[1:3] y z[1:2]
         @test length(x) == 3
         @test length(z) == 2
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
     end
     @testset "PolyVar" begin
-        @test zero(PolyVar{true}) == 0
-        @test one(PolyVar{false}) == 1
-        @polyvar x
+        Mod.@polyvar x
+        @test 1 != x
+        @test x != 0
         @test copy(x) == x
-        @test nvars(x) == 1
+        @test nvariables(x) == 1
+        @test !isapproxzero(x)
+        @test !iszero(x)
         @test zero(x) == 0
-        @test typeof(zero(x)) == Polynomial{true, Int}
+        @test iszero(zero(x))
+        @test zero(x) isa AbstractTerm{Int}
         @inferred zero(x)
         @test one(x) == 1
-        @test typeof(one(x)) == Polynomial{true, Int}
+        @test one(x) isa AbstractMonomial
         @inferred one(x)
+
+        Mod.@polyvar y
+        @test MP.exponent(x, x) == 1
+        @test MP.exponent(x, y) == 0
+        @test length(MP.exponents(x)) == 1
+        @test first(MP.exponents(x)) == 1
+        @test isconstant(x) == false
+
+        @test divides(x, x) == true
+        @test divides(x, y) == false
     end
     @testset "Monomial" begin
-        @test zero(Monomial{false}) == 0
-        @test one(Monomial{true}) == 1
-        @polyvar x
-        @test_throws ArgumentError Monomial{true}([x], [1,0])
+        Mod.@polyvar x
         @test zero(x^2) == 0
-        @test typeof(zero(x^2)) == Polynomial{true, Int}
+        @test zero(x^2) isa AbstractTerm{Int}
         @inferred zero(x^2)
         @test one(x^2) == 1
-        @test typeof(one(x^2)) == Polynomial{true, Int}
+        @test one(x^2) isa AbstractMonomial
         @inferred one(x^2)
-        @polyvar y[1:7]
+        Mod.@polyvar y[1:7]
         m = y[1] * y[3] * y[5] * y[7]
-        @test issorted(vars(y[2] * m), rev=true)
-        @test issorted(vars(m * y[4]), rev=true)
-        @test issorted(vars(y[6] * m), rev=true)
+        @test issorted(variables(y[2] * m), rev=true)
+        @test issorted(variables(m * y[4]), rev=true)
+        @test issorted(variables(y[6] * m), rev=true)
+
+        @test MP.exponent(x * y[2]^2, x) == 1
+        @test MP.exponent(x * y[2]^2, y[1]) == 0
+        @test MP.exponent(x * y[2]^2, y[2]) == 2
+
+        @test_throws ErrorException variable(x^2)
+        @test_throws ErrorException variable(x*y[1])
+        @test_throws ErrorException variable(constantmonomial(typeof(x)))
+        @test variable(x^1) == x
+        @test variable(x^1) isa AbstractVariable
+
+        @test MP._div(2x^2*y[1]^3, x*y[1]^2) == 2x*y[1]
     end
-    @testset "MonomialVector" begin
-        @polyvar x y
-        @test_throws ArgumentError MonomialVector{true}([x], [[1], [1,0]])
-        X = [x^2,x*y,y^2]
-        for (i, m) in enumerate(monomials([x,y], 2))
+    @testset "Monomial Vector" begin
+        Mod.@polyvar x y
+        @test x > y
+        @test x^2 > y^2
+        X = [x^2, x*y, y^2]
+        for (i, m) in enumerate(monomials((x, y), 2))
             @test m == X[i]
         end
-        X = MonomialVector([x, 1, x*y])
-        @test vars(X) == [x, y]
-        @test X.Z == [[1, 1], [1, 0], [0, 0]]
-        @test isa(MonomialVector{true}([1]), MonomialVector{true})
-        @test isa(MonomialVector{false}([1]), MonomialVector{false})
+        @test length(monovec([y, x])) == 2
+        X = monovec([x, 1, x*y])
         @test X[2:3][1] == x
         @test X[2:3][2] == 1
-        @test X[[3, 2]][1] == x
-        @test X[[3, 2]][2] == 1
-    end
-end
-module newmodule
-    using Base.Test
-    import MultivariatePolynomials
-    @testset "Polyvar macro hygiene" begin
-        # Verify that the @polyvar macro works when the package has been activated
-        # with `import` instead of `using`.
-        MultivariatePolynomials.@polyvar x y
-        @test isa(x, MultivariatePolynomials.PolyVar)
-        @test isa(y, MultivariatePolynomials.PolyVar)
+        @test monovec(X[[3, 2]])[1] == x
+        @test monovec(X[[3, 2]])[2] == 1
+        # Documentation examples
+        @test monovec([x*y, x, x*y, x^2*y, x]) == [x^2*y, x*y, x]
+        @test monovectype([x*y, x, 1, x^2*y, x]) <: AbstractVector{typeof(x*y)}
+        @test monovectype([x*y, x, x*y, x^2*y, x]) <: AbstractVector
+        σ, smv = sortmonovec([x*y, x, x*y, x^2*y, x])
+        @test smv == [x^2*y, x*y, x]
+        @test σ[1] == 4
+        @test σ[2] in (1, 3)
+        @test σ[3] in (2, 5)
+        @test mergemonovec([[x*y, x, x*y], [x^2*y, x]]) == [x^2*y, x*y, x]
+        @test_throws ArgumentError monovec([1, 2], [x^2])
+        σ, X = sortmonovec((y, x))
+        @test σ == [2, 1]
+        @test X == [x, y]
     end
 end
