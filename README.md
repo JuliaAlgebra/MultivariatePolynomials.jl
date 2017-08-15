@@ -1,9 +1,9 @@
 # Multivariate Polynomials
 
-| **PackageEvaluator** | **Build Status** |
-|:--------------------:|:----------------:|
-| [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
-| [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
+| **Documentation** | **PackageEvaluator** | **Build Status** |
+|:-----------------:|:--------------------:|:----------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
 
 Basic arithmetic, integration, differentiation and evaluation over sparse multivariate polynomials and sparse multivariate moments.
 Both commutative and non-commutative variables are supported.
@@ -54,6 +54,11 @@ Therefore, this order cannot be used for substitution, even as a default (see [h
 * [Polynomials](https://github.com/Keno/Polynomials.jl) for univariate polynomials
 
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-stable-url]: https://blegat.github.io/.jl/stable
+[docs-latest-url]: https://blegat.github.io/.jl/latest
 
 [pkg-0.5-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.5.svg
 [pkg-0.5-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
