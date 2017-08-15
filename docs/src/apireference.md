@@ -10,17 +10,25 @@ CurrentModule = MultivariatePolynomials
 name
 ```
 
+## Monomials
+
+```@docs
+nvariables
+variables
+exponents
+exponent
+deg
+isconstant
+constantmonomial
+divides
+```
+
 ## Terms
 
 ```@docs
 term
-zeroterm
 coefficient
 monomial
-exponent
-deg
-isconstant
-divides
 ```
 
 ## Polynomials
@@ -36,8 +44,6 @@ leadingcoefficient
 leadingmonomial
 removeleadingterm
 removemonomials
-vars
-nvars
 ```
 
 ## Monomial Vectors
