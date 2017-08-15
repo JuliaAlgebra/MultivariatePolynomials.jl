@@ -2,7 +2,10 @@ function show(io::IO, v::AbstractVariable)
     print(io, name(v))
 end
 
-isone(x::T) where T = x == one(T)
+if VERSION < v"0.7.0-DEV.1319"
+    isone(x::T) where T = x == one(T)
+end
+
 function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
         print(io, "1")
