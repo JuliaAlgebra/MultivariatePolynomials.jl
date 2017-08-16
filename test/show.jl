@@ -16,6 +16,10 @@
     @test sprint(show, y + 5 + x) == "x + y + 5"
     @test sprint(show, x + x^2) == "x^2 + x"
     @test sprint(show, x^2 + x) == "x^2 + x"
+    @test sprint(show, x^2 - 3.0x) == "x^2 - 3.0x"
+    @test sprint(show, -2.0x^2) == "-2.0x^2"
+    @test sprint(show, (1.0 + 3.1im) * x*z) == "(1.0 + 3.1im)xz"
+    @test sprint(show, -(1.0 + 3.1im) * z*x) == "(-1.0 - 3.1im)xz"
     @test sprint(show, x^2 + (1.0 + 3.1im) * x) == "x^2 + (1.0 + 3.1im)x"
     @test sprint(show, x^2 - (1.0 + 3.1im) * x) == "x^2 + (-1.0 - 3.1im)x"
 end
