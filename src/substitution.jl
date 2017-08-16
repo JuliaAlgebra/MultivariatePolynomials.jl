@@ -51,7 +51,7 @@ _polynomial(α) = α
 _polynomial(p::APL) = polynomial(p)
 function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
     if iszero(p)
-        _polynomial(substitute(st, zero(termtype(p)), s))
+        _polynomial(substitute(st, zeroterm(p), s))
     else
         ts = terms(p)
         r1 = substitute(st, ts[1], s)

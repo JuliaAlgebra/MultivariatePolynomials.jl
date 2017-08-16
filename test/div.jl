@@ -1,4 +1,13 @@
 @testset "Division" begin
+    @testset "GCD and LCM" begin
+        Mod.@polyvar x y z
+        @test gcd(x*y, y) == y
+        @test lcm(x*y, y) == x*y
+        @test gcd(x*y^2*z, y*z^3) == y*z
+        @test lcm(x*y^2*z, y*z^3) == x*y^2*z^3
+        @test gcd(x^2*y^7*z^3, x^4*y^5*z^2) == x^2*y^5*z^2
+        @test lcm(x^2*y^7*z^3, x^4*y^5*z^2) == x^4*y^7*z^3
+    end
     # Taken from
     # Ideals, Varieties, and Algorithms
     # Cox, Little and O'Shea, Fourth edition

@@ -1,4 +1,6 @@
-export name, constantmonomial, emptymonovec, monovec, monovectype, sortmonovec, mergemonovec
+export name, constantmonomial, emptymonovec, monovec, monovectype, sortmonovec, mergemonovec, mapexponents
+
+mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
 
 Base.copy(x::AbstractVariable) = x
 

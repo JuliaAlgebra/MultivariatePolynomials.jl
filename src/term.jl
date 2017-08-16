@@ -10,9 +10,17 @@ function Base.hash(t::AbstractTerm, u::UInt)
     end
 end
 
-Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constantmonomial(TT)
+# zero should return a polynomial since it is often used to keep the result of a summation of terms.
+# For example, Base.vecdot(x::Vector{<:AbstractTerm}, y:Vector{Int}) starts with `s = zero(dot(first(x), first(y)))` and then adds terms.
+# We want `s` to start as a polynomial for this operation to be efficient.
+#Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constantmonomial(TT)
+#Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constantmonomial(t)
+zeroterm(::Type{TT}) where {T, TT<:APL{T}} = zero(T) * constantmonomial(TT)
+zeroterm(t::APL{T}) where {T} = zero(T) * constantmonomial(t)
+
+Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(polynomialtype(TT))
+Base.zero(t::AbstractTermLike{T}) where {T} = zero(polynomialtype(t))
 Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = one(T) * constantmonomial(TT)
-Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constantmonomial(t)
 Base.one(t::AbstractTermLike{T}) where {T} = one(T) * constantmonomial(t)
 
 monomial(m::AbstractMonomial) = m
@@ -36,9 +44,9 @@ When applied on a polynomial, it throws an error if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
-function term(p::APL)
+function term(p::APL{T}) where T
     if nterms(p) == 0
-        zero(termtype(p))
+        zeroterm(p)
     elseif nterms(p) > 1
         error("A polynomial is more than one term cannot be converted to a term.")
     else

@@ -12,7 +12,11 @@ function divides(t1::AbstractTermLike, t2::AbstractTermLike)
 end
 divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 
+Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(min, m1, m2)
+Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(max, m1, m2)
+
 # _div(a, b) assumes that b divides a
+_div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m2)
 function _div(t::AbstractTerm, m::AbstractMonomial)
     coefficient(t) * _div(monomial(t), m)
 end

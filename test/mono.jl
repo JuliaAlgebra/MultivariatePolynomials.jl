@@ -17,7 +17,7 @@ const MP = MultivariatePolynomials
         @test !iszero(x)
         @test zero(x) == 0
         @test iszero(zero(x))
-        @test zero(x) isa AbstractTerm{Int}
+        @test zero(x) isa AbstractPolynomial{Int}
         @inferred zero(x)
         @test one(x) == 1
         @test one(x) isa AbstractMonomial
@@ -36,7 +36,7 @@ const MP = MultivariatePolynomials
     @testset "Monomial" begin
         Mod.@polyvar x
         @test zero(x^2) == 0
-        @test zero(x^2) isa AbstractTerm{Int}
+        @test zero(x^2) isa AbstractPolynomial{Int}
         @inferred zero(x^2)
         @test one(x^2) == 1
         @test one(x^2) isa AbstractMonomial

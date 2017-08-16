@@ -47,7 +47,7 @@ multconstant(p::AbstractPolynomialLike, α) = multconstant(polynomial(p), α)
 multconstant(α, t::AbstractTermLike)    = (α*coefficient(t)) * monomial(t)
 multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
 
-(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(promote(m1, m2)...)
+(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
 (*)(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * monomial(t))
