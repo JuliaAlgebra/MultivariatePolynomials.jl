@@ -37,6 +37,8 @@
         @test polynomial(1 + x) == 1 + x
         @test leadingterm(1 + x) == x
         @test one(1 + x) == one(1.0 + x) == 1
+        @test zero(1 + x) isa AbstractPolynomial{Int}
+        @test zero(1.0 + x) isa AbstractPolynomial{Float64}
         @test zero(1 + x) == zero(1.0 + x) == 0
         @test 1 != 1 + x
         @test 2x == x + x^2 + x - x^2
