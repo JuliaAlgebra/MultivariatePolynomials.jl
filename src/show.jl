@@ -2,7 +2,7 @@ function show(io::IO, v::AbstractVariable)
     print(io, name(v))
 end
 
-if VERSION < v"0.7.0-DEV.1319"
+if VERSION < v"0.7.0-DEV.1144" # Define `isone` for base types JuliaLang/julia#22846
     isone(x::T) where T = x == one(T)
 end
 
