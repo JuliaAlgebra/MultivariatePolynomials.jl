@@ -10,6 +10,7 @@ include("subs.jl")
 include("hash.jl")
 include("div.jl")
 include("norm.jl")
+include("var.jl")
 
 include("show.jl")
 
