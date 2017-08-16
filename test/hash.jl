@@ -5,6 +5,7 @@
     @test hash(1x+3y) == hash(1.0x+3.0y)
     @test hash(one(x)) == hash(x^0)
     @test hash(x*y) == hash(polynomial(x*y))
+    @test hash(0.0x) == hash(0.0)
     @test hash(1.0x) == hash(x)
     @test hash(x-x) == hash(zero(x))
     @test hash(monovec([z^3, z*x, y])[1:2]) == hash(monovec([z^3, z*x]))

@@ -18,6 +18,7 @@
         @test term(x^2) == x^2
         @test term(1x^2) isa AbstractTerm
         @test term(1x) == x
+        @test zeroterm(1x) == 0*x
 
         Mod.@polyvar y
         @test MP.exponent(2x^2, x) == 2
