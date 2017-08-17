@@ -8,6 +8,7 @@ CurrentModule = MultivariatePolynomials
 
 ```@docs
 name
+similarvariable
 ```
 
 ## Monomials
