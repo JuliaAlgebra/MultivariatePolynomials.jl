@@ -8,13 +8,13 @@ end
 
 function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
-        print(io, "1")
+        print(io, '1')
     else
         for (var, exp) in zip(variables(m), exponents(m))
             if !iszero(exp)
                 print(io, var)
                 if !isone(exp)
-                    print(io, "^", exp)
+                    print(io, '^', exp)
                 end
             end
         end
@@ -29,7 +29,11 @@ function Base.show(io::IO, t::AbstractTerm)
         print_coefficient(io, coefficient(t))
     else
         if !isone(coefficient(t))
-            print_coefficient(io, coefficient(t))
+            if isone(-coefficient(t))
+                print(io, '-')
+            else
+                print_coefficient(io, coefficient(t))
+            end
         end
         if !iszero(t)
             print(io, monomial(t))

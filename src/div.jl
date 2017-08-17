@@ -20,7 +20,7 @@ _div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m
 function _div(t::AbstractTerm, m::AbstractMonomial)
     coefficient(t) * _div(monomial(t), m)
 end
-function _div(t1::AbstractTerm, t2::AbstractTerm)
+function _div(t1::AbstractTermLike, t2::AbstractTermLike)
     (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))
 end
 
