@@ -35,5 +35,5 @@ Calling `@similarvariable typedpoly x` on a polynomial created with `TypedPolyno
 binds `TypedPolynomials.Variable{:x}` to the variable `x`.
 """
 macro similarvariable(p, name)
-  Expr(:block, _makevar(p, name), _varconstructor(:($(esc(p))), name))
+    Expr(:block, _makevar(p, name))
 end
