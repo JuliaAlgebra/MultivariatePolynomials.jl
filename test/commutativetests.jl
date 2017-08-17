@@ -10,7 +10,10 @@ include("subs.jl")
 include("hash.jl")
 include("div.jl")
 include("norm.jl")
-include("var.jl")
+
+# Enable these tests as soon as similarvariable is implemented in
+# DynamicPolynomials and TypedPolynomials
+# include("var.jl")
 
 include("show.jl")
 
