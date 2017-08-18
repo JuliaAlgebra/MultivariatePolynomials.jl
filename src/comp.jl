@@ -3,6 +3,7 @@ export isapproxzero
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
+Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
