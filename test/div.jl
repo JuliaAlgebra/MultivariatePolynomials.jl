@@ -14,6 +14,8 @@
     # They have been adapted to the grlex ordering
     @testset "Divides" begin
         Mod.@polyvar x y z
+        @test divides(leadingmonomial(x+y), x) # leadingmonomial(x+y) will be x^1*y^0 -> tricky test !
+        @test !divides(leadingmonomial(x^2+y), x)
         @test divides(x*y, x^2*y)
         @test divides(x*y, x*y^2)
         @test divides(y*z, x*y*z)
@@ -31,9 +33,41 @@
     @testset "Division examples" begin
         Mod.@polyvar x y
         @test iszero(@inferred MP.proddiff(2x*y, 3y^2*x))
-        @test div(x*y^2 + 1, x*y + 1) == y
-        @test rem(x*y^2 + 1, x*y + 1) == -y + 1
-        @test div(x*y^2 + x, y) == x*y
-        @test rem(x*y^2 + x, y) == x
+        @test (@inferred div(x*y^2 + 1, x*y + 1)) == y
+        @test (@inferred rem(x*y^2 + 1, x*y + 1)) == -y + 1
+        @test (@inferred div(x*y^2 + x, y)) == x*y
+        @test (@inferred rem(x*y^2 + x, y)) == x
+        @test (@inferred rem(x^4 + x^3 + (1+1e-10)*x^2 + 1, x^2 + x + 1)) == 1
+        @test (@inferred rem(x^4 + x^3 + (1+1e-10)*x^2 + 1, x^2 + x + 1; ztol=1e-11)) ≈ -((1+1e-10)-1)x + 1
+    end
+    @testset "Division by multiple polynomials examples" begin
+        function testdiv(p, ps)
+            q, r = @inferred divrem(p, ps)
+            @test p == dot(q, ps) + r
+            q, r
+        end
+        Mod.@polyvar x y
+        # Example 1
+        q, r = testdiv(x*y^2 + 1, [x*y + 1, y + 1])
+        @test q == [y, -1]
+        @test r == 2
+        # Example 2
+        q, r = testdiv(x^2*y + x*y^2 + y^2, [x*y - 1, y^2 - 1])
+        @test q == [x + y, 1]
+        @test r == x + y + 1
+        # Example 4
+        q, r = testdiv(x^2*y + x*y^2 + y^2, [y^2 - 1, x*y - 1])
+        @test q == [x + 1, x]
+        @test r == 2x + 1
+        # Example 5
+        q, r = testdiv(x*y^2 - x, [x*y - 1, y^2 - 1])
+        @test q == [y, 0]
+        @test r == -x + y
+        q, r = testdiv(x*y^2 - x, [y^2 - 1, x*y - 1])
+        @test q == [x, 0]
+        @test r == 0
+
+        @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
+        @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
 end

@@ -1,3 +1,5 @@
+export monic
+
 """
     divides(t1::AbstractTermLike, t2::AbstractTermLike)
 
@@ -24,17 +26,21 @@ function _div(t1::AbstractTermLike, t2::AbstractTermLike)
     (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))
 end
 
-proddiff(x, y) = x*y - x*y
+Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
+Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
-function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
-    rf = changecoefficienttype(f, Base.promote_op(proddiff, T, S))
-    q = r = zero(f - g / 2)
+proddiff(x, y) = x/y - x/y
+function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
+    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
+    q = r = zero(rf)
     lt = leadingterm(g)
     rg = removeleadingterm(g)
     lm = monomial(lt)
     while !iszero(rf)
         ltf = leadingterm(rf)
-        if divides(lm, ltf)
+        if isapproxzero(ltf; kwargs...)
+            rf = removeleadingterm(rf)
+        elseif divides(lm, ltf)
             qt = _div(ltf, lt)
             q += qt
             rf = removeleadingterm(rf) - qt * rg
@@ -50,5 +56,57 @@ function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
     end
     q, r
 end
-Base.div(f::APL, g::APL) = divrem(f, g)[1]
-Base.rem(f::APL, g::APL) = divrem(f, g)[2]
+function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
+    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
+    r = zero(rf)
+    q = similar(g, typeof(rf))
+    for i in eachindex(q)
+        q[i] = zero(rf)
+    end
+    lt = leadingterm.(g)
+    rg = removeleadingterm.(g)
+    lm = monomial.(lt)
+    useful = IntSet(eachindex(g))
+    while !iszero(rf)
+        ltf = leadingterm(rf)
+        if isapproxzero(ltf; kwargs...)
+            rf = removeleadingterm(rf)
+            continue
+        end
+        divisionoccured = false
+        for i in useful
+            if divides(lm[i], ltf)
+                qt = _div(ltf, lt[i])
+                q[i] += qt
+                rf = removeleadingterm(rf) - qt * rg[i]
+                divisionoccured = true
+                break
+            end
+        end
+        if !divisionoccured
+            if isempty(useful)
+                r += rf
+                break
+            else
+                r += ltf
+                rf = removeleadingterm(rf)
+            end
+        end
+    end
+    q, r
+end
+
+function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
+    U = Base.promote_op(/, T, S)
+    β = coefficient(t)
+    if β == α
+        one(U) * monomial(t)
+    else
+        (β / α) * monomial(t)
+    end
+end
+
+function monic(p::APL)
+    α = leadingcoefficient(p)
+    polynomial(_divtoone.(terms(p), α))
+end
