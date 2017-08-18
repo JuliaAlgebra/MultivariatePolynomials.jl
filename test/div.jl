@@ -37,6 +37,8 @@
         @test (@inferred rem(x*y^2 + 1, x*y + 1)) == -y + 1
         @test (@inferred div(x*y^2 + x, y)) == x*y
         @test (@inferred rem(x*y^2 + x, y)) == x
+        @test (@inferred rem(x^4 + x^3 + (1+1e-10)*x^2 + 1, x^2 + x + 1)) == 1
+        @test (@inferred rem(x^4 + x^3 + (1+1e-10)*x^2 + 1, x^2 + x + 1; ztol=1e-11)) ≈ -((1+1e-10)-1)x + 1
     end
     @testset "Division by multiple polynomials examples" begin
         function testdiv(p, ps)
@@ -64,5 +66,8 @@
         q, r = testdiv(x*y^2 - x, [y^2 - 1, x*y - 1])
         @test q == [x, 0]
         @test r == 0
+
+        @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
+        @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
 end

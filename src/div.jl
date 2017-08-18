@@ -26,11 +26,11 @@ function _div(t1::AbstractTermLike, t2::AbstractTermLike)
     (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))
 end
 
-Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}) = divrem(f, g)[1]
-Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}) = divrem(f, g)[2]
+Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
+Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
 proddiff(x, y) = x/y - x/y
-function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
+function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
     rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
     q = r = zero(rf)
     lt = leadingterm(g)
@@ -38,7 +38,9 @@ function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
     lm = monomial(lt)
     while !iszero(rf)
         ltf = leadingterm(rf)
-        if divides(lm, ltf)
+        if isapproxzero(ltf; kwargs...)
+            rf = removeleadingterm(rf)
+        elseif divides(lm, ltf)
             qt = _div(ltf, lt)
             q += qt
             rf = removeleadingterm(rf) - qt * rg
@@ -54,7 +56,7 @@ function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
     end
     q, r
 end
-function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}) where {T, S}
+function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
     rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
     r = zero(rf)
     q = similar(g, typeof(rf))
@@ -67,6 +69,10 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}) where {T, S}
     useful = IntSet(eachindex(g))
     while !iszero(rf)
         ltf = leadingterm(rf)
+        if isapproxzero(ltf; kwargs...)
+            rf = removeleadingterm(rf)
+            continue
+        end
         divisionoccured = false
         for i in useful
             if divides(lm[i], ltf)
