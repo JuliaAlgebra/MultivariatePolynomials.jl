@@ -31,7 +31,7 @@ Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}) = divrem(f, g)[2]
 
 proddiff(x, y) = x/y - x/y
 function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
-    rf = changecoefficienttype(f, Base.promote_op(proddiff, T, S))
+    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
     q = r = zero(rf)
     lt = leadingterm(g)
     rg = removeleadingterm(g)
@@ -55,7 +55,7 @@ function Base.divrem(f::APL{T}, g::APL{S}) where {T, S}
     q, r
 end
 function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}) where {T, S}
-    rf = changecoefficienttype(f, Base.promote_op(proddiff, T, S))
+    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)

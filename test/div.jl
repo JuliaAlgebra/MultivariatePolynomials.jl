@@ -14,6 +14,8 @@
     # They have been adapted to the grlex ordering
     @testset "Divides" begin
         Mod.@polyvar x y z
+        @test divides(leadingmonomial(x+y), x) # leadingmonomial(x+y) will be x^1*y^0 -> tricky test !
+        @test !divides(leadingmonomial(x^2+y), x)
         @test divides(x*y, x^2*y)
         @test divides(x*y, x*y^2)
         @test divides(y*z, x*y*z)

@@ -79,6 +79,7 @@ end
 polynomialtype(::Union{P, Type{P}}) where P<:APL = Base.promote_op(polynomial, P)
 polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
 polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
+polynomialtype(p, ::Type{T}) where T = polynomialtype(typeof(p), T)
 
 function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     result = T[]
