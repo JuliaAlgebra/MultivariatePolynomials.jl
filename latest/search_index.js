@@ -41,75 +41,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "apireference.html#MultivariatePolynomials.similarvariable",
+    "page": "Reference",
+    "title": "MultivariatePolynomials.similarvariable",
+    "category": "Function",
+    "text": "similarvariable(p::AbstractPolynomialLike, variable::Type{Val{V}})\n\nCreates a new variable V based upon the the given source polynomial.\n\nsimilarvariable(p::AbstractPolynomialLike, v::Symbol)\n\nCreates a new variable based upon the given source polynomial and the given symbol v. Note that this can lead to type instabilities.\n\nExamples\n\nCalling similarvariable(typedpoly, Val{:x}) on a polynomial created with TypedPolynomials results in TypedPolynomials.Variable{:x}.\n\n\n\n"
+},
+
+{
     "location": "apireference.html#Variables-1",
     "page": "Reference",
     "title": "Variables",
     "category": "section",
-    "text": "name"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.nvariables",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.nvariables",
-    "category": "Function",
-    "text": "nvariables(p::AbstractPolynomialLike)\n\nReturns the number of variables in p, i.e. length(variables(p)). It could be more than the number of variables with nonzero exponent (see the Examples section of variables).\n\nExamples\n\nCalling nvariables(x^2*y) should return at least 2 and calling nvariables(x) should return at least 1.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.variables",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.variables",
-    "category": "Function",
-    "text": "variables(p::AbstractPolynomialLike)\n\nReturns the tuple of the variables of p in decreasing order. It could contain variables of zero degree, see the example section.\n\nExamples\n\nCalling variables(x^2*y) should return (x, y) and calling variables(x) should return (x,). Note that the variables of m does not necessarily have nonzero exponent. For instance, variables([x^2*y, y*z][1]) is usually (x, y, z) since the two monomials have been promoted to a common type.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.exponents",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.exponents",
-    "category": "Function",
-    "text": "exponents(t::AbstractTermLike)\n\nReturns the exponent of the variables in the monomial of the term t.\n\nExamples\n\nCalling exponents(x^2*y) should return (2, 1).\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.exponent",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.exponent",
-    "category": "Function",
-    "text": "exponent(t::AbstractTermLike, var::AbstractVariable)\n\nReturns the exponent of the variable var in the monomial of the term t.\n\nExamples\n\nCalling exponent(x^2*y, x) should return 2 and calling exponent(x^2*y, y) should return 1.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.deg",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.deg",
-    "category": "Function",
-    "text": "deg(t::AbstractTermLike)\n\nReturns the total degree of the monomial of the term t, i.e. sum(exponents(t)).\n\nExamples\n\nCalling deg(x^2*y) should return 3 which is 2 + 1.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.isconstant",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.isconstant",
-    "category": "Function",
-    "text": "isconstant(m::AbstractMonomialLike)\n\nReturns whether the monomial is constant.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.constantmonomial",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.constantmonomial",
-    "category": "Function",
-    "text": "constantmonomial(p::AbstractPolynomialType)\n\nReturns a constant monomial of the monomial type of p with the same variables as p.\n\nconstantmonomial(::Type{PT}) where {PT<:AbstractPolynomialType}\n\nReturns a constant monomial of the monomial type of a polynomial of type PT.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.divides",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.divides",
-    "category": "Function",
-    "text": "divides(t1::AbstractTermLike, t2::AbstractTermLike)\n\nReturns whether monomial(t1) divides monomial(t2).\n\nExamples\n\nCalling divides(2x^2y, 3xy) should return false because x^2y does not divide xy since x has a degree 2 in x^2y which is greater than the degree of x on xy. However, calling divides(3xy, 2x^2y) should return true.\n\n\n\n"
+    "text": "name\nsimilarvariable"
 },
 
 {
@@ -150,86 +94,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Terms",
     "category": "section",
     "text": "term\ncoefficient\nmonomial"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.terms",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.terms",
-    "category": "Function",
-    "text": "terms(p::AbstractPolynomialLike)\n\nReturns an iterator over the nonzero terms of the polynomial p sorted in the decreasing monomial order.\n\nExamples\n\nCalling terms on 4x^2y + xy + 2x should return an iterator of 4x^2y xy 2x.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.monomials",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.monomials",
-    "category": "Function",
-    "text": "monomials(p::AbstractPolynomialLike)\n\nReturns an iterator over the monomials of p of the nonzero terms of the polynomial sorted in the decreasing order.\n\nmonomials(vars::Tuple, degs::AbstractVector{Int}, filter::Function = m -> true)\n\nBuilds the vector of all the monovec m with variables vars such that the degree deg(m) is in degs and filter(m) is true.\n\nExamples\n\nCalling monomials on 4x^2y + xy + 2x should return an iterator of x^2y xy x.\n\nCalling monomials((x, y), [1, 3], m -> exponent(m, y) != 1) should return [x^3, x*y^2, y^3, x] where x^2*y and y have been excluded by the filter.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.mindeg",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.mindeg",
-    "category": "Function",
-    "text": "mindeg(p::AbstractPolynomialLike)\n\nReturns the minimal total degree of the monomials of p, i.e. minimum(deg, terms(p)).\n\nExamples\n\nCalling mindeg on on 4x^2y + xy + 2x should return 1.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.maxdeg",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.maxdeg",
-    "category": "Function",
-    "text": "maxdeg(p::AbstractPolynomialLike)\n\nReturns the maximal total degree of the monomials of p, i.e. maximum(deg, terms(p)).\n\nExamples\n\nCalling maxdeg on on 4x^2y + xy + 2x should return 3.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.extdeg",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.extdeg",
-    "category": "Function",
-    "text": "extdeg(p::AbstractPolynomialLike)\n\nReturns the extremal total degrees of the monomials of p, i.e. (mindeg(p), maxdeg(p)).\n\nExamples\n\nCalling extdeg on on 4x^2y + xy + 2x should return (1, 3).\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.leadingterm",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.leadingterm",
-    "category": "Function",
-    "text": "leadingterm(p::AbstractPolynomialLike)\n\nReturns the coefficient of the leading term, i.e. first(terms(p)).\n\nExamples\n\nCalling leadingterm on 4x^2y + xy + 2x should return 4x^2y.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.leadingcoefficient",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.leadingcoefficient",
-    "category": "Function",
-    "text": "leadingcoefficient(p::AbstractPolynomialLike)\n\nReturns the coefficient of the leading term of p, i.e. coefficient(leadingterm(p)).\n\nExamples\n\nCalling leadingcoefficient on 4x^2y + xy + 2x should return 4 and calling it on 0 should return 0.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.leadingmonomial",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.leadingmonomial",
-    "category": "Function",
-    "text": "leadingmonomial(p::AbstractPolynomialLike)\n\nReturns the monomial of the leading term of p, i.e. monomial(leadingterm(p)) or first(monomials(p)).\n\nExamples\n\nCalling leadingmonomial on 4x^2y + xy + 2x should return x^2y.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.removeleadingterm",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.removeleadingterm",
-    "category": "Function",
-    "text": "removeleadingterm(p::AbstractPolynomialLike)\n\nReturns a polynomial with the leading term removed in the polynomial p.\n\nExamples\n\nCalling removeleadingterm on 4x^2y + xy + 2x should return xy + 2x.\n\n\n\n"
-},
-
-{
-    "location": "apireference.html#MultivariatePolynomials.removemonomials",
-    "page": "Reference",
-    "title": "MultivariatePolynomials.removemonomials",
-    "category": "Function",
-    "text": "Returns a polynomial with the terms having their monomial in the monomial vector mv removed in the polynomial p.\n\nExamples\n\nCalling removemonomials(4x^2*y + x*y + 2x, [x*y]) should return 4x^2*y + 2x.\n\n\n\n"
 },
 
 {
