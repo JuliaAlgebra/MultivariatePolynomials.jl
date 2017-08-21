@@ -23,11 +23,14 @@ const MP = MultivariatePolynomials
         @test one(x) isa AbstractMonomial
         @inferred one(x)
 
+        @test nterms(x) == 1
+        @test @inferred(terms(x)) == [x]
+
         Mod.@polyvar y
-        @test MP.exponent(x, x) == 1
-        @test MP.exponent(x, y) == 0
-        @test length(MP.exponents(x)) == 1
-        @test first(MP.exponents(x)) == 1
+        @test degree(x, x) == 1
+        @test degree(x, y) == 0
+        @test length(exponents(x)) == 1
+        @test first(exponents(x)) == 1
         @test isconstant(x) == false
 
         @test divides(x, x) == true
@@ -47,9 +50,12 @@ const MP = MultivariatePolynomials
         @test issorted(variables(m * y[4]), rev=true)
         @test issorted(variables(y[6] * m), rev=true)
 
-        @test MP.exponent(x * y[2]^2, x) == 1
-        @test MP.exponent(x * y[2]^2, y[1]) == 0
-        @test MP.exponent(x * y[2]^2, y[2]) == 2
+        @test nterms(x^2) == 1
+        @test @inferred(terms(x^2)) == [x^2]
+
+        @test degree(x * y[2]^2, x) == 1
+        @test degree(x * y[2]^2, y[1]) == 0
+        @test degree(x * y[2]^2, y[2]) == 2
 
         @test_throws ErrorException variable(x^2)
         @test_throws ErrorException variable(x*y[1])

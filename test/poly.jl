@@ -13,6 +13,14 @@
 
         @test leadingterm(2x^2) == 2x^2
         @test nterms(2x^2) == 1
+        @test terms(2x^2) == [2x^2]
+        @test nterms(0*x) == 0
+        @test terms(0*x) == typeof(0*x)[]
+        @test nterms(0.0x) == 0
+        @test terms(0.0x) == typeof(0.0x)[]
+
+        @test nterms(polynomial(0.0x)) == 0
+        @test nterms(convert(polynomialtype(0.0x), 0.0x)) == 0
 
         @test term(x) isa AbstractTerm
         @test term(x^2) == x^2
@@ -21,9 +29,9 @@
         @test zeroterm(1x) == 0*x
 
         Mod.@polyvar y
-        @test MP.exponent(2x^2, x) == 2
-        @test MP.exponent(2x^2, y) == 0
-        @test MP.exponent(2x^2, y) == 0
+        @test degree(2x^2, x) == 2
+        @test degree(2x^2, y) == 0
+        @test degree(2x^2, y) == 0
 
         @test_throws InexactError push!([1], 2x)
         @test_throws ErrorException push!([x^2], 2x)
@@ -63,12 +71,31 @@
 
         Mod.@polyvar y
 
-        @test maxdeg(x*y + 2 + x^2*y + x + y) == 3
-        @test mindeg(x*y + 2 + x^2*y + x + y) == 0
-        @test extdeg(x*y + 2 + x^2*y + x + y) == (0, 3)
+        @test iszero(((x + x) - 2x) * (x * (x ^ 2 + y ^ 2)))
+
+        @test Tuple(variables([x + 1, y^2])) == (x, y)
+        @test Tuple(variables([y^2, x + 1])) == (x, y)
+
+        @test maxdegree(x*y + 2 + x^2*y + x + y) == 3
+        @test maxdegree(x*y + 2 + x^2*y + x + y, x) == 2
+        @test maxdegree(x*y + 2 + x^2*y + x + y, y) == 1
+        @test mindegree(x*y + 2 + x^2*y + x + y) == 0
+        @test mindegree(x*y + 2 + x^2*y + x + y, x) == 0
+        @test mindegree(x*y + 2 + x^2*y + x + y, y) == 0
+        @test extdegree(x*y + 2 + x^2*y + x + y) == (0, 3)
+        @test extdegree(x*y + 2 + x^2*y + x + y, x) == (0, 2)
+        @test extdegree(x*y + 2 + x^2*y + x + y, y) == (0, 1)
+        @test extdegree(x*y + x^2*y, x) == (1, 2)
+        @test extdegree(x*y + x^2*y, y) == (1, 1)
         @test leadingterm(x*y + 2 + x^2*y + x + y) == x^2*y
         @test nvariables(x + y - x) == 2
         @test nvariables(x + x^2) == 1
+
+        @test coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3]) == [4, 0, 1, 3, 6, 0]
+
+        # Doc examples
+        @test coefficients(4x^2*y + x*y + 2x) == [4, 1, 2]
+        @test coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y]) == [2, 3, 1, 0]
 
         p = polynomial([4, 9], [x, x*x])
         @test coefficients(p) == [9, 4]

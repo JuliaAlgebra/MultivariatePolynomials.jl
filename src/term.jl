@@ -1,4 +1,4 @@
-export constantterm, term, termtype, zeroterm, coefficient, monomial, powers, exponents, exponent, deg, isconstant, divides
+export constantterm, term, termtype, zeroterm, coefficient, monomial, powers, exponents, degree, isconstant, divides
 
 function Base.hash(t::AbstractTerm, u::UInt)
     if iszero(t)
@@ -103,26 +103,6 @@ function monomial end
 powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
 
 """
-    exponent(t::AbstractTermLike, var::AbstractVariable)
-
-Returns the exponent of the variable `var` in the monomial of the term `t`.
-
-### Examples
-
-Calling `exponent(x^2*y, x)` should return 2 and calling `exponent(x^2*y, y)` should return 1.
-"""
-exponent(t::AbstractTerm, var::AbstractVariable) = exponent(monomial(t), var)
-exponent(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
-function exponent(m::AbstractMonomial, v::AbstractVariable)
-    i = findfirst(variables(m), v)
-    if iszero(i)
-        0
-    else
-        exponents(m)[i]
-    end
-end
-
-"""
     exponents(t::AbstractTermLike)
 
 Returns the exponent of the variables in the monomial of the term `t`.
@@ -135,15 +115,36 @@ exponents(t::AbstractTerm) = exponents(monomial(t))
 exponents(v::AbstractVariable) = (1,)
 
 """
-    deg(t::AbstractTermLike)
+    degree(t::AbstractTermLike)
 
 Returns the *total degree* of the monomial of the term `t`, i.e. `sum(exponents(t))`.
 
+    degree(t::AbstractTermLike, v::AbstractVariable)
+
+Returns the exponent of the variable `v` in the monomial of the term `t`.
+
 ### Examples
 
-Calling `deg(x^2*y)` should return 3 which is ``2 + 1``.
+Calling `degree(x^2*y)` should return 3 which is ``2 + 1``.
+Calling `degree(x^2*y, x)` should return 2 and calling `degree(x^2*y, y)` should return 1.
+
 """
-deg(t::AbstractTermLike) = sum(exponents(t))
+degree(t::AbstractTermLike) = sum(exponents(t))
+_deg(v::AbstractVariable) = 0
+_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
+degree(t::AbstractTermLike, v::AbstractVariable) = _deg(v, powers(t)...)
+
+degree(t::AbstractTerm, var::AbstractVariable) = degree(monomial(t), var)
+degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
+function degree(m::AbstractMonomial, v::AbstractVariable)
+    i = findfirst(variables(m), v)
+    if iszero(i)
+        0
+    else
+        exponents(m)[i]
+    end
+end
+
 
 """
     isconstant(m::AbstractMonomialLike)

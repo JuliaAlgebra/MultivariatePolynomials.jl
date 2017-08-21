@@ -23,7 +23,7 @@ function Base.hash(m::AbstractMonomial, u::UInt)
     nnz = count(!iszero, exponents(m))
     if iszero(nnz)
         hash(1, u)
-    elseif isone(nnz) && isone(deg(m))
+    elseif isone(nnz) && isone(degree(m))
         hash(variable(m), u)
     else
         _hashpowers(u, powers(m)...)

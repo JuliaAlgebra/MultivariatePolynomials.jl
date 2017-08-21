@@ -1,6 +1,6 @@
 export polynomial, polynomialtype, terms, nterms, coefficients, monomials
 export coefficienttype, monomialtype
-export mindeg, maxdeg, extdeg
+export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
 export variables, nvariables
@@ -79,6 +79,7 @@ end
 polynomialtype(::Union{P, Type{P}}) where P<:APL = Base.promote_op(polynomial, P)
 polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
 polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
+polynomialtype(::Type{P}, ::Type{T}) where {P, T} = polynomialtype(polynomialtype(P), T)
 polynomialtype(p, ::Type{T}) where T = polynomialtype(typeof(p), T)
 
 function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
@@ -112,7 +113,7 @@ Returns an iterator over the nonzero terms of the polynomial `p` sorted in the d
 
 Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy, 2x]``.
 """
-terms(t::AbstractTermLike) = [term(t)]
+terms(t::AbstractTermLike) = iszero(t) ? termtype(t)[] : [term(t)]
 terms(p::AbstractPolynomialLike) = terms(polynomial(p))
 
 """
@@ -126,7 +127,7 @@ Calling `nterms` on ``4x^2y + xy + 2x`` should return 3.
 """
 function nterms end
 
-nterms(::AbstractTermLike) = 1
+nterms(t::AbstractTermLike) = iszero(t) ? 0 : 1
 nterms(p::AbstractPolynomialLike) = length(terms(p))
 
 """
@@ -134,11 +135,34 @@ nterms(p::AbstractPolynomialLike) = length(terms(p))
 
 Returns an iterator over the coefficients of `p` of the nonzero terms of the polynomial sorted in the decreasing monomial order.
 
+    coefficients(p::AbstractPolynomialLike, X::AbstractVector)
+
+Returns an iterator over the coefficients of the monomials of `X` in `p` where `X` is a monomial vector not necessarily sorted but with no duplicate entry.
+
 ### Examples
 
 Calling `coefficients` on ``4x^2y + xy + 2x`` should return an iterator of ``[4, 1, 2]``.
+Calling `coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])` should return an iterator of ``[2, 3, 1, 0]``.
 """
 coefficients(p::APL) = coefficient.(terms(p))
+function coefficients(p::APL{T}, X::AbstractVector) where T
+    σ, mv = sortmonovec(X)
+    @assert length(mv) == length(X) # no duplicate in X
+    c = Vector{T}(length(mv))
+    i = 1
+    for t in terms(p)
+        m = monomial(t)
+        while i <= length(mv) && mv[i] > m
+            c[σ[i]] = zero(T)
+            i += 1
+        end
+        if i <= length(mv) && mv[i] == m
+            c[σ[i]] = coefficient(t)
+            i += 1
+        end
+    end
+    c
+end
 
 """
     monomials(p::AbstractPolynomialLike)
@@ -147,53 +171,71 @@ Returns an iterator over the monomials of `p` of the nonzero terms of the polyno
 
     monomials(vars::Tuple, degs::AbstractVector{Int}, filter::Function = m -> true)
 
-Builds the vector of all the monovec `m` with variables `vars` such that the degree `deg(m)` is in `degs` and `filter(m)` is `true`.
+Builds the vector of all the monovec `m` with variables `vars` such that the degree `degree(m)` is in `degs` and `filter(m)` is `true`.
 
 ### Examples
 
 Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y, xy, x]``.
 
-Calling `monomials((x, y), [1, 3], m -> exponent(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
+Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
 monomials(p::APL) = monomial.(terms(p))
 
 #$(SIGNATURES)
 """
-    mindeg(p::AbstractPolynomialLike)
+    mindegree(p::AbstractPolynomialLike)
 
-Returns the minimal total degree of the monomials of `p`, i.e. `minimum(deg, terms(p))`.
+Returns the minimal total degree of the monomials of `p`, i.e. `minimum(degree, terms(p))`.
+
+    mindegree(p::AbstractPolynomialLike, v::AbstractVariable)
+
+Returns the minimal degree of the monomials of `p` in the variable `v`, i.e. `minimum(degree.(terms(p), v))`.
 
 ### Examples
-Calling `mindeg` on on ``4x^2y + xy + 2x`` should return 1.
+Calling `mindegree` on on ``4x^2y + xy + 2x`` should return 1, `mindegree(4x^2y + xy + 2x, x)` should return 1 and  `mindegree(4x^2y + xy + 2x, y)` should return 0.
 """
-function mindeg(p::AbstractPolynomialLike)
-    minimum(deg, terms(p))
+function mindegree(p::AbstractPolynomialLike)
+    minimum(degree, terms(p))
+end
+function mindegree(p::AbstractPolynomialLike, v::AbstractVariable)
+    minimum(t -> degree(t, v), terms(p))
 end
 
 #$(SIGNATURES)
 """
-    maxdeg(p::AbstractPolynomialLike)
+    maxdegree(p::AbstractPolynomialLike)
 
-Returns the maximal total degree of the monomials of `p`, i.e. `maximum(deg, terms(p))`.
+Returns the maximal total degree of the monomials of `p`, i.e. `maximum(degree, terms(p))`.
+
+    maxdegree(p::AbstractPolynomialLike, v::AbstractVariable)
+
+Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `maximum(degree.(terms(p), v))`.
 
 ### Examples
-Calling `maxdeg` on on ``4x^2y + xy + 2x`` should return 3.
+Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
-function maxdeg(p::AbstractPolynomialLike)
-    maximum(deg, terms(p))
+function maxdegree(p::AbstractPolynomialLike)
+    maximum(degree, terms(p))
+end
+function maxdegree(p::AbstractPolynomialLike, v::AbstractVariable)
+    maximum(t -> degree(t, v), terms(p))
 end
 
 #$(SIGNATURES)
 """
-    extdeg(p::AbstractPolynomialLike)
+    extdegree(p::AbstractPolynomialLike)
 
-Returns the extremal total degrees of the monomials of `p`, i.e. `(mindeg(p), maxdeg(p))`.
+Returns the extremal total degrees of the monomials of `p`, i.e. `(mindegree(p), maxdegree(p))`.
+
+    extdegree(p::AbstractPolynomialLike, v::AbstractVariable)
+
+Returns the extremal degrees of the monomials of `p` in the variable `v`, i.e. `(mindegree(p, v), maxdegree(p, v))`.
 
 ### Examples
-Calling `extdeg` on on ``4x^2y + xy + 2x`` should return `(1, 3)`.
+Calling `extdegree` on on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
 """
-function extdeg(p::AbstractPolynomialLike)
-    (mindeg(p), maxdeg(p))
+function extdegree(p::AbstractPolynomialLike, args...)
+    (mindegree(p, args...), maxdegree(p, args...))
 end
 
 """
@@ -288,7 +330,7 @@ Returns the tuple of the variables of `p` in decreasing order. It could contain 
 ### Examples
 
 Calling `variables(x^2*y)` should return `(x, y)` and calling `variables(x)` should return `(x,)`.
-Note that the variables of `m` does not necessarily have nonzero exponent.
+Note that the variables of `m` does not necessarily have nonzero degree.
 For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
 """
 function variables end
@@ -296,7 +338,7 @@ function variables end
 """
     nvariables(p::AbstractPolynomialLike)
 
-Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero exponent (see [the Examples section of `variables`](@ref MultivariatePolynomials.variables)).
+Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero degree (see [the Examples section of `variables`](@ref MultivariatePolynomials.variables)).
 
 ### Examples
 

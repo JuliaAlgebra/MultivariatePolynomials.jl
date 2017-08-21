@@ -57,19 +57,31 @@ multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
 (*)(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
 (*)(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
 
+# guaranteed that monomial(t1) > monomial(t2)
+function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, T}
+    if iszero(t1)
+        polynomial(t2, T)
+    elseif iszero(t2)
+        polynomial(t1, T)
+    else
+        polynomial(termtype(TT, T)[t1, t2], SortedUniqState())
+    end
+end
 for op in [:+, :-]
     @eval begin
         $op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
         $op(t1::AbstractTerm, t2::AbstractTerm) = $op(promote(t1, t2)...)
-        function $op(t1::T, t2::T) where T <: AbstractTerm
+        function $op(t1::TT, t2::TT) where {T, TT <: AbstractTerm{T}}
+            S = Base.promote_op($op, T, T)
+            # t1 > t2 would compare the coefficient in case the monomials are equal
+            # and it will throw a MethodError in case the coefficients are not comparable
             if monomial(t1) == monomial(t2)
-                ts = [$op(coefficient(t1), coefficient(t2)) * monomial(t1)]
-            elseif t1 > t2
-                ts = [t1, $op(t2)]
+                polynomial($op(coefficient(t1), coefficient(t2)) * monomial(t1), S)
+            elseif monomial(t1) > monomial(t2)
+                ts = _polynomial_2terms(t1, $op(t2), S)
             else
-                ts = [$op(t2), t1]
+                ts = _polynomial_2terms($op(t2), t1, S)
             end
-            polynomial(ts, SortedUniqState())
         end
     end
 end
