@@ -1,4 +1,5 @@
 include("zip.jl")
+include("var.jl")
 include("mono.jl")
 include("poly.jl")
 include("rational.jl")
@@ -10,10 +11,6 @@ include("subs.jl")
 include("hash.jl")
 include("div.jl")
 include("norm.jl")
-
-# Enable these tests as soon as similarvariable is implemented in
-# DynamicPolynomials and TypedPolynomials
-# include("var.jl")
 
 include("show.jl")
 
