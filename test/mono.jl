@@ -50,6 +50,8 @@ const MP = MultivariatePolynomials
         @test issorted(variables(m * y[4]), rev=true)
         @test issorted(variables(y[6] * m), rev=true)
 
+        @test nvariables(monovec([x^2, prod(y[2:4])])) == 4
+
         @test nterms(x^2) == 1
         @test @inferred(terms(x^2)) == [x^2]
 

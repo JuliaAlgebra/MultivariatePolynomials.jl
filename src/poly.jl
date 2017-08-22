@@ -183,58 +183,58 @@ monomials(p::APL) = monomial.(terms(p))
 
 #$(SIGNATURES)
 """
-    mindegree(p::AbstractPolynomialLike)
+    mindegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
 
 Returns the minimal total degree of the monomials of `p`, i.e. `minimum(degree, terms(p))`.
 
-    mindegree(p::AbstractPolynomialLike, v::AbstractVariable)
+    mindegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)
 
 Returns the minimal degree of the monomials of `p` in the variable `v`, i.e. `minimum(degree.(terms(p), v))`.
 
 ### Examples
 Calling `mindegree` on on ``4x^2y + xy + 2x`` should return 1, `mindegree(4x^2y + xy + 2x, x)` should return 1 and  `mindegree(4x^2y + xy + 2x, y)` should return 0.
 """
-function mindegree(p::AbstractPolynomialLike)
-    minimum(degree, terms(p))
+function mindegree(X::AbstractVector{<:AbstractTermLike}, args...)
+    minimum(t -> degree(t, args...), X)
 end
-function mindegree(p::AbstractPolynomialLike, v::AbstractVariable)
-    minimum(t -> degree(t, v), terms(p))
+function mindegree(p::AbstractPolynomialLike, args...)
+    mindegree(terms(p), args...)
 end
 
 #$(SIGNATURES)
 """
-    maxdegree(p::AbstractPolynomialLike)
+    maxdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
 
 Returns the maximal total degree of the monomials of `p`, i.e. `maximum(degree, terms(p))`.
 
-    maxdegree(p::AbstractPolynomialLike, v::AbstractVariable)
+    maxdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)
 
 Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `maximum(degree.(terms(p), v))`.
 
 ### Examples
 Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
-function maxdegree(p::AbstractPolynomialLike)
-    maximum(degree, terms(p))
+function maxdegree(X::AbstractVector{<:AbstractTermLike}, args...)
+    maximum(t -> degree(t, args...), X)
 end
-function maxdegree(p::AbstractPolynomialLike, v::AbstractVariable)
-    maximum(t -> degree(t, v), terms(p))
+function maxdegree(p::AbstractPolynomialLike, args...)
+    maxdegree(terms(p), args...)
 end
 
 #$(SIGNATURES)
 """
-    extdegree(p::AbstractPolynomialLike)
+    extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
 
 Returns the extremal total degrees of the monomials of `p`, i.e. `(mindegree(p), maxdegree(p))`.
 
-    extdegree(p::AbstractPolynomialLike, v::AbstractVariable)
+    extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)
 
 Returns the extremal degrees of the monomials of `p` in the variable `v`, i.e. `(mindegree(p, v), maxdegree(p, v))`.
 
 ### Examples
 Calling `extdegree` on on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
 """
-function extdegree(p::AbstractPolynomialLike, args...)
+function extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, args...)
     (mindegree(p, args...), maxdegree(p, args...))
 end
 
