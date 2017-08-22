@@ -17,8 +17,7 @@ similarvariable
 nvariables
 variables
 exponents
-exponent
-deg
+degree
 isconstant
 constantmonomial
 divides
@@ -37,9 +36,9 @@ monomial
 ```@docs
 terms
 monomials
-mindeg
-maxdeg
-extdeg
+mindegree
+maxdegree
+extdegree
 leadingterm
 leadingcoefficient
 leadingmonomial

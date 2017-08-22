@@ -7,7 +7,11 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
     z = similarvariable(f, Val{:z})
     @test z isa AbstractVariable
 
+    z = similarvariable(typeof(f), Val{:z})
+    @test z isa AbstractVariable
+
     @inferred similarvariable(f, Val{:z})
+    @inferred similarvariable(typeof(f), Val{:z})
 
     w = similarvariable(f, :w)
     @test w isa AbstractVariable

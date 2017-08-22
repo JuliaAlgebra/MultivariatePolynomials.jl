@@ -13,7 +13,11 @@ function isless(t1::AbstractTerm, t2::AbstractTerm)
     end
 end
 
-for op in [:+, :-, :*, :(==)]
+# promoting multiplication is not a good idea
+# For example a polynomial of Float64 * a polynomial of JuMP affine expression
+# is a polynomial of JuMP affine expression but if we promote it would be a
+# polynomial of quadratic expression
+for op in [:+, :-, :(==)]
     @eval $op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
 isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
@@ -56,6 +60,7 @@ multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
 
 (*)(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
 (*)(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
+(*)(p::APL, q::APL) = polynomial(p) * polynomial(q)
 
 # guaranteed that monomial(t1) > monomial(t2)
 function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, T}

@@ -17,7 +17,7 @@ results in `TypedPolynomials.Variable{:x}`.
 """
 function similarvariable end
 
-similarvariable(p::AbstractPolynomialLike, s::Symbol) = similarvariable(p, Val{s})
+similarvariable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s::Symbol) = similarvariable(p, Val{s})
 
 
 _varconstructor(p, name::Symbol) = :(similarvariable($p, Val{$(esc(Expr(:quote, name)))}))
