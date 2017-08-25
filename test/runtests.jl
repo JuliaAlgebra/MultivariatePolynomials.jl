@@ -8,6 +8,6 @@ Mod = DynamicPolynomials
 include("commutativetests.jl")
 #include("noncommutativetests.jl")
 
-#import TypedPolynomials
-#Mod = TypedPolynomials
-#include("commutativetests.jl")
+import TypedPolynomials
+Mod = TypedPolynomials
+include("commutativetests.jl")

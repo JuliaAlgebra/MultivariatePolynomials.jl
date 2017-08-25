@@ -95,5 +95,8 @@ const MP = MultivariatePolynomials
         σ, X = sortmonovec((y, x))
         @test σ == [2, 1]
         @test X == [x, y]
+        @test monomialtype([x, y]) <: AbstractMonomial
+        @test monomialtype([x^2, 1]) <: AbstractMonomial
+        @test monomialtype([x*y, x+y]) <: AbstractMonomial
     end
 end

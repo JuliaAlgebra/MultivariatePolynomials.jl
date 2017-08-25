@@ -20,8 +20,6 @@ coefficienttype(::APL{T}) where {T} = T
 #coefficienttype(::Type{T}) where {T} = T
 #coefficienttype(::T) where {T} = T
 
-monomialtype(::Type{M}) where M<:AbstractMonomial = M
-
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
 

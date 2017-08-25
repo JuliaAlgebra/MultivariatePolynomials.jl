@@ -33,6 +33,10 @@ end
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)
 
+monomialtype(::Union{M, Type{M}}) where M<:AbstractMonomial = M
+monomialtype(::Union{AbstractVector{PT}, Type{AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
+monomialtype(::Union{PT, Type{PT}}) where PT <: APL = monomialtype(termtype(PT))
+
 """
     constantmonomial(p::AbstractPolynomialType)
 
