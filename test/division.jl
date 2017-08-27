@@ -24,6 +24,7 @@
     end
     @testset "Leading function" begin
         Mod.@polyvar x y z
+        @test @inferred(monic(2x^2 + 4y + 2)) == x^2 + 2y + 1
         # See page 60
         p = 4x*y^2*z + 4z^2 + 7x^2*z^2 - 5x^3
         @test leadingcoefficient(p) == 7

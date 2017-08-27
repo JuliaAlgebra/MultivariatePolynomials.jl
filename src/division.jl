@@ -81,6 +81,10 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
                 rf = removeleadingterm(rf) - qt * rg[i]
                 divisionoccured = true
                 break
+            elseif lm[i] > monomial(ltf)
+                # Since the monomials are sorted in decreasing order,
+                # lm is larger than all of them hence it cannot divide any of them
+                delete!(useful, i)
             end
         end
         if !divisionoccured

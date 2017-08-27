@@ -76,6 +76,15 @@
         @test Tuple(variables([x + 1, y^2])) == (x, y)
         @test Tuple(variables([y^2, x + 1])) == (x, y)
 
+        @test maxdegree(x^2 - x^2) == 0
+        @test maxdegree(x^2 - x^2, x) == 0
+        @test maxdegree(x^2 - x^2, y) == 0
+        @test mindegree(x^2 - x^2) == 0
+        @test mindegree(x^2 - x^2, x) == 0
+        @test mindegree(x^2 - x^2, y) == 0
+        @test extdegree(x^2 - x^2) == (0, 0)
+        @test extdegree(x^2 - x^2, x) == (0, 0)
+        @test extdegree(x^2 - x^2, y) == (0, 0)
         @test maxdegree(x*y + 2 + x^2*y + x + y) == 3
         @test maxdegree(x*y + 2 + x^2*y + x + y, x) == 2
         @test maxdegree(x*y + 2 + x^2*y + x + y, y) == 1

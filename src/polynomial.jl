@@ -193,7 +193,7 @@ Returns the minimal degree of the monomials of `p` in the variable `v`, i.e. `mi
 Calling `mindegree` on on ``4x^2y + xy + 2x`` should return 1, `mindegree(4x^2y + xy + 2x, x)` should return 1 and  `mindegree(4x^2y + xy + 2x, y)` should return 0.
 """
 function mindegree(X::AbstractVector{<:AbstractTermLike}, args...)
-    minimum(t -> degree(t, args...), X)
+    isempty(X) ? 0 : minimum(t -> degree(t, args...), X)
 end
 function mindegree(p::AbstractPolynomialLike, args...)
     mindegree(terms(p), args...)
@@ -213,7 +213,7 @@ Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `ma
 Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
 function maxdegree(X::AbstractVector{<:AbstractTermLike}, args...)
-    maximum(t -> degree(t, args...), X)
+    isempty(X) ? 0 : maximum(t -> degree(t, args...), X)
 end
 function maxdegree(p::AbstractPolynomialLike, args...)
     maxdegree(terms(p), args...)
