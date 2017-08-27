@@ -26,7 +26,7 @@ import Base.Test: @inferred
     @test t((x[2], x[1]) => [1, 3]) == 6.0
 
     p = x[1] + x[2] + 2*x[1]^2 + 3*x[1]*x[2]^2
-    @inferred p((x[1], x[2]) => (1.0, 2.0))
+    #@inferred p((x[1], x[2]) => (1.0, 2.0))
 
     @inferred subs(p, x[2] => 2.0)
     @test subs(p, x[2] => 2.0) == 13x[1] + 2 + 2x[1]^2
@@ -47,4 +47,20 @@ import Base.Test: @inferred
 
     q = (x[1] + x[3]) / (x[2] - 1)
     @test subs(q, x[1:2] => (x[2], x[1])) == (x[2] + x[3]) / (x[1] - 1)
+
+    # Taken from perf/runbenchmark.jl
+    p = x[1] + x[2] + 2x[1]^2 + x[2]^3
+
+    varst = (x[1], x[2])
+    varsv = [x[1], x[2]]
+    valst = (1.0, 2.0)
+    valsv = [1.0, 2.0]
+
+    @test variable.(Tuple(varsv)) == varst
+    @test variable.(Tuple(varsv)) isa Tuple{<:AbstractVariable, <:AbstractVariable}
+
+    @test p(variables(p) => valst) == 13
+    @test p(variables(p) => valsv) == 13
+    @test p(varst => valst) == 13
+    @test p(varsv => valsv) == 13
 end

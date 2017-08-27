@@ -5,8 +5,12 @@ export subs
 const Substitution = Pair{<:AbstractVariable}
 const MultiSubstitution{N} = Pair{<:Tuple{Vararg{AbstractVariable, N}}, <:Tuple{Vararg{<:Any, N}}}
 const MultiVectorSubstitution = Pair{<:Tuple{Vararg{AbstractVariable}}, <:AbstractVector}
-const VectorMultiSubstitution = Pair{<:AbstractVector{<:AbstractVariable}, <:Tuple}
-const VectorMultiVectorSubstitution = Pair{<:AbstractVector{<:AbstractVariable}, <:AbstractVector}
+
+# When the variables are promoted to be in the same vector they could be promoted into a monomial
+const VectorMultiSubstitution = Pair{<:AbstractVector{<:AbstractMonomialLike}, <:Tuple}
+const VectorMultiVectorSubstitution = Pair{<:AbstractVector{<:AbstractMonomialLike}, <:AbstractVector}
+_monov2vart(s::Pair{<:AbstractVector{<:AbstractMonomial}}) = variable.(Tuple(s.first)) => s.second
+_monov2vart(s) = s
 
 const AbstractMultiSubstitution = Union{MultiSubstitution, MultiVectorSubstitution, VectorMultiVectorSubstitution, VectorMultiSubstitution}
 const AbstractSubstitution = Union{Substitution, AbstractMultiSubstitution}
@@ -24,7 +28,7 @@ is equivalent to:
 
     subs(polynomial, (x=>1, y=>2))
 """
-substitute(st::AST, p::APL, s::AbstractMultiSubstitution) = substitute(st, p, pairzip(s))
+substitute(st::AST, p::APL, s::AbstractMultiSubstitution) = substitute(st, p, pairzip(_monov2vart(s)))
 
 # Evaluate the stream
 # If I do s2..., then

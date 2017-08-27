@@ -26,6 +26,7 @@ function _mono2var(ve, ves...)
     end
 end
 variable(m::AbstractMonomial) = _mono2var(powers(m)...)
+variable(v::AbstractVariable) = v
 
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
