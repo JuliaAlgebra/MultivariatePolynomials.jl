@@ -22,10 +22,10 @@ abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 const APL{T} = AbstractPolynomialLike{T}
 
 include("zip.jl")
-include("var.jl")
-include("mono.jl")
+include("variable.jl")
+include("monomial.jl")
 include("term.jl")
-include("poly.jl")
+include("polynomial.jl")
 
 include("rational.jl")
 
@@ -34,10 +34,10 @@ include("promote.jl")
 include("substitution.jl")
 
 include("operators.jl")
-include("comp.jl")
+include("comparision.jl")
 
-include("diff.jl")
-include("div.jl")
+include("differentiation.jl")
+include("division.jl")
 
 include("show.jl")
 
