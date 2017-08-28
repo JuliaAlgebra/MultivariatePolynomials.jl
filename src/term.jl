@@ -1,40 +1,4 @@
-export constantterm, term, termtype, zeroterm, coefficient, monomial, powers, exponents, degree, isconstant, divides
-
-function Base.hash(t::AbstractTerm, u::UInt)
-    if iszero(t)
-        hash(0, u)
-    elseif coefficient(t) == 1
-        hash(monomial(t), u)
-    else
-        hash(monomial(t), hash(coefficient(t), u))
-    end
-end
-
-# zero should return a polynomial since it is often used to keep the result of a summation of terms.
-# For example, Base.vecdot(x::Vector{<:AbstractTerm}, y:Vector{Int}) starts with `s = zero(dot(first(x), first(y)))` and then adds terms.
-# We want `s` to start as a polynomial for this operation to be efficient.
-#Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constantmonomial(TT)
-#Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constantmonomial(t)
-zeroterm(::Type{TT}) where {T, TT<:APL{T}} = zero(T) * constantmonomial(TT)
-zeroterm(t::APL{T}) where {T} = zero(T) * constantmonomial(t)
-
-Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(polynomialtype(TT))
-Base.zero(t::AbstractTermLike{T}) where {T} = zero(polynomialtype(t))
-Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = one(T) * constantmonomial(TT)
-Base.one(t::AbstractTermLike{T}) where {T} = one(T) * constantmonomial(t)
-
-monomial(m::AbstractMonomial) = m
-
-"""
-    constantterm(α, p::AbstractPolynomialLike)
-
-Creates a constant term with coefficient α and the same variables as p.
-
-    constantterm{PT<:AbstractPolynomialType}(α, ::Type{PT}
-
-Creates a constant term of the term type of a polynomial of type `PT`.
-"""
-constantterm(α, p) = α * constantmonomial(p)
+export constantterm, term, termtype, zeroterm, coefficient, monomial
 
 """
     term(p::AbstractPolynomialLike)
@@ -73,10 +37,10 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
-termtype(p::P) where P <: APL = Base.promote_op(first ∘ terms, P)
-termtype(::Type{V}, ::Type{C}) where {V <: AbstractVariable, C} = termtype(monomialtype(V), C)
-termtype(::Type{T}) where T <: AbstractTerm = T
-termtype(::Type{M}) where M<:AbstractMonomialLike = termtype(M, Int)
+termtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(first ∘ terms, P)
+termtype(::Union{T, Type{T}}) where T <: AbstractTerm = T
+termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, args...) = termtype(monomialtype(v), args...)
+termtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(M, Int)
 
 """
     coefficient(t::AbstractTermLike)
@@ -90,6 +54,26 @@ Calling `coefficient` on ``4x^2y`` should return ``4``.
 coefficient(m::AbstractMonomialLike) = 1
 
 """
+    coefficient(p::AbstractPolynomialLike)
+
+Returns the coefficient type of `p`.
+
+    coefficient(::Type{PT}) where PT
+
+Returns the coefficient type of a polynomial of type `PT`.
+
+### Examples
+
+Calling `coefficienttype` on ``(4//5)x^2y`` should return `Rational{Int}`,
+calling `coefficienttype` on ``1.0x^2y + 2.0x`` should return `Float64` and
+calling `coefficienttype` on ``xy`` should return `Int`.
+"""
+coefficienttype(::Type{<:APL{T}}) where {T} = T
+coefficienttype(::APL{T}) where {T} = T
+#coefficienttype(::Type{T}) where {T} = T
+#coefficienttype(::T) where {T} = T
+
+"""
     monomial(t::AbstractTermLike)
 
 Returns the monomial of the term `t`.
@@ -99,69 +83,37 @@ Returns the monomial of the term `t`.
 Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
-
-powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
-
-"""
-    exponents(t::AbstractTermLike)
-
-Returns the exponent of the variables in the monomial of the term `t`.
-
-### Examples
-
-Calling `exponents(x^2*y)` should return `(2, 1)`.
-"""
-exponents(t::AbstractTerm) = exponents(monomial(t))
-exponents(v::AbstractVariable) = (1,)
+monomial(m::AbstractMonomial) = m
 
 """
-    degree(t::AbstractTermLike)
+    constantterm(α, p::AbstractPolynomialLike)
 
-Returns the *total degree* of the monomial of the term `t`, i.e. `sum(exponents(t))`.
+Creates a constant term with coefficient α and the same variables as p.
 
-    degree(t::AbstractTermLike, v::AbstractVariable)
+    constantterm(α, ::Type{PT} where {PT<:AbstractPolynomialType}
 
-Returns the exponent of the variable `v` in the monomial of the term `t`.
-
-### Examples
-
-Calling `degree(x^2*y)` should return 3 which is ``2 + 1``.
-Calling `degree(x^2*y, x)` should return 2 and calling `degree(x^2*y, y)` should return 1.
-
+Creates a constant term of the term type of a polynomial of type `PT`.
 """
-degree(t::AbstractTermLike) = sum(exponents(t))
-_deg(v::AbstractVariable) = 0
-_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
-degree(t::AbstractTermLike, v::AbstractVariable) = _deg(v, powers(t)...)
+constantterm(α, p) = α * constantmonomial(p)
 
-degree(t::AbstractTerm, var::AbstractVariable) = degree(monomial(t), var)
-degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
-function degree(m::AbstractMonomial, v::AbstractVariable)
-    i = findfirst(variables(m), v)
-    if iszero(i)
-        0
-    else
-        exponents(m)[i]
-    end
-end
-
-
+# zero should return a polynomial since it is often used to keep the result of a summation of terms.
+# For example, Base.vecdot(x::Vector{<:AbstractTerm}, y:Vector{Int}) starts with `s = zero(dot(first(x), first(y)))` and then adds terms.
+# We want `s` to start as a polynomial for this operation to be efficient.
+#Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constantmonomial(TT)
+#Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constantmonomial(t)
 """
-    isconstant(m::AbstractMonomialLike)
+    zeroterm(p::AbstractPolynomialLike{T}) where T
 
-Returns whether the monomial is constant.
+Equivalent to `constantterm(zero(T), p)`.
+
+    zeroterm(α, ::Type{PT} where {T, PT<:AbstractPolynomialType{T}}
+
+Equivalent to `constantterm(zero(T), PT)`.
 """
-isconstant(t::AbstractTermLike) = all(iszero.(exponents(t)))
-isconstant(v::AbstractVariable) = false
+zeroterm(::Type{PT}) where {T, PT<:APL{T}} = constantterm(zero(T), PT)
+zeroterm(p::APL{T}) where {T} = constantterm(zero(T), p)
 
-"""
-    divides(t1::AbstractTermLike, t2::AbstractTermLike)
-
-Returns whether `monomial(t1)` divides `monomial(t2)`.
-
-### Examples
-
-Calling `divides(2x^2y, 3xy)` should return false because `x^2y` does not divide `xy` since `x` has a degree 2 in `x^2y` which is greater than the degree of `x` on `xy`.
-However, calling `divides(3xy, 2x^2y)` should return true.
-"""
-function divides end
+Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(polynomialtype(TT))
+Base.zero(t::AbstractTermLike{T}) where {T} = zero(polynomialtype(t))
+Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = one(T) * constantmonomial(TT)
+Base.one(t::AbstractTermLike{T}) where {T} = one(T) * constantmonomial(t)

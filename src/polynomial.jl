@@ -3,22 +3,8 @@ export coefficienttype, monomialtype
 export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials
-export variables, nvariables
 
 Base.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
-
-function Base.hash(p::AbstractPolynomial, u::UInt)
-    if iszero(p)
-        hash(0, u)
-    else
-        reduce((u, t) -> hash(t, u), u, terms(p))
-    end
-end
-
-coefficienttype(::Type{<:APL{T}}) where {T} = T
-coefficienttype(::APL{T}) where {T} = T
-#coefficienttype(::Type{T}) where {T} = T
-#coefficienttype(::T) where {T} = T
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
@@ -74,11 +60,10 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomialtype(::Union{P, Type{P}}) where P<:APL = Base.promote_op(polynomial, P)
-polynomialtype(::Type{P}) where P<:AbstractPolynomial = P
-polynomialtype(::Type{M}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
-polynomialtype(::Type{P}, ::Type{T}) where {P, T} = polynomialtype(polynomialtype(P), T)
-polynomialtype(p, ::Type{T}) where T = polynomialtype(typeof(p), T)
+polynomialtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(polynomial, P)
+polynomialtype(::Union{P, Type{P}}) where P <: AbstractPolynomial = P
+polynomialtype(::Union{M, Type{M}}, args...) where M<:AbstractMonomialLike = polynomialtype(termtype(M, args...))
+polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialtype(polynomialtype(P), T)
 
 function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     result = T[]
@@ -321,25 +306,21 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
 end
 
 """
-    variables(p::AbstractPolynomialLike)
-
-Returns the tuple of the variables of `p` in decreasing order. It could contain variables of zero degree, see the example section.
-
-### Examples
-
-Calling `variables(x^2*y)` should return `(x, y)` and calling `variables(x)` should return `(x,)`.
-Note that the variables of `m` does not necessarily have nonzero degree.
-For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
+    monic(p::AbstractPolynomialLike)
 """
-function variables end
+function monic(p::APL)
+    α = leadingcoefficient(p)
+    polynomial(_divtoone.(terms(p), α))
+end
+monic(m::AbstractMonomialLike) = m
+monic(t::AbstractTermLike{T}) where T = one(T) * monomial(t)
 
-"""
-    nvariables(p::AbstractPolynomialLike)
-
-Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero degree (see [the Examples section of `variables`](@ref MultivariatePolynomials.variables)).
-
-### Examples
-
-Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
-"""
-nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
+    U = Base.promote_op(/, T, S)
+    β = coefficient(t)
+    if β == α
+        one(U) * monomial(t)
+    else
+        (β / α) * monomial(t)
+    end
+end

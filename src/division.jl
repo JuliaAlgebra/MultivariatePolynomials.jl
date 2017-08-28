@@ -99,18 +99,3 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     end
     q, r
 end
-
-function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
-    U = Base.promote_op(/, T, S)
-    β = coefficient(t)
-    if β == α
-        one(U) * monomial(t)
-    else
-        (β / α) * monomial(t)
-    end
-end
-
-function monic(p::APL)
-    α = leadingcoefficient(p)
-    polynomial(_divtoone.(terms(p), α))
-end

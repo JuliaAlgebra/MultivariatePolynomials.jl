@@ -1,16 +1,22 @@
 include("zip.jl")
 include("variable.jl")
 include("monomial.jl")
+include("term.jl")
+include("monovec.jl")
 include("polynomial.jl")
+
 include("rational.jl")
+
 include("promote.jl")
-include("comparison.jl")
-include("algebra.jl")
-include("differentiation.jl")
 include("substitution.jl")
 include("hash.jl")
-include("division.jl")
 include("norm.jl")
+
+include("algebra.jl")
+include("comparison.jl")
+
+include("differentiation.jl")
+include("division.jl")
 
 include("show.jl")
 

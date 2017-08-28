@@ -1,41 +1,115 @@
-export name, constantmonomial, emptymonovec, monovec, monovectype, sortmonovec, mergemonovec, mapexponents
-
-mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
-
-Base.copy(x::AbstractVariable) = x
+export variables, nvariables, exponents, degree, isconstant, powers, divides, constantmonomial, mapexponents
 
 """
-    name(v::AbstractVariable)::AbstractString
+    monomialtype(p::AbstractPolynomialLike)
 
-Returns the name of a variable.
+Return the type of the monomials of `p`.
+
+    termtype(::Type{PT}) where PT<:AbstractPolynomialLike
+
+Returns the type of the monomials of a polynomial of type `PT`.
 """
-function name end
-
-_hashpowers(u::UInt) = u
-function _hashpowers(u::UInt, power::Tuple, powers...)
-    if iszero(power[2])
-        _hashpowers(u, powers...)
-    else
-        _hashpowers(hash(power, u), powers...)
-    end
-end
-function Base.hash(m::AbstractMonomial, u::UInt)
-    nnz = count(!iszero, exponents(m))
-    if iszero(nnz)
-        hash(1, u)
-    elseif isone(nnz) && isone(degree(m))
-        hash(variable(m), u)
-    else
-        _hashpowers(u, powers(m)...)
-    end
-end
-
-Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
-Base.one(t::AbstractMonomialLike) = constantmonomial(t)
-
 monomialtype(::Union{M, Type{M}}) where M<:AbstractMonomial = M
-monomialtype(::Union{AbstractVector{PT}, Type{AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
 monomialtype(::Union{PT, Type{PT}}) where PT <: APL = monomialtype(termtype(PT))
+monomialtype(::Union{AbstractVector{PT}, Type{AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
+
+"""
+    variables(p::AbstractPolynomialLike)
+
+Returns the tuple of the variables of `p` in decreasing order. It could contain variables of zero degree, see the example section.
+
+### Examples
+
+Calling `variables(x^2*y)` should return `(x, y)` and calling `variables(x)` should return `(x,)`.
+Note that the variables of `m` does not necessarily have nonzero degree.
+For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
+"""
+function variables end
+
+"""
+    nvariables(p::AbstractPolynomialLike)
+
+Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero degree (see the Examples section of [`variables`](@ref)).
+
+### Examples
+
+Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
+"""
+nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+
+"""
+    exponents(t::AbstractTermLike)
+
+Returns the exponent of the variables in the monomial of the term `t`.
+
+### Examples
+
+Calling `exponents(x^2*y)` should return `(2, 1)`.
+"""
+exponents(t::AbstractTerm) = exponents(monomial(t))
+exponents(v::AbstractVariable) = (1,)
+
+"""
+    degree(t::AbstractTermLike)
+
+Returns the *total degree* of the monomial of the term `t`, i.e. `sum(exponents(t))`.
+
+    degree(t::AbstractTermLike, v::AbstractVariable)
+
+Returns the exponent of the variable `v` in the monomial of the term `t`.
+
+### Examples
+
+Calling `degree(x^2*y)` should return 3 which is ``2 + 1``.
+Calling `degree(x^2*y, x)` should return 2 and calling `degree(x^2*y, y)` should return 1.
+
+"""
+degree(t::AbstractTermLike) = sum(exponents(t))
+
+degree(t::AbstractTermLike, var::AbstractVariable) = degree(monomial(t), var)
+degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
+#_deg(v::AbstractVariable) = 0
+#_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
+#degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
+function degree(m::AbstractMonomial, v::AbstractVariable)
+    i = findfirst(variables(m), v)
+    if iszero(i)
+        0
+    else
+        exponents(m)[i]
+    end
+end
+
+"""
+    isconstant(t::AbstractTermLike)
+
+Returns whether the monomial of `t` is constant.
+"""
+isconstant(t::AbstractTermLike) = all(iszero.(exponents(t)))
+isconstant(v::AbstractVariable) = false
+
+"""
+    powers(t::AbstractTermLike)
+
+Returns an tuple of the powers of the monomial of `t`.
+
+### Examples
+
+Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
+"""
+powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
+
+"""
+    divides(t1::AbstractTermLike, t2::AbstractTermLike)
+
+Returns whether `monomial(t1)` divides `monomial(t2)`.
+
+### Examples
+
+Calling `divides(2x^2y, 3xy)` should return false because `x^2y` does not divide `xy` since `x` has a degree 2 in `x^2y` which is greater than the degree of `x` on `xy`.
+However, calling `divides(3xy, 2x^2y)` should return true.
+"""
+function divides end
 
 """
     constantmonomial(p::AbstractPolynomialType)
@@ -48,67 +122,16 @@ Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """
 function constantmonomial end
 
-emptymonovec(::Type{PT}) where PT = monomialtype(PT)[]
-
 """
-    monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
+    mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
 
-Returns the vector of monomials `X` in decreasing order and without any duplicates.
+If ``m_1 = \\prod x^{\\alpha_i}`` and ``m_2 = \\prod x^{\\beta_i}`` then it returns the monomial ``m = \\prod x^{f(\\alpha_i, \\beta_i)}``.
 
 ### Examples
 
-Calling `monovec` on ``[xy, x, xy, x^2y, x]`` should return ``[x^2y, xy, x]``.
+The multiplication `m1 * m2` is equivalent to `mapexponents(+, m1, m2)`, the unsafe division `_div(m1, m2)` is equivalent to `mapexponents(-, m1, m2)`, `gcd(m1, m2)` is equivalent to `mapexponents(min, m1, m2)`, `lcm(m1, m2)` is equivalent to `mapexponents(max, m1, m2)`.
 """
-function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
-    Y = sort(X, rev=true)
-    dups = find(i -> Y[i] == Y[i-1], 2:length(Y))
-    deleteat!(Y, dups)
-    Y
-end
-monovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = monovec(AbstractVector{monomialtype(TT)}(X))
+mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
 
-function monovec(a, x)
-    if length(a) != length(x)
-        throw(ArgumentError("There should be as many coefficient than monomials"))
-    end
-    σ, X = sortmonovec(x)
-    (a[σ], X)
-end
-
-"""
-    monovectype(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
-
-Returns the return type of `monovec`.
-"""
-monovectype(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovectype(TT)
-monovectype(::Type{PT}) where {PT <: APL} = Vector{monomialtype(PT)}
-
-# If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
-"""
-    sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
-
-Returns `σ`, the orders in which one must take the monomials in `X` to make them sorted and without any duplicate and the sorted vector of monomials, i.e. it returns `(σ, X[σ])`.
-
-### Examples
-
-Calling `sortmonovec` on ``[xy, x, xy, x^2y, x]`` should return ``([4, 1, 2], [x^2y, xy, x])``.
-"""
-function sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
-    σ = sortperm(X, rev=true)
-    dups = find(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
-    deleteat!(σ, dups)
-    σ, X[σ]
-end
-sortmonovec(X::AbstractVector{TT}) where {TT<:AbstractTerm} = sortmonovec(AbstractVector{monomialtype(TT)}(X))
-sortmonovec(X::Tuple) = sortmonovec(vec(X))
-
-"""
-    mergemonovec{MT<:AbstractMonomialLike, MVT<:AbstractVector{MT}}(X::AbstractVector{MVT}}
-
-Returns the vector of monomials in the entries of `X` in decreasing order and without any duplicates, i.e. `monovec(vcat(X...))`
-
-### Examples
-
-Calling `mergemonovec` on ``[[xy, x, xy], [x^2y, x]]`` should return ``[x^2y, xy, x]``.
-"""
-mergemonovec(X) = monovec(vcat(X...))
+Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
+Base.one(t::AbstractMonomialLike) = constantmonomial(t)
