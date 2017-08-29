@@ -1,3 +1,3 @@
-#include("ncmono.jl")
-#include("nccomp.jl")
-#include("ncalg.jl")
+include("ncmonomial.jl")
+include("nccomparison.jl")
+include("ncoperators.jl")
