@@ -25,4 +25,3 @@ function Base.convert(::Type{MT}, t::AbstractTerm) where {MT<:AbstractMonomial}
         error("Cannot convert a term with a coefficient that is not one into a monomial")
     end
 end
-

@@ -32,12 +32,12 @@ include("rational.jl")
 
 include("conversion.jl")
 include("promote.jl")
-include("substitution.jl")
 include("hash.jl")
 
 include("operators.jl")
 include("comparision.jl")
 
+include("substitution.jl")
 include("differentiation.jl")
 include("division.jl")
 

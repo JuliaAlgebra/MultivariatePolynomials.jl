@@ -39,7 +39,8 @@ Returns the type of the terms of a polynomial of type `PT` but with coefficient 
 """
 termtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(first ∘ terms, P)
 termtype(::Union{T, Type{T}}) where T <: AbstractTerm = T
-termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, args...) = termtype(monomialtype(v), args...)
+termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}) = termtype(monomialtype(v))
+termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, ::Type{T}) where T = termtype(monomialtype(v), T)
 termtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(M, Int)
 
 """

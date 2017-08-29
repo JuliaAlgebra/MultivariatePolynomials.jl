@@ -3,13 +3,13 @@ using Base.Test
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
-include("custom.jl")
+include("utils.jl")
 
 import DynamicPolynomials
 Mod = DynamicPolynomials
-#include("commutativetests.jl")
-#include("noncommutativetests.jl")
+include("commutativetests.jl")
+include("noncommutativetests.jl")
 
-#import TypedPolynomials
-#Mod = TypedPolynomials
-#include("commutativetests.jl")
+import TypedPolynomials
+Mod = TypedPolynomials
+include("commutativetests.jl")
