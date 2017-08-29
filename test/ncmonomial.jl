@@ -1,21 +1,23 @@
 @testset "Non-commutative Monomial" begin
     Mod.@ncpolyvar x
     @test_throws ArgumentError Monomial{false}([x], [1,0])
-    X = Monomial{false}()
+    X = constantmonomial(x)
     @test nvariables(X) == 0
     @test isempty(X.vars)
     @test isempty(X.z)
-    X = Monomial{false}(x)
+    X = monomial(x)
     @test nvariables(X) == 1
-    @test X.vars[1] == x
-    @test X.z[1] == 1
-    X = Monomial{false}([x], [0])
+    @test variables(X)[1] == x
+    @test collect(exponents(X)) == [1]
+    X = x^0
     Y = X * x^2
-    @test variables(Y) == [x]
-    @test Y.z == [2]
+    @test nvariables(Y) == 1
+    @test variables(Y)[1] == x
+    @test collect(exponents(Y)) == [2]
     Y = x^2 * X
-    @test variables(Y) == [x]
-    @test Y.z == [2]
+    @test nvariables(Y) == 1
+    @test variables(Y)[1] == x
+    @test collect(expoents(Y)) == [2]
 end
 @testset "Non-commutative MonomialVector" begin
     @ncpolyvar x y

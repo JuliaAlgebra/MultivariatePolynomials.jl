@@ -37,10 +37,10 @@ isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
-plusconstant(p::APL, α) = iszero(α) ? polynomial(p) : p + constantterm(α, p)
-plusconstant(α, p::APL) = plusconstant(p, α)
-minusconstant(p::APL, α) = iszero(α) ? polynomial(p) : p - constantterm(α, p)
-minusconstant(α, p::APL) = iszero(α) ? polynomial(-p) : constantterm(α, p) - p
+plusconstant(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(+, S, T)) : p + constantterm(α, p)
+plusconstant(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(+, S, T)) : constantterm(α, p) + p
+minusconstant(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(-, S, T)) : p - constantterm(α, p)
+minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, Base.promote_op(-, S, T)) : constantterm(α, p) - p
 
 # Coefficients and variables commute
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
