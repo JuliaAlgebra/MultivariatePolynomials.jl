@@ -1,6 +1,29 @@
 # I do not use it but I import the function to add a method
 export differentiate
 
+"""
+    differentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Int=1)
+
+Differentiate `deg` times the polynomial `p` by the variable `v`.
+
+    differentiate(p::AbstractPolynomialLike, vs, deg::Int=1)
+
+Differentiate `deg` times the polynomial `p` by the variables of the vector or tuple of variable `vs` and return an array of dimension `deg`.
+
+    differentiate(p::AbstractArray{<:AbstractPolynomialLike, N}, vs, deg::Int=1) where N
+
+Differentiate the polynomials in `p` by the variables of the vector or tuple of variable `vs` and return an array of dimension `N+deg`.
+
+### Examples
+
+```julia
+p = 3x^2*y + x + 2y + 1
+differentiate(p, x) # should return 6xy + 1
+differentiate(p, (x, y)) # should return [6xy+1, 3x^2+1]
+```
+"""
+function differentiate end
+
 # Fallback for everything else
 _diff_promote_op(::Type{T}, ::Type{<:AbstractVariable}) where T = T
 differentiate(α::T, v::AbstractVariable) where T = zero(T)

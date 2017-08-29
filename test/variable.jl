@@ -24,20 +24,9 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
         @test one(x) isa AbstractMonomial
         @inferred one(x)
 
-        @test (@inferred monomialtype(x)) <: AbstractMonomial
-        @test (@inferred monomialtype(typeof(x))) <: AbstractMonomial
-
-        @test (@inferred termtype(x)) <: AbstractTerm{Int}
-        @test (@inferred termtype(x, Float64)) <: AbstractTerm{Float64}
-        @test (@inferred termtype(typeof(x))) <: AbstractTerm{Int}
-        @test (@inferred termtype(typeof(x), Float64)) <: AbstractTerm{Float64}
-
-        @test (@inferred polynomialtype(x)) <: AbstractPolynomial{Int}
+        typetests(x)
         @test (@inferred polynomial(x)) isa AbstractPolynomial{Int}
-        @test (@inferred polynomialtype(x, Float64)) <: AbstractPolynomial{Float64}
         @test (@inferred polynomial(x, Float64)) isa AbstractPolynomial{Float64}
-        @test (@inferred polynomialtype(typeof(x))) <: AbstractPolynomial{Int}
-        @test (@inferred polynomialtype(typeof(x), Float64)) <: AbstractPolynomial{Float64}
 
         @test nterms(x) == 1
         @test @inferred(terms(x)) == [x]

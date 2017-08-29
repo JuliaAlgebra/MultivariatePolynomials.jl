@@ -2,11 +2,12 @@
 CurrentModule = MultivariatePolynomials
 ```
 
-# API
+# Types
 
 ## Variables
 
 ```@docs
+AbstractVariable
 variable
 name
 similarvariable
@@ -16,6 +17,8 @@ similarvariable
 ## Monomials
 
 ```@docs
+AbstractMonomialLike
+AbstractMonomial
 monomialtype
 variables
 nvariables
@@ -23,7 +26,6 @@ exponents
 degree
 isconstant
 powers
-divides
 constantmonomial
 mapexponents
 ```
@@ -31,6 +33,8 @@ mapexponents
 ## Terms
 
 ```@docs
+AbstractTermLike
+AbstractTerm
 term
 termtype
 coefficient
@@ -43,6 +47,8 @@ zeroterm
 ## Polynomials
 
 ```@docs
+AbstractPolynomialLike
+AbstractPolynomial
 polynomial
 polynomialtype
 terms
@@ -59,6 +65,11 @@ removeleadingterm
 removemonomials
 monic
 ```
+
+## Rational Polynomial Function
+
+A rational polynomial function can be constructed with the `/` operator. Common operations such as `+`, `-`, `*`, `-` have been implemented between rational functions.
+The numerator and denominator polynomials can be retrieved by the `numerator` and `denominator` functions.
 
 ## Monomial Vectors
 

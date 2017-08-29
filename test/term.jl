@@ -37,6 +37,12 @@
     @test degree(2x^2, y) == 0
     @test degree(2x^2, y) == 0
 
+    t = 3x^2*y^4
+    typetests(t)
+    typetests([t, 2x])
+    @test (@inferred polynomial(t)) isa AbstractPolynomial{Int}
+    @test (@inferred polynomial(t, Float64)) isa AbstractPolynomial{Float64}
+
     @test_throws InexactError push!([1], 2x)
     @test_throws ErrorException push!([x^2], 2x)
 end

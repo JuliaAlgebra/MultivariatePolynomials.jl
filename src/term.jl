@@ -37,11 +37,14 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
-termtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(first ∘ terms, P)
 termtype(::Union{T, Type{T}}) where T <: AbstractTerm = T
+termtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(first ∘ terms, P)
+termtype(p::Union{APL, Type{<:APL}}, ::Type{T}) where T = termtype(termtype(p), T)
+termtype(m::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(m, Int)
 termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}) = termtype(monomialtype(v))
 termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, ::Type{T}) where T = termtype(monomialtype(v), T)
-termtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(M, Int)
+termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = termtype(PT)
+termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = termtype(PT, T)
 
 """
     coefficient(t::AbstractTermLike)

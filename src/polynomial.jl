@@ -2,7 +2,7 @@ export polynomial, polynomialtype, terms, nterms, coefficients, monomials
 export coefficienttype, monomialtype
 export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
-export removeleadingterm, removemonomials
+export removeleadingterm, removemonomials, monic
 
 Base.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
 
@@ -60,11 +60,30 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
+"""
+    polynomialtype(p::AbstractPolynomialLike)
+
+Returns the type that `p` would have if it was converted into a polynomial.
+
+    polynomialtype(::Type{PT}) where PT<:AbstractPolynomialLike
+
+Returns the same as `polynomialtype(::PT)`.
+
+    polynomialtype(p::AbstractPolynomialLike, ::Type{T}) where T
+
+Returns the type that `p` would have if it was converted into a polynomial of coefficient type `T`.
+
+    termtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}
+
+Returns the same as `polynomialtype(::PT, ::Type{T})`.
+"""
 polynomialtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(polynomial, P)
 polynomialtype(::Union{P, Type{P}}) where P <: AbstractPolynomial = P
 polynomialtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = polynomialtype(termtype(M))
 polynomialtype(::Union{M, Type{M}}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
 polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialtype(polynomialtype(P), T)
+polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
+polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
 function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     result = T[]
@@ -308,6 +327,8 @@ end
 
 """
     monic(p::AbstractPolynomialLike)
+
+Returns `p / leadingcoefficient(p)` where the leading coefficient of the returned polynomials is made sure to be exactly one to avoid rounding error.
 """
 function monic(p::APL)
     α = leadingcoefficient(p)

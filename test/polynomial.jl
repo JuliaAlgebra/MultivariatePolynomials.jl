@@ -33,6 +33,15 @@
 
     Mod.@polyvar y
 
+    p = 3x^2*y^4 + 2x
+    typetests(p)
+    typetests([p, x + y])
+    @test (@inferred polynomial(p)) isa AbstractPolynomial{Int}
+    @test (@inferred polynomial(p, Float64)) isa AbstractPolynomial{Float64}
+
+    @test (@inferred 2x^2*y + 0.0x*y) == 2x^2*y
+    @test (@inferred 0.0x^2*y + 3x*y) == 3x*y
+
     @test iszero(((x + x) - 2x) * (x * (x ^ 2 + y ^ 2)))
 
     @test Tuple(variables([x + 1, y^2])) == (x, y)

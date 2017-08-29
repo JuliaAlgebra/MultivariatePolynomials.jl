@@ -1,4 +1,4 @@
-export variables, nvariables, exponents, degree, isconstant, powers, divides, constantmonomial, mapexponents
+export variables, nvariables, exponents, degree, isconstant, powers, constantmonomial, mapexponents
 
 """
     monomialtype(p::AbstractPolynomialLike)
@@ -11,7 +11,7 @@ Returns the type of the monomials of a polynomial of type `PT`.
 """
 monomialtype(::Union{M, Type{M}}) where M<:AbstractMonomial = M
 monomialtype(::Union{PT, Type{PT}}) where PT <: APL = monomialtype(termtype(PT))
-monomialtype(::Union{AbstractVector{PT}, Type{AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
+monomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
 
 """
     variables(p::AbstractPolynomialLike)
@@ -98,18 +98,6 @@ Returns an tuple of the powers of the monomial of `t`.
 Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
 """
 powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
-
-"""
-    divides(t1::AbstractTermLike, t2::AbstractTermLike)
-
-Returns whether `monomial(t1)` divides `monomial(t2)`.
-
-### Examples
-
-Calling `divides(2x^2y, 3xy)` should return false because `x^2y` does not divide `xy` since `x` has a degree 2 in `x^2y` which is greater than the degree of `x` on `xy`.
-However, calling `divides(3xy, 2x^2y)` should return true.
-"""
-function divides end
 
 """
     constantmonomial(p::AbstractPolynomialType)

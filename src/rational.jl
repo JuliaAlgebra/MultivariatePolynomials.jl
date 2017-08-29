@@ -7,6 +7,9 @@ struct RationalPoly{NT <: APL, DT <: APL}
     den::DT
 end
 
+Base.numerator(r::RationalPoly) = r.num
+Base.denominator(r::RationalPoly) = r.den
+
 Base.convert(::Type{RationalPoly{NT, DT}}, q::RationalPoly{NT, DT}) where {NT, DT} = q
 Base.convert(::Type{RationalPoly{NTout, DTout}}, q::RationalPoly{NTin, DTin}) where {NTout, DTout, NTin, DTin} = convert(NTout, q.num) / convert(DTout, q.den)
 #function Base.convert(::Type{RationalPoly{NT, DT}}, p::NT) where {NT, DT}
