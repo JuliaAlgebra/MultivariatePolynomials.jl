@@ -5,9 +5,11 @@ const MP = MultivariatePolynomials
     @test zero(x^2) == 0
     @test zero(x^2) isa AbstractPolynomial{Int}
     @inferred zero(x^2)
-    @test one(x^2) == 1
+    @test (@inferred one(x^2)) == 1
     @test one(x^2) isa AbstractMonomial
-    @inferred one(x^2)
+    @test (@inferred one(typeof(x^2))) == 1
+    @test one(typeof(x^2)) isa AbstractMonomial
+
     Mod.@polyvar y[1:7]
     m = y[1] * y[3] * y[5] * y[7]
     @test issorted(variables(y[2] * m), rev=true)

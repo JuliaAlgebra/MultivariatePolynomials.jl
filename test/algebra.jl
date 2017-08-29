@@ -12,9 +12,33 @@
     @inferred 2 * (2x)
     @inferred 2.0 * (2x)
     #@test eltype(2.0 * (2x)) == Float64
-    @inferred 1.5 * (2x)
-    @test 1.5 * (2x) isa AbstractTerm{Float64}
-    @test 1.5 * (2x) == 3x
+    t = @inferred 1.5 * (2x)
+    @test t isa AbstractTerm{Float64}
+    @test t == 3x
+
+    p = @inferred y^2 * (2.0x^2 + 3y)
+    @test p == 2x^2*y^2 + 3y^3
+    @test p isa AbstractPolynomial{Float64}
+
+    p = @inferred (2x^2 + 3.0y) * y^2
+    @test p == 2x^2*y^2 + 3y^3
+    @test p isa AbstractPolynomial{Float64}
+
+    p = @inferred (2.0y^2) * (2x^2 + 3y)
+    @test p == 4x^2*y^2 + 6y^3
+    @test p isa AbstractPolynomial{Float64}
+
+    p = @inferred (2x^2 + 3y) * (2.0y^2)
+    @test p == 4x^2*y^2 + 6y^3
+    @test p isa AbstractPolynomial{Float64}
+
+    p = @inferred (y^2 + 2.0) * (2x + y)
+    @test p == 2x*y^2 + y^3 + 4x + 2y
+    @test p isa AbstractPolynomial{Float64}
+
+    p = @inferred CustomPoly(x + 2y) * CustomTerms(x^2 + 1.0)
+    @test p == x^3 + 2x^2*y + x + 2y
+    @test p isa AbstractPolynomial{Float64}
 
     @testset "Inference" begin
         @inferred x^2
