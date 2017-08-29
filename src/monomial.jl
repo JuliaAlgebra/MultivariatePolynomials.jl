@@ -11,7 +11,7 @@ Returns the type of the monomials of a polynomial of type `PT`.
 """
 monomialtype(::Union{M, Type{M}}) where M<:AbstractMonomial = M
 monomialtype(::Union{PT, Type{PT}}) where PT <: APL = monomialtype(termtype(PT))
-monomialtype(::Union{AbstractVector{PT}, Type{AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
+monomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = monomialtype(PT)
 
 """
     variables(p::AbstractPolynomialLike)

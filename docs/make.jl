@@ -5,7 +5,10 @@ makedocs(
     sitename = "MultivariatePolynomials",
     pages = [
         "Introduction" => "index.md",
-        "Reference" => "apireference.md",
+        "Types" => "types.md",
+        "Substitution" => "substitution.md",
+        "Differentiation" => "differentiation.md",
+        "Division" => "division.md",
     ]
 )
 

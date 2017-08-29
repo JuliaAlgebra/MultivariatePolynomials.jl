@@ -42,6 +42,8 @@ termtype(::Union{T, Type{T}}) where T <: AbstractTerm = T
 termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}) = termtype(monomialtype(v))
 termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, ::Type{T}) where T = termtype(monomialtype(v), T)
 termtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(M, Int)
+termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = termtype(PT)
+termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = termtype(PT, T)
 
 """
     coefficient(t::AbstractTermLike)

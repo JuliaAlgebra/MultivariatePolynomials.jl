@@ -60,6 +60,11 @@ removemonomials
 monic
 ```
 
+## Rational Polynomial Function
+
+A rational polynomial function can be constructed with the `/` operator. Common operations such as `+`, `-`, `*`, `-` have been implemented between rational functions.
+The numerator and denominator polynomials can be retrieved by the `numerator` and `denominator` functions.
+
 ## Monomial Vectors
 
 ```@docs

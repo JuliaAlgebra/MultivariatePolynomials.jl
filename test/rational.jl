@@ -20,4 +20,6 @@
     @test (x^2 + 1) / (2x) != nothing
     @test Dict{Int,Int}() != x / (x^2 + 1)
     @test (x^2 + 1) / (2x) != Dict{Int,Int}()
+    @test numerator(x / x^2) == x
+    @test denominator(x / x^2) == x^2
 end

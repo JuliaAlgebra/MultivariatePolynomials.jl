@@ -65,6 +65,8 @@ polynomialtype(::Union{P, Type{P}}) where P <: AbstractPolynomial = P
 polynomialtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = polynomialtype(termtype(M))
 polynomialtype(::Union{M, Type{M}}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
 polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialtype(polynomialtype(P), T)
+polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
+polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
 function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     result = T[]

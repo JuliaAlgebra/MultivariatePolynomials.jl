@@ -13,6 +13,6 @@ Currently, the following implementations are available:
 * [DynamicPolynomials](https://github.com/blegat/DynamicPolynomials.jl)
 
 ```@contents
-Pages = ["apireference.md"]
+Pages = ["types.md", "substitution.md", "differentiation.md", "division.md"]
 Depth = 3
 ```

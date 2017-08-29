@@ -29,6 +29,12 @@ const MP = MultivariatePolynomials
     @test_throws ErrorException variable(x*y[1])
     @test_throws ErrorException variable(constantmonomial(typeof(x)))
 
+    m = x^2
+    typetests(m)
+    typetests([x^2, x^3])
+    @test (@inferred polynomial(m)) isa AbstractPolynomial{Int}
+    @test (@inferred polynomial(m, Float64)) isa AbstractPolynomial{Float64}
+
     @test variable(x^1) == x
     @test variable(x^1) isa AbstractVariable
     @test variable(x^2 + x - x^2) == x
