@@ -9,11 +9,12 @@
     @test variables(m2)[1] == y
     @test variables(m2)[2] == x
     @test collect(exponents(m2)) == [2, 1]
-    m3 = x*x*y^2*x
-    @test variables(m3)[1] == x
-    @test variables(m3)[2] == y
-    @test variables(m3)[3] == x
-    @test collect(exponents(m3)) == [2, 2, 1]
+    for m3 in [(x*x)*(y^2*x), (x*x*y)*(y*x), x*(x*y^2*x), (x^2*y^2)*x]
+        @test variables(m3)[1] == x
+        @test variables(m3)[2] == y
+        @test variables(m3)[3] == x
+        @test collect(exponents(m3)) == [2, 2, 1]
+    end
     mv = monovec([x, y, x*y])
     @test x * mv == [x^2, x*y, x^2*y]
     @test mv * x == [x^2, y*x, x*y*x]
