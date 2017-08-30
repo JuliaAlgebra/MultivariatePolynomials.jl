@@ -1,4 +1,5 @@
 @testset "Comparison of monomials" begin
-    @ncpolyvar x y
+    Mod.@ncpolyvar x y
     @test x*y != y*x
+    @test x^2 == x*x
 end

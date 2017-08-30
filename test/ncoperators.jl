@@ -1,20 +1,26 @@
 @testset "Product with non-commutative monomials and variables" begin
-    @ncpolyvar x y z
-    a = x * (y * x)
-    @test a.vars == [x, y, x]
-    @test a.z == ones(Int, 3)
-    a = y * (y * x)
-    @test a.vars == [y, x]
-    @test a.z == [2, 1]
-    a = x*x*y^2*x
-    @test a.vars == [x, y, x]
-    @test a.z == [2, 2, 1]
-    mv = MonomialVector([x, y, x*y])
-    @test x * mv == MonomialVector([x^2, x*y, x^2*y])
-    @test mv * x == MonomialVector([x^2, y*x, x*y*x])
-    @test y^2 * mv == MonomialVector([y^2*x, y^3, y^2*x*y])
-    @test mv * y^2 == MonomialVector([x*y^2, y^3, x*y^3])
-    a = y*x^2
-    @test a.vars == [y, x]
-    @test a.z == [1, 2]
+    Mod.@ncpolyvar x y z
+    m1 = x * (y * x)
+    @test variables(m1)[1] == x
+    @test variables(m1)[2] == y
+    @test variables(m1)[3] == x
+    @test all(exponents(m1) .== 1)
+    m2 = y * (y * x)
+    @test variables(m2)[1] == y
+    @test variables(m2)[2] == x
+    @test collect(exponents(m2)) == [2, 1]
+    m3 = x*x*y^2*x
+    @test variables(m3)[1] == x
+    @test variables(m3)[2] == y
+    @test variables(m3)[3] == x
+    @test collect(exponents(m3)) == [2, 2, 1]
+    mv = monovec([x, y, x*y])
+    @test x * mv == [x^2, x*y, x^2*y]
+    @test mv * x == [x^2, y*x, x*y*x]
+    @test y^2 * mv == [y^2*x, y^3, y^2*x*y]
+    @test mv * y^2 == [x*y^2, y^3, x*y^3]
+    m4 = y*x^2
+    @test variables(m4)[1] == y
+    @test variables(m4)[2] == x
+    @test collect(exponents(m4)) == [1, 2]
 end
