@@ -19,20 +19,17 @@
     @testset "Equality" begin
         @testset "Monomial equality" begin
             Mod.@polyvar x y
-            #@test 1 == constantmonomial([x, y])
-            #@test 2 != constantmonomial([x, y])
+            @test 1 == constantmonomial(x)
+            @test 2 != constantmonomial(x)
             @test 2 != x
             @test 2 != x*y
-            #@test 2 != MonomialVector([x, y], 1)
-            #@test x != MonomialVector([x, y], 1)
             @test x*y != x
             @test 1x*y == x*y
             @test 2x*y != x*y
             @test x == monomial(x)
-            #@test Monomial([x, y], [1, 0]) == x
-            #@test x != Monomial([x, y], [0, 1])
-            #@test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
-            #@test MonomialVector([x, y], 2) != MonomialVector([x, y], 1)
+            @test x*y^0 == x
+            @test x != x^0*y
+            @test x^2 != x*y
         end
         @testset "Polynomial equality" begin
             Mod.@polyvar x y

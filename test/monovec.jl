@@ -29,4 +29,7 @@
     @test monomialtype([x, y]) <: AbstractMonomial
     @test monomialtype([x^2, 1]) <: AbstractMonomial
     @test monomialtype([x*y, x+y]) <: AbstractMonomial
+
+    @test monovec([x, x^2]) != monovec([x*y, x^2*y])
+    @test monomials((x, y), 2) != monomials((x, y), 1)
 end

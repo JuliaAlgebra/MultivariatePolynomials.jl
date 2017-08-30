@@ -10,6 +10,7 @@
     @test hash(x-x) == hash(zero(x))
     @test hash(monovec([z^3, z*x, y])[1:2]) == hash(monovec([z^3, z*x]))
     @test hash(monovec([z^3, x, y])[1:1]) == hash(monovec([z^3, x])[1:1])
+    @test hash(emptymonovec(x)) == hash([])
     @test hash(1) == hash(one(x))
     @test hash(1) == hash(constantmonomial(x * y))
     @test hash(2) != hash(constantmonomial(x * y))

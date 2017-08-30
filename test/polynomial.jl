@@ -34,6 +34,7 @@
     Mod.@polyvar y
 
     p = 3x^2*y^4 + 2x
+    @test terms(p)[end] == 2x
     typetests(p)
     typetests([p, x + y])
     @test (@inferred polynomial(p)) isa AbstractPolynomial{Int}

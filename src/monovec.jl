@@ -6,7 +6,7 @@ export monovec, monovectype, emptymonovec, sortmonovec, mergemonovec
 
 Returns an empty collection of the type of `monomials(p)`.
 """
-emptymonovec(::Type{PT}) where PT = monomialtype(PT)[]
+emptymonovec(p) = monomialtype(p)[]
 
 """
     monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}

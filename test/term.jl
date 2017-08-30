@@ -10,6 +10,9 @@
     #@inferred one(1.0x)
     @inferred zero(1.0x)
 
+    @test !isapproxzero((1+1e-10im)*x^2)
+    @test isapproxzero(1e-10im*x^2)
+
     @test monic(2.0x) isa AbstractTerm{Float64}
     @test monic(2.0x) == x
     @test monic(2x^2) isa AbstractTerm{Int}
