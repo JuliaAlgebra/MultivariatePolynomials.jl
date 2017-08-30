@@ -99,6 +99,10 @@
 
     @test polynomial([1 2; 3 4], [x^2, y]) == x^4 + 5x^2*y + 4y^2
     @test polynomial([1 2; 3 4], [x^2, y], Float64) isa AbstractPolynomial{Float64}
+    @test polynomial([1 2; 3 4], [y, x^2]) == y^2 + 5x^2*y + 4x^4
+    @test polynomial([1 2; 3 4], [y, x^2], Float64) isa AbstractPolynomial{Float64}
+    @test polynomial([1 2; 3 4], monovec([y, x^2])) == x^4 + 5x^2*y + 4y^2
+    @test polynomial([1 2; 3 4], monovec([y, x^2]), Float64) isa AbstractPolynomial{Float64}
 
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
