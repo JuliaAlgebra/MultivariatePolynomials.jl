@@ -19,6 +19,7 @@
     @inferred zero(1.0 + x)
 
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [2x^2, 1]
+    @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [2x^2, 1]
 
     @test (1.0 + x) * x == x^2 + x
     @test constantterm(1, x) * (1 - x) == 1 - x

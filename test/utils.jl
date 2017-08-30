@@ -1,14 +1,14 @@
-struct CustomTerms{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
-    p::P
-end
-CustomTerms(p::AbstractPolynomial{T}) where T = CustomTerms{T, typeof(p)}(p)
-MultivariatePolynomials.polynomial(p::CustomTerms) = p.p
-
 struct CustomPoly{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
 CustomPoly(p::AbstractPolynomial{T}) where T = CustomPoly{T, typeof(p)}(p)
-MultivariatePolynomials.terms(p::CustomPoly) = terms(p.p)
+MultivariatePolynomials.polynomial(p::CustomPoly) = p.p
+
+struct CustomTerms{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
+    p::P
+end
+CustomTerms(p::AbstractPolynomial{T}) where T = CustomTerms{T, typeof(p)}(p)
+MultivariatePolynomials.terms(p::CustomTerms) = terms(p.p)
 
 function _typetests(x, ::Type{T}) where T
     @test (@inferred monomialtype(x)) <: AbstractMonomial
