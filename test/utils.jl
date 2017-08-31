@@ -11,6 +11,8 @@ CustomTerms(p::AbstractPolynomial{T}) where T = CustomTerms{T, typeof(p)}(p)
 MultivariatePolynomials.terms(p::CustomTerms) = terms(p.p)
 
 function _typetests(x, ::Type{T}) where T
+    @test (@inferred coefficienttype(x)) == Int
+
     @test (@inferred monomialtype(x)) <: AbstractMonomial
 
     @test (@inferred termtype(x)) <: AbstractTerm{Int}
