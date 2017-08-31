@@ -33,6 +33,7 @@
         end
         @testset "Polynomial equality" begin
             Mod.@polyvar x y
+            @test isapproxzero(0.0x, ztol=0.0)
             @test polynomial(CustomTerms(x + 1 - x)) isa AbstractPolynomial
             @test MultivariatePolynomials.eqconstant(polynomial(CustomTerms(x + 1 - x)), 1)
             @test MultivariatePolynomials.eqconstant(CustomTerms(x + 1 - x), 1)

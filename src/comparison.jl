@@ -99,7 +99,7 @@ end
 (==)(q::RationalPoly, α) = α == q
 
 function isapproxzero(α; ztol::Real=Base.rtoldefault(α, α))
-    abs(α) < ztol
+    abs(α) <= ztol
 end
 
 isapproxzero(m::AbstractMonomialLike; kwargs...) = false
