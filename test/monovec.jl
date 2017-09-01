@@ -6,6 +6,12 @@
     for (i, m) in enumerate(monomials((x, y), 2))
         @test m == X[i]
     end
+    @test (@inferred monovectype([1, x])) <: AbstractArray{<:AbstractMonomial}
+    @test (@inferred monovectype([x])) <: AbstractArray{<:AbstractMonomial}
+    @test (@inferred monovec([1, x])) isa monovectype([1, x])
+    @test (@inferred monovec([x])) isa monovectype([x])
+    @test (@inferred monovec([1, 2], [1, x]))[2] isa AbstractArray{<:AbstractMonomial}
+    @test (@inferred monovec([1], [x]))[2] isa AbstractArray{<:AbstractMonomial}
     @test length(monovec([y, x])) == 2
     X = monovec([x, 1, x*y])
     @test X[2:3][1] == x
