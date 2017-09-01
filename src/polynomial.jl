@@ -151,7 +151,7 @@ coefficients(p::APL) = coefficient.(terms(p))
 function coefficients(p::APL{T}, X::AbstractVector) where T
     σ, mv = sortmonovec(X)
     @assert length(mv) == length(X) # no duplicate in X
-    c = Vector{T}(length(mv))
+    c = zeros(T, length(mv))
     i = 1
     for t in terms(p)
         m = monomial(t)
