@@ -38,8 +38,8 @@ end
 
 Returns the return type of `monovec`.
 """
-monovectype(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovectype(TT)
-monovectype(::Type{PT}) where {PT <: APL} = Vector{monomialtype(PT)}
+monovectype(X::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where {PT<:APL} = monovectype(PT)
+monovectype(::Union{PT, Type{PT}}) where {PT <: APL} = Vector{monomialtype(PT)}
 
 # If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
 """

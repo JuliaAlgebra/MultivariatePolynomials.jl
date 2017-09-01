@@ -20,6 +20,8 @@ function _typetests(x, ::Type{T}) where T
 
     @test (@inferred polynomialtype(x)) <: AbstractPolynomial{Int}
     @test (@inferred polynomialtype(x, Float64)) <: AbstractPolynomial{Float64}
+
+    @test (@inferred monovectype(x)) <: AbstractArray{<:AbstractMonomial}
 end
 
 function typetests(x::Union{AbstractPolynomialLike{T}, Vector{<:AbstractPolynomialLike{T}}}) where T
