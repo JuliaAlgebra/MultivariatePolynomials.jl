@@ -6,6 +6,10 @@
     for (i, m) in enumerate(monomials((x, y), 2))
         @test m == X[i]
     end
+    X = [x^2, y^2]
+    for (i, m) in enumerate(monomials((x, y), 2, m -> m != x*y))
+        @test m == X[i]
+    end
     @test (@inferred monovectype([1, x])) <: AbstractArray{<:AbstractMonomial}
     @test (@inferred monovectype([x])) <: AbstractArray{<:AbstractMonomial}
     @test (@inferred monovec([1, x])) isa monovectype([1, x])
@@ -14,6 +18,9 @@
     @test (@inferred monovec([1], [x]))[2] isa AbstractArray{<:AbstractMonomial}
     @test length(monovec([y, x])) == 2
     X = monovec([x, 1, x*y])
+    @test nvariables(X) == 2
+    @test variables(X)[1] == x
+    @test variables(X)[2] == y
     @test X[2:3][1] == x
     @test X[2:3][2] == 1
     @test monovec(X[[3, 2]])[1] == x
