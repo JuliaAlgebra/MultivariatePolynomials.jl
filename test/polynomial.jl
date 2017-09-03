@@ -7,6 +7,9 @@
 
     @test polynomial(1 + x) == 1 + x
     @test leadingterm(1 + x) == x
+    @test leadingterm(x - x) == 0
+    @test leadingmonomial(x - x) == 1
+    @test leadingcoefficient(x - x) == 0
     @test one(1 + x) == one(1.0 + x) == 1
     @test zero(1 + x) == zero(1.0 + x) == 0
     @test 1 != 1 + x

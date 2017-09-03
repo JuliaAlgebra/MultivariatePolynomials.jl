@@ -3,7 +3,11 @@
     @test x > y
     @test x^2 > y^2
     X = [x^2, x*y, y^2]
+    #@test isempty(@inferred monomials((x, y), 1:0))
     for (i, m) in enumerate(monomials((x, y), 2))
+        @test m == X[i]
+    end
+    for (i, m) in enumerate(monomials((x, y), 2:2))
         @test m == X[i]
     end
     X = [x^2, y^2]

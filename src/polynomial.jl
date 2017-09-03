@@ -251,7 +251,11 @@ Returns the coefficient of the leading term, i.e. `first(terms(p))`.
 Calling `leadingterm` on ``4x^2y + xy + 2x`` should return ``4x^2y``.
 """
 function leadingterm(p::AbstractPolynomialLike)
-    first(terms(p))
+    if iszero(p)
+        zeroterm(p)
+    else
+        first(terms(p))
+    end
 end
 leadingterm(t::AbstractTermLike) = term(t)
 
