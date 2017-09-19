@@ -98,7 +98,9 @@ end
 (==)(α, q::RationalPoly) = α*q.den == q.num
 (==)(q::RationalPoly, α) = α == q
 
-function isapproxzero(α; ztol::Real=Base.rtoldefault(α, α))
+# α could be a JuMP affine expression
+isapproxzero(α; ztol::Real=0.) = false
+function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α))
     abs(α) <= ztol
 end
 
