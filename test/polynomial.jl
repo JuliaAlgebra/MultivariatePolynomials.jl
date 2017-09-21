@@ -44,6 +44,9 @@
     @test (@inferred polynomial(p)) isa AbstractPolynomial{Int}
     @test (@inferred polynomial(p, Float64)) isa AbstractPolynomial{Float64}
 
+    @test coefficient(2x + 4y^2 + 3, y^2) == 4
+    @test coefficient(2x + 4y^2 + 3, x^2) == 0
+
     @test (@inferred 2x^2*y + 0.0x*y) == 2x^2*y
     @test (@inferred 0.0x^2*y + 3x*y) == 3x*y
 

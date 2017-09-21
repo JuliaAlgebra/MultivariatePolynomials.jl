@@ -51,11 +51,25 @@ termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) whe
 
 Returns the coefficient of the term `t`.
 
+    coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)
+
+Returns the coefficient of the monomial `m` in `p`.
+
 ### Examples
 
 Calling `coefficient` on ``4x^2y`` should return ``4``.
+Calling `coefficient(2x + 4y^2 + 3, y^2)` should return ``4``.
+Calling `coefficient(2x + 4y^2 + 3, x^2)` should return ``0``.
 """
 coefficient(m::AbstractMonomialLike) = 1
+function coefficient(p::AbstractPolynomialLike{T}, m::AbstractMonomialLike) where T
+    for t in terms(p)
+        if monomial(t) == m
+            return coefficient(t)
+        end
+    end
+    zero(T)
+end
 
 """
     coefficient(p::AbstractPolynomialLike)
