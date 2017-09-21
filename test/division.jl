@@ -68,6 +68,8 @@
         @test q == [x, 0]
         @test r == 0
 
+        @test (@inferred rem(2y^4 + 3y^3 + 2y, y^2 - x)) == 2x^2 + 3xy + 2y
+
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
