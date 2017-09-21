@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.coefficient",
     "category": "Function",
-    "text": "coefficient(t::AbstractTermLike)\n\nReturns the coefficient of the term t.\n\nExamples\n\nCalling coefficient on 4x^2y should return 4.\n\n\n\n"
+    "text": "coefficient(t::AbstractTermLike)\n\nReturns the coefficient of the term t.\n\ncoefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)\n\nReturns the coefficient of the monomial m in p.\n\nExamples\n\nCalling coefficient on 4x^2y should return 4. Calling coefficient(2x + 4y^2 + 3, y^2) should return 4. Calling coefficient(2x + 4y^2 + 3, x^2) should return 0.\n\n\n\n"
 },
 
 {
