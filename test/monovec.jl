@@ -48,5 +48,6 @@
     @test monomialtype([x*y, x+y]) <: AbstractMonomial
 
     @test monovec([x, x^2]) != monovec([x*y, x^2*y])
+    @test monomials(x, 1:3) == monovec([x^3, x, x^2])
     @test monomials((x, y), 2) != monomials((x, y), 1)
 end
