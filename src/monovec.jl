@@ -1,5 +1,6 @@
 export monovec, monovectype, emptymonovec, sortmonovec, mergemonovec
 
+monomials(v::AbstractVariable, args...) = monomials((v,), args...)
 
 """
     emptymonovec(p::AbstractPolynomialLike)

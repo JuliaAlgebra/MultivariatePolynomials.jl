@@ -21,6 +21,9 @@
     #@inferred one(1.0 + x)
     @inferred zero(1.0 + x)
 
+    @test polynomial(1:2, [x, x^2]) == x + 2x^2
+    @test polynomial(1:2, monomials(x, 1:2)) == 2x + x^2
+
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [2x^2, 1]
     @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [2x^2, 1]
 
