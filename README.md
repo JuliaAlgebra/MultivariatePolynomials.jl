@@ -13,13 +13,13 @@ The interface contains functions for accessing the coefficients, monomials, term
 The following packages provides multivariate polynomials that implement the interface:
 
 * [TypedPolynomials](https://github.com/rdeits/TypedPolynomials.jl) : Commutative polynomials of arbitrary coefficient types
-* [DynamicPolynomials](https://github.com/blegat/DynamicPolynomials.jl) : Commutative and non-commutative polynomials of arbitrary coefficient types
+* [DynamicPolynomials](https://github.com/JuliaAlgebra/DynamicPolynomials.jl) : Commutative and non-commutative polynomials of arbitrary coefficient types
 
 The following packages extend/use the interface:
 
-* [SemialgebraicSets](https://github.com/blegat/SemialgebraicSets.jl) : Sets defined by inequalities and equalities between polynomials and algorithms for solving polynomial systems of equations.
+* [SemialgebraicSets](https://github.com/JuliaAlgebra/SemialgebraicSets.jl) : Sets defined by inequalities and equalities between polynomials and algorithms for solving polynomial systems of equations.
 * [HomotopyContinuation](https://github.com/saschatimme/HomotopyContinuation.jl) : Solving systems of polynomials via homotopy continuation.
-* [MultivariateMoments](https://github.com/blegat/MultivariateMoments.jl) : Moments of multivariate measures and their scalar product with polynomials.
+* [MultivariateMoments](https://github.com/JuliaAlgebra/MultivariateMoments.jl) : Moments of multivariate measures and their scalar product with polynomials.
 * [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) : A [JuMP](https://github.com/JuliaOpt/JuMP.jl) extension for Polynomial Optimization.
 * [SumOfSquares](https://github.com/JuliaOpt/SumOfSquares.jl) : Certifying the nonnegativity of polynomials, minimizing/maximizing polynomials and optimization over sum of squares polynomials using Sum of Squares Programming.
 
@@ -53,19 +53,19 @@ p(x=>A*vec(x)) # corresponds to dot(A*x, A*x), need vec to convert the tuple to 
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-stable-url]: https://blegat.github.io/MultivariatePolynomials.jl/stable
-[docs-latest-url]: https://blegat.github.io/MultivariatePolynomials.jl/latest
+[docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
+[docs-latest-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/latest
 
 [pkg-0.5-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.5.svg
 [pkg-0.5-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
 [pkg-0.6-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.6.svg
 [pkg-0.6-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
 
-[build-img]: https://travis-ci.org/blegat/MultivariatePolynomials.jl.svg?branch=master
-[build-url]: https://travis-ci.org/blegat/MultivariatePolynomials.jl
+[build-img]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl.svg?branch=master
+[build-url]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl
 [winbuild-img]: https://ci.appveyor.com/api/projects/status/4l5i8sbxev8405jl?svg=true
 [winbuild-url]: https://ci.appveyor.com/project/blegat/multivariatepolynomials-jl
-[coveralls-img]: https://coveralls.io/repos/github/blegat/MultivariatePolynomials.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/blegat/MultivariatePolynomials.jl?branch=master
-[codecov-img]: http://codecov.io/github/blegat/MultivariatePolynomials.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/blegat/MultivariatePolynomials.jl?branch=master
+[coveralls-img]: https://coveralls.io/repos/github/JuliaAlgebra/MultivariatePolynomials.jl/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
+[codecov-img]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
