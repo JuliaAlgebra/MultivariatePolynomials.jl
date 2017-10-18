@@ -32,7 +32,11 @@ function (/)(num, den::APL)
 end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients
-(/)(num::APL, den) = num * (1 / den)
+function (/)(num::APL{T}, den::S) where {T,S}
+    R = Base.promote_op(/, T, S)
+    num * inv(convert(R, den))
+end
+
 
 function (+)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)
