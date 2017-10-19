@@ -350,3 +350,20 @@ function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
         (β / α) * monomial(t)
     end
 end
+
+"""
+    mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
+
+Returns the polynomial obtained by applying `f` to each coefficients where `f` is a function such that `f(x)` is nonzero if `x` is nonzero.
+
+### Examples
+
+Calling `mapcoefficientsnz(α -> α^2, 2x*y + 3x + 1)` should return `4x*y + 9x + 1`.
+"""
+function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
+    # Invariant: p has only nonzero coefficient
+    # therefore f(α) will be nonzero for every coefficient α of p
+    # hence we can use Uniq
+    polynomial(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
+end
+mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)

@@ -46,12 +46,18 @@ minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, Base.
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
 multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 
-multconstant(α, t::AbstractTermLike)    = (α*coefficient(t)) * monomial(t)
-multconstant(t::AbstractTermLike, α)    = (coefficient(t)*α) * monomial(t)
-multconstant(α::T, p::AbstractPolynomial{S}) where {T, S} = iszero(α) ? zero(polynomialtype(p, Base.promote_op(*, T, S))) : polynomial(map(t -> α * t, terms(p)), SortedUniqState())
-multconstant(p::AbstractPolynomial{S}, α::T) where {T, S} = iszero(α) ? zero(polynomialtype(p, Base.promote_op(*, S, T))) : polynomial(map(t -> t * α, terms(p)), SortedUniqState())
-multconstant(α, p::AbstractPolynomialLike) = multconstant(α, polynomial(p))
-multconstant(p::AbstractPolynomialLike, α) = multconstant(polynomial(p), α)
+_multconstant(α, f, t::AbstractTermLike) = mapcoefficientsnz(f, t)
+function _multconstant(α::T, f, p::AbstractPolynomial{S}) where {S, T}
+    if iszero(α)
+        zero(polynomialtype(p, Base.promote_op(*, T, S)))
+    else
+        mapcoefficientsnz(f, p)
+    end
+end
+_multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomial(p))
+
+multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
+multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
 
 (*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
