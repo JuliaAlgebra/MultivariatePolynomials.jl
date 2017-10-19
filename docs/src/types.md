@@ -64,6 +64,7 @@ leadingmonomial
 removeleadingterm
 removemonomials
 monic
+mapcoefficientsnz
 ```
 
 ## Rational Polynomial Function
