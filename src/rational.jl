@@ -32,7 +32,8 @@ function (/)(num, den::APL)
 end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients
-(/)(num::APL, den) = num * (1 / den)
+(/)(num::APL, den) = polynomial(map(t -> coefficient(t)/den * monomial(t), terms(num)), SortedUniqState())
+    
 
 function (+)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)
