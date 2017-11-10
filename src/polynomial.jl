@@ -73,7 +73,7 @@ Returns the same as `polynomialtype(::PT)`.
 
 Returns the type that `p` would have if it was converted into a polynomial of coefficient type `T`.
 
-    termtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}
+    polynomialtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}
 
 Returns the same as `polynomialtype(::PT, ::Type{T})`.
 """
