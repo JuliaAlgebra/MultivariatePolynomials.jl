@@ -36,6 +36,7 @@ p = 2x + 3.0x*y^2 + y
 ```
 Below is an example with `@polyvar x[1:3]`
 ```julia
+using TypedPolynomials
 A = rand(3, 3)
 @polyvar x[1:3] # assign x to a tuple of variables x1, x2, x3
 p = sum(x .* x) # x_1^2 + x_2^2 + x_3^2
