@@ -1,9 +1,9 @@
 # Multivariate Polynomials
 
-| **Documentation** | **PackageEvaluator** | **Build Status** |
-|:-----------------:|:--------------------:|:----------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
+| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** |
+|:-----------------:|:--------------------:|:----------------:|:----------:|
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/en/a/af/Discourse_logo.png" width="64">][discourse-url] |
 
 This package provides an interface for manipulating multivariate polynomials.
 Implementing algorithms on polynomials using this interface will allow the algorithm to work for all polynomials implementing the interface.
@@ -70,3 +70,7 @@ p(x=>A*vec(x)) # corresponds to dot(A*x, A*x), need vec to convert the tuple to 
 [coveralls-url]: https://coveralls.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
 [codecov-img]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
+
+[gitter-url]: https://gitter.im/JuliaAlgebra/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link
+[gitter-img]: https://badges.gitter.im/JuliaAlgebra/Lobby.svg
+[discourse-url]: https://discourse.julialang.org/c/domain/opt
