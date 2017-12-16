@@ -23,6 +23,8 @@ function Base.convert(::Type{RationalPoly{NT, DT}}, α) where {NT, DT}
     #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
 
+Base.inv(r::RationalPoly) = r.den / r.num
+Base.inv(p::APL{T}) where T = one(T) / p
 (/)(r::RationalPoly, p) = r.num / (r.den * p)
 function (/)(num::NT, den::DT) where {NT <: APL, DT <: APL}
     RationalPoly{NT, DT}(num, den)
