@@ -10,19 +10,12 @@ Implementing algorithms on polynomials using this interface will allow the algor
 
 The interface contains functions for accessing the coefficients, monomials, terms of the polynomial, defines arithmetic operations on them, rational functions, division with remainder, calculus/differentiation and evaluation/substitution.
 
-The following packages provides multivariate polynomials that implement the interface:
+## Documentation
 
-* [TypedPolynomials](https://github.com/rdeits/TypedPolynomials.jl) : Commutative polynomials of arbitrary coefficient types
-* [DynamicPolynomials](https://github.com/JuliaAlgebra/DynamicPolynomials.jl) : Commutative and non-commutative polynomials of arbitrary coefficient types
+- [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
+- [**LATEST**][docs-latest-url] &mdash; *in-development version of the documentation.*
 
-The following packages extend/use the interface:
-
-* [SemialgebraicSets](https://github.com/JuliaAlgebra/SemialgebraicSets.jl) : Sets defined by inequalities and equalities between polynomials and algorithms for solving polynomial systems of equations.
-* [FixedPolynomials](https://github.com/JuliaAlgebra/FixedPolynomials.jl) : Fast evaluation of multivariate polynomials
-* [HomotopyContinuation](https://github.com/saschatimme/HomotopyContinuation.jl) : Solving systems of polynomials via homotopy continuation.
-* [MultivariateMoments](https://github.com/JuliaAlgebra/MultivariateMoments.jl) : Moments of multivariate measures and their scalar product with polynomials.
-* [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) : A [JuMP](https://github.com/JuliaOpt/JuMP.jl) extension for Polynomial Optimization.
-* [SumOfSquares](https://github.com/JuliaOpt/SumOfSquares.jl) : Certifying the nonnegativity of polynomials, minimizing/maximizing polynomials and optimization over sum of squares polynomials using Sum of Squares Programming.
+## Examples
 
 Below is a simple usage example
 ```julia
@@ -45,12 +38,26 @@ subs(p, x[1]=>2, x[3]=>3) # x_2^2 + 13
 p(x=>A*vec(x)) # corresponds to dot(A*x, A*x), need vec to convert the tuple to a vector
 ```
 
-## See also
+## Ecosystem
+
+The following packages provides multivariate polynomials that implement the interface:
+
+* [TypedPolynomials](https://github.com/rdeits/TypedPolynomials.jl) : Commutative polynomials of arbitrary coefficient types
+* [DynamicPolynomials](https://github.com/JuliaAlgebra/DynamicPolynomials.jl) : Commutative and non-commutative polynomials of arbitrary coefficient types
+
+The following packages extend/use the interface:
+
+* [SemialgebraicSets](https://github.com/JuliaAlgebra/SemialgebraicSets.jl) : Sets defined by inequalities and equalities between polynomials and algorithms for solving polynomial systems of equations.
+* [FixedPolynomials](https://github.com/JuliaAlgebra/FixedPolynomials.jl) : Fast evaluation of multivariate polynomials
+* [HomotopyContinuation](https://github.com/saschatimme/HomotopyContinuation.jl) : Solving systems of polynomials via homotopy continuation.
+* [MultivariateMoments](https://github.com/JuliaAlgebra/MultivariateMoments.jl) : Moments of multivariate measures and their scalar product with polynomials.
+* [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) : A [JuMP](https://github.com/JuliaOpt/JuMP.jl) extension for Polynomial Optimization.
+* [SumOfSquares](https://github.com/JuliaOpt/SumOfSquares.jl) : Certifying the nonnegativity of polynomials, minimizing/maximizing polynomials and optimization over sum of squares polynomials using Sum of Squares Programming.
+
+### See also
 
 * [Nemo](https://github.com/wbhart/Nemo.jl) for generic polynomial rings, matrix spaces, fraction fields, residue rings, power series
-
 * [Polynomials](https://github.com/Keno/Polynomials.jl) for univariate polynomials
-
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
