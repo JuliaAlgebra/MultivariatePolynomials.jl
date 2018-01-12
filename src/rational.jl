@@ -65,3 +65,5 @@ _minus(s::RationalPoly, p) = (s.num - p * s.den) / s.den
 
 Base.zero(::RationalPoly{NT}) where {NT} = zero(NT)
 Base.zero(::Type{RationalPoly{NT, DT}}) where {NT, DT} = zero(NT)
+Base.one(::RationalPoly{NT}) where {NT} = one(NT)
+Base.one(::Type{RationalPoly{NT, DT}}) where {NT, DT} = one(NT)
