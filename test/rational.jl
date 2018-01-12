@@ -12,6 +12,8 @@
     @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
     #@test typeof(zero(1/x)) == Term{true, Int}
     @test iszero(zero(1/x))
+    @test zero(1/x) == 0
+    @test one(1/x) == 1
     #@test typeof(zero(RationalPoly{true, Float64, Int})) == Polynomial{true, Float64}
     #@test iszero(zero(RationalPoly{true, Float64, Int}))
     #@test typeof(x / 2) == Term{true, Float64}
