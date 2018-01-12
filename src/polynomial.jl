@@ -367,3 +367,9 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
     polynomial(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
 end
 mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)
+
+Base.round(t::AbstractTermLike) = round(coefficient(t)) * monomial(t)
+function Base.round(p::AbstractPolynomialLike)
+    # round(0.1) is zero so we cannot use SortedUniqState
+    polynomial(round.(terms(p)), SortedState())
+end
