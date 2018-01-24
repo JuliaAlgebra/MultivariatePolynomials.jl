@@ -117,6 +117,8 @@
 
     @test (@inferred round(2.6x + 1.001x^2)) == 3x + 1x^2
     @test (@inferred round(3.1x*y)) == 3x*y
+    @test (@inferred round(2.613x + 1.1051x^2, 2)) ≈ 2.61x + 1.11x^2
+    @test (@inferred round(3.145x*y, 1)) ≈ 3.1x*y
 
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
