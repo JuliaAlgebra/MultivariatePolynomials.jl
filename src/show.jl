@@ -6,7 +6,6 @@ if VERSION < v"0.7.0-DEV.1144" # Define `isone` for base types JuliaLang/julia#2
     isone(x::T) where T = x == one(T)
 end
 
-
 function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')
