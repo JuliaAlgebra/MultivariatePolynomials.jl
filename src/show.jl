@@ -6,6 +6,7 @@ if VERSION < v"0.7.0-DEV.1144" # Define `isone` for base types JuliaLang/julia#2
     isone(x::T) where T = x == one(T)
 end
 
+
 function show(io::IO, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')
@@ -21,6 +22,8 @@ function show(io::IO, m::AbstractMonomial)
     end
 end
 
+should_print_coefficient(x) = true  # By default, just print all coefficients
+should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one" coefficients
 print_coefficient(io::IO, coeff::Real) = print(io, coeff)
 print_coefficient(io::IO, coeff) = print(io, "(", coeff, ")")
 
@@ -28,8 +31,8 @@ function Base.show(io::IO, t::AbstractTerm)
     if isconstant(t)
         print_coefficient(io, coefficient(t))
     else
-        if !isone(coefficient(t))
-            if isone(-coefficient(t))
+        if should_print_coefficient(coefficient(t))
+            if !should_print_coefficient(-coefficient(t))
                 print(io, '-')
             else
                 print_coefficient(io, coefficient(t))
