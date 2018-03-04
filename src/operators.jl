@@ -104,9 +104,9 @@ Base.transpose(m::AbstractMonomial) = m
 Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
 Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
 
-Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-Base.dot(x, p::AbstractPolynomialLike) = x' * p
-Base.dot(p::AbstractPolynomialLike, x) = p' * x
+dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+dot(x, p::AbstractPolynomialLike) = x' * p
+dot(p::AbstractPolynomialLike, x) = p' * x
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """

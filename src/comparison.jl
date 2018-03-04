@@ -7,12 +7,12 @@ Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
-(==)(α::Void, x::APL) = false
-(==)(x::APL, α::Void) = false
+(==)(α::Nothing, x::APL) = false
+(==)(x::APL, α::Nothing) = false
 (==)(α::Dict, x::APL) = false
 (==)(x::APL, α::Dict) = false
-(==)(α::Void, x::RationalPoly) = false
-(==)(x::RationalPoly, α::Void) = false
+(==)(α::Nothing, x::RationalPoly) = false
+(==)(x::RationalPoly, α::Nothing) = false
 (==)(α::Dict, x::RationalPoly) = false
 (==)(x::RationalPoly, α::Dict) = false
 
