@@ -10,6 +10,8 @@ import Base: *, +, -, /, ^, ==,
 using Compat
 import Compat.LinearAlgebra: dot, norm
 
+# The ' operator lowers to `transpose()` in v0.6 and to
+# `adjoint()` in v0.7+. 
 # TOOD: remove this switch when dropping v0.6 support
 @static if VERSION <= v"0.7.0-DEV.3351"
     import Base: transpose
