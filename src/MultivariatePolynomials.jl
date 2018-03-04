@@ -6,9 +6,9 @@ module MultivariatePolynomials
 
 import Base: *, +, -, /, ^, ==,
     promote_rule, convert, show, isless, size, getindex,
-    one, zero, transpose, isapprox, @pure, copy
+    one, zero, isapprox, @pure, copy
 using Compat
-import Compat.LinearAlgebra: dot, norm
+import Compat.LinearAlgebra: dot, norm, adjoint
 
 export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
 """

@@ -99,10 +99,10 @@ for op in [:+, :-]
     end
 end
 
-Base.transpose(v::AbstractVariable) = v
-Base.transpose(m::AbstractMonomial) = m
-Base.transpose(t::T) where {T <: AbstractTerm} = transpose(coefficient(t)) * monomial(t)
-Base.transpose(p::AbstractPolynomialLike) = polynomial(map(transpose, terms(p)))
+adjoint(v::AbstractVariable) = v
+adjoint(m::AbstractMonomial) = m
+adjoint(t::T) where {T <: AbstractTerm} = adjoint(coefficient(t)) * monomial(t)
+adjoint(p::AbstractPolynomialLike) = polynomial(map(adjoint, terms(p)))
 
 dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
 dot(x, p::AbstractPolynomialLike) = x' * p
@@ -115,3 +115,6 @@ The element type of the vector will be Monomial{vars, length(vars)}.
 """
 Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 # vec(vars::Tuple{Vararg{<:TypedVariable}}) = SVector(vars)
+
+# https://github.com/JuliaLang/julia/pull/23332
+^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)

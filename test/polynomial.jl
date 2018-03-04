@@ -102,7 +102,7 @@
         @test monomials(p) == monovec([x^2, x])
     end
 
-    @test transpose(x + y) == x + y
+    @test (x + y)' == x + y
 
     @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
 
