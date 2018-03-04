@@ -99,10 +99,10 @@ for op in [:+, :-]
     end
 end
 
-adjoint(v::AbstractVariable) = v
-adjoint(m::AbstractMonomial) = m
-adjoint(t::T) where {T <: AbstractTerm} = adjoint(coefficient(t)) * monomial(t)
-adjoint(p::AbstractPolynomialLike) = polynomial(map(adjoint, terms(p)))
+adjoint_operator(v::AbstractVariable) = v
+adjoint_operator(m::AbstractMonomial) = m
+adjoint_operator(t::T) where {T <: AbstractTerm} = adjoint_operator(coefficient(t)) * monomial(t)
+adjoint_operator(p::AbstractPolynomialLike) = polynomial(map(adjoint_operator, terms(p)))
 
 dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
 dot(x, p::AbstractPolynomialLike) = x' * p
