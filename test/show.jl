@@ -24,5 +24,5 @@
     @test sprint(show, -(1.0 + 3.1im) * z*x) == "(-1.0 - 3.1im)xz"
     @test sprint(show, x^2 + (1.0 + 3.1im) * x) == "x^2 + (1.0 + 3.1im)x"
     @test sprint(show, x^2 - (1.0 + 3.1im) * x) == "x^2 + (-1.0 - 3.1im)x"
-    @test sprint(show, [1.0, 2.0] * x == "([1.0, 2.0])x")
+    @test sprint(show, [1.0, 2.0] * x) == "([1.0, 2.0])x"
 end
