@@ -100,7 +100,7 @@ end
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real=0.) = false
-function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α))
+function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α, 0))
     abs(α) <= ztol
 end
 

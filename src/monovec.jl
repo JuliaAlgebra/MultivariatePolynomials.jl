@@ -20,7 +20,7 @@ Calling `monovec` on ``[xy, x, xy, x^2y, x]`` should return ``[x^2y, xy, x]``.
 """
 function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
     Y = sort(X, rev=true)
-    dups = find(i -> Y[i] == Y[i-1], 2:length(Y))
+    dups = findall(i -> Y[i] == Y[i-1], 2:length(Y))
     deleteat!(Y, dups)
     Y
 end
@@ -54,7 +54,7 @@ Calling `sortmonovec` on ``[xy, x, xy, x^2y, x]`` should return ``([4, 1, 2], [x
 """
 function sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
     σ = sortperm(X, rev=true)
-    dups = find(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
+    dups = findall(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
     deleteat!(σ, dups)
     σ, X[σ]
 end
