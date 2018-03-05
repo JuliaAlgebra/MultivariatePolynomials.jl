@@ -34,17 +34,6 @@ differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) *
 
 const ARPL = Union{APL, RationalPoly}
 
-function differentiate_old(ps::AbstractArray{PT, N}, xs::Union{AbstractArray, Tuple}) where {N, PT<:ARPL}
-    qs = Array{Any, N+1}(length(xs), size(ps)...)
-    for (i, x) in enumerate(xs)
-        for j in linearindices(ps)
-            J = ind2sub(ps, j)
-            qs[i, J...] = differentiate(ps[J...], x)
-        end
-    end
-    qs
-end
-
 function differentiate(ps::AbstractArray{PT}, xs::AbstractArray) where {PT <: ARPL}
     differentiate.(reshape(ps, (1, size(ps)...)), reshape(xs, :))
 end
