@@ -95,7 +95,7 @@ differentiate(p, x, ::Val{1}) = differentiate(p, x)
     Base.@pure _reduce_degree(::Val{N}) where {N} = Val{N - 1}()
     function differentiate(p, x, deg::Val{N}) where N
         if N < 0
-            throw(DomainError())
+            throw(DomainError(deg))
         else
             differentiate(differentiate(p, x), x, _reduce_degree(deg))
         end
@@ -104,7 +104,7 @@ else
     # In Julia v0.7 and above, we can remove the _reduce_degree trick
     function differentiate(p, x, deg::Val{N}) where N
         if N < 0
-            throw(DomainError())
+            throw(DomainError(deg))
         else
             differentiate(differentiate(p, x), x, Val{N - 1}())
         end
