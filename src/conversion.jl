@@ -1,8 +1,8 @@
 export variable
 
-function convertconstant end
+convertconstant(::Type{P}, α) where P<:APL = P(α)
 convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
-convert(::Type{P}, p::APL) where P<:AbstractPolynomial = convert(P, polynomial(p))
+convert(::Type{P}, p::APL) where P<:AbstractPolynomial = P(polynomial(p))
 
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
@@ -17,6 +17,10 @@ function Base.convert(::Type{S}, p::APL) where {S}
     end
     s
 end
+
+# Fix ambiguity caused by above conversions
+Base.convert(::Type{P}, p::APL) where P<:APL = P(p)
+
 Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
 function Base.convert(::Type{MT}, t::AbstractTerm) where {MT<:AbstractMonomial}
     if isone(coefficient(t))
