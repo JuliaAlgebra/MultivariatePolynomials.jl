@@ -2,15 +2,20 @@
 export differentiate
 
 """
-    differentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Int=1)
+    differentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Union{Int, Val}=1)
 
 Differentiate `deg` times the polynomial `p` by the variable `v`.
 
-    differentiate(p::AbstractPolynomialLike, vs, deg::Int=1)
 
-Differentiate `deg` times the polynomial `p` by the variables of the vector or tuple of variable `vs` and return an array of dimension `deg`.
+    differentiate(p::AbstractPolynomialLike, vs, deg::Union{Int, Val}=1)
 
-    differentiate(p::AbstractArray{<:AbstractPolynomialLike, N}, vs, deg::Int=1) where N
+Differentiate `deg` times the polynomial `p` by the variables of the vector or
+tuple of variable `vs` and return an array of dimension `deg`. It is recommended
+to pass `deg` as a `Val` instance when the degree is known at compile time, e.g.
+`differentiate(p, v, Val{2}())` instead of `differentiate(p, x, 2)`, as this
+will help the compiler infer the return type.
+
+    differentiate(p::AbstractArray{<:AbstractPolynomialLike, N}, vs, deg::Union{Int, Val}=1) where N
 
 Differentiate the polynomials in `p` by the variables of the vector or tuple of variable `vs` and return an array of dimension `N+deg`.
 
@@ -19,63 +24,84 @@ Differentiate the polynomials in `p` by the variables of the vector or tuple of 
 ```julia
 p = 3x^2*y + x + 2y + 1
 differentiate(p, x) # should return 6xy + 1
+differentiate(p, x, Val{1}()) # equivalent to the above
 differentiate(p, (x, y)) # should return [6xy+1, 3x^2+1]
 ```
 """
 function differentiate end
 
 # Fallback for everything else
-_diff_promote_op(::Type{T}, ::Type{<:AbstractVariable}) where T = T
 differentiate(α::T, v::AbstractVariable) where T = zero(T)
-
-_diff_promote_op(::Type{<:AbstractVariable}, ::Type{<:AbstractVariable}) = Int
 differentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 : 0
-
-_diff_promote_op(::Type{TT}, ::Type{<:AbstractVariable}) where {T, TT<:AbstractTermLike{T}} = changecoefficienttype(TT, Base.promote_op(*, T, Int))
 differentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * differentiate(monomial(t), v)
-
-_diff_promote_op(::Type{PT}, ::Type{<:AbstractVariable}) where {T, PT<:APL{T}} = polynomialtype(PT, Base.promote_op(*, T, Int))
 # The polynomial function will take care of removing the zeros
 differentiate(p::APL, v::AbstractVariable) = polynomial(differentiate.(terms(p), v), SortedState())
-
 differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) * p.den - p.num * differentiate(p.den, v)) / p.den^2
 
 const ARPL = Union{APL, RationalPoly}
 
-_vec_diff_promote_op(::Type{PT}, ::AbstractVector{VT}) where {PT, VT} = _diff_promote_op(PT, VT)
-_vec_diff_promote_op(::Type{PT}, ::NTuple{N, VT}) where {PT, N, VT}   = _diff_promote_op(PT, VT)
-_vec_diff_promote_op(::Type{PT}, ::VT, xs...) where {PT, VT}          = _diff_promote_op(PT, VT)
-_vec_diff_promote_op(::Type{PT}, xs::Tuple) where PT = _vec_diff_promote_op(PT, xs...)
-
-# even if I annotate with ::Array{_diff_promote_op(T, PolyVar{C}), N+1}, it cannot detect the type since it seems to be unable to determine the dimension N+1 :(
-function differentiate(ps::AbstractArray{PT, N}, xs::Union{AbstractArray, Tuple}) where {N, PT<:ARPL}
-    qs = Array{_vec_diff_promote_op(PT, xs), N+1}(length(xs), size(ps)...)
-    for (i, x) in enumerate(xs)
-        for j in linearindices(ps)
-            J = ind2sub(ps, j)
-            qs[i, J...] = differentiate(ps[J...], x)
-        end
-    end
-    qs
+function differentiate(ps::AbstractArray{PT}, xs::AbstractArray) where {PT <: ARPL}
+    differentiate.(reshape(ps, (1, size(ps)...)), reshape(xs, :))
 end
 
+function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT <: ARPL}
+    differentiate.(reshape(ps, (1, size(ps)...)), xs)
+end
+
+
+# TODO: this signature is probably too wide and creates the potential
+# for stack overflows
 differentiate(p::ARPL, xs) = [differentiate(p, x) for x in xs]
 
 # differentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
 differentiate(p::ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
 
-# In Julia v0.5, Base.promote_op returns Any for PolyVar, Monomial and MatPolynomial
-# Even on Julia v0.6 and Polynomial, Base.promote_op returns Any...
-_diff_promote_op(::Type{PT}, ::Type{VT}) where {PT, VT} = Base.promote_op(differentiate, PT, VT)
-_diff_promote_op(::Type{MT}, ::Type{<:AbstractVariable}) where {MT<:AbstractMonomialLike} = termtype(MT, Int)
-
-function differentiate(p, x, deg::Int)
+# The `R` argument indicates a desired result type. We use this in order
+# to attempt to preserve type-stability even though the value of `deg` cannot
+# be known at compile time. For scalar `p` and `x`, we set R to be the type
+# of differentiate(p, x) to give a stable result type regardless of `deg`. For
+# vectors p and/or x this is impossible (since differentiate may return an array),
+# so we just set `R` to `Any`
+function (_differentiate_recursive(p, x, deg::Int, ::Type{R})::R) where {R}
     if deg < 0
         throw(DomainError())
     elseif deg == 0
-        # Need the conversion with promote_op to be type stable for PolyVar, Monomial and MatPolynomial
-        return convert(_diff_promote_op(typeof(p), typeof(x)), p)
+        return p
     else
         return differentiate(differentiate(p, x), x, deg-1)
+    end
+end
+
+differentiate(p, x, deg::Int) = _differentiate_recursive(p, x, deg, Base.promote_op(differentiate, typeof(p), typeof(x)))
+differentiate(p::AbstractArray, x,                              deg::Int) = _differentiate_recursive(p, x, deg, Any)
+differentiate(p,                x::Union{AbstractArray, Tuple}, deg::Int) = _differentiate_recursive(p, x, deg, Any)
+differentiate(p::AbstractArray, x::Union{AbstractArray, Tuple}, deg::Int) = _differentiate_recursive(p, x, deg, Any)
+
+
+# This is alternative, Val-based interface for nested differentiation.
+# It has the advantage of not requiring an conversion or calls to
+# Base.promote_op, while maintaining type stability for any argument
+# type.
+differentiate(p, x, ::Val{0}) = p
+differentiate(p, x, ::Val{1}) = differentiate(p, x)
+
+@static if VERSION < v"v0.7.0-"
+    # Marking this @pure helps julia v0.6 figure this out
+    Base.@pure _reduce_degree(::Val{N}) where {N} = Val{N - 1}()
+    function differentiate(p, x, deg::Val{N}) where N
+        if N < 0
+            throw(DomainError(deg))
+        else
+            differentiate(differentiate(p, x), x, _reduce_degree(deg))
+        end
+    end
+else
+    # In Julia v0.7 and above, we can remove the _reduce_degree trick
+    function differentiate(p, x, deg::Val{N}) where N
+        if N < 0
+            throw(DomainError(deg))
+        else
+            differentiate(differentiate(p, x), x, Val{N - 1}())
+        end
     end
 end

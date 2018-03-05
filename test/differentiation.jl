@@ -2,7 +2,7 @@
     Mod.@polyvar x y
     @test differentiate(3, y) == 0
     @test differentiate.([x, y], y) == [0, 1]
-    @test differentiate([x, y], (x, y)) == eye(2)
+    @test differentiate([x, y], (x, y)) == Matrix(1.0I, 2, 2) # TODO: this can be just `I` on v0.7 and above
     @test differentiate(true*x+true*x^2, y) == 0
     @inferred differentiate(true*x+true*x^2, y)
     @test differentiate(x*y + 3y^2 , [x, y]) == [y, x+6y]
@@ -33,4 +33,16 @@
     p = differentiate(2x^2 + 3x*y^2 + 4y^3 + 2.0, (x, y), 2)
     @test isa(p, Matrix{<:AbstractPolynomial{Float64}})
     @test p == [4.0 6.0y; 6.0y 6.0x+24.0y]
+
+    @testset "differentiation with Val{}" begin
+        @test @inferred(differentiate(x, x, Val{0}())) == x
+        @test @inferred(differentiate(x, x, Val{1}())) == 1
+        @test @inferred(differentiate(x^2, x, Val{1}())) == 2x
+        @test @inferred(differentiate(x^2, y, Val{1}())) == 0
+        @test @inferred(differentiate(2x^2 + 3y, x, Val{1}())) == 4x
+        @test @inferred(differentiate(2x^2 + 3y, x, Val{2}())) == 4
+        p = differentiate(2x^2 + 3x*y + y^2, [x, y], Val{2}())
+        @test isa(p, Matrix{<:AbstractPolynomial{Int}})
+        @test p == [4 3; 3 2]
+    end
 end

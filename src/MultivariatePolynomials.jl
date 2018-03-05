@@ -6,7 +6,20 @@ module MultivariatePolynomials
 
 import Base: *, +, -, /, ^, ==,
     promote_rule, convert, show, isless, size, getindex,
-    one, zero, transpose, isapprox, @pure, dot, copy
+    one, zero, isapprox, @pure, copy
+using Compat
+import Compat.LinearAlgebra: dot, norm
+
+# The ' operator lowers to `transpose()` in v0.6 and to
+# `adjoint()` in v0.7+. 
+# TOOD: remove this switch when dropping v0.6 support
+@static if VERSION <= v"0.7.0-DEV.3351"
+    import Base: transpose
+    const adjoint_operator = transpose
+else
+    import Compat.LinearAlgebra: adjoint
+    const adjoint_operator = adjoint
+end
 
 export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
 """

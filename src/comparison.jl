@@ -7,12 +7,12 @@ Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
-(==)(α::Void, x::APL) = false
-(==)(x::APL, α::Void) = false
+(==)(α::Nothing, x::APL) = false
+(==)(x::APL, α::Nothing) = false
 (==)(α::Dict, x::APL) = false
 (==)(x::APL, α::Dict) = false
-(==)(α::Void, x::RationalPoly) = false
-(==)(x::RationalPoly, α::Void) = false
+(==)(α::Nothing, x::RationalPoly) = false
+(==)(x::RationalPoly, α::Nothing) = false
 (==)(α::Dict, x::RationalPoly) = false
 (==)(x::RationalPoly, α::Dict) = false
 
@@ -100,7 +100,7 @@ end
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real=0.) = false
-function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α))
+function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α, 0))
     abs(α) <= ztol
 end
 

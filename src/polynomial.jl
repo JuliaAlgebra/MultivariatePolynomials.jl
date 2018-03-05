@@ -4,7 +4,7 @@ export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
 
-Base.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
+norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)

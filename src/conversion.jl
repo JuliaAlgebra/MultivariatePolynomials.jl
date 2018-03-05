@@ -11,7 +11,7 @@ function Base.convert(::Type{S}, p::APL) where {S}
     for t in terms(p)
         if !isconstant(t)
             # The polynomial is not constant
-            throw(InexactError())
+            throw(InexactError(:convert, S, p))
         end
         s += S(coefficient(t))
     end
