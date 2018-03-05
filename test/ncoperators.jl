@@ -39,7 +39,7 @@
     p = @inferred polynomial(Q, monovec([x*y, x^2, y^2]))
     @test coefficients(p) == [4, 3, 5, 4, 3, 2, 6, 5, 4]
     @test monomials(p) == [x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y]
-    q = @inferred polynomial(Matrix{Float64}(0, 0), emptymonovec(x))
+    q = @inferred polynomial(zeros(Float64, 0, 0), emptymonovec(x))
     @test q isa AbstractPolynomialLike{Float64}
     @test q == 0
 end
