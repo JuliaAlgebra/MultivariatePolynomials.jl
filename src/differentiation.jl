@@ -56,13 +56,13 @@ differentiate(p::ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
 # of differentiate(p, x) to give a stable result type regardless of `deg`. For
 # vectors p and/or x this is impossible (since differentiate may return an array),
 # so we just set `R` to `Any`
-function _differentiate_recursive(p, x, deg::Int, ::Type{R}) where {R}
+function (_differentiate_recursive(p, x, deg::Int, ::Type{R})::R) where {R}
     if deg < 0
         throw(DomainError())
     elseif deg == 0
-        return convert(R, p)::R
+        return p
     else
-        return convert(R, differentiate(differentiate(p, x), x, deg-1))::R
+        return differentiate(differentiate(p, x), x, deg-1)
     end
 end
 
