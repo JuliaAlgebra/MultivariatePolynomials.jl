@@ -71,9 +71,10 @@ degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
 #_deg(v::AbstractVariable) = 0
 #_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
 #degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
+
 function degree(m::AbstractMonomial, v::AbstractVariable)
-    i = findfirst(variables(m), v)
-    if i == nothing || iszero(i)
+    i = findfirst(equalto(v), variables(m))
+    if i === nothing || iszero(i)
         0
     else
         exponents(m)[i]

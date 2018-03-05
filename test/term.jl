@@ -1,6 +1,6 @@
 @testset "Term" begin
     Mod.@polyvar x
-    @test Any(1x) == 1x
+    @test convert(Any, 1x) == 1x
     @test one(1x) == one(1.0x) == 1
     @test zero(1x) == zero(1.0x) == 0
     @test nvariables(0.0x) == 1

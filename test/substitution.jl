@@ -1,4 +1,4 @@
-import Base.Test: @inferred
+using Compat.Test: @inferred
 
 @testset "Substitution" begin
     Mod.@polyvar x[1:3]

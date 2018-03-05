@@ -67,7 +67,7 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     lt = leadingterm.(g)
     rg = removeleadingterm.(g)
     lm = monomial.(lt)
-    useful = IntSet(eachindex(g))
+    useful = BitSet(eachindex(g))
     while !iszero(rf)
         ltf = leadingterm(rf)
         if isapproxzero(ltf; kwargs...)
