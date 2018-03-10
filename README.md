@@ -1,9 +1,9 @@
 # Multivariate Polynomials
 
-| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** |
-|:-----------------:|:--------------------:|:----------------:|:----------:|
-| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] |
+| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** | **References to cite** |
+|:-----------------:|:--------------------:|:----------------:|:----------:|:----------------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI](https://zenodo.org/badge/72210778.svg)](https://zenodo.org/badge/latestdoi/72210778) |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 This package provides an interface for manipulating multivariate polynomials.
 Implementing algorithms on polynomials using this interface will allow the algorithm to work for all polynomials implementing the interface.
