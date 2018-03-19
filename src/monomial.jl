@@ -73,7 +73,7 @@ degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
 #degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
 
 function degree(m::AbstractMonomial, v::AbstractVariable)
-    i = findfirst(equalto(v), variables(m))
+    i = findfirst(isequal(v), variables(m))
     if i === nothing || iszero(i)
         0
     else
