@@ -101,6 +101,7 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     q, r
 end
 
+# TODO remove when all supported Julia version contain https://github.com/JuliaLang/julia/pull/26344
 Base.det(A::AbstractMatrix{<:AbstractTermLike}) = det(polynomial.(A))
 function Base.det(A::AbstractMatrix{<:AbstractPolynomialLike})
     d = det(lufact(A))
