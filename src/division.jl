@@ -100,3 +100,10 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     end
     q, r
 end
+
+Base.det(A::AbstractMatrix{<:AbstractTermLike}) = det(polynomial.(A))
+function Base.det(A::AbstractMatrix{<:AbstractPolynomialLike})
+    d = det(lufact(A))
+    # The denominator should divide the numerator
+    div(numerator(d), denominator(d))
+end

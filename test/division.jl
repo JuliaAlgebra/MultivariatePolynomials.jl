@@ -71,4 +71,11 @@
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
+    @testset "Determinant" begin
+        Mod.@polyvar x y
+        @test 2x^3 - x^2 == @inferred det([2x^2 x; x x])
+        @test x^3 - x^2 == @inferred det([x^2 x; x x])
+        @test x^2 - y^2 == @inferred det([x y; y x])
+        @test -2x^3 + 2x^2*y + 2x*y^2 - 4x^2 - 2x*y + 4x + 4y == @inferred det([x+1 x*y-x+2 0; 2x^2-3y^3 x-y 2; x+y x^2 0])
+    end
 end
