@@ -22,8 +22,9 @@
     @test (x^2 + 1) / (2x) != nothing
     @test Dict{Int,Int}() != x / (x^2 + 1)
     @test (x^2 + 1) / (2x) != Dict{Int,Int}()
-    @test numerator(x / x^2) == x
-    @test denominator(x / x^2) == x^2
-    @test inv(x / x^2) == x
-    @test x / x^2 == inv(x)
+    d = @inferred x / x^2
+    @test inv(d) == x
+    @test d == inv(x)
+    @test numerator(d) == 1
+    @test denominator(d) == x
 end

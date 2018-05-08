@@ -1,6 +1,5 @@
 export RationalPoly
 
-# TODO We should take gcd between numerator and denominator
 struct RationalPoly{NT <: APL, DT <: APL}
     num::NT
     den::DT
@@ -22,12 +21,14 @@ function Base.convert(::Type{RationalPoly{NT, DT}}, α) where {NT, DT}
     #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
 
+function Base.:/(num::APL, den::APL)
+    d = gcd(num, den)
+    RationalPoly(div(num, d), div(den, d))
+end
+
 Base.inv(r::RationalPoly) = r.den / r.num
 Base.inv(p::APL{T}) where T = one(T) / p
 Base.:/(r::RationalPoly, p) = r.num / (r.den * p)
-function Base.:/(num::NT, den::DT) where {NT <: APL, DT <: APL}
-    RationalPoly{NT, DT}(num, den)
-end
 function Base.:/(num, den::APL)
     constantterm(num, den) / den
 end
