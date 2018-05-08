@@ -71,4 +71,26 @@
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
+    @testset "gcd" begin
+        Mod.@polyvar x
+        @test -2(x + 1) == @inferred gcd(x^2 - 1, x^2 + 2x + 1)
+        @test  2(x + 1) == @inferred gcd(x^2 + 2x + 1, x^2 - 1)
+        @test    x + 1  == @inferred gcd(x^2 - 1, x + 1)
+        @test    x + 1  == @inferred gcd(x + 1, x^2 - 1)
+        @test    x + 1  == @inferred gcd(x - x, x + 1)
+        @test    x + 1  == @inferred gcd(x + 1, x - x)
+        @test        0  == @inferred gcd(x - x, x^2 - x^2)
+        @test        0  == @inferred gcd(x^2 - x^2, x - x)
+    end
+    @testset "lcm" begin
+        Mod.@polyvar x
+        @test -(x-1) * (x+1)^2 / 2 == @inferred lcm(x^2 - 1, x^2 + 2x + 1)
+        @test  (x-1) * (x+1)^2 / 2 == @inferred lcm(x^2 + 2x + 1, x^2 - 1)
+        @test x^2 - 1 == @inferred lcm(x^2 - 1, x - 1)
+        @test x^2 - 1 == @inferred lcm(x - 1, x^2 - 1)
+        @test       0 == @inferred lcm(x - x, x + 1)
+        @test       0 == @inferred lcm(x + 1, x - x)
+        @test       0 == @inferred lcm(x - x, x^2 - x^2)
+        @test       0 == @inferred lcm(x^2 - x^2, x - x)
+    end
 end

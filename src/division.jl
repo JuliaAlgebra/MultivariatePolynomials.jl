@@ -100,3 +100,12 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     end
     q, r
 end
+
+function Base.gcd(p::AbstractPolynomialLike{T}, q::AbstractPolynomialLike{S}) where {T, S}
+    if isapproxzero(q)
+        convert(polynomialtype(p, Base.promote_op(proddiff, T, S)), p)
+    else
+        gcd(q, rem(p, q))
+    end
+end
+Base.lcm(p::AbstractPolynomialLike, q::AbstractPolynomialLike) = p * div(q, gcd(p, q))
