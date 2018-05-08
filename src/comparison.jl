@@ -7,14 +7,14 @@ Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to eqconstant
-(==)(α::Nothing, x::APL) = false
-(==)(x::APL, α::Nothing) = false
-(==)(α::Dict, x::APL) = false
-(==)(x::APL, α::Dict) = false
-(==)(α::Nothing, x::RationalPoly) = false
-(==)(x::RationalPoly, α::Nothing) = false
-(==)(α::Dict, x::RationalPoly) = false
-(==)(x::RationalPoly, α::Dict) = false
+Base.:(==)(α::Nothing, x::APL) = false
+Base.:(==)(x::APL, α::Nothing) = false
+Base.:(==)(α::Dict, x::APL) = false
+Base.:(==)(x::APL, α::Dict) = false
+Base.:(==)(α::Nothing, x::RationalPoly) = false
+Base.:(==)(x::RationalPoly, α::Nothing) = false
+Base.:(==)(α::Dict, x::RationalPoly) = false
+Base.:(==)(x::RationalPoly, α::Dict) = false
 
 function polyeqterm(p::AbstractPolynomial, t)
     if iszero(p)
@@ -40,7 +40,7 @@ eqconstant(t::AbstractTermLike, α) = _termeqconstant(t, α)
 eqconstant(α, p::APL) = polyeqterm(p, α)
 eqconstant(p::APL, α) = polyeqterm(p, α)
 
-function (==)(t1::AbstractTerm, t2::AbstractTerm)
+function Base.:(==)(t1::AbstractTerm, t2::AbstractTerm)
     c1 = coefficient(t1)
     c2 = coefficient(t2)
     if iszero(c1)
@@ -49,8 +49,8 @@ function (==)(t1::AbstractTerm, t2::AbstractTerm)
         c1 == c2 && monomial(t1) == monomial(t2)
     end
 end
-(==)(p::AbstractPolynomial, t::AbstractTerm) = polyeqterm(p, t)
-(==)(t::AbstractTerm, p::AbstractPolynomial) = polyeqterm(p, t)
+Base.:(==)(p::AbstractPolynomial, t::AbstractTerm) = polyeqterm(p, t)
+Base.:(==)(t::AbstractTerm, p::AbstractPolynomial) = polyeqterm(p, t)
 
 function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, isz, op)
     i1 = 1
@@ -89,14 +89,14 @@ end
 #    end
 #    return true
 #end
-(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, iszero, ==)
+Base.:(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, iszero, ==)
 
-(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
 # Solve ambiguity with (::PolyType, ::Any)
-(==)(p::APL, q::RationalPoly) = p*q.den == q.num
-(==)(q::RationalPoly, p::APL) = p == q
-(==)(α, q::RationalPoly) = α*q.den == q.num
-(==)(q::RationalPoly, α) = α == q
+Base.:(==)(p::APL, q::RationalPoly) = p*q.den == q.num
+Base.:(==)(q::RationalPoly, p::APL) = p == q
+Base.:(==)(α, q::RationalPoly) = α*q.den == q.num
+Base.:(==)(q::RationalPoly, α) = α == q
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real=0.) = false
