@@ -1,4 +1,3 @@
-# I do not use it but I import the function to add a method
 export differentiate
 
 """

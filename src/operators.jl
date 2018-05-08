@@ -1,9 +1,9 @@
 # We reverse the order of comparisons here so that the result
 # of x < y is equal to the result of Monomial(x) < Monomial(y)
-@pure isless(v1::AbstractVariable, v2::AbstractVariable) = name(v1) > name(v2)
-isless(m1::AbstractTermLike, m2::AbstractTermLike) = isless(promote(m1, m2)...)
+Base.@pure Base.isless(v1::AbstractVariable, v2::AbstractVariable) = name(v1) > name(v2)
+Base.isless(m1::AbstractTermLike, m2::AbstractTermLike) = isless(promote(m1, m2)...)
 
-function isless(t1::AbstractTerm, t2::AbstractTerm)
+function Base.isless(t1::AbstractTerm, t2::AbstractTerm)
     if monomial(t1) < monomial(t2)
         true
     elseif monomial(t1) == monomial(t2)
@@ -18,22 +18,22 @@ end
 # is a polynomial of JuMP affine expression but if we promote it would be a
 # polynomial of quadratic expression
 for op in [:+, :-, :(==)]
-    @eval $op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
+    @eval Base.$op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
-isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
+Base.isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
 
 # @eval $op(p::APL, α) = $op(promote(p, α)...) would be less efficient
 for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant), (:(==), :eqconstant)]
-    @eval $op(p::APL, α) = $fun(p, α)
-    @eval $op(α, p::APL) = $fun(α, p)
+    @eval Base.$op(p::APL, α) = $fun(p, α)
+    @eval Base.$op(α, p::APL) = $fun(α, p)
 end
-isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
-isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
+Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
+Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
-(-)(m::AbstractMonomialLike) = (-1) * m
-(-)(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
-(-)(p::APL) = polynomial((-).(terms(p)))
-(+)(p::Union{APL, RationalPoly}) = p
+Base.:-(m::AbstractMonomialLike) = (-1) * m
+Base.:-(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
+Base.:-(p::APL) = polynomial((-).(terms(p)))
+Base.:+(p::Union{APL, RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
@@ -59,16 +59,16 @@ _multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomia
 multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
 multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
 
-(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
-#(*)(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
+Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
+#Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
-(*)(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * monomial(t))
-(*)(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
-(*)(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
+Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * monomial(t))
+Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
+Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
 
-(*)(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
-(*)(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
-(*)(p::APL, q::APL) = polynomial(p) * polynomial(q)
+Base.:*(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
+Base.:*(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
+Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
 
 # guaranteed that monomial(t1) > monomial(t2)
 function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, T}
@@ -82,9 +82,9 @@ function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, 
 end
 for op in [:+, :-]
     @eval begin
-        $op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
-        $op(t1::AbstractTerm, t2::AbstractTerm) = $op(promote(t1, t2)...)
-        function $op(t1::TT, t2::TT) where {T, TT <: AbstractTerm{T}}
+        Base.$op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
+        Base.$op(t1::AbstractTerm, t2::AbstractTerm) = $op(promote(t1, t2)...)
+        function Base.$op(t1::TT, t2::TT) where {T, TT <: AbstractTerm{T}}
             S = Base.promote_op($op, T, T)
             # t1 > t2 would compare the coefficient in case the monomials are equal
             # and it will throw a MethodError in case the coefficients are not comparable
@@ -104,9 +104,9 @@ adjoint_operator(m::AbstractMonomial) = m
 adjoint_operator(t::T) where {T <: AbstractTerm} = adjoint_operator(coefficient(t)) * monomial(t)
 adjoint_operator(p::AbstractPolynomialLike) = polynomial(map(adjoint_operator, terms(p)))
 
-dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-dot(x, p::AbstractPolynomialLike) = x' * p
-dot(p::AbstractPolynomialLike, x) = p' * x
+Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+Base.dot(x, p::AbstractPolynomialLike) = x' * p
+Base.dot(p::AbstractPolynomialLike, x) = p' * x
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """
@@ -117,4 +117,4 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 # vec(vars::Tuple{Vararg{<:TypedVariable}}) = SVector(vars)
 
 # https://github.com/JuliaLang/julia/pull/23332
-^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
+Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)

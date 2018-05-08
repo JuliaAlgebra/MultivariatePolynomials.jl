@@ -1,8 +1,8 @@
 export variable
 
 convertconstant(::Type{P}, α) where P<:APL = P(α)
-convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
-convert(::Type{P}, p::APL) where P<:AbstractPolynomial = P(polynomial(p))
+Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
+Base.convert(::Type{P}, p::APL) where P<:AbstractPolynomial = P(polynomial(p))
 
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar

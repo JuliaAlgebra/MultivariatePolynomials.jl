@@ -4,9 +4,6 @@ module MultivariatePolynomials
 
 #using DocStringExtensions
 
-import Base: *, +, -, /, ^, ==,
-    promote_rule, convert, show, isless, size, getindex,
-    one, zero, isapprox, @pure, copy
 using Compat
 import Compat.LinearAlgebra: dot, norm
 
