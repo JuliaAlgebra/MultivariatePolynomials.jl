@@ -20,9 +20,6 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
         @test iszero(zero(x))
         @test zero(x) isa AbstractPolynomial{Int}
         @inferred zero(x)
-        @test one(x) == 1
-        @test one(x) isa AbstractMonomial
-        @inferred one(x)
 
         typetests(x)
         @test (@inferred polynomial(x)) isa AbstractPolynomial{Int}
@@ -40,6 +37,18 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
 
         @test divides(x, x) == true
         @test divides(x, y) == false
+
+        @testset "Issue #82" begin
+            for v in (x, typeof(x))
+                for fun in (oneunit, one)
+                    @test fun(v) == 1
+                    @test 1 == fun(v)
+                    #@test isone(fun(v)) # Enable when Julia v0.6 is dropped
+                    @test fun(v) isa AbstractMonomial
+                    @inferred fun(v)
+                end
+            end
+        end
     end
     @testset "Create similar variable" begin
         Mod.@polyvar x y
