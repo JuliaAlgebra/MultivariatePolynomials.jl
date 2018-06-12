@@ -124,3 +124,11 @@ mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponen
 
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)
+# See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
+# By default, Base do oneunit(v::VT) = VT(one(v)).
+# This tries to convert a monomial to a variable which does not work.
+# The issue here is there is no way to represent the multiplicative identity
+# using the variable type. The best we can do is return a monomial even
+# if it does not exactly match the definition of oneunit.
+Base.oneunit(v::AbstractVariable) = one(v)
+Base.oneunit(VT::Type{<: AbstractVariable}) = one(VT)
