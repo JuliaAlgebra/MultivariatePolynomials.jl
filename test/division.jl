@@ -1,3 +1,4 @@
+const MP = MultivariatePolynomials
 @testset "Division" begin
     @testset "GCD and LCM" begin
         Mod.@polyvar x y z
