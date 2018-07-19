@@ -104,9 +104,9 @@ adjoint_operator(m::AbstractMonomial) = m
 adjoint_operator(t::T) where {T <: AbstractTerm} = adjoint_operator(coefficient(t)) * monomial(t)
 adjoint_operator(p::AbstractPolynomialLike) = polynomial(map(adjoint_operator, terms(p)))
 
-Base.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-Base.dot(x, p::AbstractPolynomialLike) = x' * p
-Base.dot(p::AbstractPolynomialLike, x) = p' * x
+Compat.LinearAlgebra.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+Compat.LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
+Compat.LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """
