@@ -5,10 +5,10 @@ module MultivariatePolynomials
 #using DocStringExtensions
 
 using Compat
-import Compat.LinearAlgebra: dot, norm
+import Compat.LinearAlgebra: dot, norm, det
 
 # The ' operator lowers to `transpose()` in v0.6 and to
-# `adjoint()` in v0.7+. 
+# `adjoint()` in v0.7+.
 # TOOD: remove this switch when dropping v0.6 support
 @static if VERSION <= v"0.7.0-DEV.3351"
     import Base: transpose
@@ -91,5 +91,6 @@ include("comparison.jl")
 include("substitution.jl")
 include("differentiation.jl")
 include("division.jl")
+include("det.jl")
 
 end # module

@@ -4,6 +4,7 @@ include("monomial.jl")
 include("term.jl")
 include("monovec.jl")
 include("polynomial.jl")
+include("det.jl")
 
 include("rational.jl")
 
