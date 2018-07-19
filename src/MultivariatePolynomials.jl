@@ -5,7 +5,7 @@ module MultivariatePolynomials
 #using DocStringExtensions
 
 using Compat
-import Compat.LinearAlgebra: dot, norm
+import Compat.LinearAlgebra: dot, norm, det
 
 # The ' operator lowers to `transpose()` in v0.6 and to
 # `adjoint()` in v0.7+.

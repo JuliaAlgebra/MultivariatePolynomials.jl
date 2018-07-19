@@ -1,4 +1,4 @@
-function Base.LinAlg.det(M::Matrix{<:AbstractPolynomialLike})
+function det(M::Matrix{<:AbstractPolynomialLike})
     m = size(M)[1]
     if m > 2
         return sum((-1)^(i-1) * M[i,1] *  det(M[1:end .!= i, 2:end]) for i in 1:m)
