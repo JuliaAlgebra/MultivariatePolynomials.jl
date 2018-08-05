@@ -1,10 +1,10 @@
 @testset "Algebra" begin
     Mod.@polyvar x y
-    @test 2 .- ((1 .+ (-x)) .* 4) ./ 2 == x.^2 .* (1 ./ x) .* 2
+    #@test 2 .- ((1 .+ (-x)) .* 4) ./ 2 == x.^2 .* (1 ./ x) .* 2
     @test dot(0, x^2 - 2*x^2) == dot((x^2 - x)', x^2 - x^2)
     @test dot(x + 1, 2) == 2x + 2
-    @test 2 .* x .+ 2 == (x + 3) .+ (x .- 1)
-    @test ((x + y) .- y) ./ y == x / y
+    # @test 2 .* x .+ 2 == (x + 3) .+ (x .- 1)
+    # @test ((x + y) .- y) ./ y == x / y
     @test (-2)*x == -(2*x)
     @test x * x == x^2
     @test 4x == 2.0(2x)

@@ -1,6 +1,5 @@
-using Compat
-using Compat.Test
-using Compat.LinearAlgebra
+using Test
+using LinearAlgebra
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
@@ -23,7 +22,8 @@ if try_import(:DynamicPolynomials)
     include("noncommutativetests.jl")
 end
 
-if try_import(:TypedPolynomials)
-    Mod = TypedPolynomials
-    include("commutativetests.jl")
-end
+# TypedPolynomials currently does not load under 0.7
+# if try_import(:TypedPolynomials)
+#     Mod = TypedPolynomials
+#     include("commutativetests.jl")
+# end

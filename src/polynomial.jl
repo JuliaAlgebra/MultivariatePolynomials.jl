@@ -4,7 +4,7 @@ export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
 
-Compat.LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int=2) = norm(coefficients(p), r)
+LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int=2) = LinearAlgebra.norm(coefficients(p), r)
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
 changecoefficienttype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial, T} = polynomialtype(PT, T)
@@ -54,7 +54,7 @@ polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(
 polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
 polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial([f(i) * mv[i] for i in 1:length(mv)])
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
-    dot(mv, Q * mv)
+    LinearAlgebra.dot(mv, Q * mv)
 end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
@@ -368,8 +368,8 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
 end
 mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)
 
-Base.round(t::AbstractTermLike, args...) = round(coefficient(t), args...) * monomial(t)
-function Base.round(p::AbstractPolynomialLike, args...)
+Base.round(t::AbstractTermLike; args...) = round(coefficient(t); args...) * monomial(t)
+function Base.round(p::AbstractPolynomialLike; args...)
     # round(0.1) is zero so we cannot use SortedUniqState
-    polynomial(round.(terms(p), args...), SortedState())
+    polynomial(round.(terms(p); args...), SortedState())
 end
