@@ -373,3 +373,5 @@ function Base.round(p::AbstractPolynomialLike; args...)
     # round(0.1) is zero so we cannot use SortedUniqState
     polynomial(round.(terms(p); args...), SortedState())
 end
+
+Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)
