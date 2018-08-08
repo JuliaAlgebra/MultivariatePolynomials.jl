@@ -1,6 +1,5 @@
-using Compat
-using Compat.Test
-using Compat.LinearAlgebra
+using Test
+using LinearAlgebra
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials

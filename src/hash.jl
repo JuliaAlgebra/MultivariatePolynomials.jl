@@ -31,6 +31,6 @@ function Base.hash(p::AbstractPolynomial, u::UInt)
     if iszero(p)
         hash(0, u)
     else
-        reduce((u, t) -> hash(t, u), u, terms(p))
+        reduce((u, t) -> hash(t, u), terms(p); init=u)
     end
 end

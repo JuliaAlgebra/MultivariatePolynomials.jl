@@ -99,14 +99,14 @@ for op in [:+, :-]
     end
 end
 
-adjoint_operator(v::AbstractVariable) = v
-adjoint_operator(m::AbstractMonomial) = m
-adjoint_operator(t::T) where {T <: AbstractTerm} = adjoint_operator(coefficient(t)) * monomial(t)
-adjoint_operator(p::AbstractPolynomialLike) = polynomial(map(adjoint_operator, terms(p)))
+LinearAlgebra.adjoint(v::AbstractVariable) = v
+LinearAlgebra.adjoint(m::AbstractMonomial) = m
+LinearAlgebra.adjoint(t::T) where {T <: AbstractTerm} = LinearAlgebra.adjoint(coefficient(t)) * monomial(t)
+LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
 
-Compat.LinearAlgebra.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
-Compat.LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
-Compat.LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
+LinearAlgebra.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
+LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
+LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """

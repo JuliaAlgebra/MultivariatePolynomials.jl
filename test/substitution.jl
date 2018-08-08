@@ -1,4 +1,4 @@
-using Compat.Test: @inferred
+import Test: @inferred
 
 @testset "Substitution" begin
     Mod.@polyvar x[1:3]
@@ -12,10 +12,10 @@ using Compat.Test: @inferred
     @test (x[1])(x[1]=>x[2]) == x[2]
 
     p = x[1]*x[2]*x[3]
-    @test Int(p(x => (1, 2, 3))) == 6
+    @test convert(Int, p(x => (1, 2, 3))) == 6
 
     p = x[1]^2 + x[1]*x[3] - 3
-    @test Int(p(x => (5, x[1]*x[2], 4))) == 42
+    @test convert(Int, p(x => (5, x[1]*x[2], 4))) == 42
 
     p = x[1]^2 + x[2]^2
     q = p(x[1:2] => [1 -1; 1 1] * vec(x[1:2]))

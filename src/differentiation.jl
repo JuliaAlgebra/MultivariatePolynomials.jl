@@ -63,7 +63,7 @@ differentiate(p::ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
 # so we just set `R` to `Any`
 function (_differentiate_recursive(p, x, deg::Int, ::Type{R})::R) where {R}
     if deg < 0
-        throw(DomainError())
+        throw(DomainError(deg, "degree is negative"))
     elseif deg == 0
         return p
     else
