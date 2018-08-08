@@ -34,7 +34,7 @@ differentiate(α::T, v::AbstractVariable) where T = zero(T)
 differentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 : 0
 differentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * differentiate(monomial(t), v)
 # The polynomial function will take care of removing the zeros
-differentiate(p::APL, v::AbstractVariable) = polynomial(differentiate.(terms(p), Ref(v)), SortedState())
+differentiate(p::APL, v::AbstractVariable) = polynomial(differentiate.(terms(p), v), SortedState())
 differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) * p.den - p.num * differentiate(p.den, v)) / p.den^2
 
 const ARPL = Union{APL, RationalPoly}
