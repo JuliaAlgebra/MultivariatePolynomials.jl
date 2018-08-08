@@ -22,8 +22,7 @@ if try_import(:DynamicPolynomials)
     include("noncommutativetests.jl")
 end
 
-# TypedPolynomials currently does not load under 0.7
-# if try_import(:TypedPolynomials)
-#     Mod = TypedPolynomials
-#     include("commutativetests.jl")
-# end
+if try_import(:TypedPolynomials)
+    Mod = TypedPolynomials
+    include("commutativetests.jl")
+end
