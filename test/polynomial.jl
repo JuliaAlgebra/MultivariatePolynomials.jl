@@ -104,6 +104,8 @@ const MP = MultivariatePolynomials
     end
 
     @test (x + y)' == x + y
+    @test transpose(x + y) == x + y
+    @test transpose([1 2; 3 4] * x) == [1 3; 2 4] * x
 
     @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
 

@@ -101,8 +101,13 @@ end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = v
 LinearAlgebra.adjoint(m::AbstractMonomial) = m
-LinearAlgebra.adjoint(t::T) where {T <: AbstractTerm} = LinearAlgebra.adjoint(coefficient(t)) * monomial(t)
+LinearAlgebra.adjoint(t::AbstractTerm) = LinearAlgebra.adjoint(coefficient(t)) * monomial(t)
 LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
+
+LinearAlgebra.transpose(v::AbstractVariable) = v
+LinearAlgebra.transpose(m::AbstractMonomial) = m
+LinearAlgebra.transpose(t::AbstractTerm) = LinearAlgebra.transpose(coefficient(t)) * monomial(t)
+LinearAlgebra.transpose(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.transpose, terms(p)))
 
 LinearAlgebra.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' * p2
 LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
