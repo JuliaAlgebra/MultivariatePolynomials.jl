@@ -1,14 +1,9 @@
 # VARIABLES
-function Base.show(io::IO, v::AbstractVariable)
-    print_var(io, MIME"text/plain"(), v)
-end
-function Base.show(io::IO, mime::MIME"text/latex", v::AbstractVariable)
-    print_var(io, mime, v)
-end
+Base.show(io::IO, v::AbstractVariable) = print_var(io, MIME"text/plain"(), v)
+Base.show(io::IO, mime::MIME"text/plain", v::AbstractVariable) = print_var(io, mime, v)
+Base.show(io::IO, mime::MIME"text/latex", v::AbstractVariable) = print_var(io, mime, v)
 
-function print_var(io::IO, mime::MIME, var::AbstractVariable)
-    print_var(io, mime, name(var))
-end
+print_var(io::IO, mime::MIME, var::AbstractVariable) = print_var(io, mime, name(var))
 function print_var(io::IO, mime::MIME, var::String)
     m = match(r"([a-zA-Z]+)(?:\[((?:\d,)*\d)\])", var)
     if m === nothing
@@ -19,7 +14,7 @@ function print_var(io::IO, mime::MIME, var::String)
     end
 end
 function print_subscript(io::IO, ::MIME"text/latex", index)
-    print(io, "_{", join(unicode_subscript.(index), ","), "}")
+    print(io, "_{", join(index, ","), "}")
 end
 function print_subscript(io::IO, mime, index)
     if length(index) == 1
@@ -29,17 +24,14 @@ function print_subscript(io::IO, mime, index)
     end
 end
 
+const unicode_subscripts = ("₀","₁","₂","₃","₄","₅","₆","₇","₈","₉")
+unicode_subscript(i) = unicode_subscripts[i+1]
+
 # MONOMIALS
 
-function Base.show(io::IO, mime::MIME"text/latex", m::AbstractMonomial)
-    print_monomial(io, mime, m)
-end
-function Base.show(io::IO, mime::MIME"text/plain", m::AbstractMonomial)
-    print_monomial(io, mime, m)
-end
-function Base.show(io::IO, m::AbstractMonomial)
-    print_monomial(io, MIME"text/plain"(), m)
-end
+Base.show(io::IO, mime::MIME"text/latex", m::AbstractMonomial) = print_monomial(io, mime, m)
+Base.show(io::IO, mime::MIME"text/plain", m::AbstractMonomial) = print_monomial(io, mime, m)
+Base.show(io::IO, m::AbstractMonomial) = print_monomial(io, MIME"text/plain"(), m)
 
 function print_monomial(io::IO, mime, m::AbstractMonomial)
     if isconstant(m)
@@ -61,17 +53,14 @@ function print_exponent(io::IO, mime, exp)
     print(io, join(unicode_superscript.(reverse(digits(exp)))))
 end
 
+const unicode_superscripts = ("⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹")
+unicode_superscript(i) = unicode_superscripts[i+1]
+
 # TERM
 
-function Base.show(io::IO, t::AbstractTerm)
-    print_term(io, MIME"text/plain"(), t)
-end
-function Base.show(io::IO, mime::MIME"text/latex", t::AbstractTerm)
-    print_term(io, mime, t)
-end
-function Base.show(io::IO, mime::MIME"text/plain", t::AbstractTerm)
-    print_term(io, mime, t)
-end
+Base.show(io::IO, t::AbstractTerm) = print_term(io, MIME"text/plain"(), t)
+Base.show(io::IO, mime::MIME"text/latex", t::AbstractTerm) = print_term(io, mime, t)
+Base.show(io::IO, mime::MIME"text/plain", t::AbstractTerm) = print_term(io, mime, t)
 
 function print_term(io::IO, mime, t::AbstractTerm)
     if isconstant(t)
@@ -85,7 +74,7 @@ function print_term(io::IO, mime, t::AbstractTerm)
             end
         end
         if !iszero(t)
-            print(io, monomial(t))
+            show(io, mime, monomial(t))
         end
     end
 end
@@ -97,15 +86,9 @@ print_coefficient(io::IO, coeff) = print(io, "(", coeff, ")")
 
 # POLYNOMIAL
 
-function Base.show(io::IO, t::AbstractPolynomial)
-    print_poly(io, MIME"text/plain"(), t)
-end
-function Base.show(io::IO, mime::MIME"text/plain", t::AbstractPolynomial)
-    print_poly(io, mime, t)
-end
-function Base.show(io::IO, mime::MIME"text/latex", t::AbstractPolynomial)
-    print_poly(io, mime, t)
-end
+Base.show(io::IO, t::AbstractPolynomial) = print_poly(io, MIME"text/plain"(), t)
+Base.show(io::IO, mime::MIME"text/plain", t::AbstractPolynomial) = print_poly(io, mime, t)
+Base.show(io::IO, mime::MIME"text/latex", t::AbstractPolynomial) = print_poly(io, mime, t)
 
 function print_poly(io::IO, mime, p::AbstractPolynomial{T}) where T
     ts = terms(p)
@@ -116,10 +99,10 @@ function print_poly(io::IO, mime, p::AbstractPolynomial{T}) where T
         for t in Iterators.drop(ts, 1)
             if isnegative(coefficient(t))
                 print(io, " - ")
-                print_term(io, mime, abs(coefficient(t)) * monomial(t))
+                show(io, mime, abs(coefficient(t)) * monomial(t))
             else
                 print(io, " + ")
-                print_term(io, mime, t)
+                show(io, mime, t)
             end
         end
     end
@@ -128,16 +111,11 @@ end
 isnegative(x::Real) = x < 0
 isnegative(x) = false
 
+# RATIONAL POLY
 
-function Base.show(io::IO, t::RationalPoly)
-    print_ratpoly(io, MIME"text/plain"(), t)
-end
-function Base.show(io::IO, mime::MIME"text/plain", t::RationalPoly)
-    print_ratpoly(io, mime, t)
-end
-function Base.show(io::IO, mime::MIME"text/latex", t::RationalPoly)
-    print_ratpoly(io, mime, t)
-end
+Base.show(io::IO, t::RationalPoly) = print_ratpoly(io, MIME"text/plain"(), t)
+Base.show(io::IO, mime::MIME"text/plain", t::RationalPoly) = print_ratpoly(io, mime, t)
+Base.show(io::IO, mime::MIME"text/latex", t::RationalPoly) = print_ratpoly(io, mime, t)
 
 function print_ratpoly(io::IO, mime, p::RationalPoly)
     print(io, "(")
@@ -145,52 +123,4 @@ function print_ratpoly(io::IO, mime, p::RationalPoly)
     print(io, ") / (")
     show(io, mime, p.den)
     print(io, ")")
-end
-
-function unicode_subscript(i)
-    if i == 0
-        "\u2080"
-    elseif i == 1
-        "\u2081"
-    elseif i == 2
-        "\u2082"
-    elseif i == 3
-        "\u2083"
-    elseif i == 4
-        "\u2084"
-    elseif i == 5
-        "\u2085"
-    elseif i == 6
-        "\u2086"
-    elseif i == 7
-        "\u2087"
-    elseif i == 8
-        "\u2088"
-    elseif i == 9
-        "\u2089"
-    end
-end
-
-function unicode_superscript(i)
-    if i == 0
-        "\u2070"
-    elseif i == 1
-        "\u00B9"
-    elseif i == 2
-        "\u00B2"
-    elseif i == 3
-        "\u00B3"
-    elseif i == 4
-        "\u2074"
-    elseif i == 5
-        "\u2075"
-    elseif i == 6
-        "\u2076"
-    elseif i == 7
-        "\u2077"
-    elseif i == 8
-        "\u2078"
-    elseif i == 9
-        "\u2079"
-    end
 end
