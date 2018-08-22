@@ -3,24 +3,23 @@ Base.show(io::IO, v::AbstractVariable) = print_var(io, MIME"text/plain"(), v)
 Base.show(io::IO, mime::MIME"text/plain", v::AbstractVariable) = print_var(io, mime, v)
 Base.show(io::IO, mime::MIME"text/latex", v::AbstractVariable) = print_var(io, mime, v)
 
-print_var(io::IO, mime::MIME, var::AbstractVariable) = print_var(io, mime, name(var))
-function print_var(io::IO, mime::MIME, var::String)
-    m = match(r"([a-zA-Z]+)(?:\[((?:\d,)*\d)\])", var)
-    if m === nothing
-        print(io, var)
+function print_var(io::IO, mime::MIME, var::AbstractVariable)
+    base, indices = name_base_indices(var)
+    if isempty(indices)
+        print(io, base)
     else
-        print(io, m.captures[1])
-        print_subscript(io, mime, parse.(Int, split(m.captures[2], ",")))
+        print(io, base)
+        print_subscript(io, mime, indices)
     end
 end
 function print_subscript(io::IO, ::MIME"text/latex", index)
     print(io, "_{", join(index, ","), "}")
 end
-function print_subscript(io::IO, mime, index)
-    if length(index) == 1
-        print(io, unicode_subscript(index[1]))
+function print_subscript(io::IO, mime, indices)
+    if length(indices) == 1
+        print(io, unicode_subscript(indices[1]))
     else
-        print(io, join(unicode_subscript.(index), "\u208B"))
+        print(io, join(unicode_subscript.(indices), "\u208B"))
     end
 end
 

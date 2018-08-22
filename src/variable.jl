@@ -1,4 +1,4 @@
-export name, similarvariable, @similarvariable
+export name, name_base_indices, similarvariable, @similarvariable
 
 Base.copy(x::AbstractVariable) = x
 
@@ -55,6 +55,13 @@ end
 Returns the name of a variable.
 """
 function name end
+
+"""
+    name_base(v::AbstractVariable)::Tuple{String, Vector{Int}}
+
+Returns the name of the variable and its indices.
+"""
+function name_base_indices end
 
 """
     similarvariable(p::AbstractPolynomialLike, variable::Type{Val{V}})

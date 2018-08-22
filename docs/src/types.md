@@ -10,6 +10,7 @@ CurrentModule = MultivariatePolynomials
 AbstractVariable
 variable
 name
+name_base_indices
 similarvariable
 @similarvariable
 ```
