@@ -57,9 +57,10 @@ Returns the name of a variable.
 function name end
 
 """
-    name_base(v::AbstractVariable)::Tuple{String, Vector{Int}}
+    name_base_indices(v::AbstractVariable)
 
-Returns the name of the variable and its indices.
+Returns the name of the variable (as a `String` or `Symbol`) and its indices
+as a `Vector{Int}` or tuple of `Int`s.
 """
 function name_base_indices end
 
