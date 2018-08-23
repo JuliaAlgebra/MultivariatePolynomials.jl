@@ -1,7 +1,10 @@
+Base.print(io::IO, v::AbstractPolynomialLike) = show(io, MIME"text/print"(), v)
+
 # VARIABLES
 Base.show(io::IO, v::AbstractVariable) = print_var(io, MIME"text/plain"(), v)
 Base.show(io::IO, mime::MIME"text/plain", v::AbstractVariable) = print_var(io, mime, v)
 Base.show(io::IO, mime::MIME"text/latex", v::AbstractVariable) = print_var(io, mime, v)
+Base.show(io::IO, mime::MIME"text/print", v::AbstractVariable) = print_var(io, mime, v)
 
 function print_var(io::IO, mime::MIME, var::AbstractVariable)
     base, indices = name_base_indices(var)
@@ -12,6 +15,8 @@ function print_var(io::IO, mime::MIME, var::AbstractVariable)
         print_subscript(io, mime, indices)
     end
 end
+print_var(io::IO, mime::MIME"text/print", var::AbstractVariable) = print(io, name(var))
+
 function print_subscript(io::IO, ::MIME"text/latex", index)
     print(io, "_{", join(index, ","), "}")
 end
@@ -30,15 +35,23 @@ unicode_subscript(i) = unicode_subscripts[i+1]
 
 Base.show(io::IO, mime::MIME"text/latex", m::AbstractMonomial) = print_monomial(io, mime, m)
 Base.show(io::IO, mime::MIME"text/plain", m::AbstractMonomial) = print_monomial(io, mime, m)
+Base.show(io::IO, mime::MIME"text/print", m::AbstractMonomial) = print_monomial(io, mime, m)
 Base.show(io::IO, m::AbstractMonomial) = print_monomial(io, MIME"text/plain"(), m)
 
 function print_monomial(io::IO, mime, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')
     else
-        for (var, exp) in zip(variables(m), exponents(m))
+        printed_var = false
+        vars = variables(m)
+        n = length(vars)
+        for (i, var, exp) in zip(1:n, vars, exponents(m))
             if !iszero(exp)
+                if mime isa MIME"text/print" && printed_var && i > 0 &&
+                    print(io,"*")
+                end
                 print_var(io, mime, var)
+                printed_var = true
                 if !isone(exp)
                     print_exponent(io, mime, exp)
                 end
@@ -48,6 +61,7 @@ function print_monomial(io::IO, mime, m::AbstractMonomial)
 end
 #
 print_exponent(io::IO, ::MIME"text/latex", exp) = print(io, "^{", exp, "}")
+print_exponent(io::IO, ::MIME"text/print", exp) = print(io, "^", exp)
 function print_exponent(io::IO, mime, exp)
     print(io, join(unicode_superscript.(reverse(digits(exp)))))
 end
@@ -60,6 +74,7 @@ unicode_superscript(i) = unicode_superscripts[i+1]
 Base.show(io::IO, t::AbstractTerm) = print_term(io, MIME"text/plain"(), t)
 Base.show(io::IO, mime::MIME"text/latex", t::AbstractTerm) = print_term(io, mime, t)
 Base.show(io::IO, mime::MIME"text/plain", t::AbstractTerm) = print_term(io, mime, t)
+Base.show(io::IO, mime::MIME"text/print", t::AbstractTerm) = print_term(io, mime, t)
 
 function print_term(io::IO, mime, t::AbstractTerm)
     if isconstant(t)
@@ -88,6 +103,7 @@ print_coefficient(io::IO, coeff) = print(io, "(", coeff, ")")
 Base.show(io::IO, t::AbstractPolynomial) = print_poly(io, MIME"text/plain"(), t)
 Base.show(io::IO, mime::MIME"text/plain", t::AbstractPolynomial) = print_poly(io, mime, t)
 Base.show(io::IO, mime::MIME"text/latex", t::AbstractPolynomial) = print_poly(io, mime, t)
+Base.show(io::IO, mime::MIME"text/print", t::AbstractPolynomial) = print_poly(io, mime, t)
 
 function print_poly(io::IO, mime, p::AbstractPolynomial{T}) where T
     ts = terms(p)
@@ -115,6 +131,7 @@ isnegative(x) = false
 Base.show(io::IO, t::RationalPoly) = print_ratpoly(io, MIME"text/plain"(), t)
 Base.show(io::IO, mime::MIME"text/plain", t::RationalPoly) = print_ratpoly(io, mime, t)
 Base.show(io::IO, mime::MIME"text/latex", t::RationalPoly) = print_ratpoly(io, mime, t)
+Base.show(io::IO, mime::MIME"text/print", t::RationalPoly) = print_ratpoly(io, mime, t)
 
 function print_ratpoly(io::IO, mime, p::RationalPoly)
     print(io, "(")
