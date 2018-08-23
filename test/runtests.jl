@@ -17,15 +17,14 @@ function try_import(name::Symbol)
 end
 
 global implementation = :DynamicPolynomials
-
 if try_import(:DynamicPolynomials)
     Mod = DynamicPolynomials
     include("commutativetests.jl")
     include("noncommutativetests.jl")
 end
 
+global implementation = :TypedPolynomials
 if try_import(:TypedPolynomials)
     Mod = TypedPolynomials
-    global implementation = :TypedPolynomials
     include("commutativetests.jl")
 end
