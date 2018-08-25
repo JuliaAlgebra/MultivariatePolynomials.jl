@@ -3,8 +3,6 @@ module SimplePolynomials
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
-import Base: ==
-
 # Taken from DynamicPolynomials/src/var.jl
 function polyvecvar(prefix, idxset)
     [Variable("$(prefix * string(i))") for i in idxset]
@@ -33,7 +31,7 @@ struct Variable <: AbstractVariable
     name::String
 end
 MP.name(v::Variable) = v.name
-==(v1::Variable, v2::Variable) = v1.name == v2.name
+Base.:(==)(v1::Variable, v2::Variable) = v1.name == v2.name
 struct Monomial <: AbstractMonomial
     vars::Vector{Variable}
     exps::Vector{Int}
