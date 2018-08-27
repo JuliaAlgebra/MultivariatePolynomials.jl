@@ -30,10 +30,8 @@
     @test sprint(show, sum(i*x[i]^i for i=1:10)) == "10x₉¹⁰ + 9x₈⁹ + 8x₇⁸ + 7x₆⁷ + 6x₅⁶ + 5x₄⁵ + 4x₃⁴ + 3x₂³ + 2x₁² + x₀"
     @test sprint(show, "text/latex", sum(i*x[i]^i for i=1:10)) == "10x_{9}^{10} + 9x_{8}^{9} + 8x_{7}^{8} + 7x_{6}^{7} + 6x_{5}^{6} + 5x_{4}^{5} + 4x_{3}^{4} + 3x_{2}^{3} + 2x_{1}^{2} + x_{0}"
 
-    #This is only supported by DynamicPolynomials so far
-    @static if implementation == :DynamicPolynomials
-        Mod.@polyvar A[1:2, 1:2]
-        @test sprint(show, sum(A)) == "A₁₋₁ + A₂₋₁ + A₁₋₂ + A₂₋₂"
-        @test sprint(show, "text/latex", sum(A)) == "A_{1,1} + A_{2,1} + A_{1,2} + A_{2,2}"
-    end
+    # #This is only supported by DynamicPolynomials so far
+    #     Mod.@polyvar A[1:2, 1:2]
+    #     @test sprint(show, sum(A)) == "A₁₋₁ + A₂₋₁ + A₁₋₂ + A₂₋₂"
+    #     @test sprint(show, "text/latex", sum(A)) == "A_{1,1} + A_{2,1} + A_{1,2} + A_{2,2}"
 end
