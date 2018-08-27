@@ -16,9 +16,7 @@ notifications:
 
 after_success:
   # push coverage results to Coveralls
-  - julia -e 'cd(Pkg.dir("MultivariatePolynomials")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); import MultivariatePolynomials; cd(joinpath(dirname(pathof(MultivariatePolynomials)), "..")); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("MultivariatePolynomials")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  # update doc
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("MultivariatePolynomials")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; Pkg.add("Documenter")'
+  - julia -e 'import MultivariatePolynomials; cd(joinpath(dirname(pathof(MultivariatePolynomials)), "..")); include(joinpath("docs", "make.jl"))'
