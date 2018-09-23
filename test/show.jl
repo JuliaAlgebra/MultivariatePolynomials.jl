@@ -34,8 +34,5 @@
     @test sprint(show, "text/latex", x[10]) == "x_{10}"
     @test sprint(show, x[10]) == "x₁₀"
 
-    # #This is only supported by DynamicPolynomials so far
-    #     Mod.@polyvar A[1:2, 1:2]
-    #     @test sprint(show, sum(A)) == "A₁₋₁ + A₂₋₁ + A₁₋₂ + A₂₋₂"
-    #     @test sprint(show, "text/latex", sum(A)) == "A_{1,1} + A_{2,1} + A_{1,2} + A_{2,2}"
+    @test sprint(print, 2x[1]^2+3x[3]+1+x[4]) == "2*x[1]^2 + 3*x[3] + x[4] + 1"
 end

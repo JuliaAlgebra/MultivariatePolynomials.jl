@@ -85,6 +85,9 @@ function print_term(io::IO, mime, t::AbstractTerm)
                 print(io, '-')
             else
                 print_coefficient(io, coefficient(t))
+                if !iszero(t)
+                    print_maybe_mul(io, mime)
+                end
             end
         end
         if !iszero(t)
@@ -93,6 +96,8 @@ function print_term(io::IO, mime, t::AbstractTerm)
     end
 end
 
+print_maybe_mul(io::IO, ::MIME"text/print") = print(io, "*")
+print_maybe_mul(io::IO, mime) = nothing
 should_print_coefficient(x) = true  # By default, just print all coefficients
 should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one" coefficients
 print_coefficient(io::IO, coeff::Real) = print(io, coeff)
