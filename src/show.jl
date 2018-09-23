@@ -29,7 +29,7 @@ function print_subscript(io::IO, mime, indices)
 end
 
 const unicode_subscripts = ("₀","₁","₂","₃","₄","₅","₆","₇","₈","₉")
-unicode_subscript(i) = join(unicode_subscripts[d+1] for d in digits(i))
+unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # MONOMIALS
 

@@ -31,8 +31,8 @@
     @test sprint(show, "text/latex", sum(i*x[i]^i for i=1:10)) == "10x_{9}^{10} + 9x_{8}^{9} + 8x_{7}^{8} + 7x_{6}^{7} + 6x_{5}^{6} + 5x_{4}^{5} + 4x_{3}^{4} + 3x_{2}^{3} + 2x_{1}^{2} + x_{0}"
 
     Mod.@polyvar x[1:11]
-    @test sprint(show, "text/latex", x[11]) == "x_{11}"
-    @test sprint(show, x[11]) == "x₁₁"
+    @test sprint(show, "text/latex", x[10]) == "x_{10}"
+    @test sprint(show, x[10]) == "x₁₀"
 
     # #This is only supported by DynamicPolynomials so far
     #     Mod.@polyvar A[1:2, 1:2]
