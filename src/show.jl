@@ -86,7 +86,9 @@ function print_term(io::IO, mime, t::AbstractTerm)
             else
                 print_coefficient(io, coefficient(t))
                 if !iszero(t)
-                    print_maybe_mul(io, mime)
+                    # Print the a multiplication sign between coefficent and monmomial
+                    # depending on the mime type
+                    print_maybe_multiplication_sign(io, mime)
                 end
             end
         end
@@ -96,8 +98,14 @@ function print_term(io::IO, mime, t::AbstractTerm)
     end
 end
 
-print_maybe_mul(io::IO, ::MIME"text/print") = print(io, "*")
-print_maybe_mul(io::IO, mime) = nothing
+"""
+    print_maybe_multiplication_sign(io, mime)
+
+Prints a multiplication sign depending on the `mime` type.
+"""
+print_maybe_multiplication_sign(io::IO, ::MIME"text/print") = print(io, "*")
+print_maybe_multiplication_sign(io::IO, mime) = nothing
+
 should_print_coefficient(x) = true  # By default, just print all coefficients
 should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one" coefficients
 print_coefficient(io::IO, coeff::Real) = print(io, coeff)
