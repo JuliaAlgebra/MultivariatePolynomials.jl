@@ -86,7 +86,7 @@ function print_term(io::IO, mime, t::AbstractTerm)
             else
                 print_coefficient(io, coefficient(t))
                 if !iszero(t)
-                    # Print the a multiplication sign between coefficent and monmomial
+                    # Print a multiplication sign between coefficent and monmomial
                     # depending on the mime type
                     print_maybe_multiplication_sign(io, mime)
                 end
