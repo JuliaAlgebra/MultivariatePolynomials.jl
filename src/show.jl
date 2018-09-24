@@ -29,7 +29,7 @@ function print_subscript(io::IO, mime, indices)
 end
 
 const unicode_subscripts = ("₀","₁","₂","₃","₄","₅","₆","₇","₈","₉")
-unicode_subscript(i) = join(unicode_subscripts[d+1] for d in digits(i))
+unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # MONOMIALS
 
@@ -85,6 +85,11 @@ function print_term(io::IO, mime, t::AbstractTerm)
                 print(io, '-')
             else
                 print_coefficient(io, coefficient(t))
+                if !iszero(t)
+                    # Print a multiplication sign between coefficent and monmomial
+                    # depending on the mime type
+                    print_maybe_multiplication_sign(io, mime)
+                end
             end
         end
         if !iszero(t)
@@ -92,6 +97,14 @@ function print_term(io::IO, mime, t::AbstractTerm)
         end
     end
 end
+
+"""
+    print_maybe_multiplication_sign(io, mime)
+
+Prints a multiplication sign depending on the `mime` type.
+"""
+print_maybe_multiplication_sign(io::IO, ::MIME"text/print") = print(io, "*")
+print_maybe_multiplication_sign(io::IO, mime) = nothing
 
 should_print_coefficient(x) = true  # By default, just print all coefficients
 should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one" coefficients
