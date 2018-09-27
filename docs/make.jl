@@ -13,7 +13,7 @@ makedocs(
 )
 
 deploydocs(
-    repo   = "github.com/blegat/MultivariatePolynomials.jl.git",
+    repo   = "github.com/JuliaAlgebra/MultivariatePolynomials.jl.git",
     target = "build",
     osname = "linux",
     julia  = "1.0",
