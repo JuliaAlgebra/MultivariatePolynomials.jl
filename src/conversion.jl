@@ -6,7 +6,7 @@ Base.convert(::Type{P}, p::APL) where P<:AbstractPolynomial = P(polynomial(p))
 
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
-function Base.convert(::Type{S}, p::APL) where {S}
+function Base.convert(S::Type{<:Union{Number, T}}, p::APL{T}) where T
     s = zero(S)
     for t in terms(p)
         if !isconstant(t)

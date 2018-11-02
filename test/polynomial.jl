@@ -133,4 +133,11 @@ const MP = MultivariatePolynomials
         @test coefficients(f) == [7, 4, -5, 4]
         @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
     end
+
+    @testset "Convertion" begin
+        p = 2.5x + 1 - 2.5x
+        @test convert(Int, p) == 1
+        @test convert(typeof(p), p) === p
+        @test convert(Union{Nothing, typeof(p)}, p) === p
+    end
 end
