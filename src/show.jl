@@ -1,12 +1,27 @@
-Base.print(io::IO, v::AbstractPolynomialLike) = show(io, MIME"text/print"(), v)
+function Base.show(io::IO, mime::MIME"text/latex",
+                   p::Union{AbstractPolynomialLike, RationalPoly})
+    print(io, "\$\$ ")
+    _show(io, mime, p)
+    print(io, " \$\$")
+end
+
+# If the MIME is not specified, IJulia thinks that it supports images, ...
+# and then use the result of show and tries to interpret it as an svg, ...
+# We need the two methods to avoid ambiguity
+function Base.show(io::IO, mime::MIME"text/plain",
+                   p::Union{AbstractPolynomialLike, RationalPoly})
+    _show(io, mime, p)
+end
+function Base.show(io::IO, mime::MIME"text/print",
+                   p::Union{AbstractPolynomialLike, RationalPoly})
+    _show(io, mime, p)
+end
+
+Base.print(io::IO, p::Union{AbstractPolynomialLike, RationalPoly}) = show(io, MIME"text/print"(), p)
+Base.show(io::IO, p::Union{AbstractPolynomialLike, RationalPoly}) = show(io, MIME"text/plain"(), p)
 
 # VARIABLES
-Base.show(io::IO, v::AbstractVariable) = print_var(io, MIME"text/plain"(), v)
-Base.show(io::IO, mime::MIME"text/plain", v::AbstractVariable) = print_var(io, mime, v)
-Base.show(io::IO, mime::MIME"text/latex", v::AbstractVariable) = print_var(io, mime, v)
-Base.show(io::IO, mime::MIME"text/print", v::AbstractVariable) = print_var(io, mime, v)
-
-function print_var(io::IO, mime::MIME, var::AbstractVariable)
+function _show(io::IO, mime::MIME, var::AbstractVariable)
     base, indices = name_base_indices(var)
     if isempty(indices)
         print(io, base)
@@ -15,7 +30,7 @@ function print_var(io::IO, mime::MIME, var::AbstractVariable)
         print_subscript(io, mime, indices)
     end
 end
-print_var(io::IO, mime::MIME"text/print", var::AbstractVariable) = print(io, name(var))
+_show(io::IO, mime::MIME"text/print", var::AbstractVariable) = print(io, name(var))
 
 function print_subscript(io::IO, ::MIME"text/latex", index)
     print(io, "_{", join(index, ","), "}")
@@ -32,13 +47,7 @@ const unicode_subscripts = ("₀","₁","₂","₃","₄","₅","₆","₇","₈
 unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # MONOMIALS
-
-Base.show(io::IO, mime::MIME"text/latex", m::AbstractMonomial) = print_monomial(io, mime, m)
-Base.show(io::IO, mime::MIME"text/plain", m::AbstractMonomial) = print_monomial(io, mime, m)
-Base.show(io::IO, mime::MIME"text/print", m::AbstractMonomial) = print_monomial(io, mime, m)
-Base.show(io::IO, m::AbstractMonomial) = print_monomial(io, MIME"text/plain"(), m)
-
-function print_monomial(io::IO, mime, m::AbstractMonomial)
+function _show(io::IO, mime, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')
     else
@@ -50,7 +59,7 @@ function print_monomial(io::IO, mime, m::AbstractMonomial)
                 if mime isa MIME"text/print" && printed_var && i > 0 &&
                     print(io,"*")
                 end
-                print_var(io, mime, var)
+                _show(io, mime, var)
                 printed_var = true
                 if !isone(exp)
                     print_exponent(io, mime, exp)
@@ -59,7 +68,7 @@ function print_monomial(io::IO, mime, m::AbstractMonomial)
         end
     end
 end
-#
+
 print_exponent(io::IO, ::MIME"text/latex", exp) = print(io, "^{", exp, "}")
 print_exponent(io::IO, ::MIME"text/print", exp) = print(io, "^", exp)
 function print_exponent(io::IO, mime, exp)
@@ -70,13 +79,7 @@ const unicode_superscripts = ("⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸"
 unicode_superscript(i) = unicode_superscripts[i+1]
 
 # TERM
-
-Base.show(io::IO, t::AbstractTerm) = print_term(io, MIME"text/plain"(), t)
-Base.show(io::IO, mime::MIME"text/latex", t::AbstractTerm) = print_term(io, mime, t)
-Base.show(io::IO, mime::MIME"text/plain", t::AbstractTerm) = print_term(io, mime, t)
-Base.show(io::IO, mime::MIME"text/print", t::AbstractTerm) = print_term(io, mime, t)
-
-function print_term(io::IO, mime, t::AbstractTerm)
+function _show(io::IO, mime, t::AbstractTerm)
     if isconstant(t)
         print_coefficient(io, coefficient(t))
     else
@@ -93,7 +96,7 @@ function print_term(io::IO, mime, t::AbstractTerm)
             end
         end
         if !iszero(t)
-            show(io, mime, monomial(t))
+            _show(io, mime, monomial(t))
         end
     end
 end
@@ -112,25 +115,19 @@ print_coefficient(io::IO, coeff::Real) = print(io, coeff)
 print_coefficient(io::IO, coeff) = print(io, "(", coeff, ")")
 
 # POLYNOMIAL
-
-Base.show(io::IO, t::AbstractPolynomial) = print_poly(io, MIME"text/plain"(), t)
-Base.show(io::IO, mime::MIME"text/plain", t::AbstractPolynomial) = print_poly(io, mime, t)
-Base.show(io::IO, mime::MIME"text/latex", t::AbstractPolynomial) = print_poly(io, mime, t)
-Base.show(io::IO, mime::MIME"text/print", t::AbstractPolynomial) = print_poly(io, mime, t)
-
-function print_poly(io::IO, mime, p::AbstractPolynomial{T}) where T
+function _show(io::IO, mime, p::AbstractPolynomial{T}) where T
     ts = terms(p)
     if isempty(ts)
         print(io, zero(T))
     else
-        print_term(io, mime, first(ts))
+        _show(io, mime, first(ts))
         for t in Iterators.drop(ts, 1)
             if isnegative(coefficient(t))
                 print(io, " - ")
-                show(io, mime, abs(coefficient(t)) * monomial(t))
+                _show(io, mime, abs(coefficient(t)) * monomial(t))
             else
                 print(io, " + ")
-                show(io, mime, t)
+                _show(io, mime, t)
             end
         end
     end
@@ -140,16 +137,10 @@ isnegative(x::Real) = x < 0
 isnegative(x) = false
 
 # RATIONAL POLY
-
-Base.show(io::IO, t::RationalPoly) = print_ratpoly(io, MIME"text/plain"(), t)
-Base.show(io::IO, mime::MIME"text/plain", t::RationalPoly) = print_ratpoly(io, mime, t)
-Base.show(io::IO, mime::MIME"text/latex", t::RationalPoly) = print_ratpoly(io, mime, t)
-Base.show(io::IO, mime::MIME"text/print", t::RationalPoly) = print_ratpoly(io, mime, t)
-
-function print_ratpoly(io::IO, mime, p::RationalPoly)
-    print(io, "(")
-    show(io, mime, p.num)
-    print(io, ") / (")
-    show(io, mime, p.den)
-    print(io, ")")
+function _show(io::IO, mime, p::RationalPoly)
+    print(io, mime isa MIME"text/latex" ? "\\frac{" : "(")
+    _show(io, mime, p.num)
+    print(io, mime isa MIME"text/latex" ? "}{" : ") / (")
+    _show(io, mime, p.den)
+    print(io, mime isa MIME"text/latex" ? "}" : ")")
 end
