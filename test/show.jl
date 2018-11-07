@@ -28,10 +28,11 @@
 
     Mod.@polyvar x[0:9]
     @test sprint(show, sum(i*x[i]^i for i=1:10)) == "10x₉¹⁰ + 9x₈⁹ + 8x₇⁸ + 7x₆⁷ + 6x₅⁶ + 5x₄⁵ + 4x₃⁴ + 3x₂³ + 2x₁² + x₀"
-    @test sprint(show, "text/latex", sum(i*x[i]^i for i=1:10)) == "10x_{9}^{10} + 9x_{8}^{9} + 8x_{7}^{8} + 7x_{6}^{7} + 6x_{5}^{6} + 5x_{4}^{5} + 4x_{3}^{4} + 3x_{2}^{3} + 2x_{1}^{2} + x_{0}"
+    @test sprint(show, "text/latex", sum(i*x[i]^i for i=1:10)) == "\$\$ 10x_{9}^{10} + 9x_{8}^{9} + 8x_{7}^{8} + 7x_{6}^{7} + 6x_{5}^{6} + 5x_{4}^{5} + 4x_{3}^{4} + 3x_{2}^{3} + 2x_{1}^{2} + x_{0} \$\$"
+    @test sprint(show, "text/latex", (x[2] + 1) / x[3]^2) == "\$\$ \\frac{x_{1} + 1}{x_{2}^{2}} \$\$"
 
     Mod.@polyvar x[1:11]
-    @test sprint(show, "text/latex", x[10]) == "x_{10}"
+    @test sprint(show, "text/latex", x[10]) == "\$\$ x_{10} \$\$"
     @test sprint(show, x[10]) == "x₁₀"
 
     @test sprint(print, 2x[1]^2+3x[3]+1+x[4]) == "2*x[1]^2 + 3*x[3] + x[4] + 1"
