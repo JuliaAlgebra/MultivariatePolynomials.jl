@@ -27,6 +27,12 @@ for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant)
     @eval Base.$op(p::APL, α) = $fun(p, α)
     @eval Base.$op(α, p::APL) = $fun(α, p)
 end
+# Special case AbstractArrays of APLs
+for op in [:+, :-, :*]
+    @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
+    @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
+end
+
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
