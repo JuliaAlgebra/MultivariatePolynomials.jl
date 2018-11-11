@@ -75,6 +75,10 @@ substitute(st::AST, q::RationalPoly, s::Substitutions) = substitute(st, q.num, s
 # subs(x, x=>x+y, y=>2) would call substitute(Subs(), x+y, y=>2)
 #substitute(st::AST, p::Union{APL, RationalPoly}, s::AbstractSubstitution...) = substitute(st, p, s)
 
+# Substitute Arrays
+function substitute(st::AST, A::AbstractArray{<:APL}, s::Substitutions)
+    map(p -> substitute(st, p, s), A)
+end
 ## Everything else
 substitute(::AST, x, s::Substitutions) = x
 # subs(x, x=>1, y=>2) would call substitute(Subs(), 1, y=>2)
