@@ -66,5 +66,5 @@ import Test: @inferred
 
 
     Mod.@polyvar x y
-    @test subs([x^2 + 1, x + y], x => y) == [y^2+1, 2y]
+    @test subs([x^2 + y, x + y], x => y) == [y^2+y, 2y]
 end

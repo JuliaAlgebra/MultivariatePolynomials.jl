@@ -68,8 +68,8 @@
 
     @testset "Scalar - Array" begin
         Mod.@polyvar x y
-        @test x + [x^2 y; 1 x*y] == [x+x^2 x+y; x+1 x+x*y]
-        @test [x^2 y; 1 x*y] + x == [x^2+x y+x; 1+x x*y+x]
+        @test x + [x^2+y y; y x*y] == [x+x^2+y x+y; x+y x+x*y]
+        @test [x^2+y y; y x*y] + x == [x^2+x+y y+x; y+x x*y+x]
 
         @test x * [1+y y] == [x*(1+y) x*y]
         @test [1+y y] * x == [(1+y)*x y*x]
