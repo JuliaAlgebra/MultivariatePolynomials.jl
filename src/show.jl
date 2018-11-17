@@ -1,5 +1,6 @@
-function Base.show(io::IO, mime::MIME"text/latex",
-                   p::Union{AbstractPolynomialLike, RationalPoly})
+const TypesWithShow = Union{AbstractVariable, AbstractMonomial, AbstractTerm,
+                            AbstractPolynomial, RationalPoly}
+function Base.show(io::IO, mime::MIME"text/latex", p::TypesWithShow)
     print(io, "\$\$ ")
     _show(io, mime, p)
     print(io, " \$\$")
@@ -8,17 +9,15 @@ end
 # If the MIME is not specified, IJulia thinks that it supports images, ...
 # and then use the result of show and tries to interpret it as an svg, ...
 # We need the two methods to avoid ambiguity
-function Base.show(io::IO, mime::MIME"text/plain",
-                   p::Union{AbstractPolynomialLike, RationalPoly})
+function Base.show(io::IO, mime::MIME"text/plain", p::TypesWithShow)
     _show(io, mime, p)
 end
-function Base.show(io::IO, mime::MIME"text/print",
-                   p::Union{AbstractPolynomialLike, RationalPoly})
+function Base.show(io::IO, mime::MIME"text/print", p::TypesWithShow)
     _show(io, mime, p)
 end
 
-Base.print(io::IO, p::Union{AbstractPolynomialLike, RationalPoly}) = show(io, MIME"text/print"(), p)
-Base.show(io::IO, p::Union{AbstractPolynomialLike, RationalPoly}) = show(io, MIME"text/plain"(), p)
+Base.print(io::IO, p::TypesWithShow) = show(io, MIME"text/print"(), p)
+Base.show(io::IO, p::TypesWithShow) = show(io, MIME"text/plain"(), p)
 
 # VARIABLES
 function _show(io::IO, mime::MIME, var::AbstractVariable)
