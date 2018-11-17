@@ -73,5 +73,6 @@
 
         @test x * [1+y y] == [x*(1+y) x*y]
         @test [1+y y] * x == [(1+y)*x y*x]
+        @test [1+y y] / x == [(1+y)/x y/x]
     end
 end
