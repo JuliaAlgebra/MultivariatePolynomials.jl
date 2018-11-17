@@ -32,6 +32,7 @@ for op in [:+, :-, :*]
     @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
     @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
 end
+Base.:/(A::AbstractArray{<:APL}, p::APL) = map(f -> f / p, A)
 
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
