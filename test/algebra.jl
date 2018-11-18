@@ -65,4 +65,14 @@
 
     @test iszero((x+x-2*x) * (x * (x^2 + y^2)))
     @test iszero((0*x) * (x*y * (x^2 + y^2)))
+
+    @testset "Scalar - Array" begin
+        Mod.@polyvar x y
+        @test x + [x^2+y y; y x*y] == [x+x^2+y x+y; x+y x+x*y]
+        @test [x^2+y y; y x*y] + x == [x^2+x+y y+x; y+x x*y+x]
+
+        @test x * [1+y y] == [x*(1+y) x*y]
+        @test [1+y y] * x == [(1+y)*x y*x]
+        @test [1+y y] / x == [(1+y)/x y/x]
+    end
 end

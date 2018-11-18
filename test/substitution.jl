@@ -63,4 +63,8 @@ import Test: @inferred
     @test p(variables(p) => valsv) == 13
     @test p(varst => valst) == 13
     @test p(varsv => valsv) == 13
+
+
+    Mod.@polyvar x y
+    @test subs([x^2 + y, x + y], x => y) == [y^2+y, 2y]
 end

@@ -27,6 +27,17 @@ for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant)
     @eval Base.$op(p::APL, α) = $fun(p, α)
     @eval Base.$op(α, p::APL) = $fun(α, p)
 end
+
+# Special case AbstractArrays of APLs
+# We add these instead of relying on the broadcasting API since the above method definitions are very wide.
+# In particular, there is support for Matrices as coefficents. In order to avoid issues like #104 we therefore
+# explicitly define this (instead of implictly getting unexpected results).
+for op in [:+, :-, :*]
+    @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
+    @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
+end
+Base.:/(A::AbstractArray{<:APL}, p::APL) = map(f -> f / p, A)
+
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
