@@ -140,4 +140,12 @@ const MP = MultivariatePolynomials
         @test convert(typeof(p), p) === p
         @test convert(Union{Nothing, typeof(p)}, p) === p
     end
+
+    @testset "Vector" begin
+        Mod.@polyvar x y
+        v = [x - 1, y + 1]
+        @test nvariables(v) == 2
+        @test variables(v)[1] == x
+        @test variables(v)[2] == y
+    end
 end
