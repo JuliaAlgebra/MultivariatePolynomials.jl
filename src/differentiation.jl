@@ -40,11 +40,11 @@ differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) *
 const ARPL = Union{APL, RationalPoly}
 
 function differentiate(ps::AbstractArray{PT}, xs::AbstractArray) where {PT <: ARPL}
-    differentiate.(reshape(ps, (1, size(ps)...)), reshape(xs, :))
+    differentiate.(reshape(ps, (size(ps)..., 1)), reshape(xs, 1, :))
 end
 
 function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT <: ARPL}
-    differentiate.(reshape(ps, (1, size(ps)...)), xs)
+    differentiate(ps, collect(xs))
 end
 
 
