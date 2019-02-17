@@ -182,7 +182,7 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 
 Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
-monomials(p::APL) = monomial.(terms(p))
+monomials(p::APL) = monovec(monomial.(terms(p)))
 
 #$(SIGNATURES)
 """
