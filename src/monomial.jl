@@ -101,11 +101,11 @@ Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
 powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
 
 """
-    constantmonomial(p::AbstractPolynomialType)
+    constantmonomial(p::AbstractPolynomialLike)
 
 Returns a constant monomial of the monomial type of `p` with the same variables as `p`.
 
-    constantmonomial(::Type{PT}) where {PT<:AbstractPolynomialType}
+    constantmonomial(::Type{PT}) where {PT<:AbstractPolynomialLike}
 
 Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """

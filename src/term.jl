@@ -106,7 +106,7 @@ monomial(m::AbstractMonomial) = m
 
 Creates a constant term with coefficient α and the same variables as p.
 
-    constantterm(α, ::Type{PT} where {PT<:AbstractPolynomialType}
+    constantterm(α, ::Type{PT} where {PT<:AbstractPolynomialLike}
 
 Creates a constant term of the term type of a polynomial of type `PT`.
 """
@@ -122,7 +122,7 @@ constantterm(α, p) = α * constantmonomial(p)
 
 Equivalent to `constantterm(zero(T), p)`.
 
-    zeroterm(α, ::Type{PT} where {T, PT<:AbstractPolynomialType{T}}
+    zeroterm(α, ::Type{PT} where {T, PT<:AbstractPolynomialLike{T}}
 
 Equivalent to `constantterm(zero(T), PT)`.
 """
