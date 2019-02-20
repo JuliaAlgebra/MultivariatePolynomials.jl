@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.constantmonomial",
     "category": "function",
-    "text": "constantmonomial(p::AbstractPolynomialType)\n\nReturns a constant monomial of the monomial type of p with the same variables as p.\n\nconstantmonomial(::Type{PT}) where {PT<:AbstractPolynomialType}\n\nReturns a constant monomial of the monomial type of a polynomial of type PT.\n\n\n\n\n\n"
+    "text": "constantmonomial(p::AbstractPolynomialLike)\n\nReturns a constant monomial of the monomial type of p with the same variables as p.\n\nconstantmonomial(::Type{PT}) where {PT<:AbstractPolynomialLike}\n\nReturns a constant monomial of the monomial type of a polynomial of type PT.\n\n\n\n\n\n"
 },
 
 {
@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.constantterm",
     "category": "function",
-    "text": "constantterm(α, p::AbstractPolynomialLike)\n\nCreates a constant term with coefficient α and the same variables as p.\n\nconstantterm(α, ::Type{PT} where {PT<:AbstractPolynomialType}\n\nCreates a constant term of the term type of a polynomial of type PT.\n\n\n\n\n\n"
+    "text": "constantterm(α, p::AbstractPolynomialLike)\n\nCreates a constant term with coefficient α and the same variables as p.\n\nconstantterm(α, ::Type{PT} where {PT<:AbstractPolynomialLike}\n\nCreates a constant term of the term type of a polynomial of type PT.\n\n\n\n\n\n"
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.zeroterm",
     "category": "function",
-    "text": "zeroterm(p::AbstractPolynomialLike{T}) where T\n\nEquivalent to constantterm(zero(T), p).\n\nzeroterm(α, ::Type{PT} where {T, PT<:AbstractPolynomialType{T}}\n\nEquivalent to constantterm(zero(T), PT).\n\n\n\n\n\n"
+    "text": "zeroterm(p::AbstractPolynomialLike{T}) where T\n\nEquivalent to constantterm(zero(T), p).\n\nzeroterm(α, ::Type{PT} where {T, PT<:AbstractPolynomialLike{T}}\n\nEquivalent to constantterm(zero(T), PT).\n\n\n\n\n\n"
 },
 
 {
@@ -277,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.AbstractPolynomialLike",
     "category": "type",
-    "text": "AbstractPolynomialLike{T}\n\nAbstract type for a value that can act like a polynomial. For instance, an AbstractTerm{T} is an AbstractPolynomialType{T} since it can act as a polynomial of only one term.\n\n\n\n\n\n"
+    "text": "AbstractPolynomialLike{T}\n\nAbstract type for a value that can act like a polynomial. For instance, an AbstractTerm{T} is an AbstractPolynomialLike{T} since it can act as a polynomial of only one term.\n\n\n\n\n\n"
 },
 
 {
