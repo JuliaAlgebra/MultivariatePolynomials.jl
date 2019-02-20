@@ -40,6 +40,14 @@
     @test p == x^3 + 2x^2*y + x + 2y
     @test p isa AbstractPolynomial{Float64}
 
+    p = @inferred CustomPoly(x + 2y) + 1
+    @test p == x + 2y + 1
+    @test p isa AbstractPolynomial{Int}
+
+    p = @inferred CustomPoly(x + 2y) + 1.0
+    @test p == x + 2y + 1
+    @test p isa AbstractPolynomial{Float64}
+
     @testset "Inference" begin
         @inferred x^2
         @inferred x^2-2x
