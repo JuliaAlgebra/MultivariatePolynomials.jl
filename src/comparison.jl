@@ -110,7 +110,11 @@ isapproxzero(p::APL; kwargs...) = all(isapproxzero.(terms(p); kwargs...))
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
-Base.isapprox(p1::AbstractPolynomial, p2::AbstractPolynomial; ztol::Real=1e-6, kwargs...) = compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol), (x, y) -> isapprox(x, y; kwargs...))
+function Base.isapprox(p1::AbstractPolynomial{S}, p2::AbstractPolynomial{T};
+                       atol=0, ztol::Real=iszero(atol) ? Base.rtoldefault(S, T, 0) : atol, kwargs...) where {S, T}
+    return compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol),
+                         (x, y) -> isapprox(x, y; atol=atol, kwargs...))
+end
 
 Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
 Base.isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
