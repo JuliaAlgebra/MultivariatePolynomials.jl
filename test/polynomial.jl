@@ -51,6 +51,10 @@ const MP = MultivariatePolynomials
     @test coefficient(2x + 4y^2 + 3, y^2) == 4
     @test coefficient(2x + 4y^2 + 3, x^2) == 0
 
+    Mod.@polyvar a b
+    @test coefficient((2a + b)x^2 + 2y^2 + 3, x^2, (x,y)) == 2a + b
+    @test coefficient((2a + b)x^2 + 2y^2 + 3x^2*y, x^2, (x,)) == 2a + b + 3y
+
     @test (@inferred 2x^2*y + 0.0x*y) == 2x^2*y
     @test (@inferred 0.0x^2*y + 3x*y) == 3x*y
 
