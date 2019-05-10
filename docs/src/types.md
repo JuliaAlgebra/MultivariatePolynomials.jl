@@ -55,6 +55,7 @@ polynomialtype
 terms
 nterms
 coefficients
+coefficient(p::AbstractPolynomialLike, vars, m::AbstractMonomialLike)
 monomials
 mindegree
 maxdegree
