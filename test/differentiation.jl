@@ -1,5 +1,5 @@
 @testset "Differentiation" begin
-    Mod.@polyvar x y
+    Mod.@polyvar x y z
     @test differentiate(3, y) == 0
     @test differentiate.([x, y], y) == [0, 1]
     @test differentiate([x, y], (x, y)) == Matrix(1.0I, 2, 2) # TODO: this can be just `I` on v0.7 and above
@@ -33,6 +33,10 @@
     p = differentiate(2x^2 + 3x*y^2 + 4y^3 + 2.0, (x, y), 2)
     @test isa(p, Matrix{<:AbstractPolynomial{Float64}})
     @test p == [4.0 6.0y; 6.0y 6.0x+24.0y]
+
+    f = [x^2+y, z^2+4x]
+    @test differentiate(f, [x, y, z]) == [2x 1 0; 4 0 2z]
+    @test differentiate(f, (x, y, z)) == [2x 1 0; 4 0 2z]
 
     @testset "differentiation with Val{}" begin
         @test @inferred(differentiate(x, x, Val{0}())) == x
