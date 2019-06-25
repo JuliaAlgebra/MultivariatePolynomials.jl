@@ -229,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "MultivariatePolynomials.coefficient",
     "category": "function",
-    "text": "coefficient(t::AbstractTermLike)\n\nReturns the coefficient of the term t.\n\ncoefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)\n\nReturns the coefficient of the monomial m in p.\n\nExamples\n\nCalling coefficient on 4x^2y should return 4. Calling coefficient(2x + 4y^2 + 3, y^2) should return 4. Calling coefficient(2x + 4y^2 + 3, x^2) should return 0.\n\n\n\n\n\n"
+    "text": "coefficient(t::AbstractTermLike)\n\nReturns the coefficient of the term t.\n\ncoefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)\n\nReturns the coefficient of the monomial m in p.\n\nExamples\n\nCalling coefficient on 4x^2y should return 4. Calling coefficient(2x + 4y^2 + 3, y^2) should return 4. Calling coefficient(2x + 4y^2 + 3, x^2) should return 0.\n\n\n\n\n\ncoefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike, vars)::AbstractPolynomialLike\n\nReturns the coefficient of the monomial m of the polynomial p considered as a polynomial in variables vars.\n\nExample\n\nCalling coefficient((a+b)x^2+2x+y*x^2, x^2, [x,y]) should return a+b. Calling coefficient((a+b)x^2+2x+y*x^2, x^2, [x]) should return a+b+y.\n\n\n\n\n\n"
 },
 
 {
@@ -273,155 +273,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "types.html#MultivariatePolynomials.AbstractPolynomialLike",
-    "page": "Types",
-    "title": "MultivariatePolynomials.AbstractPolynomialLike",
-    "category": "type",
-    "text": "AbstractPolynomialLike{T}\n\nAbstract type for a value that can act like a polynomial. For instance, an AbstractTerm{T} is an AbstractPolynomialLike{T} since it can act as a polynomial of only one term.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.AbstractPolynomial",
-    "page": "Types",
-    "title": "MultivariatePolynomials.AbstractPolynomial",
-    "category": "type",
-    "text": "AbstractPolynomial{T} <: AbstractPolynomialLike{T}\n\nAbstract type for a polynomial of coefficient type T, i.e. a sum of AbstractTerm{T}s.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.polynomial",
-    "page": "Types",
-    "title": "MultivariatePolynomials.polynomial",
-    "category": "function",
-    "text": "polynomial(p::AbstractPolynomialLike)\n\nConverts p to a value with polynomial type.\n\npolynomial(p::AbstractPolynomialLike, ::Type{T}) where T\n\nConverts p to a value with polynomial type with coefficient type T.\n\npolynomial(a::AbstractVector, mv::AbstractVector{<:AbstractMonomialLike})\n\nCreates a polynomial equal to dot(a, mv).\n\npolynomial(terms::AbstractVector{<:AbstractTerm}, s::ListState=MessyState())\n\nCreates a polynomial equal to sum(terms) where terms are guaranteed to be in state s.\n\npolynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike})\n\nCreates a polynomial equal to sum(f(i) * mv[i] for i in 1:length(mv)).\n\nExamples\n\nCalling polynomial([2, 4, 1], [x, x^2*y, x*y]) should return 4x^2y + xy + 2x.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.polynomialtype",
-    "page": "Types",
-    "title": "MultivariatePolynomials.polynomialtype",
-    "category": "function",
-    "text": "polynomialtype(p::AbstractPolynomialLike)\n\nReturns the type that p would have if it was converted into a polynomial.\n\npolynomialtype(::Type{PT}) where PT<:AbstractPolynomialLike\n\nReturns the same as polynomialtype(::PT).\n\npolynomialtype(p::AbstractPolynomialLike, ::Type{T}) where T\n\nReturns the type that p would have if it was converted into a polynomial of coefficient type T.\n\npolynomialtype(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomialLike, T}\n\nReturns the same as polynomialtype(::PT, ::Type{T}).\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.terms",
-    "page": "Types",
-    "title": "MultivariatePolynomials.terms",
-    "category": "function",
-    "text": "terms(p::AbstractPolynomialLike)\n\nReturns an iterator over the nonzero terms of the polynomial p sorted in the decreasing monomial order.\n\nExamples\n\nCalling terms on 4x^2y + xy + 2x should return an iterator of 4x^2y xy 2x.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.nterms",
-    "page": "Types",
-    "title": "MultivariatePolynomials.nterms",
-    "category": "function",
-    "text": "nterms(p::AbstractPolynomialLike)\n\nReturns the number of nonzero terms in p, i.e. length(terms(p)).\n\nExamples\n\nCalling nterms on 4x^2y + xy + 2x should return 3.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.coefficients",
-    "page": "Types",
-    "title": "MultivariatePolynomials.coefficients",
-    "category": "function",
-    "text": "coefficients(p::AbstractPolynomialLike)\n\nReturns an iterator over the coefficients of p of the nonzero terms of the polynomial sorted in the decreasing monomial order.\n\ncoefficients(p::AbstractPolynomialLike, X::AbstractVector)\n\nReturns an iterator over the coefficients of the monomials of X in p where X is a monomial vector not necessarily sorted but with no duplicate entry.\n\nExamples\n\nCalling coefficients on 4x^2y + xy + 2x should return an iterator of 4 1 2. Calling coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y]) should return an iterator of 2 3 1 0.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.monomials",
-    "page": "Types",
-    "title": "MultivariatePolynomials.monomials",
-    "category": "function",
-    "text": "monomials(p::AbstractPolynomialLike)\n\nReturns an iterator over the monomials of p of the nonzero terms of the polynomial sorted in the decreasing order.\n\nmonomials(vars::Tuple, degs::AbstractVector{Int}, filter::Function = m -> true)\n\nBuilds the vector of all the monovec m with variables vars such that the degree degree(m) is in degs and filter(m) is true.\n\nExamples\n\nCalling monomials on 4x^2y + xy + 2x should return an iterator of x^2y xy x.\n\nCalling monomials((x, y), [1, 3], m -> degree(m, y) != 1) should return [x^3, x*y^2, y^3, x] where x^2*y and y have been excluded by the filter.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.mindegree",
-    "page": "Types",
-    "title": "MultivariatePolynomials.mindegree",
-    "category": "function",
-    "text": "mindegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})\n\nReturns the minimal total degree of the monomials of p, i.e. minimum(degree, terms(p)).\n\nmindegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)\n\nReturns the minimal degree of the monomials of p in the variable v, i.e. minimum(degree.(terms(p), v)).\n\nExamples\n\nCalling mindegree on on 4x^2y + xy + 2x should return 1, mindegree(4x^2y + xy + 2x, x) should return 1 and  mindegree(4x^2y + xy + 2x, y) should return 0.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.maxdegree",
-    "page": "Types",
-    "title": "MultivariatePolynomials.maxdegree",
-    "category": "function",
-    "text": "maxdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})\n\nReturns the maximal total degree of the monomials of p, i.e. maximum(degree, terms(p)).\n\nmaxdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)\n\nReturns the maximal degree of the monomials of p in the variable v, i.e. maximum(degree.(terms(p), v)).\n\nExamples\n\nCalling maxdegree on on 4x^2y + xy + 2x should return 3, maxdegree(4x^2y + xy + 2x, x) should return 2 and  maxdegree(4x^2y + xy + 2x, y) should return 1.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.extdegree",
-    "page": "Types",
-    "title": "MultivariatePolynomials.extdegree",
-    "category": "function",
-    "text": "extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})\n\nReturns the extremal total degrees of the monomials of p, i.e. (mindegree(p), maxdegree(p)).\n\nextdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, v::AbstractVariable)\n\nReturns the extremal degrees of the monomials of p in the variable v, i.e. (mindegree(p, v), maxdegree(p, v)).\n\nExamples\n\nCalling extdegree on on 4x^2y + xy + 2x should return (1, 3), extdegree(4x^2y + xy + 2x, x) should return (1, 2) and  maxdegree(4x^2y + xy + 2x, y) should return (0, 1).\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.leadingterm",
-    "page": "Types",
-    "title": "MultivariatePolynomials.leadingterm",
-    "category": "function",
-    "text": "leadingterm(p::AbstractPolynomialLike)\n\nReturns the coefficient of the leading term, i.e. first(terms(p)).\n\nExamples\n\nCalling leadingterm on 4x^2y + xy + 2x should return 4x^2y.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.leadingcoefficient",
-    "page": "Types",
-    "title": "MultivariatePolynomials.leadingcoefficient",
-    "category": "function",
-    "text": "leadingcoefficient(p::AbstractPolynomialLike)\n\nReturns the coefficient of the leading term of p, i.e. coefficient(leadingterm(p)).\n\nExamples\n\nCalling leadingcoefficient on 4x^2y + xy + 2x should return 4 and calling it on 0 should return 0.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.leadingmonomial",
-    "page": "Types",
-    "title": "MultivariatePolynomials.leadingmonomial",
-    "category": "function",
-    "text": "leadingmonomial(p::AbstractPolynomialLike)\n\nReturns the monomial of the leading term of p, i.e. monomial(leadingterm(p)) or first(monomials(p)).\n\nExamples\n\nCalling leadingmonomial on 4x^2y + xy + 2x should return x^2y.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.removeleadingterm",
-    "page": "Types",
-    "title": "MultivariatePolynomials.removeleadingterm",
-    "category": "function",
-    "text": "removeleadingterm(p::AbstractPolynomialLike)\n\nReturns a polynomial with the leading term removed in the polynomial p.\n\nExamples\n\nCalling removeleadingterm on 4x^2y + xy + 2x should return xy + 2x.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.removemonomials",
-    "page": "Types",
-    "title": "MultivariatePolynomials.removemonomials",
-    "category": "function",
-    "text": "Returns a polynomial with the terms having their monomial in the monomial vector mv removed in the polynomial p.\n\nExamples\n\nCalling removemonomials(4x^2*y + x*y + 2x, [x*y]) should return 4x^2*y + 2x.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.monic",
-    "page": "Types",
-    "title": "MultivariatePolynomials.monic",
-    "category": "function",
-    "text": "monic(p::AbstractPolynomialLike)\n\nReturns p / leadingcoefficient(p) where the leading coefficient of the returned polynomials is made sure to be exactly one to avoid rounding error.\n\n\n\n\n\n"
-},
-
-{
-    "location": "types.html#MultivariatePolynomials.mapcoefficientsnz",
-    "page": "Types",
-    "title": "MultivariatePolynomials.mapcoefficientsnz",
-    "category": "function",
-    "text": "mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)\n\nReturns the polynomial obtained by applying f to each coefficients where f is a function such that f(x) is nonzero if x is nonzero.\n\nExamples\n\nCalling mapcoefficientsnz(α -> α^2, 2x*y + 3x + 1) should return 4x*y + 9x + 1.\n\n\n\n\n\n"
-},
-
-{
     "location": "types.html#Polynomials-1",
     "page": "Types",
     "title": "Polynomials",
     "category": "section",
-    "text": "AbstractPolynomialLike\nAbstractPolynomial\npolynomial\npolynomialtype\nterms\nnterms\ncoefficients\nmonomials\nmindegree\nmaxdegree\nextdegree\nleadingterm\nleadingcoefficient\nleadingmonomial\nremoveleadingterm\nremovemonomials\nmonic\nmapcoefficientsnz"
+    "text": "AbstractPolynomialLike\nAbstractPolynomial\npolynomial\npolynomialtype\nterms\nnterms\ncoefficients\ncoefficient(p::AbstractPolynomialLike, vars, m::AbstractMonomialLike)\nmonomials\nmindegree\nmaxdegree\nextdegree\nleadingterm\nleadingcoefficient\nleadingmonomial\nremoveleadingterm\nremovemonomials\nmonic\nmapcoefficientsnz"
 },
 
 {
