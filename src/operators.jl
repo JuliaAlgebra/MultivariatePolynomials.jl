@@ -45,6 +45,7 @@ Base.:-(m::AbstractMonomialLike) = (-1) * m
 Base.:-(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
 Base.:-(p::APL) = polynomial((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
+Base.:*(p::Union{APL, RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
