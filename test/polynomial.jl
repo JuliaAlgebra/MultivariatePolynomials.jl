@@ -42,6 +42,8 @@ const MP = MultivariatePolynomials
     Mod.@polyvar y
 
     p = 3x^2*y^4 + 2x
+    @test +(p) === p
+    @test *(p) === p
     @test terms(p)[end] == 2x
     typetests(p)
     typetests([p, x + y])
