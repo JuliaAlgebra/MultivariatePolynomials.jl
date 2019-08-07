@@ -6,6 +6,8 @@ struct RationalPoly{NT <: APL, DT <: APL}
     den::DT
 end
 
+RationalPoly{NT,DT}(x::Bool) where {NT,DT} = ifelse(x, one(RationalPoly{NT,DT}), zero(RationalPoly{NT,DT}))
+
 Base.numerator(r::RationalPoly) = r.num
 Base.denominator(r::RationalPoly) = r.den
 
@@ -25,6 +27,7 @@ end
 Base.inv(r::RationalPoly) = r.den / r.num
 Base.inv(p::APL{T}) where T = one(T) / p
 Base.:/(r::RationalPoly, p) = r.num / (r.den * p)
+Base.:/(r::RationalPoly, s::RationalPoly) = (r.num * s.den) / (s.num * r.den)
 function Base.:/(num::NT, den::DT) where {NT <: APL, DT <: APL}
     RationalPoly{NT, DT}(num, den)
 end
