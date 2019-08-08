@@ -28,7 +28,12 @@
     @test x / x^2 == inv(x)
     @test isone(((x+1) / (x-1)) / ((x+1) / (x-1)))
     @test ((x+1)^2 / (x-1)) / ((x+1) / (x-1)) == x+1
-    RType = typeof(x+1/x)
+    poly = x+1/x
+    RType = typeof(poly)
     @test RType(true) == one(RType)
     @test RType(false) == zero(RType)
+    @test one(RType) isa RationalPoly
+    @test zero(RType) isa RationalPoly
+    @test one(poly) isa RationalPoly
+    @test zero(poly) isa RationalPoly
 end
