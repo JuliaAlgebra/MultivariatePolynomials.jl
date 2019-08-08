@@ -6,6 +6,7 @@ struct RationalPoly{NT <: APL, DT <: APL}
     den::DT
 end
 
+# This constructor is called from LinearAlgebra in the method Matrix{T}(s::UniformScaling{Bool}, dims)
 RationalPoly{NT,DT}(x::Bool) where {NT,DT} = ifelse(x, one(RationalPoly{NT,DT}), zero(RationalPoly{NT,DT}))
 
 Base.numerator(r::RationalPoly) = r.num
