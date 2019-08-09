@@ -66,7 +66,7 @@ Base.:*(r::RationalPoly, p::APL)          = (r.num * p) / r.den
 Base.:*(α, r::RationalPoly)               = (α * r.num) / r.den
 Base.:*(r::RationalPoly, α)               = (r.num * α) / r.den
 
-Base.zero(::RationalPoly{NT}) where {NT} = zero(NT) / one(NT)
+Base.zero(r::RationalPoly) = zero(typeof(r))
 Base.zero(::Type{RationalPoly{NT, DT}}) where {NT, DT} = zero(NT) / one(DT)
-Base.one(::RationalPoly{NT}) where {NT} = one(NT) / one(NT)
+Base.one(r::RationalPoly) = one(typeof(r))
 Base.one(::Type{RationalPoly{NT, DT}}) where {NT, DT} = one(NT) / one(DT)
