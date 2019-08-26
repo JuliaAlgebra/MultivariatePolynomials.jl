@@ -11,6 +11,7 @@ AbstractVariable
 variable
 name
 name_base_indices
+variable_union_type
 similarvariable
 @similarvariable
 ```
