@@ -73,6 +73,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "types.html#MultivariatePolynomials.variable_union_type",
+    "page": "Types",
+    "title": "MultivariatePolynomials.variable_union_type",
+    "category": "function",
+    "text": "variable_union_type(p::AbstractPolynomialLike)\n\nReturn the supertype for variables of p. If p is a variable, it should not be the type of p but the supertype of all variables that could be created.\n\nExamples\n\nFor TypedPolynomials, a variable of name x has type Variable{:x} so variable_union_type should return Variable. For DynamicPolynomials, all variables have the same type PolyVar{C} where C is true for commutative variables and false for non-commutative ones so variable_union_type should return PolyVar{C}.\n\n\n\n\n\n"
+},
+
+{
     "location": "types.html#MultivariatePolynomials.similarvariable",
     "page": "Types",
     "title": "MultivariatePolynomials.similarvariable",
@@ -93,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Types",
     "title": "Variables",
     "category": "section",
-    "text": "AbstractVariable\nvariable\nname\nname_base_indices\nsimilarvariable\n@similarvariable"
+    "text": "AbstractVariable\nvariable\nname\nname_base_indices\nvariable_union_type\nsimilarvariable\n@similarvariable"
 },
 
 {
