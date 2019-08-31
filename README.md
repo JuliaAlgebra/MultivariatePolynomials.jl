@@ -1,9 +1,9 @@
 # Multivariate Polynomials
 
-| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** | **References to cite** |
-|:-----------------:|:--------------------:|:----------------:|:----------:|:----------------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
+| **Documentation** | **Build Status** | **Social** | **References to cite** |
+|:-----------------:|:----------------:|:----------:|:----------------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 This package provides an interface for manipulating multivariate polynomials.
 Implementing algorithms on polynomials using this interface will allow the algorithm to work for all polynomials implementing the interface.
@@ -64,11 +64,6 @@ The following packages extend/use the interface:
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
 [docs-latest-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/latest
-
-[pkg-0.6-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.6.svg
-[pkg-0.6-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
-[pkg-0.7-img]: http://pkg.julialang.org/badges/MultivariatePolynomials_0.7.svg
-[pkg-0.7-url]: http://pkg.julialang.org/?pkg=MultivariatePolynomials
 
 [build-img]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl.svg?branch=master
 [build-url]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl
