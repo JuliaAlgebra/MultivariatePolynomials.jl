@@ -28,6 +28,9 @@ for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant)
     @eval Base.$op(α, p::APL) = $fun(α, p)
 end
 
+MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomial) = MA.mutable_operate_to!(p, op, p, q)
+MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomialLike) = MA.mutable_operate!(op, p, polynomial(q))
+
 # Special case AbstractArrays of APLs
 # We add these instead of relying on the broadcasting API since the above method definitions are very wide.
 # In particular, there is support for Matrices as coefficents. In order to avoid issues like #104 we therefore

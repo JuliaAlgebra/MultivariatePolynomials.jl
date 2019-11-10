@@ -2,6 +2,9 @@ module MultivariatePolynomials
 
 import LinearAlgebra
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
 """
     AbstractPolynomialLike{T}
