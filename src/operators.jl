@@ -74,6 +74,8 @@ _multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomia
 multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
 multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
 
+MA.mutable_operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
+MA.mutable_operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = mapexponents!(+, m1, m2)
 Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
@@ -140,3 +142,19 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
+
+function MA.mutable_operate_to!(output::AbstractPolynomial, ::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
+    return MA.mutable_operate_to!(output, +, x, *(args...))
+end
+function MA.mutable_operate!(::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
+    return MA.mutable_operate!(+, x, *(args...))
+end
+MA.buffer_for(::typeof(MA.add_mul), ::Type{<:AbstractPolynomial}, args::Vararg{Any, N}) where {N} = MA.promote_operation(*, args...)
+function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, ::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
+    product = MA.operate_to!(buffer, *, args...)
+    return MA.mutable_operate_to!(output, +, x, product)
+end
+function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, ::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
+    product = MA.operate_to!(buffer, *, args...)
+    return MA.mutable_operate!(+, x, product)
+end

@@ -122,6 +122,9 @@ The multiplication `m1 * m2` is equivalent to `mapexponents(+, m1, m2)`, the uns
 """
 mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
 
+function mapexponents_to! end
+function mapexponents! end
+
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)
 MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike}) = monomialtype(MT)
