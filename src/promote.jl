@@ -22,22 +22,22 @@ Base.promote_rule(::Type{RT}, ::Type{PT}) where {PT<:APL, RT<:RationalPoly} = pr
 
 function MA.promote_operation(
     op::Union{typeof(+), typeof(-)}, PT::Type{<:APL{S}},
-    ::Type{<:APL{T}}) where {S, T}
+    QT::Type{<:APL{T}}) where {S, T}
 
     U = MA.promote_operation(op, S, T)
-    return polynomialtype(PT, U)
+    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
 end
 function MA.promote_operation(::typeof(*), MT::Type{<:AbstractMonomialLike},
     ::Type{<:AbstractMonomialLike})
     return monomialtype(MT)
 end
 function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
-                              ::Type{<:AbstractTermLike{T}}) where {S, T}
+                              ST::Type{<:AbstractTermLike{T}}) where {S, T}
     U = MA.promote_operation(*, S, T)
-    return termtype(TT, U)
+    return termtype(promote_type(monomialtype(TT), monomialtype(ST)), U)
 end
 function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}},
-                              ::Type{<:APL{T}}) where {S, T}
+                              QT::Type{<:APL{T}}) where {S, T}
     U = MA.promote_operation(MA.add_mul, S, T)
-    return polynomialtype(PT, U)
+    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
 end

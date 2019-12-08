@@ -104,6 +104,28 @@ function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
     end
     result
 end
+function uniqterms!(ts::AbstractVector{<: AbstractTerm})
+    i = firstindex(ts)
+    for j in Iterators.drop(eachindex(ts), 1)
+        if !iszero(ts[j])
+            if monomial(ts[i]) == monomial(ts[j])
+                ts[i] = MA.add!(coefficient(ts[i]), coefficient(ts[j])) * monomial(ts[i])
+            else
+                if !iszero(ts[i])
+                    i += 1
+                end
+                ts[i] = MA.copy_if_mutable(ts[j])
+            end
+        end
+    end
+    if i < length(ts)
+        if iszero(ts[i])
+            i -= 1
+        end
+        resize!(ts, i)
+    end
+    ts
+end
 polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedState) = polynomial(uniqterms(ts), SortedUniqState())
 polynomial(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState()) = polynomial(sort(ts, lt=(>)), sortstate(s))
 
@@ -374,4 +396,5 @@ function Base.round(p::AbstractPolynomialLike; args...)
     polynomial(round.(terms(p); args...), SortedState())
 end
 
+Base.ndims(::Type{<:AbstractPolynomialLike}) = 0
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)
