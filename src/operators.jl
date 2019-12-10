@@ -182,7 +182,7 @@ function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
     return ts
 end
 function Base.:*(p::AbstractPolynomial, q::AbstractPolynomial)
-    polynomial(mul_to_terms!(MA.promote_operation(*, termtype(p), termtype(q))[], p, q))
+    polynomial!(mul_to_terms!(MA.promote_operation(*, termtype(p), termtype(q))[], p, q))
 end
 
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
@@ -190,7 +190,7 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
 Base.:-(m::AbstractMonomialLike) = (-1) * m
 Base.:-(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
-Base.:-(p::APL) = polynomial((-).(terms(p)))
+Base.:-(p::APL) = polynomial!((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
 
@@ -249,8 +249,8 @@ Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * mo
 Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
 Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
 
-Base.:*(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
-Base.:*(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
+Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
+Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
 Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
 
 # guaranteed that monomial(t1) > monomial(t2)
@@ -260,6 +260,7 @@ function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, 
     elseif iszero(t2)
         polynomial(t1, T)
     else
+        # not `polynomial!` because we `t1` and `t2` cannot be modified
         polynomial(termtype(TT, T)[t1, t2], SortedUniqState())
     end
 end
