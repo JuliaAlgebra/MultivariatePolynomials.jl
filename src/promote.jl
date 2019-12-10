@@ -27,9 +27,9 @@ function MA.promote_operation(
     U = MA.promote_operation(op, S, T)
     return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
 end
-function MA.promote_operation(::typeof(*), MT::Type{<:AbstractMonomialLike},
-    ::Type{<:AbstractMonomialLike})
-    return monomialtype(MT)
+function MA.promote_operation(::typeof(*), MT1::Type{<:AbstractMonomialLike},
+    MT2::Type{<:AbstractMonomialLike})
+    return typeof(constantmonomial(MT1) * constantmonomial(MT2))
 end
 function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
                               ST::Type{<:AbstractTermLike{T}}) where {S, T}
