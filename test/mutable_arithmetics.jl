@@ -70,11 +70,11 @@ function all_tests(a, b, c, d, e, f, g)
     @test isequal(e, e_copy)
 end
 
-Mod.@polyvar w x y z
+Mod.@polyvar x y
 
 @testset "MutableArithmetics with variables in $T" for T in [Int, BigInt]
     # Creating 7 different variables here gives a long compile time for TypedPolynomials
-    all_tests(w, x, y, z, w, x, y)
+    all_tests(x, y, x, y, x, y, x)
 end
 
 @testset "MutableArithmetics with monomials in $T" for T in [Int, BigInt]
