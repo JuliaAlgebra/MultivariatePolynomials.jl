@@ -72,12 +72,12 @@ end
 
 Mod.@polyvar x y
 
-@testset "MutableArithmetics with variables in $T" for T in [Int, BigInt]
+@testset "MutableArithmetics with variables" begin
     # Creating 7 different variables here gives a long compile time for TypedPolynomials
     all_tests(x, y, x, y, x, y, x)
 end
 
-@testset "MutableArithmetics with monomials in $T" for T in [Int, BigInt]
+@testset "MutableArithmetics with monomials" begin
     a = x^2
     b = y^2
     c = x

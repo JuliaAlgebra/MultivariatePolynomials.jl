@@ -61,6 +61,7 @@ polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial
 polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 
 polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
 
