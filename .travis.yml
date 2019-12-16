@@ -16,9 +16,6 @@ matrix:
 notifications:
   email: false
 
-before_script:
-    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaOpt/MutableArithmetics.jl", rev="master"))'
-
 jobs:
   include:
     - stage: "Documentation"
