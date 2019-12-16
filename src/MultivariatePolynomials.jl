@@ -59,7 +59,6 @@ abstract type AbstractTerm{T} <: AbstractTermLike{T} end
 Abstract type for a polynomial of coefficient type `T`, i.e. a sum of `AbstractTerm{T}`s.
 """
 abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
-MA.mutability(::Type{<:AbstractPolynomial}) = MA.IsMutable()
 
 const APL{T} = AbstractPolynomialLike{T}
 
