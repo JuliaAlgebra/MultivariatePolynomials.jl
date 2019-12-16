@@ -5,6 +5,8 @@ os:
 julia:
   - 1.0
   - 1.1
+  - 1.2
+  - 1.3
   - nightly
 
 matrix:
@@ -13,6 +15,9 @@ matrix:
 
 notifications:
   email: false
+
+before_script:
+    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaOpt/MutableArithmetics.jl", rev="master"))'
 
 jobs:
   include:
