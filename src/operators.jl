@@ -20,6 +20,13 @@ end
 for op in [:+, :-, :(==)]
     @eval Base.$op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
 end
+# Promotion between `I` and `1` is `Any`.
+# Promotion between `I` and `2I` is `UniformScaling`.
+for op in [:+, :-]
+    @eval Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(p1, mapcoefficientsnz(J -> J.λ, p2))
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL) = $op(mapcoefficientsnz(J -> J.λ, p1), p2)
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(mapcoefficientsnz(J -> J.λ, p1), p2)
+end
 Base.isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
 
 # @eval $op(p::APL, α) = $op(promote(p, α)...) would be less efficient
@@ -27,6 +34,134 @@ for (op, fun) in [(:+, :plusconstant), (:-, :minusconstant), (:*, :multconstant)
     @eval Base.$op(p::APL, α) = $fun(p, α)
     @eval Base.$op(α, p::APL) = $fun(α, p)
 end
+# Fix ambiguity between above methods and methods in MA
+Base.:+(::MA.Zero, p::APL) = MA.copy_if_mutable(p)
+Base.:+(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
+constant_function(::typeof(+)) = plusconstant
+constant_function(::typeof(-)) = minusconstant
+MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::APL, α) = MA.mutable_operate!(constant_function(op), p, α)
+MA.mutable_operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.mutable_operate_to!(output, multconstant, α, p)
+MA.mutable_operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.mutable_operate_to!(output, multconstant, p, α)
+
+function polynomial_merge!(
+    n1::Int, n2::Int, get1::Function, get2::Function,
+    set::Function, push::Function, compare_monomials::Function,
+    combine::Function, keep::Function, resize::Function)
+    buffer = nothing
+    i = j = k = 1
+    # Invariant:
+    # The terms p[0] -> p[k-1] are sorted and are smaller than the remaining terms.
+    # The terms p[k] -> p[i-1] are garbage.
+    # The terms p[i] -> p[end] are sorted and still need to be added.
+    # The terms q[j] -> p[end] are sorted and still need to be added.
+    # If `buffer` is not empty:
+    #   The terms in `buffer` are sorted and still need to be added.
+    #   Moreover, they are smaller than the terms p[i] -> p[end].
+    while i <= n1 && j <= n2
+        @assert buffer === nothing || isempty(buffer)
+        comp = compare_monomials(i, j)
+        if comp > 0
+            if k == i
+                t0 = get1(i)
+                if buffer === nothing
+                    buffer = DataStructures.Queue{typeof(t0)}()
+                end
+                DataStructures.enqueue!(buffer, t0)
+                i += 1
+            end
+            set(k, get2(j))
+            j += 1
+            k += 1
+        elseif iszero(comp)
+            combine(i, j)
+            if keep(i)
+                if k != i
+                    @assert k < i
+                    set(k, get1(i))
+                end
+                k += 1
+            end
+            i += 1
+            j += 1
+        else
+            if k != i
+                set(k, get1(i))
+            end
+            i += 1
+            k += 1
+        end
+        while buffer !== nothing && !isempty(buffer) && j <= n2
+            @assert i == k
+            t = DataStructures.front(buffer)
+            comp = compare_monomials(t, j)
+            if comp >= 0
+                if comp > 0
+                    t = get2(j)
+                else
+                    t = combine(t, j)
+                end
+                j += 1
+            end
+            if comp <= 0
+                DataStructures.dequeue!(buffer)
+            end
+            # if `comp` is zero, we called `combine` so `t`
+            # might not be kept. If `comp` is not zero, we
+            # skip the `keep` call that might be costly.
+            if iszero(comp) && !keep(t)
+                continue
+            end
+            if k <= n1
+                DataStructures.enqueue!(buffer, get1(i))
+                set(k, t)
+            else
+                push(t)
+                n1 += 1
+            end
+            i += 1
+            k += 1
+        end
+    end
+    if buffer !== nothing && !isempty(buffer)
+        @assert j == n2 + 1
+        @assert i == k
+        n = length(buffer)
+        resize(n1 + n)
+        for k in n1:-1:i
+            set(k + n, get1(k))
+        end
+        for k in i:(i + n - 1)
+            set(k, DataStructures.dequeue!(buffer))
+        end
+        n1 += n
+    else
+        len = (k - 1) + (n2 - (j - 1)) + (n1 - (i - 1))
+        if n1 < len
+            resize(len)
+        end
+        while j <= n2
+            set(k, get2(j))
+            j += 1
+            k += 1
+        end
+        @assert j == n2 + 1
+        while i <= n1
+            set(k, get1(i))
+            i += 1
+            k += 1
+        end
+        if len < n1
+            resize(len)
+        end
+        @assert i == n1 + 1
+        @assert k == len + 1
+    end
+    return
+end
+
+
+#MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomial) = MA.mutable_operate_to!(p, op, p, q)
+MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomialLike) = MA.mutable_operate!(op, p, polynomial(q))
 
 # Special case AbstractArrays of APLs
 # We add these instead of relying on the broadcasting API since the above method definitions are very wide.
@@ -38,21 +173,39 @@ for op in [:+, :-, :*]
 end
 Base.:/(A::AbstractArray{<:APL}, p::APL) = map(f -> f / p, A)
 
+function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
+    for t1 in terms(p1)
+        for t2 in terms(p2)
+            push!(ts, t1 * t2)
+        end
+    end
+    return ts
+end
+function Base.:*(p::AbstractPolynomial, q::AbstractPolynomial)
+    polynomial!(mul_to_terms!(MA.promote_operation(*, termtype(p), termtype(q))[], p, q))
+end
+
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
 Base.:-(m::AbstractMonomialLike) = (-1) * m
 Base.:-(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
-Base.:-(p::APL) = polynomial((-).(terms(p)))
+Base.:-(p::APL) = polynomial!((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
-plusconstant(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(+, S, T)) : p + constantterm(α, p)
-plusconstant(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(+, S, T)) : constantterm(α, p) + p
-minusconstant(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, Base.promote_op(-, S, T)) : p - constantterm(α, p)
-minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, Base.promote_op(-, S, T)) : constantterm(α, p) - p
+plusconstant(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : p + constantterm(α, p)
+plusconstant(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : constantterm(α, p) + p
+function MA.mutable_operate!(::typeof(plusconstant), p::APL, α)
+    if !iszero(α)
+        MA.mutable_operate!(+, p, constantterm(α, p))
+    end
+    return p
+end
+minusconstant(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(-, S, T)) : p - constantterm(α, p)
+minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) : constantterm(α, p) - p
 
 # Coefficients and variables commute
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
@@ -61,7 +214,7 @@ multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 _multconstant(α, f, t::AbstractTermLike) = mapcoefficientsnz(f, t)
 function _multconstant(α::T, f, p::AbstractPolynomial{S}) where {S, T}
     if iszero(α)
-        zero(polynomialtype(p, Base.promote_op(*, T, S)))
+        zero(polynomialtype(p, MA.promote_operation(*, T, S)))
     else
         mapcoefficientsnz(f, p)
     end
@@ -71,6 +224,24 @@ _multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomia
 multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
 multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
 
+function mapcoefficientsnz_to! end
+
+function _multconstant_to!(output, α, f, p)
+    if iszero(α)
+        MA.mutable_operate!(zero, output)
+    else
+        mapcoefficientsnz_to!(output, f, p)
+    end
+end
+function MA.mutable_operate_to!(output, ::typeof(multconstant), p::APL, α)
+    _multconstant_to!(output, α, β -> β*α, p)
+end
+function MA.mutable_operate_to!(output, ::typeof(multconstant), α, p::APL)
+    _multconstant_to!(output, α, β -> α*β, p)
+end
+
+MA.mutable_operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
+MA.mutable_operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = mapexponents!(+, m1, m2)
 Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
@@ -78,8 +249,8 @@ Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * mo
 Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
 Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
 
-Base.:*(t::AbstractTermLike, p::APL) = polynomial(map(te -> t * te, terms(p)))
-Base.:*(p::APL, t::AbstractTermLike) = polynomial(map(te -> te * t, terms(p)))
+Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
+Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
 Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
 
 # guaranteed that monomial(t1) > monomial(t2)
@@ -89,15 +260,16 @@ function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, 
     elseif iszero(t2)
         polynomial(t1, T)
     else
+        # not `polynomial!` because we `t1` and `t2` cannot be modified
         polynomial(termtype(TT, T)[t1, t2], SortedUniqState())
     end
 end
 for op in [:+, :-]
     @eval begin
         Base.$op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
-        Base.$op(t1::AbstractTerm, t2::AbstractTerm) = $op(promote(t1, t2)...)
+        Base.$op(t1::AbstractTerm, t2::AbstractTerm) = $op(_promote_terms(t1, t2)...)
         function Base.$op(t1::TT, t2::TT) where {T, TT <: AbstractTerm{T}}
-            S = Base.promote_op($op, T, T)
+            S = MA.promote_operation($op, T, T)
             # t1 > t2 would compare the coefficient in case the monomials are equal
             # and it will throw a MethodError in case the coefficients are not comparable
             if monomial(t1) == monomial(t2)
@@ -109,6 +281,18 @@ for op in [:+, :-]
             end
         end
     end
+end
+_promote_terms(t1, t2) = promote(t1, t2)
+# Promotion between `I` and `1` is `Any`.
+_promote_terms(t1::AbstractTerm, t2::AbstractTerm{<:LinearAlgebra.UniformScaling}) = _promote_terms(t1, coefficient(t2).λ * monomial(t2))
+_promote_terms(t1::AbstractTerm{<:LinearAlgebra.UniformScaling}, t2::AbstractTerm) = _promote_terms(coefficient(t1).λ * monomial(t1), t2)
+# Promotion between `I` and `2I` is `UniformScaling`, not `UniformScaling{Int}`.
+function _promote_terms(t1::AbstractTerm{LinearAlgebra.UniformScaling{S}}, t2::AbstractTerm{LinearAlgebra.UniformScaling{T}}) where {S<:Number, T<:Number}
+    U = LinearAlgebra.UniformScaling{promote_type(S, T)}
+    _promote_terms(MA.scaling_convert(U, coefficient(t1)) * monomial(t1), MA.scaling_convert(U, coefficient(t2)) * monomial(t2))
+end
+function _promote_terms(t1::AbstractTerm{LinearAlgebra.UniformScaling{T}}, t2::AbstractTerm{LinearAlgebra.UniformScaling{T}}) where T<:Number
+    return promote(t1, t2)
 end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = v
@@ -127,6 +311,9 @@ LinearAlgebra.dot(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike) = p1' 
 LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
 LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
 
+LinearAlgebra.symmetric_type(PT::Type{<:APL}) = PT
+LinearAlgebra.symmetric(p::APL, ::Symbol) = p
+
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """
 Convert a tuple of variables into a static vector to allow array-like usage.
@@ -137,3 +324,19 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
+
+function MA.mutable_operate_to!(output::AbstractPolynomial, ::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
+    return MA.mutable_operate_to!(output, +, x, *(args...))
+end
+function MA.mutable_operate!(::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
+    return MA.mutable_operate!(+, x, *(y, z, args...))
+end
+MA.buffer_for(::typeof(MA.add_mul), ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
+function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, ::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
+    product = MA.operate_to!(buffer, *, y, z, args...)
+    return MA.mutable_operate_to!(output, +, x, product)
+end
+function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, ::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
+    product = MA.operate_to!(buffer, *, y, z, args...)
+    return MA.mutable_operate!(+, x, product)
+end

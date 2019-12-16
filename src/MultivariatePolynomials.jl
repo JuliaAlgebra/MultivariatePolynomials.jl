@@ -2,6 +2,11 @@ module MultivariatePolynomials
 
 import LinearAlgebra
 
+import DataStructures
+
+import MutableArithmetics
+const MA = MutableArithmetics
+
 export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
 """
     AbstractPolynomialLike{T}
@@ -10,13 +15,15 @@ Abstract type for a value that can act like a polynomial. For instance, an
 `AbstractTerm{T}` is an `AbstractPolynomialLike{T}` since it can act as a
 polynomial of only one term.
 """
-abstract type AbstractPolynomialLike{T} end
+abstract type AbstractPolynomialLike{T} <: MA.AbstractMutable end
+
 """
     AbstractTermLike{T}
 
 Abstract type for a value that can act like a term. For instance, an `AbstractMonomial` is an `AbstractTermLike{Int}` since it can act as a term with coefficient `1`.
 """
 abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
+
 """
     AbstractMonomialLike
 

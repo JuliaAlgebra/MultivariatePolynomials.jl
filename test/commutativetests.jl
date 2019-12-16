@@ -1,3 +1,5 @@
+include("mutable_arithmetics.jl")
+
 include("zip.jl")
 include("variable.jl")
 include("monomial.jl")

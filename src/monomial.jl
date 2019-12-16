@@ -122,8 +122,12 @@ The multiplication `m1 * m2` is equivalent to `mapexponents(+, m1, m2)`, the uns
 """
 mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
 
+function mapexponents_to! end
+function mapexponents! end
+
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)
+MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike}) = monomialtype(MT)
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).
 # This tries to convert a monomial to a variable which does not work.

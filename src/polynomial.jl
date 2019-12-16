@@ -1,4 +1,4 @@
-export polynomial, polynomialtype, terms, nterms, coefficients, monomials
+export polynomial, polynomial!, polynomialtype, terms, nterms, coefficients, monomials
 export coefficienttype, monomialtype
 export mindegree, maxdegree, extdegree
 export leadingterm, leadingcoefficient, leadingmonomial
@@ -49,16 +49,32 @@ Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x
 polynomial(p::AbstractPolynomial) = p
 polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
 polynomial(p::APL{T}) where T = polynomial(p, T)
-polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
-polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
-polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
-polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial([f(i) * mv[i] for i in 1:length(mv)])
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
     LinearAlgebra.dot(mv, Q * mv)
 end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
+
+polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([f(i) * mv[i] for i in 1:length(mv)])
+
+polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
+
+polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+
+polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
+
+function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
+    polynomial!(uniqterms!(ts), SortedUniqState())
+end
+function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState())
+    polynomial!(sort!(ts, lt=(>)), sortstate(s))
+end
+
+_collect(v::Vector) = v
+_collect(v::AbstractVector) = collect(v)
+polynomial(ts::AbstractVector{<:AbstractTerm}, args::Vararg{ListState, N}) where {N} = polynomial!(MA.mutable_copy(_collect(ts)), args...)
 
 """
     polynomialtype(p::AbstractPolynomialLike)
@@ -85,27 +101,28 @@ polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialt
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
-function uniqterms(ts::AbstractVector{T}) where T <: AbstractTerm
-    result = T[]
-    sizehint!(result, length(ts))
-    for t in ts
-        if !iszero(t)
-            if isempty(result) || monomial(t) != monomial(last(result))
-                push!(result, t)
+function uniqterms!(ts::AbstractVector{<: AbstractTerm})
+    i = firstindex(ts)
+    for j in Iterators.drop(eachindex(ts), 1)
+        if !iszero(ts[j])
+            if monomial(ts[i]) == monomial(ts[j])
+                ts[i] = MA.add!(coefficient(ts[i]), coefficient(ts[j])) * monomial(ts[i])
             else
-                coef = coefficient(last(result)) + coefficient(t)
-                if iszero(coef)
-                    pop!(result)
-                else
-                    result[end] = coef * monomial(t)
+                if !iszero(ts[i])
+                    i += 1
                 end
+                ts[i] = MA.copy_if_mutable(ts[j])
             end
         end
     end
-    result
+    if i < length(ts)
+        if iszero(ts[i])
+            i -= 1
+        end
+        resize!(ts, i)
+    end
+    ts
 end
-polynomial(ts::AbstractVector{<:AbstractTerm}, s::SortedState) = polynomial(uniqterms(ts), SortedUniqState())
-polynomial(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState()) = polynomial(sort(ts, lt=(>)), sortstate(s))
 
 """
     terms(p::AbstractPolynomialLike)
@@ -336,7 +353,7 @@ Returns `p / leadingcoefficient(p)` where the leading coefficient of the returne
 """
 function monic(p::APL)
     α = leadingcoefficient(p)
-    polynomial(_divtoone.(terms(p), α))
+    polynomial!(_divtoone.(terms(p), α))
 end
 monic(m::AbstractMonomialLike) = m
 monic(t::AbstractTermLike{T}) where T = one(T) * monomial(t)
@@ -364,14 +381,15 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
     # Invariant: p has only nonzero coefficient
     # therefore f(α) will be nonzero for every coefficient α of p
     # hence we can use Uniq
-    polynomial(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
+    polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
 end
 mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)
 
 Base.round(t::AbstractTermLike; args...) = round(coefficient(t); args...) * monomial(t)
 function Base.round(p::AbstractPolynomialLike; args...)
     # round(0.1) is zero so we cannot use SortedUniqState
-    polynomial(round.(terms(p); args...), SortedState())
+    polynomial!(round.(terms(p); args...), SortedState())
 end
 
+Base.ndims(::Type{<:AbstractPolynomialLike}) = 0
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)

@@ -2,13 +2,14 @@ export variable
 
 function convertconstant end
 Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
-function Base.convert(::Type{P}, p::P) where P<:AbstractPolynomial
+function Base.convert(::Type{P}, p::P) where {T, P<:AbstractPolynomial{T}}
     return p
 end
 function Base.convert(::Type{P}, p::APL) where {T, P<:AbstractPolynomial{T}}
     return convert(P, polynomial(p, T))
 end
 
+MA.scaling(p::AbstractPolynomialLike{T}) where {T} = convert(T, p)
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
 function Base.convert(S::Type{<:Union{Number, T}}, p::APL{T}) where T

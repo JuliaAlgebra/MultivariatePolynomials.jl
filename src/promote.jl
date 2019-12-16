@@ -19,3 +19,25 @@ Base.promote_rule(::Type{RT}, ::Type{PT}) where {PT<:APL, RT<:RationalPoly} = pr
 #promote_rule(::Type{RationalPoly{C, S, T}}, ::Type{Term{C, U}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
 #promote_rule(::Type{Polynomial{C, U}}, ::Type{RationalPoly{C, S, T}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
 #promote_rule(::Type{RationalPoly{C, S, T}}, ::Type{Polynomial{C, U}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
+
+function MA.promote_operation(
+    op::Union{typeof(+), typeof(-)}, PT::Type{<:APL{S}},
+    QT::Type{<:APL{T}}) where {S, T}
+
+    U = MA.promote_operation(op, S, T)
+    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
+end
+function MA.promote_operation(::typeof(*), MT1::Type{<:AbstractMonomialLike},
+    MT2::Type{<:AbstractMonomialLike})
+    return typeof(constantmonomial(MT1) * constantmonomial(MT2))
+end
+function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
+                              ST::Type{<:AbstractTermLike{T}}) where {S, T}
+    U = MA.promote_operation(*, S, T)
+    return termtype(promote_type(monomialtype(TT), monomialtype(ST)), U)
+end
+function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}},
+                              QT::Type{<:APL{T}}) where {S, T}
+    U = MA.promote_operation(MA.add_mul, S, T)
+    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
+end

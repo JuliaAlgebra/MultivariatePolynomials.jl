@@ -5,16 +5,20 @@ repo = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl"
 version = "0.3.2"
 
 [deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 
 [compat]
+DataStructures = "0.17"
+MutableArithmetics = "0.1.1"
 julia = "1"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
-TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"
 
 [targets]
 test = ["BenchmarkTools", "DynamicPolynomials", "Test", "TypedPolynomials"]
