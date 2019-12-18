@@ -48,4 +48,17 @@
 
     @test_throws InexactError push!([1], 2x)
     @test_throws ErrorException push!([x^2], 2x)
+
+
+    @testset "Effective variables" begin
+        T = variable_union_type(x)
+        @test x isa T
+        @test y isa T
+        @test T[x, y] == @inferred effective_variables(x * y)
+        @test T[x, y] == @inferred effective_variables(y * x)
+        @test T[x] == @inferred effective_variables(x * y^0)
+        @test T[x] == @inferred effective_variables(y^0 * x)
+        @test T[y] == @inferred effective_variables(x^0 * y)
+        @test T[y] == @inferred effective_variables(y * x^0)
+    end
 end

@@ -1,4 +1,4 @@
-export name, name_base_indices, similarvariable, @similarvariable
+export name, name_base_indices, similarvariable, @similarvariable, variable_union_type
 
 Base.copy(x::AbstractVariable) = x
 
