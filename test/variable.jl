@@ -49,6 +49,11 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
                 end
             end
         end
+
+        @testset "Effective variables" begin
+            @test [x] == @inferred effective_variables(x)
+            @test [y] == @inferred effective_variables(y)
+        end
     end
     @testset "Create similar variable" begin
         Mod.@polyvar x y

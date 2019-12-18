@@ -1,6 +1,6 @@
 export polynomial, polynomial!, polynomialtype, terms, nterms, coefficients, monomials
 export coefficienttype, monomialtype
-export mindegree, maxdegree, extdegree
+export mindegree, maxdegree, extdegree, effective_variables
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
 
@@ -256,6 +256,11 @@ Calling `extdegree` on on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree
 """
 function extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, args...)
     (mindegree(p, args...), maxdegree(p, args...))
+end
+
+function effective_variables(p::AbstractPolynomialLike, args...)
+    VT = variable_union_type(p)
+    return VT[v for v in variables(p) if !iszero(maxdegree(p, v))]
 end
 
 """

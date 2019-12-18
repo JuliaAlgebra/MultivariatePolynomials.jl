@@ -154,4 +154,16 @@ const MP = MultivariatePolynomials
         @test variables(v)[1] == x
         @test variables(v)[2] == y
     end
+
+    @testset "Effective variables" begin
+        Mod.@polyvar x y z
+        T = variable_union_type(x)
+        @test x isa T
+        @test y isa T
+        @test z isa T
+        @test T[x] == @inferred effective_variables(x + y - y)
+        @test T[x, y] == @inferred effective_variables(z + x + y - z)
+        @test T[y, z] == @inferred effective_variables(z + 0 * x + y)
+        @test T[z] == @inferred effective_variables(z + 0 * x + y^0)
+    end
 end

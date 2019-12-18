@@ -51,4 +51,19 @@ const MP = MultivariatePolynomials
     @test adjoint(x) == x
     @test transpose(x^2) == x^2
     @test adjoint(x^2) == x^2
+
+    @testset "Effective variables" begin
+        T = variable_union_type(x)
+        @test x isa T
+        @test y[2] isa T
+        @test T[x, y[2]] == @inferred effective_variables(x * y[2])
+        @test T[x, y[2]] == @inferred effective_variables(y[2] * x)
+        @test T[x] == @inferred effective_variables(x * y[2]^0)
+        @test T[x] == @inferred effective_variables(y[2]^0 * x)
+        @test T[y[2]] == @inferred effective_variables(x^0 * y[2])
+        @test T[y[2]] == @inferred effective_variables(y[2] * x^0)
+        @test T[x, y[2]] == @inferred effective_variables(y[3]^0 * x * y[2])
+        @test T[x, y[2]] == @inferred effective_variables(y[2] * y[3]^0 * x)
+        @test T[x, y[2]] == @inferred effective_variables(y[2] * x * y[3]^0)
+    end
 end
