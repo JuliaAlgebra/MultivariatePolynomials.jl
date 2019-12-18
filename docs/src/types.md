@@ -23,6 +23,7 @@ AbstractMonomialLike
 AbstractMonomial
 monomialtype
 variables
+effective_variables
 nvariables
 exponents
 degree
@@ -56,7 +57,7 @@ polynomialtype
 terms
 nterms
 coefficients
-coefficient(p::AbstractPolynomialLike, vars, m::AbstractMonomialLike)
+coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike, vars)
 monomials
 mindegree
 maxdegree

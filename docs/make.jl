@@ -1,8 +1,15 @@
 using Documenter, MultivariatePolynomials
 
 makedocs(
-    format = :html,
     sitename = "MultivariatePolynomials",
+
+    format = Documenter.HTML(
+        # See https://github.com/JuliaDocs/Documenter.jl/issues/868
+        prettyurls = get(ENV, "CI", nothing) == "true"
+    ),
+    # See https://github.com/JuliaOpt/JuMP.jl/issues/1576
+    strict = true,
+
     pages = [
         "Introduction" => "index.md",
         "Types" => "types.md",
@@ -14,9 +21,4 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/JuliaAlgebra/MultivariatePolynomials.jl.git",
-    target = "build",
-    osname = "linux",
-    julia  = "1.0",
-    deps   = nothing,
-    make   = nothing,
 )
