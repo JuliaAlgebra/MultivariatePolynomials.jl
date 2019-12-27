@@ -37,6 +37,19 @@ end
 # Fix ambiguity between above methods and methods in MA
 Base.:+(::MA.Zero, p::APL) = MA.copy_if_mutable(p)
 Base.:+(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
+
+# Special case AbstractArrays of APLs
+# We add these instead of relying on the broadcasting API since the above method definitions are very wide.
+# In particular, there is support for Matrices as coefficents. In order to avoid issues like #104 we therefore
+# explicitly define this (instead of implictly getting unexpected results).
+for op in [:+, :-]
+    @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
+    @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
+end
+Base.:*(p::APL, A::AbstractArray) = map(f -> p * f, A)
+Base.:*(A::AbstractArray, p::APL) = map(f -> f * p, A)
+Base.:/(A::AbstractArray, p::APL) = map(f -> f / p, A)
+
 constant_function(::typeof(+)) = plusconstant
 constant_function(::typeof(-)) = minusconstant
 MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::APL, α) = MA.mutable_operate!(constant_function(op), p, α)
@@ -163,16 +176,6 @@ end
 #MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomial) = MA.mutable_operate_to!(p, op, p, q)
 MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomialLike) = MA.mutable_operate!(op, p, polynomial(q))
 
-# Special case AbstractArrays of APLs
-# We add these instead of relying on the broadcasting API since the above method definitions are very wide.
-# In particular, there is support for Matrices as coefficents. In order to avoid issues like #104 we therefore
-# explicitly define this (instead of implictly getting unexpected results).
-for op in [:+, :-, :*]
-    @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
-    @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
-end
-Base.:/(A::AbstractArray{<:APL}, p::APL) = map(f -> f / p, A)
-
 function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
     for t1 in terms(p1)
         for t2 in terms(p2)
@@ -188,8 +191,12 @@ end
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
-Base.:-(m::AbstractMonomialLike) = (-1) * m
-Base.:-(t::AbstractTermLike) = (-coefficient(t)) * monomial(t)
+# `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
+# through the MA API without modifying `p`. We should either copy the monomial
+# here or implement a `MA.operate(-, p)` that copies it. We choose the first
+# option.
+Base.:-(m::AbstractMonomialLike) = (-1) * MA.copy_if_mutable(m)
+Base.:-(t::AbstractTermLike) = MA.operate(-, coefficient(t)) * MA.copy_if_mutable(monomial(t))
 Base.:-(p::APL) = polynomial!((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
@@ -206,6 +213,12 @@ function MA.mutable_operate!(::typeof(plusconstant), p::APL, α)
 end
 minusconstant(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(-, S, T)) : p - constantterm(α, p)
 minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) : constantterm(α, p) - p
+function MA.mutable_operate!(::typeof(minusconstant), p::APL, α)
+    if !iszero(α)
+        MA.mutable_operate!(-, p, constantterm(α, p))
+    end
+    return p
+end
 
 # Coefficients and variables commute
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
@@ -325,18 +338,18 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
 
-function MA.mutable_operate_to!(output::AbstractPolynomial, ::typeof(MA.add_mul), x, args::Vararg{Any, N}) where N
-    return MA.mutable_operate_to!(output, +, x, *(args...))
+function MA.mutable_operate_to!(output::AbstractPolynomial, op::MA.AddSubMul, x, args::Vararg{Any, N}) where N
+    return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, *(args...))
 end
-function MA.mutable_operate!(::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
-    return MA.mutable_operate!(+, x, *(y, z, args...))
+function MA.mutable_operate!(op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
+    return MA.mutable_operate!(MA.add_sub_op(op), x, *(y, z, args...))
 end
-MA.buffer_for(::typeof(MA.add_mul), ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
-function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, ::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
+MA.buffer_for(::MA.AddSubMul, ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
+function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!(buffer, *, y, z, args...)
-    return MA.mutable_operate_to!(output, +, x, product)
+    return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, product)
 end
-function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, ::typeof(MA.add_mul), x, y, z, args::Vararg{Any, N}) where N
+function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!(buffer, *, y, z, args...)
-    return MA.mutable_operate!(+, x, product)
+    return MA.mutable_operate!(MA.add_sub_op(op), x, product)
 end
