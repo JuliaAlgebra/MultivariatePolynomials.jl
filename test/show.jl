@@ -25,7 +25,6 @@
     @test sprint(show, -(1.0 + 3.1im) * z*x) == "(-1.0 - 3.1im)xz"
     @test sprint(show, x^2 + (1.0 + 3.1im) * x) == "x² + (1.0 + 3.1im)x"
     @test sprint(show, x^2 - (1.0 + 3.1im) * x) == "x² + (-1.0 - 3.1im)x"
-    @test sprint(show, [1.0, 2.0] * x) == "([1.0, 2.0])x"
 
     Mod.@polyvar x[0:9]
     @test sprint(show, sum(i*x[i]^i for i=1:10)) == "10x₉¹⁰ + 9x₈⁹ + 8x₇⁸ + 7x₆⁷ + 6x₅⁶ + 5x₄⁵ + 4x₃⁴ + 3x₂³ + 2x₁² + x₀"
