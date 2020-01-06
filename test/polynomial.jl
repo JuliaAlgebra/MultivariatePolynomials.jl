@@ -166,4 +166,11 @@ const MP = MultivariatePolynomials
         @test T[y, z] == @inferred effective_variables(z + 0 * x + y)
         @test T[z] == @inferred effective_variables(z + 0 * x + y^0)
     end
+
+    @testset "Complex" begin
+        # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/128
+        Mod.@polyvar x
+        p = im * x + 2im * x^2
+        @test p * p == -x^2 - 4x^4 - 4x^3
+    end
 end

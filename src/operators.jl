@@ -7,7 +7,7 @@ function Base.isless(t1::AbstractTerm, t2::AbstractTerm)
     if monomial(t1) < monomial(t2)
         true
     elseif monomial(t1) == monomial(t2)
-        coefficient(t1) < coefficient(t2)
+        abs(coefficient(t1)) < abs(coefficient(t2))
     else
         false
     end
