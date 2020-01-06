@@ -10,7 +10,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 
 [compat]
-DataStructures = "0.17"
+DataStructures = "0.17.7"
 MutableArithmetics = "0.2"
 julia = "1"
 

@@ -105,7 +105,7 @@ function polynomial_merge!(
         end
         while buffer !== nothing && !isempty(buffer) && j <= n2
             @assert i == k
-            t = DataStructures.front(buffer)
+            t = first(buffer)
             comp = compare_monomials(t, j)
             if comp >= 0
                 if comp > 0
