@@ -22,6 +22,7 @@
     @test (@inferred monovec([1], [x]))[2] isa AbstractArray{<:AbstractMonomial}
     @test length(monovec([y, x])) == 2
     X = monovec([x, 1, x*y])
+    @test X == collect(X)
     @test nvariables(X) == 2
     @test variables(X)[1] == x
     @test variables(X)[2] == y
