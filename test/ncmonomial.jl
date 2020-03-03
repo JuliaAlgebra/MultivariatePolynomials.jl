@@ -33,14 +33,21 @@ end
     X = monovec([y, x])
     @test X[1] == x
     @test X[2] == y
-    X = monomials([x, y], 2)
-    @test variables(X)[1] == x
-    @test variables(X)[2] == y
-    @test variables(X)[3] == x
-    @test collect(exponents(X[1])) == [2, 0, 0]
-    @test collect(exponents(X[2])) == [1, 1, 0]
-    @test collect(exponents(X[3])) == [0, 2, 0]
-    @test collect(exponents(X[4])) == [0, 1, 1]
+    # `variables` may return `[x, y, x, y]` if the polynomial has, e.g., the monomial `x * y * x * y`.
+    X = monomials([y, x, y, x, y], 0:2)
+    Y = monomials([x, y], 2)
+    for M in [X, Y]
+        @test variables(X)[1] == x
+        @test variables(X)[2] == y
+        @test variables(X)[3] == x
+        @test collect(exponents(X[1])) == [2, 0, 0]
+        @test collect(exponents(X[2])) == [1, 1, 0]
+        @test collect(exponents(X[3])) == [0, 2, 0]
+        @test collect(exponents(X[4])) == [0, 1, 1]
+    end
+    @test collect(exponents(X[5])) == [1, 0, 0]
+    @test collect(exponents(X[6])) == [0, 1, 0]
+    @test collect(exponents(X[7])) == [0, 0, 0]
     X0 = [x^3, x^2*y, x*y^2, x*y*x, y^3, y^2*x, y*x^2, y*x*y]
     X1 = monomials([x, y], 3)
     X2 = monovec(X0)
