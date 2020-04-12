@@ -37,6 +37,8 @@ end
 # Fix ambiguity between above methods and methods in MA
 Base.:+(::MA.Zero, p::APL) = MA.copy_if_mutable(p)
 Base.:+(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
+Base.:-(::MA.Zero, p::APL) = MA.operate(-, p)
+Base.:-(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
 
 # Special case AbstractArrays of APLs
 # We add these instead of relying on the broadcasting API since the above method definitions are very wide.
