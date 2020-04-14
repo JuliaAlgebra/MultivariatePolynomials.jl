@@ -1,26 +1,29 @@
 @testset "Non-commutative Monomial" begin
     Mod.@ncpolyvar x
-    X = constantmonomial(typeof(x))
-    @test nvariables(X) == 0
-    @test isempty(X.vars)
-    @test isempty(X.z)
-    X = constantmonomial(x)
-    @test nvariables(X) == 1
-    @test variables(X)[1] == x
-    @test collect(exponents(X)) == [0]
-    X = monomial(x)
-    @test nvariables(X) == 1
-    @test variables(X)[1] == x
-    @test collect(exponents(X)) == [1]
-    X = x^0
-    Y = X * x^2
-    @test nvariables(Y) == 1
-    @test variables(Y)[1] == x
-    @test collect(exponents(Y)) == [2]
-    Y = x^2 * X
-    @test nvariables(Y) == 1
-    @test variables(Y)[1] == x
-    @test collect(exponents(Y)) == [2]
+    X_ = constantmonomial(typeof(x))
+    @test nvariables(X_) == 0
+    @test isempty(X_.vars)
+    @test isempty(X_.z)
+    X0 = constantmonomial(x)
+    for Y in [x^0, X0]
+        @test nvariables(Y) == 1
+        @test variables(Y)[1] == x
+        @test collect(exponents(Y)) == [0]
+    end
+    for X in [X_, X0]
+        for Y in [monomial(x), x^1, x * X, X * x]
+            @test nvariables(Y) == 1
+            @test variables(Y)[1] == x
+            @test collect(exponents(Y)) == [1]
+        end
+    end
+    for X in [X_, X0]
+        for Y in [x^2, X * x^2, x^2 * X]
+            @test nvariables(Y) == 1
+            @test variables(Y)[1] == x
+            @test collect(exponents(Y)) == [2]
+        end
+    end
 end
 @testset "Non-commutative MonomialVector" begin
     Mod.@ncpolyvar x y
