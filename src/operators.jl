@@ -3,13 +3,24 @@
 Base.@pure Base.isless(v1::AbstractVariable, v2::AbstractVariable) = name(v1) > name(v2)
 Base.isless(m1::AbstractTermLike, m2::AbstractTermLike) = isless(promote(m1, m2)...)
 
+# Implement this to make coefficients be compared with terms.
+function isless_coefficient(a::Real, b::Real)
+    return a < b
+end
+function isless_coefficient(a::Number, b::Number)
+    return abs(a) < abs(b)
+end
+# By default, coefficients are not comparable so `a` is not strictly
+# less than `b`, they are considered sort of equal.
+isless_coefficient(a, b) = false
+
 function Base.isless(t1::AbstractTerm, t2::AbstractTerm)
     if monomial(t1) < monomial(t2)
-        true
+        return true
     elseif monomial(t1) == monomial(t2)
-        abs(coefficient(t1)) < abs(coefficient(t2))
+        return isless_coefficient(coefficient(t1), coefficient(t2))
     else
-        false
+        return false
     end
 end
 
