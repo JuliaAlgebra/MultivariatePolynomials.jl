@@ -1,3 +1,7 @@
+struct CoefNotComparable
+end
+Base.iszero(::CoefNotComparable) = false
+
 @testset "Term" begin
     Mod.@polyvar x
     @test convert(Any, 1x) == 1x
@@ -49,7 +53,6 @@
     @test_throws InexactError push!([1], 2x)
     @test_throws ErrorException push!([x^2], 2x)
 
-
     @testset "Effective variables" begin
         T = variable_union_type(x)
         @test x isa T
@@ -60,5 +63,36 @@
         @test T[x] == @inferred effective_variables(y^0 * x)
         @test T[y] == @inferred effective_variables(x^0 * y)
         @test T[y] == @inferred effective_variables(y * x^0)
+    end
+
+    @testset "Compare terms" begin
+        t1 = 1 * x
+        t2 = 2 * x
+        @test t1 < t2
+        @test t1 <= t2
+        @test !(t1 > t2)
+        @test !(t1 >= t2)
+
+        t1 = (1 + 1im) * x
+        t2 = (2 + 2im) * x
+        @test t1 < t2
+        @test t1 <= t2
+        @test !(t1 > t2)
+        @test !(t1 >= t2)
+
+        a = CoefNotComparable()
+        b = CoefNotComparable()
+        t1 = a * x
+        t2 = b * y
+        @test t1 > t2
+        @test t1 >= t2
+        @test !(t1 < t2)
+        @test !(t1 <= t2)
+        t1 = a * x
+        t2 = b * x
+        @test !(t1 > t2)
+        @test t1 >= t2
+        @test !(t1 < t2)
+        @test t1 <= t2
     end
 end
