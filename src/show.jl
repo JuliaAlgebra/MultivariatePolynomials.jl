@@ -55,8 +55,8 @@ function _show(io::IO, mime, m::AbstractMonomial)
         n = length(vars)
         for (i, var, exp) in zip(1:n, vars, exponents(m))
             if !iszero(exp)
-                if mime isa MIME"text/print" && printed_var && i > 0 &&
-                    print(io,"*")
+                if mime isa MIME"text/print" && printed_var && i > 0
+                    print(io, "*")
                 end
                 _show(io, mime, var)
                 printed_var = true
