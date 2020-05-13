@@ -40,6 +40,19 @@ eqconstant(t::AbstractTermLike, α) = _termeqconstant(t, α)
 eqconstant(α, p::APL) = polyeqterm(p, α)
 eqconstant(p::APL, α) = polyeqterm(p, α)
 
+function Base.:(==)(mono::AbstractMonomial, v::AbstractVariable)
+    return isone(degree(mono)) && variable(mono) == v
+end
+function Base.:(==)(v::AbstractVariable, mono::AbstractMonomial)
+    return isone(degree(mono)) && v == variable(mono)
+end
+function Base.:(==)(t::AbstractTerm, mono::AbstractMonomialLike)
+    return isone(coefficient(t)) && monomial(t) == mono
+end
+function Base.:(==)(mono::AbstractMonomialLike, t::AbstractTerm)
+    return isone(coefficient(t)) && mono == monomial(t)
+end
+
 function Base.:(==)(t1::AbstractTerm, t2::AbstractTerm)
     c1 = coefficient(t1)
     c2 = coefficient(t2)

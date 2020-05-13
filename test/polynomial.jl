@@ -37,7 +37,7 @@ const MP = MultivariatePolynomials
     @test term(x + x^2 - x) == x^2
     @test term(x - x) isa AbstractTerm
     @test iszero(term(x - x))
-    @test_throws ErrorException term(x + x^2)
+    @test_throws InexactError term(x + x^2)
 
     Mod.@polyvar y
 

@@ -51,7 +51,7 @@ Base.iszero(::CoefNotComparable) = false
     @test (@inferred polynomial(t, Float64)) isa AbstractPolynomial{Float64}
 
     @test_throws InexactError push!([1], 2x)
-    @test_throws ErrorException push!([x^2], 2x)
+    @test_throws InexactError push!([x^2], 2x)
 
     @testset "Effective variables" begin
         T = variable_union_type(x)

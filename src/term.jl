@@ -4,21 +4,11 @@ export constantterm, term, termtype, zeroterm, coefficient, monomial
     term(p::AbstractPolynomialLike)
 
 Converts the polynomial `p` to a term.
-When applied on a polynomial, it throws an error if it has more than one term.
+When applied on a polynomial, it throws an `InexactError` if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
-function term(p::APL{T}) where T
-    if nterms(p) == 0
-        zeroterm(p)
-    elseif nterms(p) > 1
-        error("A polynomial is more than one term cannot be converted to a term.")
-    else
-        leadingterm(p)
-    end
-end
-term(t::AbstractTerm) = t
-term(m::AbstractMonomialLike) = 1 * m
+term(p::APL) = convert(termtype(p), p)
 
 """
     termtype(p::AbstractPolynomialLike)
@@ -61,6 +51,8 @@ Calling `coefficient` on ``4x^2y`` should return ``4``.
 Calling `coefficient(2x + 4y^2 + 3, y^2)` should return ``4``.
 Calling `coefficient(2x + 4y^2 + 3, x^2)` should return ``0``.
 """
+function coefficient end
+coefficient(t::AbstractTerm) = t.coefficient # by convention, the field should be `coefficient`
 coefficient(m::AbstractMonomialLike) = 1
 function coefficient(p::AbstractPolynomialLike{T}, m::AbstractMonomialLike) where T
     for t in terms(p)
@@ -126,6 +118,7 @@ Returns the monomial of the term `t`.
 Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
+monomial(t::AbstractTerm) = t.monomial # by convention, the field should be `monomial`.
 monomial(m::AbstractMonomial) = m
 
 """

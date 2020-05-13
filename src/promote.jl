@@ -15,6 +15,16 @@ Base.promote_rule(::Type{RS}, ::Type{RT}) where {RS<:RationalPoly, RT<:RationalP
 Base.promote_rule(::Type{PT}, ::Type{RT}) where {PT<:APL, RT<:RationalPoly} = promote_rule_rational(PT, RT)
 Base.promote_rule(::Type{RT}, ::Type{PT}) where {PT<:APL, RT<:RationalPoly} = promote_rule_rational(PT, RT)
 
+# Promotion with Term
+function Base.promote_rule(ST::Type{<:AbstractTermLike{S}}, TT::Type{<:AbstractTerm{T}}) where {S, T}
+    U = promote_type(S, T)
+    UT = termtype(ST, U)
+    if UT != termtype(TT, U)
+        error("Cannot promote `$ST` and `$TT` to the same type.")
+    end
+    return UT
+end
+
 #promote_rule(::Type{Term{C, U}}, ::Type{RationalPoly{C, S, T}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
 #promote_rule(::Type{RationalPoly{C, S, T}}, ::Type{Term{C, U}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
 #promote_rule(::Type{Polynomial{C, U}}, ::Type{RationalPoly{C, S, T}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}

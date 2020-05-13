@@ -25,11 +25,16 @@ const MP = MultivariatePolynomials
     @test degree(x * y[2]^2, y[1]) == 0
     @test degree(x * y[2]^2, y[2]) == 2
 
-    @test_throws ErrorException variable(x^2)
-    @test_throws ErrorException variable(x*y[1])
-    @test_throws ErrorException variable(constantmonomial(typeof(x)))
+    @test_throws InexactError variable(x^2)
+    @test_throws InexactError variable(x*y[1])
+    @test_throws InexactError variable(constantmonomial(typeof(x)))
+
+    @test x != constantmonomial(typeof(x))
+    @test constantmonomial(typeof(x)) != x
 
     m = x^2
+    @test x != m
+    @test m != x
     typetests(m)
     typetests([x^2, x^3])
     @test (@inferred polynomial(m)) isa AbstractPolynomial{Int}
@@ -41,7 +46,7 @@ const MP = MultivariatePolynomials
     @test variable(x^2 + x - x^2) isa AbstractVariable
     @test variable(1.0x) == x
     @test variable(1.0x) isa AbstractVariable
-    @test_throws ErrorException variable(x + 2x) == x
+    @test_throws InexactError variable(x + 2x) == x
 
     @test monic(x^2) == x^2
 

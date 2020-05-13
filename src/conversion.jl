@@ -9,6 +9,53 @@ function Base.convert(::Type{P}, p::APL) where {T, P<:AbstractPolynomial{T}}
     return convert(P, polynomial(p, T))
 end
 
+function Base.convert(::Type{V}, mono::AbstractMonomial) where V <: AbstractVariable
+    variable = nothing
+    for v in variables(mono)
+        d = degree(mono, v)
+        if isone(d)
+            if variable === nothing
+                variable = v
+            else
+                throw(InexactError(:convert, V, mono))
+            end
+        elseif !iszero(d)
+            throw(InexactError(:convert, V, mono))
+        end
+    end
+    if variable === nothing
+        throw(InexactError(:convert, V, mono))
+    end
+    return variable
+end
+
+function Base.convert(::Type{M}, t::AbstractTerm) where M <: AbstractMonomialLike
+    if isone(coefficient(t))
+        return convert(M, monomial(t))
+    else
+        throw(InexactError(:convert, M, t))
+    end
+end
+function Base.convert(TT::Type{<:AbstractTerm{T}}, m::AbstractMonomialLike) where T
+    return convert(TT, one(T) * m)
+end
+function Base.convert(TT::Type{<:AbstractTerm{T}}, t::AbstractTerm) where T
+    return convert(TT, convert(T, coefficient(t)) * monomial(t))
+end
+function Base.convert(::Type{T}, t::T) where T <: AbstractTerm
+    return t
+end
+
+function Base.convert(::Type{T}, p::AbstractPolynomial) where T <: AbstractTermLike
+    if iszero(nterms(p))
+        convert(T, zeroterm(p))
+    elseif isone(nterms(p))
+        convert(T, leadingterm(p))
+    else
+        throw(InexactError(:convert, T, p))
+    end
+end
+
 MA.scaling(p::AbstractPolynomialLike{T}) where {T} = convert(T, p)
 Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
@@ -24,14 +71,4 @@ function Base.convert(S::Type{<:Union{Number, T}}, p::APL{T}) where T
     s
 end
 
-# Fix ambiguity caused by above conversions
-Base.convert(::Type{P}, p::APL) where P<:APL = P(p)
-
 Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
-function Base.convert(::Type{MT}, t::AbstractTerm) where {MT<:AbstractMonomial}
-    if isone(coefficient(t))
-        monomial(t)
-    else
-        error("Cannot convert a term with a coefficient that is not one into a monomial")
-    end
-end
