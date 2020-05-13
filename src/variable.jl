@@ -21,28 +21,19 @@ function variable_union_type end
 """
     variable(p::AbstractPolynomialLike)
 
-Converts `p` to a variable. Throws an error if it is not possible.
+Converts `p` to a variable. Throws `InexactError` if it is not possible.
 
 ### Examples
 
 Calling `variable(x^2 + x - x^2)` should return the variable `x` and
 calling `variable(1.0y)` should return the variable `y` however calling
-`variable(2x)` or `variable(x + y)` should throw an error.
+`variable(2x)` or `variable(x + y)` should throw `InexactError`.
 
 ### Note
 
 This operation is not type stable for the TypedPolynomials implementation if `nvariables(p) > 1` but is type stable for DynamicPolynomials.
 """
-variable(m::AbstractMonomialLike) = _mono2var(powers(m)...)
-variable(v::AbstractVariable) = v
-function variable(t::AbstractTermLike)
-    if isone(coefficient(t))
-        variable(monomial(t))
-    else
-        error("A term with non-one coefficient cannot be converted into a variable")
-    end
-end
-variable(p::APL) = variable(term(p))
+variable(t::APL) = convert(variable_union_type(t), t)
 
 _errormono2var() = error("Monomial cannot be converted to a variable")
 _mono2var() = _errormono2var()

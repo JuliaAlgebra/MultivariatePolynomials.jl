@@ -4,21 +4,11 @@ export constantterm, term, termtype, zeroterm, coefficient, monomial
     term(p::AbstractPolynomialLike)
 
 Converts the polynomial `p` to a term.
-When applied on a polynomial, it throws an error if it has more than one term.
+When applied on a polynomial, it throws an `InexactError` if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
-function term(p::APL{T}) where T
-    if nterms(p) == 0
-        zeroterm(p)
-    elseif nterms(p) > 1
-        error("A polynomial is more than one term cannot be converted to a term.")
-    else
-        leadingterm(p)
-    end
-end
-term(t::AbstractTerm) = t
-term(m::AbstractMonomialLike) = 1 * m
+term(p::APL) = convert(termtype(p), p)
 
 """
     termtype(p::AbstractPolynomialLike)
