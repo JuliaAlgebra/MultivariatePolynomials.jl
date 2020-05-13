@@ -35,27 +35,6 @@ This operation is not type stable for the TypedPolynomials implementation if `nv
 """
 variable(t::APL) = convert(variable_union_type(t), t)
 
-_errormono2var() = error("Monomial cannot be converted to a variable")
-_mono2var() = _errormono2var()
-function _checknovar() end
-function _checknovar(ve, ves...)
-    if iszero(ve[2])
-        _checknovar(ves...)
-    else
-        _errormono2var()
-    end
-end
-function _mono2var(ve, ves...)
-    if iszero(ve[2])
-        _mono2var(ves...)
-    elseif isone(ve[2])
-        _checknovar(ves...)
-        ve[1]
-    else
-        _errormono2var()
-    end
-end
-
 """
     name(v::AbstractVariable)::AbstractString
 

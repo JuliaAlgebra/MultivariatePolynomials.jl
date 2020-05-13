@@ -25,6 +25,7 @@ Note that the variables of `m` does not necessarily have nonzero degree.
 For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two monomials have been promoted to a common type.
 """
 function variables end
+variables(t::AbstractTerm) = variables(monomial(t))
 
 """
     nvariables(p::AbstractPolynomialLike)
@@ -36,6 +37,7 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
 nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+nvariables(p::APL) = length(variables(p))
 
 """
     exponents(t::AbstractTermLike)

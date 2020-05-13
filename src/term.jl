@@ -51,6 +51,8 @@ Calling `coefficient` on ``4x^2y`` should return ``4``.
 Calling `coefficient(2x + 4y^2 + 3, y^2)` should return ``4``.
 Calling `coefficient(2x + 4y^2 + 3, x^2)` should return ``0``.
 """
+function coefficient end
+coefficient(t::AbstractTerm) = t.coefficient # by convention, the field should be `coefficient`
 coefficient(m::AbstractMonomialLike) = 1
 function coefficient(p::AbstractPolynomialLike{T}, m::AbstractMonomialLike) where T
     for t in terms(p)
@@ -116,6 +118,7 @@ Returns the monomial of the term `t`.
 Calling `monomial` on ``4x^2y`` should return ``x^2y``.
 """
 function monomial end
+monomial(t::AbstractTerm) = t.monomial # by convention, the field should be `monomial`.
 monomial(m::AbstractMonomial) = m
 
 """

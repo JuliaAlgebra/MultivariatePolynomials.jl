@@ -36,6 +36,16 @@ function Base.convert(::Type{M}, t::AbstractTerm) where M <: AbstractMonomialLik
         throw(InexactError(:convert, M, t))
     end
 end
+function Base.convert(TT::Type{<:AbstractTerm{T}}, m::AbstractMonomialLike) where T
+    return convert(TT, one(T) * m)
+end
+function Base.convert(TT::Type{<:AbstractTerm{T}}, t::AbstractTerm) where T
+    return convert(TT, convert(T, coefficient(t)) * monomial(t))
+end
+function Base.convert(::Type{T}, t::T) where T <: AbstractTerm
+    return t
+end
+
 function Base.convert(::Type{T}, p::AbstractPolynomial) where T <: AbstractTermLike
     if iszero(nterms(p))
         convert(T, zeroterm(p))
