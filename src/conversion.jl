@@ -42,7 +42,10 @@ end
 function Base.convert(TT::Type{<:AbstractTerm{T}}, t::AbstractTerm) where T
     return convert(TT, convert(T, coefficient(t)) * monomial(t))
 end
-function Base.convert(::Type{T}, t::T) where T <: AbstractTerm
+
+# Base.convert(::Type{T}, t::T) where {T <: AbstractTerm} is ambiguous with above method.
+# we need the following:
+function Base.convert(::Type{TT}, t::TT) where {T, TT <: AbstractTerm{T}}
     return t
 end
 

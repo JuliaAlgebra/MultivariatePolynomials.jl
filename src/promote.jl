@@ -1,10 +1,37 @@
-Base.promote_rule(::Type{PT}, ::Type{PS}) where {PT<:APL, PS<:APL} = promote_type(polynomialtype(PT), polynomialtype(PS))
+# MonomialLike
+Base.promote_rule(::Type{M}, ::Type{M}) where {M<:AbstractMonomialLike} = M
+function Base.promote_rule(M1::Type{<:AbstractMonomialLike},
+                           M2::Type{<:AbstractMonomialLike})
+    return promote_type(monomialtype(M1), monomialtype(M2))
+end
+
+# TermLike
+Base.promote_rule(::Type{T}, ::Type{T}) where {T<:AbstractTermLike} = T
+function Base.promote_rule(TS::Type{<:AbstractTermLike{S}}, TT::Type{<:AbstractTermLike{T}}) where {S, T}
+    U = promote_type(S, T)
+    M = promote_type(monomialtype(TS), monomialtype(TT))
+    return termtype(M, U)
+end
+function promote_rule_constant(::Type{S}, TT::Type{<:AbstractTermLike{T}}) where {S, T}
+    return termtype(TT, promote_type(S, T))
+end
+
+
+# PolynomialLike
 Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:APL} = PT
+function Base.promote_rule(PS::Type{<:APL}, PT::Type{<:APL})
+    return polynomialtype(promote_type(termtype(PS), termtype(PT)))
+end
 
-promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
-
+function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S, T}
+    return polynomialtype(PT, promote_type(S, T))
+end
 Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 Base.promote_rule(::Type{T}, ::Type{PT}) where {T, PT<:APL} = promote_rule_constant(T, PT)
+
+# Rational
+promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
+
 Base.promote_rule(::Type{T}, ::Type{RT}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 Base.promote_rule(::Type{RT}, ::Type{T}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 
@@ -15,21 +42,7 @@ Base.promote_rule(::Type{RS}, ::Type{RT}) where {RS<:RationalPoly, RT<:RationalP
 Base.promote_rule(::Type{PT}, ::Type{RT}) where {PT<:APL, RT<:RationalPoly} = promote_rule_rational(PT, RT)
 Base.promote_rule(::Type{RT}, ::Type{PT}) where {PT<:APL, RT<:RationalPoly} = promote_rule_rational(PT, RT)
 
-# Promotion with Term
-function Base.promote_rule(ST::Type{<:AbstractTermLike{S}}, TT::Type{<:AbstractTerm{T}}) where {S, T}
-    U = promote_type(S, T)
-    UT = termtype(ST, U)
-    if UT != termtype(TT, U)
-        error("Cannot promote `$ST` and `$TT` to the same type.")
-    end
-    return UT
-end
-
-#promote_rule(::Type{Term{C, U}}, ::Type{RationalPoly{C, S, T}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
-#promote_rule(::Type{RationalPoly{C, S, T}}, ::Type{Term{C, U}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
-#promote_rule(::Type{Polynomial{C, U}}, ::Type{RationalPoly{C, S, T}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
-#promote_rule(::Type{RationalPoly{C, S, T}}, ::Type{Polynomial{C, U}}) where {C, S, T, U} = RationalPoly{C, promote_type(U, S), T}
-
+# MutableArithmetics
 function MA.promote_operation(
     op::Union{typeof(+), typeof(-)}, PT::Type{<:APL{S}},
     QT::Type{<:APL{T}}) where {S, T}
