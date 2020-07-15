@@ -173,4 +173,11 @@ const MP = MultivariatePolynomials
         p = im * x + 2im * x^2
         @test p * p == -x^2 - 4x^4 - 4x^3
     end
+
+    @testset "$f is a mutable copy, see issue DynamicPolynomials#62" for f in [zero, one]
+        p = 2x + 1
+        q = f(p)
+        q = MA.add!(q, 2y)
+        @test p == 2x + 1
+    end
 end

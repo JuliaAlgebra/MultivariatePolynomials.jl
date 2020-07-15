@@ -69,6 +69,12 @@ const MP = MultivariatePolynomials
         @test q == [x, 0]
         @test r == 0
 
+        @testset "Issue DynamicPolynomials#62" begin
+            p = x^2 + x + 1
+            q = rem(p, [x^2-y])
+            @test q == x + y + 1
+        end
+
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
