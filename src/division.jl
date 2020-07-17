@@ -32,7 +32,8 @@ Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g;
 
 proddiff(x, y) = x/y - x/y
 function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
-    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
+    # `promote_type(typeof(f), typeof(g))` is needed for TypedPolynomials in case they use different variables
+    rf = convert(polynomialtype(promote_type(typeof(f), typeof(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
     q = zero(rf)
     r = zero(rf)
     lt = leadingterm(g)
@@ -60,7 +61,8 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
     q, r
 end
 function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
-    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
+    # `promote_type(typeof(f), eltype(g))` is needed for TypedPolynomials in case they use different variables
+    rf = convert(polynomialtype(promote_type(typeof(f), eltype(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
