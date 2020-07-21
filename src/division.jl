@@ -32,33 +32,37 @@ Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g;
 
 proddiff(x, y) = x/y - x/y
 function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
-    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
-    q = r = zero(rf)
+    # `promote_type(typeof(f), typeof(g))` is needed for TypedPolynomials in case they use different variables
+    rf = convert(polynomialtype(promote_type(typeof(f), typeof(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
+    q = zero(rf)
+    r = zero(rf)
     lt = leadingterm(g)
     rg = removeleadingterm(g)
     lm = monomial(lt)
     while !iszero(rf)
         ltf = leadingterm(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = removeleadingterm(rf)
+            rf = MA.operate!(removeleadingterm, rf)
         elseif divides(lm, ltf)
             qt = _div(ltf, lt)
-            q += qt
-            rf = removeleadingterm(rf) - qt * rg
+            q = MA.add!(q, qt)
+            rf = MA.operate!(removeleadingterm, rf)
+            rf = MA.operate!(MA.sub_mul, rf, qt, rg)
         elseif lm > monomial(ltf)
             # Since the monomials are sorted in decreasing order,
             # lm is larger than all of them hence it cannot divide any of them
-            r += rf
+            r = MA.add!(r, rf)
             break
         else
-            r += ltf
-            rf = removeleadingterm(rf)
+            r = MA.add!(r, ltf)
+            rf = MA.operate!(removeleadingterm, rf)
         end
     end
     q, r
 end
 function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
-    rf = convert(polynomialtype(f, Base.promote_op(proddiff, T, S)), f)
+    # `promote_type(typeof(f), eltype(g))` is needed for TypedPolynomials in case they use different variables
+    rf = convert(polynomialtype(promote_type(typeof(f), eltype(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
@@ -71,15 +75,16 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     while !iszero(rf)
         ltf = leadingterm(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = removeleadingterm(rf)
+            rf = MA.operate!(removeleadingterm, rf)
             continue
         end
         divisionoccured = false
         for i in useful
             if divides(lm[i], ltf)
                 qt = _div(ltf, lt[i])
-                q[i] += qt
-                rf = removeleadingterm(rf) - qt * rg[i]
+                q[i] = MA.add!(q[i], qt)
+                rf = MA.operate!(removeleadingterm, rf)
+                rf = MA.operate!(MA.sub_mul, rf, qt, rg[i])
                 divisionoccured = true
                 break
             elseif lm[i] > monomial(ltf)
@@ -90,11 +95,11 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
         end
         if !divisionoccured
             if isempty(useful)
-                r += rf
+                r = MA.add!(r, rf)
                 break
             else
-                r += ltf
-                rf = removeleadingterm(rf)
+                r = MA.add!(r, ltf)
+                rf = MA.operate!(removeleadingterm, rf)
             end
         end
     end
