@@ -52,7 +52,7 @@ function MA.promote_operation(
 end
 function MA.promote_operation(::typeof(*), MT1::Type{<:AbstractMonomialLike},
     MT2::Type{<:AbstractMonomialLike})
-    return typeof(constantmonomial(MT1) * constantmonomial(MT2))
+    return promote_type(monomialtype(MT1), monomialtype(MT2))
 end
 function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
                               ST::Type{<:AbstractTermLike{T}}) where {S, T}
