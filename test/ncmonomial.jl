@@ -24,6 +24,10 @@
             @test collect(exponents(Y)) == [2]
         end
     end
+    @testset "Issue #71 of DynamicPolynomials" begin
+        Mod.@ncpolyvar x y
+        @test x^0 * y == y * x^0
+    end
 end
 @testset "Non-commutative MonomialVector" begin
     Mod.@ncpolyvar x y

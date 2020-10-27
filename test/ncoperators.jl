@@ -43,3 +43,10 @@
     @test q isa AbstractPolynomialLike{Float64}
     @test q == 0
 end
+@testset "Noncommutative quadratic" begin
+    Mod.@ncpolyvar x[1:2]
+    Q = Hermitian([1 2 + 3im; 2 - 3im 4])
+    p = 1x[1]^2 + (2 + 3im) * x[1] * x[2] + (2 - 3im) * x[2] * x[1] + 4x[2]^2
+    @test polynomial(Q, x) == p
+    @test polynomial(Q, monovec(x)) == p
+end
