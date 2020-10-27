@@ -23,3 +23,18 @@
     @test Y[2] == 2x + 4y
     @test dot(X, [1 2; 3 4] * X) == x^2 + 5x*y + 4y^2
 end
+
+struct A end
+Base.zero(::Type{A}) = A()
+Base.:*(::A, ::A) = B()
+struct B end
+Base.zero(::Type{B}) = B()
+Base.:+(::B, ::B) = C()
+struct C end
+Base.:+(::B, ::C) = C()
+Base.:+(::C, ::B) = C()
+Base.:+(::C, ::C) = C()
+@testset "promote_operation with tricky types" begin
+    Mod.@polyvar x
+    @test MA.promote_operation(*, polynomialtype(x, A), polynomialtype(x, A)) == polynomialtype(x, C)
+end

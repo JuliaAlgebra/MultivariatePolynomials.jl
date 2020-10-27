@@ -59,8 +59,8 @@ function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
     U = MA.promote_operation(*, S, T)
     return termtype(promote_type(monomialtype(TT), monomialtype(ST)), U)
 end
-function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}},
-                              QT::Type{<:APL{T}}) where {S, T}
-    U = MA.promote_operation(MA.add_mul, S, T)
+function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}}, QT::Type{<:APL{T}}) where {S, T}
+    ST = MA.promote_operation(*, S, T)
+    U = MA.promote_operation(+, ST, ST)
     return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
 end
