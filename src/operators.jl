@@ -208,8 +208,8 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # through the MA API without modifying `p`. We should either copy the monomial
 # here or implement a `MA.operate(-, p)` that copies it. We choose the first
 # option.
-Base.:-(m::AbstractMonomialLike) = (-1) * MA.copy_if_mutable(m)
-Base.:-(t::AbstractTermLike) = MA.operate(-, coefficient(t)) * MA.copy_if_mutable(monomial(t))
+Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
+Base.:-(t::AbstractTermLike) = MA.operate(-, _term(coefficient(t)), monomial(t))
 Base.:-(p::APL) = polynomial!((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
@@ -271,9 +271,9 @@ MA.mutable_operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike)
 Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
-Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = coefficient(t) * (m * monomial(t))
-Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = coefficient(t) * (monomial(t) * m)
-Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = (coefficient(t1) * coefficient(t2)) * (monomial(t1) * monomial(t2))
+Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = term(coefficient(t), m * monomial(t))
+Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = term(coefficient(t), monomial(t) * m)
+Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = term(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
 
 Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
 Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
@@ -290,6 +290,9 @@ function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, 
         polynomial(termtype(TT, T)[t1, t2], SortedUniqState())
     end
 end
+
+_term(α, mono) = term(α, MA.copy_if_mutable(mono))
+
 for op in [:+, :-]
     @eval begin
         Base.$op(t1::AbstractTermLike, t2::AbstractTermLike) = $op(term(t1), term(t2))
@@ -299,7 +302,7 @@ for op in [:+, :-]
             # t1 > t2 would compare the coefficient in case the monomials are equal
             # and it will throw a MethodError in case the coefficients are not comparable
             if monomial(t1) == monomial(t2)
-                polynomial($op(coefficient(t1), coefficient(t2)) * monomial(t1), S)
+                polynomial(_term($op(coefficient(t1), coefficient(t2)), monomial(t1)), S)
             elseif monomial(t1) > monomial(t2)
                 ts = _polynomial_2terms(t1, $op(t2), S)
             else
@@ -323,13 +326,13 @@ end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = v
 LinearAlgebra.adjoint(m::AbstractMonomial) = m
-LinearAlgebra.adjoint(t::AbstractTerm) = LinearAlgebra.adjoint(coefficient(t)) * monomial(t)
+LinearAlgebra.adjoint(t::AbstractTerm) = _term(LinearAlgebra.adjoint(coefficient(t)), monomial(t))
 LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
 LinearAlgebra.adjoint(r::RationalPoly) = adjoint(numerator(r)) / adjoint(denominator(r))
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
 LinearAlgebra.transpose(m::AbstractMonomial) = m
-LinearAlgebra.transpose(t::AbstractTerm) = LinearAlgebra.transpose(coefficient(t)) * monomial(t)
+LinearAlgebra.transpose(t::AbstractTerm) = _term(LinearAlgebra.transpose(coefficient(t)), monomial(t))
 LinearAlgebra.transpose(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.transpose, terms(p)))
 LinearAlgebra.transpose(r::RationalPoly) = transpose(numerator(r)) / transpose(denominator(r))
 
