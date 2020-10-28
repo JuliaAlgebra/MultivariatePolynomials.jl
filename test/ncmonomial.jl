@@ -24,6 +24,13 @@
             @test collect(exponents(Y)) == [2]
         end
     end
+    @testset "Issue #148" begin
+        Mod.@ncpolyvar x y z
+        m = x * y^4 * x^2
+        @test 3 == @inferred degree(m, x)
+        @test 4 == @inferred degree(m, y)
+        @test 0 == @inferred degree(m, z)
+    end
     @testset "Issue #71 of DynamicPolynomials" begin
         Mod.@ncpolyvar x y
         @test x^0 * y == y * x^0
