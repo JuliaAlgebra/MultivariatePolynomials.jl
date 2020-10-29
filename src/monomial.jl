@@ -75,12 +75,14 @@ degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
 #degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
 
 function degree(m::AbstractMonomial, v::AbstractVariable)
-    i = findfirst(isequal(v), variables(m))
-    if i === nothing || iszero(i)
-        0
-    else
-        exponents(m)[i]
+    deg = 0
+    # With Noncommutative variables, there may be several powers with the same variable
+    for (var, exp) in powers(m)
+        if var == v
+            deg += exp
+        end
     end
+    return deg
 end
 
 """
