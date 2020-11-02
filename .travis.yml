@@ -1,21 +1,24 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-os:
-  - linux
-julia:
-  - 1.0
-  - 1
-  - nightly
-
-matrix:
- allow_failures:
- - julia: nightly
 
 notifications:
   email: false
 
 jobs:
   include:
+    - os: linux
+      arch: x64
+      julia: 1
+    - os: linux
+      arch: x64
+      julia: 1.0
+    - os: linux
+      arch: x86  # Test 32-bit on LTS
+      julia: 1.0
+    - os: linux
+      arch: x64
+      julia: nightly
+      allow_failure: true
     - stage: "Documentation"
       julia: 1.0
       os: linux
