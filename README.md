@@ -2,8 +2,8 @@
 
 | **Documentation** | **Build Status** | **Social** | **References to cite** |
 |:-----------------:|:----------------:|:----------:|:----------------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 This package provides an interface for manipulating multivariate polynomials.
 Implementing algorithms on polynomials using this interface will allow the algorithm to work for all polynomials implementing the interface.
@@ -65,12 +65,8 @@ The following packages extend/use the interface:
 [docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
 [docs-latest-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/latest
 
-[build-img]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl.svg?branch=master
-[build-url]: https://travis-ci.org/JuliaAlgebra/MultivariatePolynomials.jl
-[winbuild-img]: https://ci.appveyor.com/api/projects/status/4l5i8sbxev8405jl?svg=true
-[winbuild-url]: https://ci.appveyor.com/project/blegat/multivariatepolynomials-jl
-[coveralls-img]: https://coveralls.io/repos/github/JuliaAlgebra/MultivariatePolynomials.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
+[build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions?query=workflow%3ACI
 [codecov-img]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
 
