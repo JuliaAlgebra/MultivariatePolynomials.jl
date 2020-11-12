@@ -64,7 +64,7 @@ The following packages extend/use the interface:
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
-[docs-latest-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/latest
+[docs-latest-url]: https://juliaalgebra.github.io/MultivariatePolynomials.jl/dev
 
 [build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/workflows/CI/badge.svg?branch=master
 [build-url]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions?query=workflow%3ACI
