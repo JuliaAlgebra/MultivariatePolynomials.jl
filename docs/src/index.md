@@ -17,6 +17,7 @@ The following packages extend the interface and/or implement algorithms using th
 
 * [SemialgebraicSets](https://github.com/blegat/SemialgebraicSets.jl) : Sets defined by inequalities and equalities between polynomials and algorithms for solving polynomial systems of equations.
 * [HomotopyContinuation](https://github.com/saschatimme/HomotopyContinuation.jl) : Solving systems of polynomials via homotopy continuation.
+* [MultivariateBases](https://github.com/JuliaAlgebra/MultivariateBases.jl/) : Standardized API for multivariate polynomial bases.
 * [MultivariateMoments](https://github.com/blegat/MultivariateMoments.jl) : Moments of multivariate measures and their scalar product with polynomials.
 * [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) : A [JuMP](https://github.com/JuliaOpt/JuMP.jl) extension for Polynomial Optimization.
 * [SumOfSquares](https://github.com/JuliaOpt/SumOfSquares.jl) : Certifying the nonnegativity of polynomials, minimizing/maximizing polynomials and optimization over sum of squares polynomials using Sum of Squares Programming.
