@@ -403,5 +403,5 @@ function Base.round(p::AbstractPolynomialLike; args...)
     polynomial!(round.(terms(p); args...), SortedState())
 end
 
-Base.ndims(::Type{<:AbstractPolynomialLike}) = 0
+Base.ndims(::Union{Type{<:AbstractPolynomialLike}, AbstractPolynomialLike}) = 0
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)
