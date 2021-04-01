@@ -3,7 +3,8 @@
     @test sprint(show, (x*y^2 + x + 1 + y)) == "xy² + x + y + 1"
     @test sprint(show, (x + 1 + y) / x^2) == "(x + y + 1) / (x²)"
     @test sprint(show, (x - y - x + y) / (x^2 - x)) == "(0) / (x² - x)"
-    @test sprint(show, CustomPoly(1 + x)) == "CustomPoly{$Int,$(typeof(1 + x))}(x + 1)"
+    cp = CustomPoly(1 + x)
+    @test sprint(show, cp) == "$(typeof(cp))(x + 1)"
     # Test taken from TypedPolynomials
     @test sprint(show, x) == "x"
     @test sprint(show, x^0) == "1"
