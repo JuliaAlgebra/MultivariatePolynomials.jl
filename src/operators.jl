@@ -358,11 +358,11 @@ function MA.mutable_operate!(op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) wh
     return MA.mutable_operate!(MA.add_sub_op(op), x, *(y, z, args...))
 end
 MA.buffer_for(::MA.AddSubMul, ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
-function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
+function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!(buffer, *, y, z, args...)
     return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, product)
 end
-function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
+function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!(buffer, *, y, z, args...)
     return MA.mutable_operate!(MA.add_sub_op(op), x, product)
 end
