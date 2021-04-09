@@ -78,26 +78,39 @@ const MP = MultivariatePolynomials
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1])) == 1
         @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
     end
-    @testset "gcd" begin
+    @testset "Univariate gcd" begin
         Mod.@polyvar x
-        @test -2(x + 1) == @inferred gcd(x^2 - 1, x^2 + 2x + 1)
-        @test  2(x + 1) == @inferred gcd(x^2 + 2x + 1, x^2 - 1)
-        @test    x + 1  == @inferred gcd(x^2 - 1, x + 1)
-        @test    x + 1  == @inferred gcd(x + 1, x^2 - 1)
-        @test    x + 1  == @inferred gcd(x - x, x + 1)
-        @test    x + 1  == @inferred gcd(x + 1, x - x)
-        @test        0  == @inferred gcd(x - x, x^2 - x^2)
-        @test        0  == @inferred gcd(x^2 - x^2, x - x)
+        @test -2(x + 1) == gcd(x^2 - 1, x^2 + 2x + 1)
+        @test  2(x + 1) == gcd(x^2 + 2x + 1, x^2 - 1)
+        @test    x + 1  == gcd(x^2 - 1, x + 1)
+        @test    x + 1  == gcd(x + 1, x^2 - 1)
+        @test    x + 1  == gcd(x - x, x + 1)
+        @test    x + 1  == gcd(x + 1, x - x)
+        @test        0  == gcd(x - x, x^2 - x^2)
+        @test        0  == gcd(x^2 - x^2, x - x)
+    end
+    @testset "Multivariate gcd" begin
+        # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
+        Mod.@polyvar x y
+        f1 = x * y + x
+        f2 = y^2
+        f3 = x
+        @test gcd(f1 * f2, f1 * f3) == f1
+        @test gcd(f1 * f3, f1 * f2) == f1
+        @test gcd(f2 * f1, f2 * f3) == f2 * x
+        @test gcd(f2 * f3, f2 * f1) == f2 * x
+        @test gcd(f3 * f1, f3 * f2) == f3
+        @test gcd(f3 * f2, f3 * f1) == f3
     end
     @testset "lcm" begin
         Mod.@polyvar x
-        @test -(x-1) * (x+1)^2 / 2 == @inferred lcm(x^2 - 1, x^2 + 2x + 1)
-        @test  (x-1) * (x+1)^2 / 2 == @inferred lcm(x^2 + 2x + 1, x^2 - 1)
-        @test x^2 - 1 == @inferred lcm(x^2 - 1, x - 1)
-        @test x^2 - 1 == @inferred lcm(x - 1, x^2 - 1)
-        @test       0 == @inferred lcm(x - x, x + 1)
-        @test       0 == @inferred lcm(x + 1, x - x)
-        @test       0 == @inferred lcm(x - x, x^2 - x^2)
-        @test       0 == @inferred lcm(x^2 - x^2, x - x)
+        @test -(x-1) * (x+1)^2 / 2 == lcm(x^2 - 1, x^2 + 2x + 1)
+        @test  (x-1) * (x+1)^2 / 2 == lcm(x^2 + 2x + 1, x^2 - 1)
+        @test x^2 - 1 == lcm(x^2 - 1, x - 1)
+        @test x^2 - 1 == lcm(x - 1, x^2 - 1)
+        @test       0 == lcm(x - x, x + 1)
+        @test       0 == lcm(x + 1, x - x)
+        @test       0 == lcm(x - x, x^2 - x^2)
+        @test       0 == lcm(x^2 - x^2, x - x)
     end
 end
