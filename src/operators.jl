@@ -209,7 +209,7 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # here or implement a `MA.operate(-, p)` that copies it. We choose the first
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
-Base.:-(t::AbstractTermLike) = MA.operate(-, _term(coefficient(t)), monomial(t))
+Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
 Base.:-(p::APL) = polynomial!((-).(terms(p)))
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p

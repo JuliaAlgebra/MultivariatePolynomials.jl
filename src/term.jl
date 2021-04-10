@@ -1,7 +1,7 @@
 export constantterm, term, termtype, zeroterm, coefficient, monomial
 
 """
-    term(coef, mono)
+    term(coef, mono::AbstractMonomialLike)
 
 Returns a term with coefficient `coef` and monomial `mono`. There are two key
 difference between this and `coef * mono`:
@@ -21,6 +21,8 @@ When applied on a polynomial, it throws an `InexactError` if it has more than on
 When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
+function term end
+term(coef, var::AbstractVariable) = term(coef, monomial(var))
 term(p::APL) = convert(termtype(p), p)
 
 """
