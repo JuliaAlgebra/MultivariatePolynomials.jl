@@ -182,7 +182,7 @@ function Base.gcd(p::AbstractPolynomialLike{T}, q::AbstractPolynomialLike{S}) wh
     if length(p_vars) == length(q_vars) == 1 && first(p_vars) == first(q_vars)
         return univariate_gcd(p, q)
     else
-        vars = p_vars ∩ q_vars
+        vars = _first_in_union_decreasing(p_vars, q_vars)
         if isempty(vars)
             return univariate_gcd(p, q)
             #return one(MA.promote_operation(gcd, typeof(p), typeof(q)))
@@ -190,6 +190,20 @@ function Base.gcd(p::AbstractPolynomialLike{T}, q::AbstractPolynomialLike{S}) wh
             return multivariate_gcd(p, q, first(vars))
         end
     end
+end
+# Returns first element in the union of two decreasing vectors
+function _first_in_union_decreasing(a, b)
+    i = j = 1
+    while i <= length(a) && j <= length(b)
+        if a[i] == b[j]
+            return a[i]
+        elseif a[i] > b[j]
+            i += 1
+        else
+            j += 1
+        end
+    end
+    return
 end
 
 function MA.promote_operation(::typeof(gcd), P::Type{<:AbstractPolynomialLike{T}}, ::Type{<:AbstractPolynomialLike{S}}) where {T,S}
