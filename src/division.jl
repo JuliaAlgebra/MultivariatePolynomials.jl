@@ -46,6 +46,7 @@ end
 Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
+# FIXME What should we do for `Rational` ?
 function ring_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}})
     return true, rem(f, g)
 end
@@ -169,12 +170,22 @@ function isolate_variable(poly::APL, var::AbstractVariable)
     ])
 end
 
+_simplifier(a, b) = gcd(a, b)
+# Before Julia v1.4, it is not defined.
+# After Julia v1.4, it is defined as `gcd of num / lcm of den`.
+# We prefer `gcd of den`, otherwise,
+# `1/a0 + 1/a1 x + 1/a2 x^2 + ... + 1/an x^n`
+# will be transformed into
+# `a1*a2*...*an + a0*a2*...*an x + ...`
+# which makes the size of the `BigInt`s grow significantly which slows things down.
+_simplifier(a::Rational, b::Rational) = gcd(a.num, b.num) // gcd(a.den, b.den)
+
 function coefficients_gcd(poly::APL{T}) where {T}
     P = MA.promote_operation(gcd, T, T)
     # This is tricky to infer a `coefficients_gcd` calls `gcd` which calls `coefficients_gcd`, etc...
     # To help Julia break the loop, we annotate the result here.
     return reduce(
-        gcd,
+        _simplifier,
         coefficients(poly),
         init = zero(P),
     )::P
@@ -226,7 +237,7 @@ defined above. The base case is that `_gcd(p1, p2)` redirects to `gcd(p1, p2)`
 when the degree of both `p1` and `p2` is zero for `xi`. Then we pick another
 variable and we continue until we arrive at `gcd(p, 0)`.
 """
-function Base.gcd(p::AbstractPolynomialLike{T}, q::AbstractPolynomialLike{S}) where {T, S}
+function Base.gcd(p::APL{T}, q::APL{S}) where {T, S}
     p_vars = effective_variables(p)
     q_vars = effective_variables(q)
     if length(p_vars) == length(q_vars) == 1 && first(p_vars) == first(q_vars)
@@ -263,7 +274,10 @@ function _first_in_union_decreasing(a, b)
     return
 end
 
-function _gcd_relatively_prime_coefficients(p::AbstractPolynomialLike, q::AbstractPolynomialLike)
+_div_gcd_coefficients(p::APL{<:AbstractFloat}) = p
+_div_gcd_coefficients(p::APL) = div_gcd_coefficients(p)[1]
+
+function _gcd_relatively_prime_coefficients(p::APL, q::APL)
     if isapproxzero(q)
         convert(MA.promote_operation(gcd, typeof(p), typeof(q)), p)
     elseif isapproxzero(p)
@@ -277,13 +291,13 @@ function _gcd_relatively_prime_coefficients(p::AbstractPolynomialLike, q::Abstra
             # Since `p` and `q` are univariate, at least one divides the other
             @assert divided
         end
-        return _gcd_relatively_prime_coefficients(o, div_gcd_coefficients(r)[1])
+        return _gcd_relatively_prime_coefficients(o, _div_gcd_coefficients(r))
     end
 end
-function univariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike{<:Union{Rational, AbstractFloat}})
+function univariate_gcd(p1::APL, p2::APL{<:AbstractFloat})
     return _gcd_relatively_prime_coefficients(p1, p2)
 end
-function univariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike)
+function univariate_gcd(p1::APL, p2::APL)
     f1, g1 = div_gcd_coefficients(p1)
     f2, g2 = div_gcd_coefficients(p2)
     pp = _gcd_relatively_prime_coefficients(f1, f2)
@@ -294,9 +308,9 @@ function div_gcd_coefficients(p)
     g = coefficients_gcd(p)
     return mapcoefficientsnz(Base.Fix2(_div, g), p), g
 end
-function multivariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike, var)
+function multivariate_gcd(p1::APL, p2::APL, var)
     q = univariate_gcd(isolate_variable(p1, var), isolate_variable(p2, var))
     return sum(coefficient(t) * monomial(t) for t in terms(q))::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 
-Base.lcm(p::AbstractPolynomialLike, q::AbstractPolynomialLike) = p * div(q, gcd(p, q))
+Base.lcm(p::APL, q::APL) = p * div(q, gcd(p, q))
