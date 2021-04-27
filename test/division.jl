@@ -34,7 +34,6 @@ const MP = MultivariatePolynomials
     end
     @testset "Division examples" begin
         Mod.@polyvar x y
-        @test iszero(@inferred MP.proddiff(2x*y, 3y^2*x))
         @test (@inferred div(x*y^2 + 1, x*y + 1)) == y
         @test (@inferred rem(x*y^2 + 1, x*y + 1)) == -y + 1
         @test (@inferred div(x*y^2 + x, y)) == x*y
@@ -80,37 +79,64 @@ const MP = MultivariatePolynomials
     end
     @testset "Univariate gcd" begin
         Mod.@polyvar x
-        @test -2(x + 1) == gcd(x^2 - 1, x^2 + 2x + 1)
-        @test  2(x + 1) == gcd(x^2 + 2x + 1, x^2 - 1)
-        @test    x + 1  == gcd(x^2 - 1, x + 1)
-        @test    x + 1  == gcd(x + 1, x^2 - 1)
-        @test    x + 1  == gcd(x - x, x + 1)
-        @test    x + 1  == gcd(x + 1, x - x)
-        @test        0  == gcd(x - x, x^2 - x^2)
-        @test        0  == gcd(x^2 - x^2, x - x)
+        @test -(x + 1) == @inferred gcd(x^2 - 1, x^2 + 2x + 1)
+        @test -(x + 1) == @inferred gcd(x^2 + 2x + 1, x^2 - 1)
+        @test -(x + 1) == @inferred gcd(x^2 - 1, x + 1)
+        @test -(x + 1) == @inferred gcd(x + 1, x^2 - 1)
+        @test   x + 1  == @inferred gcd(x - x, x + 1)
+        @test   x + 1  == @inferred gcd(x + 1, x - x)
+        @test       0  == @inferred gcd(x - x, x^2 - x^2)
+        @test       0  == @inferred gcd(x^2 - x^2, x - x)
     end
-    @testset "Multivariate gcd" begin
+    @testset "Multivariate gcd $T" for T in [Int, Rational{BigInt}]
+        function _mult_test(a::Number, b)
+            return @test iszero(maxdegree(b))
+        end
+        function _mult_test(a, b)
+            @test iszero(rem(a, b))
+            @test iszero(rem(b, a))
+        end
+        function mult_test(expected, a, b)
+            g = @inferred gcd(a, b)
+            @test g isa polynomialtype(a)
+            _mult_test(expected, g)
+        end
+        function sym_test(a, b, g)
+            mult_test(g, a, b)
+            mult_test(g, b, a)
+        end
+        function triple_test(a, b, c)
+            sym_test(a * c, b * c, gcd(a, b) * c)
+            sym_test(b * a, c * a, gcd(b, c) * a)
+            sym_test(c * b, a * b, gcd(c, a) * b)
+        end
+        Mod.@polyvar x y z
+        o = one(T)
         # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
-        Mod.@polyvar x y
-        f1 = x * y + x
-        f2 = y^2
-        f3 = x
-        @test gcd(f1 * f2, f1 * f3) == f1
-        @test gcd(f1 * f3, f1 * f2) == f1
-        @test gcd(f2 * f1, f2 * f3) == f2 * x
-        @test gcd(f2 * f3, f2 * f1) == f2 * x
-        @test gcd(f3 * f1, f3 * f2) == f3
-        @test gcd(f3 * f2, f3 * f1) == f3
+        f1 = o * x * y + o * x
+        f2 = o * y^2
+        f3 = o * x
+        sym_test(f1, f2, 1)
+        sym_test(f2, f3, 1)
+        sym_test(f3, f1, x)
+        triple_test(f1, f2, f3)
+        a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
+        b = (o * x + o * y + o * z) * (o * x^2 + o * y)
+        c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
+        sym_test(a, b, 1)
+        sym_test(b, c, x + y + z)
+        sym_test(c, a, z^3 + y^2 + x)
+        triple_test(a, b, c)
     end
     @testset "lcm" begin
         Mod.@polyvar x
-        @test -(x-1) * (x+1)^2 / 2 == lcm(x^2 - 1, x^2 + 2x + 1)
-        @test  (x-1) * (x+1)^2 / 2 == lcm(x^2 + 2x + 1, x^2 - 1)
-        @test x^2 - 1 == lcm(x^2 - 1, x - 1)
-        @test x^2 - 1 == lcm(x - 1, x^2 - 1)
-        @test       0 == lcm(x - x, x + 1)
-        @test       0 == lcm(x + 1, x - x)
-        @test       0 == lcm(x - x, x^2 - x^2)
-        @test       0 == lcm(x^2 - x^2, x - x)
+        @test -(x-1) * (x+1)^2 == @inferred lcm(x^2 - 1, x^2 + 2x + 1)
+        @test -(x-1) * (x+1)^2 == @inferred lcm(x^2 + 2x + 1, x^2 - 1)
+        @test x^2 - 1 == @inferred lcm(x^2 - 1, x - 1)
+        @test x^2 - 1 == @inferred lcm(x - 1, x^2 - 1)
+        @test       0 == @inferred lcm(x - x, x + 1)
+        @test       0 == @inferred lcm(x + 1, x - x)
+        @test       0 == @inferred lcm(x - x, x^2 - x^2)
+        @test       0 == @inferred lcm(x^2 - x^2, x - x)
     end
 end

@@ -145,7 +145,7 @@ Creates a constant term with coefficient α and the same variables as p.
 
 Creates a constant term of the term type of a polynomial of type `PT`.
 """
-constantterm(α, p) = α * constantmonomial(p)
+constantterm(α, p) = term(α, constantmonomial(p))
 
 # zero should return a polynomial since it is often used to keep the result of a summation of terms.
 # For example, Base.vecdot(x::Vector{<:AbstractTerm}, y:Vector{Int}) starts with `s = zero(dot(first(x), first(y)))` and then adds terms.
