@@ -404,5 +404,26 @@ function Base.round(p::AbstractPolynomialLike; args...)
     polynomial!(round.(terms(p); args...), SortedState())
 end
 
+"""
+    deg_num_leading_terms(p::AbstractPolynomialLike, var)
+
+Return `deg, num` where `deg = maxdegree(p, var)` and `num` is the number of
+terms `t` such that `degree(t, var) == deg`.
+"""
+function deg_num_leading_terms(p::AbstractPolynomialLike, var)
+    deg = 0
+    num = 0
+    for mono in monomials(p)
+        d = degree(mono, var)
+        if d > deg
+            deg = d
+            num = 1
+        elseif d == deg
+            num += 1
+        end
+    end
+    return deg, num
+end
+
 Base.ndims(::Union{Type{<:AbstractPolynomialLike}, AbstractPolynomialLike}) = 0
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)

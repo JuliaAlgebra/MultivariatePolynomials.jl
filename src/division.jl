@@ -237,41 +237,82 @@ defined above. The base case is that `_gcd(p1, p2)` redirects to `gcd(p1, p2)`
 when the degree of both `p1` and `p2` is zero for `xi`. Then we pick another
 variable and we continue until we arrive at `gcd(p, 0)`.
 """
-function Base.gcd(p::APL{T}, q::APL{S}) where {T, S}
-    p_vars = effective_variables(p)
-    q_vars = effective_variables(q)
-    if length(p_vars) == length(q_vars) == 1 && first(p_vars) == first(q_vars)
-        return univariate_gcd(p, q)
-    else
-        if isempty(p_vars)
-            if isempty(q_vars)
-                return univariate_gcd(p, q)
-            end
-            var = first(q_vars)
-        elseif isempty(q_vars)
-            var = first(p_vars)
+function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
+    println("p1 = ", p1)
+    println("p2 = ", p2)
+    v1, v2, num_common = _extracted_variable(p1, p2)
+    @show v1
+    @show v2
+    @show num_common
+    if v1 === nothing
+        if v2 === nothing
+            return univariate_gcd(p1, p2)
         else
-            var = _first_in_union_decreasing(p_vars, q_vars)
-            if var === nothing
-                return one(MA.promote_operation(gcd, typeof(p), typeof(q)))
+            if isapproxzero(p1)
+                return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
+            end
+            q2 = isolate_variable(p2, v2)
+            g = coefficients_gcd(q2)
+            return gcd(p1, g)
+        end
+    else
+        if v2 === nothing
+            if isapproxzero(p2)
+                return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p1)
+            end
+            q1 = isolate_variable(p1, v1)
+            g = coefficients_gcd(q1)
+            return gcd(g, p2)
+        else
+            if num_common > 1
+                @assert v1 == v2
+                return multivariate_gcd(p1, p2, v1)
+            else
+                return univariate_gcd(p1, p2)
             end
         end
-        return multivariate_gcd(p, q, var)
     end
 end
 # Returns first element in the union of two decreasing vectors
-function _first_in_union_decreasing(a, b)
-    i = j = 1
-    while i <= length(a) && j <= length(b)
-        if a[i] == b[j]
-            return a[i]
-        elseif a[i] > b[j]
-            i += 1
+function _extracted_variable(p1, p2)
+    v1 = variables(p1)
+    v2 = variables(p2)
+    i1 = i2 = 1
+    best = nothing
+    best_var = nothing
+    num_common = 0
+    while i1 <= length(v1) && i2 <= length(v2)
+        if v1[i1] == v2[i2]
+            d1, n1 = deg_num_leading_terms(p1, v1[i1])
+            d2, n2 = deg_num_leading_terms(p2, v2[i2])
+            if d1 < d2
+                d1, d2 = d2, d1
+                n1, n2 = n2, n1
+            end
+            # Heuristic used in `AbstractAlgebra`:
+            # https://github.com/Nemocas/AbstractAlgebra.jl/blob/4c6b0a366e550df3db84a665de186111bc3cf8ed/src/generic/MPoly.jl#L4347
+            # FIXME what is this based on ? Is there any analysis somewhere comparing different heuristics ?
+            cur = max(log(n2) * d1 * d2, log(2) * d2)
+            if best === nothing || best > cur
+                best = cur
+                best_var = v1[i1]
+            end
+            num_common += 1
+            i1 += 1
+            i2 += 1
+        elseif i1 <= length(v1)
+            return v1[i1], nothing, num_common
         else
-            j += 1
+            @assert i2 <= length(v2)
+            return nothing, v2[i2], num_common
         end
     end
-    return
+    if i1 <= length(v1)
+        return v1[i1], nothing, num_common
+    elseif i2 <= length(v2)
+        return nothing, v2[i2], num_common
+    end
+    return best_var, best_var, num_common
 end
 
 _div_gcd_coefficients(p::APL{<:AbstractFloat}) = p
@@ -283,10 +324,16 @@ function _gcd_relatively_prime_coefficients(p::APL, q::APL)
     elseif isapproxzero(p)
         convert(MA.promote_operation(gcd, typeof(p), typeof(q)), q)
     else
+        println(p)
+        println(q)
         divided, r = ring_rem(p, q)
+        @show divided
+        @show r
         o = q
         if !divided
             divided, r = ring_rem(q, p)
+            @show divided
+            @show r
             o = p
             # Since `p` and `q` are univariate, at least one divides the other
             @assert divided
