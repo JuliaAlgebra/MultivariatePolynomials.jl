@@ -198,8 +198,82 @@ function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL})
     return MA.promote_operation(ring_rem, P, Q)
 end
 
+# Inspired from to `AbstractAlgebra.deflation`
+function deflation(p::AbstractPolynomialLike)
+    if iszero(p)
+        return constantmonomial(p), constantmonomial(p)
+    end
+    shift = fill(-1, nvariables(p))
+    defl = zeros(Int, nvariables(p))
+    for mono in monomials(p)
+        exps = exponents(mono)
+        for i in eachindex(exps)
+            exp = exps[i]
+            @assert exp >= 0
+            if shift[i] == -1
+                shift[i] = exp
+            elseif exp < shift[i]
+                # There are two cases:
+                # 1) If `defl[i]` is zero then it means all previous monomials
+                #    had degree `shift[i]` so we just set `defl[i]` to
+                #    `shift[i] - exp` or equivalently `gcd(0, shift[i] - exp)`.
+                # 2) If  `defl[i]` is positive then we have some monomials with
+                #    degree `shift[i]` and some with degree
+                #    `shift[i] + k * defl[i]` for some `k > 0`. We have
+                #    `gcd(shift[i] - exp, shift[i] + k1 * defl[i] - exp, shift[i] + k2 * defl[i] - exp, ...) =`
+                #    `gcd(shift[i] - exp, k1 * defl[i], k2 * defl[i], ...)`
+                #    Since `gcd(k1, k2, ...) = 1`, this is equal to
+                #    `gcd(shift[i] - exp, defl[i])`
+                defl[i] = gcd(defl[i], shift[i] - exp)
+                shift[i] = exp
+            else
+                defl[i] = gcd(defl[i], exp - shift[i])
+            end
+        end
+    end
+    @assert all(d -> d >= 0, shift)
+    @assert all(d -> d >= 0, defl)
+    s = prod(variables(p).^shift)
+    d = prod(variables(p).^defl)
+    return s, d
+end
+
+function deflate(p::AbstractPolynomialLike, shift, defl)
+    if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
+        return p
+    end
+    q = MA.operate(deflate, p, shift, defl)
+    return q
+end
+function inflate(p::AbstractPolynomialLike, shift, defl)
+    if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
+        return p
+    end
+    q = MA.operate(inflate, p, shift, defl)
+    return q
+end
+
+function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
+    mutable_mono = mapexponents(-, mono, shift)
+    mapexponents!(div, mutable_mono, defl)
+    return mutable_mono
+end
+function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
+    mutable_mono = mapexponents(*, mono, defl)
+    mapexponents!(+, mutable_mono, shift)
+    return mutable_mono
+end
+
+# Inspired from to `AbstractAlgebra.deflate`
+function MA.operate(op::Union{typeof(deflate), typeof(inflate)}, p::AbstractPolynomialLike, shift, defl)
+    defl = prod(variables(defl).^map(d -> iszero(d) ? one(d) : d, exponents(defl)))
+    return polynomial(map(terms(p)) do t
+        return term(coefficient(t), MA.operate(op, monomial(t), shift, defl))
+    end)
+end
+
 """
-    function Base.gcd(p1::AbstractPolynomialLike{T}, p2::AbstractPolynomialLike{S}) where {T, S}
+    function gcd(p1::AbstractPolynomialLike{T}, p2::AbstractPolynomialLike{S}) where {T, S}
 
 Returns the greatest common divisor of `p1` and `p2`.
 
@@ -238,12 +312,29 @@ when the degree of both `p1` and `p2` is zero for `xi`. Then we pick another
 variable and we continue until we arrive at `gcd(p, 0)`.
 """
 function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
-    println("p1 = ", p1)
-    println("p2 = ", p2)
+    # If one of these is zero, `shift` should be infinite
+    # for this method to work so we exclude these cases.
+    if isapproxzero(p1)
+        return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
+    end
+    if isapproxzero(p1)
+        return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
+    end
+    shift1, defl1 = deflation(p1)
+    shift2, defl2 = deflation(p2)
+    shift = gcd(shift1, shift2)
+    defl = mapexponents(gcd, defl1, defl2)
+    # We factor out `x.^shift1` from `p1` and
+    # `x.^shift2` from `p2`. The `gcd` of these
+    # monomials is `x.^shift`.
+    # Then, we subsitute `y[i] = x[i]^defl[i]`.
+    q1 = deflate(p1, shift1, defl)
+    q2 = deflate(p2, shift2, defl)
+    g = deflated_gcd(q1, q2)
+    return inflate(g, shift, defl)
+end
+function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     v1, v2, num_common = _extracted_variable(p1, p2)
-    @show v1
-    @show v2
-    @show num_common
     if v1 === nothing
         if v2 === nothing
             return univariate_gcd(p1, p2)
@@ -281,10 +372,35 @@ function _extracted_variable(p1, p2)
     best = nothing
     best_var = nothing
     num_common = 0
-    while i1 <= length(v1) && i2 <= length(v2)
-        if v1[i1] == v2[i2]
-            d1, n1 = deg_num_leading_terms(p1, v1[i1])
-            d2, n2 = deg_num_leading_terms(p2, v2[i2])
+    while i1 <= length(v1) || i2 <= length(v2)
+        if i2 > length(v2) || (i1 <= length(v1) && v1[i1] > v2[i2])
+            if !iszero(maxdegree(p1, v1[i1]))
+                return v1[i1], nothing, num_common
+            end
+            i1 += 1
+        elseif i1 > length(v1) || v2[i2] > v1[i1]
+            if !iszero(maxdegree(p2, v2[i2]))
+                return nothing, v2[i2], num_common
+            end
+            i2 += 1
+        else
+            @assert v1[i1] == v2[i2]
+            v = v1[i1]
+            i1 += 1
+            i2 += 1
+            d1, n1 = deg_num_leading_terms(p1, v)
+            d2, n2 = deg_num_leading_terms(p2, v)
+            if iszero(d1)
+                if iszero(d2)
+                    continue
+                else
+                    return nothing, v, num_common
+                end
+            else
+                if iszero(d2)
+                    return v, nothing, num_common
+                end
+            end
             if d1 < d2
                 d1, d2 = d2, d1
                 n1, n2 = n2, n1
@@ -295,22 +411,10 @@ function _extracted_variable(p1, p2)
             cur = max(log(n2) * d1 * d2, log(2) * d2)
             if best === nothing || best > cur
                 best = cur
-                best_var = v1[i1]
+                best_var = v
             end
             num_common += 1
-            i1 += 1
-            i2 += 1
-        elseif i1 <= length(v1)
-            return v1[i1], nothing, num_common
-        else
-            @assert i2 <= length(v2)
-            return nothing, v2[i2], num_common
         end
-    end
-    if i1 <= length(v1)
-        return v1[i1], nothing, num_common
-    elseif i2 <= length(v2)
-        return nothing, v2[i2], num_common
     end
     return best_var, best_var, num_common
 end
@@ -324,16 +428,10 @@ function _gcd_relatively_prime_coefficients(p::APL, q::APL)
     elseif isapproxzero(p)
         convert(MA.promote_operation(gcd, typeof(p), typeof(q)), q)
     else
-        println(p)
-        println(q)
         divided, r = ring_rem(p, q)
-        @show divided
-        @show r
         o = q
         if !divided
             divided, r = ring_rem(q, p)
-            @show divided
-            @show r
             o = p
             # Since `p` and `q` are univariate, at least one divides the other
             @assert divided

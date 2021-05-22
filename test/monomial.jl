@@ -1,4 +1,31 @@
 const MP = MultivariatePolynomials
+
+function effective_variables_test()
+    T = variable_union_type(x)
+    @test x isa T
+    @test y[2] isa T
+    @test T[x, y[2]] == @inferred effective_variables(x * y[2])
+    @test T[x, y[2]] == @inferred effective_variables(y[2] * x)
+    @test T[x] == @inferred effective_variables(x * y[2]^0)
+    @test T[x] == @inferred effective_variables(y[2]^0 * x)
+    @test T[y[2]] == @inferred effective_variables(x^0 * y[2])
+    @test T[y[2]] == @inferred effective_variables(y[2] * x^0)
+    @test T[x, y[2]] == @inferred effective_variables(y[3]^0 * x * y[2])
+    @test T[x, y[2]] == @inferred effective_variables(y[2] * y[3]^0 * x)
+    @test T[x, y[2]] == @inferred effective_variables(y[2] * x * y[3]^0)
+end
+
+function mapexponents_test()
+    Mod.@polyvar x y
+    a = x^2
+    b = x * y
+    MP.mapexponents!(+, a, b)
+    @test variables(a) == variables(b)
+    a = x^3
+    MP.mapexponents_to!(a, -, b, b)
+    @test variables(a) == variables(b)
+end
+
 @testset "Monomial" begin
     Mod.@polyvar x
 
@@ -58,17 +85,9 @@ const MP = MultivariatePolynomials
     @test adjoint(x^2) == x^2
 
     @testset "Effective variables" begin
-        T = variable_union_type(x)
-        @test x isa T
-        @test y[2] isa T
-        @test T[x, y[2]] == @inferred effective_variables(x * y[2])
-        @test T[x, y[2]] == @inferred effective_variables(y[2] * x)
-        @test T[x] == @inferred effective_variables(x * y[2]^0)
-        @test T[x] == @inferred effective_variables(y[2]^0 * x)
-        @test T[y[2]] == @inferred effective_variables(x^0 * y[2])
-        @test T[y[2]] == @inferred effective_variables(y[2] * x^0)
-        @test T[x, y[2]] == @inferred effective_variables(y[3]^0 * x * y[2])
-        @test T[x, y[2]] == @inferred effective_variables(y[2] * y[3]^0 * x)
-        @test T[x, y[2]] == @inferred effective_variables(y[2] * x * y[3]^0)
+        effective_variables_test()
+    end
+    @test "mapexponents" begin
+        mapexponents_test()
     end
 end
