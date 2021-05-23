@@ -213,12 +213,19 @@ end
 function extracted_variable_test()
     Mod.@polyvar x y z
     function _test(p1, p2, w1, w2)
-        v1, v2, n = MP._extracted_variable(p1, p2)
-        @test v1 == w1
-        @test v2 == w2
-        v2, v1, n = MP._extracted_variable(p2, p1)
-        @test v1 == w1
-        @test v2 == w2
+        i1, i2, n = MP._extracted_variable(p1, p2)
+        v(p, i) = iszero(i) ? nothing : variables(p)[i]
+        if string(Mod) == "DynamicPolynomials"
+            alloc_test(() -> MP._extracted_variable(p1, p2), 0)
+        end
+        @test v(p1, i1) == w1
+        @test v(p2, i2) == w2
+        i2, i1, n = MP._extracted_variable(p2, p1)
+        if string(Mod) == "DynamicPolynomials"
+            alloc_test(() -> MP._extracted_variable(p2, p1), 0)
+        end
+        @test v(p1, i1) == w1
+        @test v(p2, i2) == w2
     end
     _test(x - x, y - y, nothing, nothing)
     _test(x + y + z, x - z, y, nothing)

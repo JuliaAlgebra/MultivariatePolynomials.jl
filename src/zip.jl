@@ -16,4 +16,7 @@ tuplezip(::Tuple{}, ::Tuple{}) = ()
 tuplezip(::Tuple{}, ::Tuple) = throw(ArgumentError("args must be equal in length"))
 tuplezip(::Tuple, ::Tuple{}) = throw(ArgumentError("args must be equal in length"))
 tuplezip(t::Tuple, u::Tuple) = ((t[1], u[1]), tuplezip(Base.tail(t), Base.tail(u))...)
-tuplezip(t::Vector, u::Vector) = ntuple(i -> (t[i], u[i]), length(t))
+
+_zip(t::Tuple, u::Tuple) = tuplezip(t, u)
+# `tuplezip` would be type unstable
+_zip(t::Vector, u::Vector) = zip(t, u)

@@ -96,13 +96,13 @@ isconstant(v::AbstractVariable) = false
 """
     powers(t::AbstractTermLike)
 
-Returns an tuple of the powers of the monomial of `t`.
+Returns an iterator over the powers of the monomial of `t`.
 
 ### Examples
 
 Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
 """
-powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
+powers(t::AbstractTermLike) = _zip(variables(t), exponents(t))
 
 """
     constantmonomial(p::AbstractPolynomialLike)

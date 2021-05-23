@@ -334,29 +334,32 @@ function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     return inflate(g, shift, defl)
 end
 function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
-    v1, v2, num_common = _extracted_variable(p1, p2)
-    if v1 === nothing
-        if v2 === nothing
+    i1, i2, num_common = _extracted_variable(p1, p2)
+    if iszero(i1)
+        if iszero(i2)
             return univariate_gcd(p1, p2)
         else
             if isapproxzero(p1)
                 return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
             end
+            v2 = variables(p2)[i2]
             q2 = isolate_variable(p2, v2)
             g = coefficients_gcd(q2)
             return gcd(p1, g)
         end
     else
-        if v2 === nothing
+        if iszero(i2)
             if isapproxzero(p2)
                 return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p1)
             end
+            v1 = variables(p1)[i1]
             q1 = isolate_variable(p1, v1)
             g = coefficients_gcd(q1)
             return gcd(g, p2)
         else
             if num_common > 1
-                @assert v1 == v2
+                @assert i1 == i2
+                v1 = variables(p1)[i1]
                 return multivariate_gcd(p1, p2, v1)
             else
                 return univariate_gcd(p1, p2)
@@ -370,17 +373,18 @@ function _extracted_variable(p1, p2)
     v2 = variables(p2)
     i1 = i2 = 1
     best = nothing
-    best_var = nothing
+    best_var1 = 0
+    best_var2 = 0
     num_common = 0
     while i1 <= length(v1) || i2 <= length(v2)
         if i2 > length(v2) || (i1 <= length(v1) && v1[i1] > v2[i2])
             if !iszero(maxdegree(p1, v1[i1]))
-                return v1[i1], nothing, num_common
+                return i1, 0, num_common
             end
             i1 += 1
         elseif i1 > length(v1) || v2[i2] > v1[i1]
             if !iszero(maxdegree(p2, v2[i2]))
-                return nothing, v2[i2], num_common
+                return 0, i2, num_common
             end
             i2 += 1
         else
@@ -394,11 +398,11 @@ function _extracted_variable(p1, p2)
                 if iszero(d2)
                     continue
                 else
-                    return nothing, v, num_common
+                    return 0, i2-1, num_common
                 end
             else
                 if iszero(d2)
-                    return v, nothing, num_common
+                    return i1-1, 0, num_common
                 end
             end
             if d1 < d2
@@ -411,12 +415,13 @@ function _extracted_variable(p1, p2)
             cur = max(log(n2) * d1 * d2, log(2) * d2)
             if best === nothing || best > cur
                 best = cur
-                best_var = v
+                best_var1 = i1-1
+                best_var2 = i2-1
             end
             num_common += 1
         end
     end
-    return best_var, best_var, num_common
+    return best_var1, best_var2, num_common
 end
 
 _div_gcd_coefficients(p::APL{<:AbstractFloat}) = p
