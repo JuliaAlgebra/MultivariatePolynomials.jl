@@ -1,6 +1,8 @@
 const MP = MultivariatePolynomials
 
 function effective_variables_test()
+    Mod.@polyvar x
+    Mod.@polyvar y[1:7]
     T = variable_union_type(x)
     @test x isa T
     @test y[2] isa T
@@ -87,7 +89,7 @@ end
     @testset "Effective variables" begin
         effective_variables_test()
     end
-    @test "mapexponents" begin
+    @testset "mapexponents" begin
         mapexponents_test()
     end
 end
