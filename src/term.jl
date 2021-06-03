@@ -1,5 +1,16 @@
 export constantterm, term, termtype, zeroterm, coefficient, monomial
 
+struct Term{T, M<:AbstractMonomial} <: AbstractTerm{T}
+    coefficient::T
+    monomial::M
+end
+
+coefficient(t::Term) = t.coefficient
+monomial(t::Term) = t.monomial
+termtype(::Union{Term{C, M}, Type{Term{C, M}}}, ::Type{T}) where {C, M, T} = Term{T, M}
+termtype(::Union{M, Type{M}}, ::Type{T}) where {M<:AbstractMonomial, T} = Term{T, M}
+monomialtype(::Union{Term{T, M}, Type{Term{T, M}}}) where {T, M} = M
+
 """
     term(coef, mono::AbstractMonomialLike)
 
@@ -22,6 +33,7 @@ When applied to a term, it is the identity and does not copy it.
 When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
 function term end
+term(coef, mono::AbstractMonomial) = Term(coef, mono)
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
 term(p::APL) = convert(termtype(p), p)
 

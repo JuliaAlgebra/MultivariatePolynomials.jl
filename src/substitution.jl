@@ -48,7 +48,7 @@ powersubstitute(st::AST, s::Substitutions, p::Tuple{AbstractVariable, Integer}, 
 substitute(st::AST, m::AbstractMonomial, s::Substitutions) = powersubstitute(st, s, powers(m)...)
 
 ## Terms
-substitute(st::AST, t::AbstractTerm, s::Substitutions) = coefficient(t) * substitute(st, monomial(t), s)
+substitute(st::AST, t::AbstractTerm, s::Substitutions) = copy_if_mutable(coefficient(t)) * substitute(st, monomial(t), s)
 
 ## Polynomials
 _polynomial(α) = α

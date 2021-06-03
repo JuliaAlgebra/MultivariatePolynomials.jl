@@ -165,8 +165,11 @@ function isolate_variable(poly::APL, var::AbstractVariable)
         end
     end
     return polynomial([
-        term(polynomial(ts), var^d) for (d, ts) in dict
+        term(polynomial(ts), UnivariateMonomial(d)) for (d, ts) in dict
     ])
+#    return polynomial([
+#        term(polynomial(ts), var^d) for (d, ts) in dict
+#    ])
 end
 
 _simplifier(a, b) = gcd(a, b)
@@ -254,13 +257,11 @@ end
 
 function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = mapexponents(-, mono, shift)
-    mapexponents!(div, mutable_mono, defl)
-    return mutable_mono
+    return mapexponents!(div, mutable_mono, defl)
 end
 function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = mapexponents(*, mono, defl)
-    mapexponents!(+, mutable_mono, shift)
-    return mutable_mono
+    return mapexponents!(+, mutable_mono, shift)
 end
 
 # Inspired from to `AbstractAlgebra.deflate`

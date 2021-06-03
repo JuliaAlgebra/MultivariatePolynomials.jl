@@ -4,6 +4,10 @@ export mindegree, maxdegree, extdegree, effective_variables
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
 
+struct Polynomial{T, M} <: AbstractPolynomial{T}
+    terms::Vector{Term{T, M}}
+end
+
 LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int=2) = LinearAlgebra.norm(coefficients(p), r)
 
 changecoefficienttype(::Type{TT}, ::Type{T}) where {TT<:AbstractTermLike, T} = termtype(TT, T)
