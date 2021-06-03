@@ -58,8 +58,7 @@ function ring_rem(f::APL, g::APL)
     end
     new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
     new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * removeleadingterm(g)
-    return true, constantterm(coefficient(ltg), f) * removeleadingterm(f) -
-        term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * removeleadingterm(g)
+    return true, new_f - new_g
 end
 function MA.promote_operation(
     ::typeof(ring_rem),

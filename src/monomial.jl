@@ -37,6 +37,7 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
 nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(p::APL) = length(variables(p))
 
 """
