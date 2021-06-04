@@ -21,11 +21,11 @@ function mapexponents_test()
     Mod.@polyvar x y
     a = x^2
     b = x * y
-    MP.mapexponents!(+, a, b)
-    @test variables(a) == variables(b)
+    c = MP.mapexponents!(+, a, b)
+    @test variables(c) == variables(b)
     a = x^3
-    MP.mapexponents_to!(a, -, b, b)
-    @test variables(a) == variables(b)
+    d = MP.mapexponents_to!(a, -, b, b)
+    @test variables(d) == variables(b)
 end
 
 @testset "Monomial" begin
