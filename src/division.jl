@@ -232,8 +232,8 @@ function deflation(p::AbstractPolynomialLike)
     end
     @assert all(d -> d >= 0, shift)
     @assert all(d -> d >= 0, defl)
-    s = prod(variables(p).^shift)
-    d = prod(variables(p).^defl)
+    s = prod(variables(p).^shift)::monomialtype(p)
+    d = prod(variables(p).^defl)::monomialtype(p)
     return s, d
 end
 
@@ -243,6 +243,9 @@ function deflate(p::AbstractPolynomialLike, shift, defl)
     end
     q = MA.operate(deflate, p, shift, defl)
     return q
+end
+function inflate(α, shift, defl)
+    return inflate(convert(polynomialtype(shift, typeof(α)), α), shift, defl)
 end
 function inflate(p::AbstractPolynomialLike, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
@@ -254,13 +257,11 @@ end
 
 function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = mapexponents(-, mono, shift)
-    mapexponents!(div, mutable_mono, defl)
-    return mutable_mono
+    return mapexponents!(div, mutable_mono, defl)
 end
 function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = mapexponents(*, mono, defl)
-    mapexponents!(+, mutable_mono, shift)
-    return mutable_mono
+    return mapexponents!(+, mutable_mono, shift)
 end
 
 # Inspired from to `AbstractAlgebra.deflate`
@@ -330,7 +331,7 @@ function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     q1 = deflate(p1, shift1, defl)
     q2 = deflate(p2, shift2, defl)
     g = deflated_gcd(q1, q2)
-    return inflate(g, shift, defl)
+    return inflate(g, shift, defl)::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     i1, i2, num_common = _extracted_variable(p1, p2)
@@ -366,6 +367,8 @@ function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
         end
     end
 end
+Base.gcd(α, p::APL) = gcd(α, coefficients_gcd(p))
+Base.gcd(p::APL, α) = gcd(coefficients_gcd(p), α)
 # Returns first element in the union of two decreasing vectors
 function _extracted_variable(p1, p2)
     v1 = variables(p1)

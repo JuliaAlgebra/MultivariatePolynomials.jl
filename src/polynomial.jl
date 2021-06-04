@@ -106,7 +106,7 @@ function uniqterms!(ts::AbstractVector{<: AbstractTerm})
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
             if monomial(ts[i]) == monomial(ts[j])
-                ts[i] = MA.add!(coefficient(ts[i]), coefficient(ts[j])) * monomial(ts[i])
+                ts[i] = term(MA.add!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
             else
                 if !iszero(ts[i])
                     i += 1
@@ -369,15 +369,15 @@ function monic(p::APL)
     polynomial!(_divtoone.(terms(p), α))
 end
 monic(m::AbstractMonomialLike) = m
-monic(t::AbstractTermLike{T}) where T = one(T) * monomial(t)
+monic(t::AbstractTermLike{T}) where T = term(one(T), monomial(t))
 
 function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
     U = Base.promote_op(/, T, S)
     β = coefficient(t)
     if β == α
-        one(U) * monomial(t)
+        term(one(U), monomial(t))
     else
-        (β / α) * monomial(t)
+        term((β / α), monomial(t))
     end
 end
 
@@ -396,9 +396,9 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
     # hence we can use Uniq
     polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
 end
-mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)
+mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
 
-Base.round(t::AbstractTermLike; args...) = round(coefficient(t); args...) * monomial(t)
+Base.round(t::AbstractTermLike; args...) = term(round(coefficient(t); args...), monomial(t))
 function Base.round(p::AbstractPolynomialLike; args...)
     # round(0.1) is zero so we cannot use SortedUniqState
     polynomial!(round.(terms(p); args...), SortedState())

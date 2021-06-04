@@ -108,7 +108,7 @@ function _mult_test(a, b)
 end
 function mult_test(expected, a, b)
     g = @inferred gcd(a, b)
-    @test g isa polynomialtype(a)
+    @test g isa promote_type(polynomialtype(a), polynomialtype(b))
     _mult_test(expected, g)
 end
 function sym_test(a, b, g)
@@ -150,22 +150,28 @@ function multivariate_gcd_test(::Type{T}) where {T}
     @test gcd(p1, p2) == -1
     p1 = 2*y^3 + 2*y^2*z - y
     p2 = y^3 + y^3*z - y - z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
     p1 = z^4 + 2*y^3 + 2*y^2*z - y
     p2 = y*z^4 + y^3 + y^3*z - y - z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
     p1 = y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
     p2 = y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
     p1 = -3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
     p2 = 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
     p1 = -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
     p2 = -y*z^6 - 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
     p1 = -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
     p2 = -y^2*z^6 - 3*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z
-    @test gcd(p1, p2) == -1
+    g = @inferred gcd(p1, p2)
+    @test g == -1 || g == 1
 
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
@@ -191,12 +197,8 @@ end
 function deflation_test()
     Mod.@polyvar a b c
     function _test(p, eshift, edefl)
-        @show p
-        @show edefl
         shift, defl = MP.deflation(p)
-        @show shift
         @test shift == eshift
-        @show defl
         @test defl == edefl
         q = MP.deflate(p, shift, defl)
         @test p == MP.inflate(q, shift, defl)
