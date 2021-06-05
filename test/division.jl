@@ -258,7 +258,10 @@ end
         univariate_gcd_test()
     end
     @testset "Multivariate gcd $T" for T in [Int, Rational{BigInt}]
-        multivariate_gcd_test(T)
+        if T != Rational{BigInt} || VERSION >= v"1.6"
+            # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
+            multivariate_gcd_test(T)
+        end
     end
     @testset "lcm" begin
         lcm_test()
