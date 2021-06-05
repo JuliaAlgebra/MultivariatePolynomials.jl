@@ -47,27 +47,34 @@ Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g;
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
 # FIXME What should we do for `Rational` ?
-function ring_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}})
+function pseudo_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}})
     return true, rem(f, g)
 end
-function ring_rem(f::APL, g::APL)
+function pseudo_rem(f::APL, g::APL)
     ltg = leadingterm(g)
+    rg = removeleadingterm(g)
     ltf = leadingterm(f)
     if !divides(monomial(ltg), ltf)
         return false, f
     end
-    new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
-    new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * removeleadingterm(g)
-    return true, new_f - new_g
+    while divides(monomial(ltg), ltf)
+        new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
+        new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
+        # Check with `::` that we don't have any type unstability on this variable.
+        f = primitive_part(new_f - new_g)::typeof(f)
+        @show f
+        ltf = leadingterm(f)
+    end
+    return true, f
 end
 function MA.promote_operation(
-    ::typeof(ring_rem),
+    ::typeof(pseudo_rem),
     ::Type{P},
     ::Type{Q},
 ) where {T,S<:Union{Rational, AbstractFloat},P<:APL{T},Q<:APL{S}}
     return MA.promote_operation(rem, P, Q)
 end
-function MA.promote_operation(::typeof(ring_rem), ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+function MA.promote_operation(::typeof(pseudo_rem), ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables

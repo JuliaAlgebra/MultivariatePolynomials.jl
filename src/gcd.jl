@@ -6,7 +6,7 @@ Base.gcd(p::APL, α) = gcd(content(p), α)
 #    return typeof(gcd(one(P), one(Q)))
 #end
 function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL})
-    return MA.promote_operation(ring_rem, P, Q)
+    return MA.promote_operation(pseudo_rem, P, Q)
 end
 
 """
@@ -307,26 +307,36 @@ which is a subtype of [`AbstractUnivariateGCDAlgorithm`](@ref).
 """
 function primitive_univariate_gcd end
 
-function primitive_univariate_gcd(p::APL, q::APL, ::GeneralizedEuclideanAlgorithm=GeneralizedEuclideanAlgorithm())
+# If `p` and `q` do not have the same time then the local variables `p` and `q`
+# won't be type stable.
+function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm=GeneralizedEuclideanAlgorithm())
+    if maxdegree(p) < maxdegree(q)
+        return primitive_univariate_gcd(q, p, algo)
+    end
     R = MA.promote_operation(gcd, typeof(p), typeof(q))
-    if isapproxzero(q)
-        return convert(R, p)
-    elseif isapproxzero(p)
-        return convert(R, q)
-    elseif isconstant(p) || isconstant(q)
-        # `p` and `q` are primitive so if one of them is constant, it cannot
-        # divide the content of the other one.
-        return one(R)
-    else
-        divided, r = ring_rem(p, q)
-        o = q
-        if !divided
-            divided, r = ring_rem(q, p)
-            o = p
-            # Since `p` and `q` are univariate, at least one divides the other
-            @assert divided
+    u = convert(R, p)
+    v = convert(R, q)
+    while true
+        if isapproxzero(v)
+            return u
+        elseif isconstant(v)
+            # `p` and `q` are primitive so if one of them is constant, it cannot
+            # divide the content of the other one.
+            return one(R)
         end
-        return primitive_univariate_gcd(o, primitive_part(r))
+        divided, r = pseudo_rem(u, v)
+        if !divided
+            error(
+                "Polynomial `$v` of degree `$(maxdegree(v))` and effective",
+                " variables `$(effective_variables(v))` does not divide",
+                " polynomial `$u` of degree `$(maxdegree(u))` and effective",
+                " variables `$(effective_variables(u))`. Did you call",
+                " `univariate_gcd` with polynomials with more than one",
+                " variable in common ? If yes, call `gcd` instead, otherwise,",
+                " please report this.",
+            )
+        end
+        u, v = v, r::R
     end
 end
 
