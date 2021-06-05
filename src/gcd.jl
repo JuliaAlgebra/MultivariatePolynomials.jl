@@ -12,7 +12,10 @@ end
 """
     function gcd(p1::AbstractPolynomialLike{T}, p2::AbstractPolynomialLike{S}) where {T, S}
 
-Returns the greatest common divisor of `p1` and `p2`.
+Returns a greatest common divisor of `p1` and `p2`. Note that it does not make
+sense, in general, to speak of "the" greatest common divisor of u and v; there
+is a set of greatest common divisors, each one being a unit multiple of the
+others [Knu14, p. 424].
 
 # Implementation notes
 
@@ -40,13 +43,16 @@ Therefore, if it divides `p2` then it also divides the coefficients
 of `p2` in `xi^k` for `k = 0, 1, ..., d2`.
 This means that if we ensure that these are relatively prime then we won't have
 any issue.
-So we start by computing the `gcd` `gj` of the coefficients in each degree of
-`xi` of `pj`.
+So we start by computing a `gcd` `gj` of the coefficients in each degree of
+`xi` of `pj`, this is called the [`content`](@ref) of `pj`.
 And then we compute `_gcd(p1 / g1, p2 / g2) * gcd(g1, g2)` where we can use the
 recursion `_gcd(p1, p2) = _gcd(p2, q2 * p1 - q1 * p2)` where `q1, q2` are as
-defined above. The base case is that `_gcd(p1, p2)` redirects to `gcd(p1, p2)`
-when the degree of both `p1` and `p2` is zero for `xi`. Then we pick another
-variable and we continue until we arrive at `gcd(p, 0)`.
+defined above.
+This is the [`GeneralizedEuclideanAlgorithm`](@ref).
+
+[Knu14] Knuth, D.E., 2014.
+*Art of computer programming, volume 2: Seminumerical algorithms.*
+Addison-Wesley Professional. Third edition.
 """
 function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     # If one of these is zero, `shift` should be infinite

@@ -141,6 +141,10 @@ function multivariate_gcd_test(::Type{T}) where {T}
     @test gcd(p1, p2) == z
     function test_relatively_prime(p1, p2)
         g = @inferred gcd(p1, p2)
+        # it does not make sense, in general, to speak of "the" greatest common
+        # divisor of u and v; there is a set of greatest common divisors, each
+        # one being a unit multiple of the others [Knu14, p. 424] so `1` and
+        # `-1` are both accepted.
         @test g == 1 || g == -1
     end
     test_relatively_prime(2*y*z - 1, y - z)
