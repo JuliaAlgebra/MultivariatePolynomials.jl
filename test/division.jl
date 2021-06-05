@@ -139,39 +139,31 @@ function multivariate_gcd_test(::Type{T}) where {T}
     p1 = y - y
     p2 = z
     @test gcd(p1, p2) == z
-    p1 = 2*y*z - 1
-    p2 = y - z
-    @test gcd(p1, p2) == -1
-    p1 = 2*y^2*z - y
-    p2 = y - z
-    @test gcd(p1, p2) == -1
-    p1 = 2*y^2*z - y
-    p2 = y^3*z - y - z
-    @test gcd(p1, p2) == -1
-    p1 = 2*y^3 + 2*y^2*z - y
-    p2 = y^3 + y^3*z - y - z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
-    p1 = z^4 + 2*y^3 + 2*y^2*z - y
-    p2 = y*z^4 + y^3 + y^3*z - y - z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
-    p1 = y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
-    p2 = y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
-    p1 = -3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
-    p2 = 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
-    p1 = -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
-    p2 = -y*z^6 - 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
-    p1 = -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y
-    p2 = -y^2*z^6 - 3*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z
-    g = @inferred gcd(p1, p2)
-    @test g == -1 || g == 1
+    function test_relatively_prime(p1, p2)
+        g = @inferred gcd(p1, p2)
+        @test g == 1 || g == -1
+    end
+    test_relatively_prime(2*y*z - 1, y - z)
+    test_relatively_prime(2*y^2*z - y, y - z)
+    test_relatively_prime(2*y^2*z - y, y^3*z - y - z)
+    test_relatively_prime(2*y^3 + 2*y^2*z - y, y^3 + y^3*z - y - z)
+    test_relatively_prime(z^4 + 2*y^3 + 2*y^2*z - y, y*z^4 + y^3 + y^3*z - y - z)
+    test_relatively_prime(
+        y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+    )
+    test_relatively_prime(
+        -3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+    )
+    test_relatively_prime(
+        -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        -y*z^6 - 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+    )
+    test_relatively_prime(
+        -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        -y^2*z^6 - 3*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z,
+    )
 
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)

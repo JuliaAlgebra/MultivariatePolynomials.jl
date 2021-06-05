@@ -91,7 +91,7 @@ end
 
 Returns whether the monomial of `t` is constant.
 """
-isconstant(t::AbstractTermLike) = all(iszero.(exponents(t)))
+isconstant(t::AbstractTermLike) = all(iszero, exponents(t))
 isconstant(v::AbstractVariable) = false
 
 """

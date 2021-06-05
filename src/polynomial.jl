@@ -56,9 +56,9 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([f(i) * mv[i] for i in 1:length(mv)])
+polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
 
-polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
+polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([term(α, m) for (α, m) in zip(a, x)], s)
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
@@ -200,6 +200,11 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
 monomials(p::APL) = monovec(monomial.(terms(p)))
+
+function isconstant(p::APL)
+    n = nterms(p)
+    return iszero(n) || (isone(n) && isconstant(first(terms(p))))
+end
 
 #$(SIGNATURES)
 """

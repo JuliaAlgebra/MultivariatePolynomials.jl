@@ -100,7 +100,7 @@ function coefficient(f::APL, m::AbstractMonomialLike, vars)
         end
         match || continue
 
-        coeff += coefficient(t) * (_div(monomial(t), m))
+        coeff += term(coefficient(t), _div(monomial(t), m))
     end
     coeff
 end
@@ -167,7 +167,7 @@ zeroterm(p::APL{T}) where {T} = constantterm(zero(T), p)
 Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(polynomialtype(TT))
 Base.zero(t::AbstractTermLike{T}) where {T} = zero(polynomialtype(t))
 MA.promote_operation(::typeof(zero), PT::Type{<:AbstractTermLike}) = polynomialtype(PT)
-Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = one(T) * constantmonomial(TT)
-Base.one(t::AbstractTermLike{T}) where {T} = one(T) * constantmonomial(t)
+Base.one(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = term(one(T), constantmonomial(TT))
+Base.one(t::AbstractTermLike{T}) where {T} = term(one(T), constantmonomial(t))
 MA.promote_operation(::typeof(one), TT::Type{<:AbstractTermLike}) = termtype(TT)
 MA.promote_operation(::typeof(one), PT::Type{<:AbstractPolynomialLike}) = polynomialtype(PT)

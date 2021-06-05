@@ -84,6 +84,7 @@ include("comparison.jl")
 include("substitution.jl")
 include("differentiation.jl")
 include("division.jl")
+include("gcd.jl")
 include("det.jl")
 
 end # module
