@@ -87,16 +87,26 @@ function multi_div_test()
     @test (@inferred rem(x^2*y + (1+1e-10)*x*y + 1, [x^2 + x, y + 1]; ztol=1e-11)) == -((1+1e-10)-1)x + 1
 end
 
-function univariate_gcd_test()
+function test_gcd_unit(expected, p1, p2, algo)
+    g = @inferred gcd(p1, p2, algo)
+    # it does not make sense, in general, to speak of "the" greatest common
+    # divisor of u and v; there is a set of greatest common divisors, each
+    # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+    # `-expected` are both accepted.
+    @test g == expected || g == -expected
+end
+
+
+function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
     Mod.@polyvar x
-    @test -(x + 1) == @inferred gcd(x^2 - 1, x^2 + 2x + 1)
-    @test -(x + 1) == @inferred gcd(x^2 + 2x + 1, x^2 - 1)
-    @test -(x + 1) == @inferred gcd(x^2 - 1, x + 1)
-    @test -(x + 1) == @inferred gcd(x + 1, x^2 - 1)
-    @test   x + 1  == @inferred gcd(x - x, x + 1)
-    @test   x + 1  == @inferred gcd(x + 1, x - x)
-    @test       0  == @inferred gcd(x - x, x^2 - x^2)
-    @test       0  == @inferred gcd(x^2 - x^2, x - x)
+    test_gcd_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
+    test_gcd_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
+    test_gcd_unit(x + 1, x^2 - 1, x + 1, algo)
+    test_gcd_unit(x + 1, x + 1, x^2 - 1, algo)
+    test_gcd_unit(x + 1, x - x, x + 1, algo)
+    test_gcd_unit(x + 1, x + 1, x - x, algo)
+    @test       0  == @inferred gcd(x - x, x^2 - x^2, algo)
+    @test       0  == @inferred gcd(x^2 - x^2, x - x, algo)
 end
 
 function _mult_test(a::Number, b)
@@ -106,82 +116,88 @@ function _mult_test(a, b)
     @test iszero(rem(a, b))
     @test iszero(rem(b, a))
 end
-function mult_test(expected, a, b)
-    g = @inferred gcd(a, b)
+function mult_test(expected, a, b, algo)
+    g = @inferred gcd(a, b, algo)
     @test g isa promote_type(polynomialtype(a), polynomialtype(b))
     _mult_test(expected, g)
 end
-function sym_test(a, b, g)
-    mult_test(g, a, b)
-    mult_test(g, b, a)
+function sym_test(a, b, g, algo)
+    mult_test(g, a, b, algo)
+    mult_test(g, b, a, algo)
 end
-function triple_test(a, b, c)
-    sym_test(a * c, b * c, gcd(a, b) * c)
-    sym_test(b * a, c * a, gcd(b, c) * a)
-    sym_test(c * b, a * b, gcd(c, a) * b)
+function triple_test(a, b, c, algo)
+    sym_test(a * c, b * c, gcd(a, b, algo) * c, algo)
+    sym_test(b * a, c * a, gcd(b, c, algo) * a, algo)
+    sym_test(c * b, a * b, gcd(c, a, algo) * b, algo)
 end
 
-function multivariate_gcd_test(::Type{T}) where {T}
+function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) where {T}
     Mod.@polyvar x y z
     o = one(T)
     # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
     f1 = o * x * y + o * x
     f2 = o * y^2
     f3 = o * x
-    sym_test(f1, f2, 1)
-    sym_test(f2, f3, 1)
-    sym_test(f3, f1, x)
-    triple_test(f1, f2, f3)
+    sym_test(f1, f2, 1, algo)
+    sym_test(f2, f3, 1, algo)
+    sym_test(f3, f1, x, algo)
+    triple_test(f1, f2, f3, algo)
 
-    p1 = z - z
+    p1 = o*z - z
     p2 = z
-    @test gcd(p1, p2) == z
-    p1 = y - y
+    @test gcd(p1, p2, algo) == z
+    p1 = o*y - y
     p2 = z
-    @test gcd(p1, p2) == z
-    function test_relatively_prime(p1, p2)
-        g = @inferred gcd(p1, p2)
-        # it does not make sense, in general, to speak of "the" greatest common
-        # divisor of u and v; there is a set of greatest common divisors, each
-        # one being a unit multiple of the others [Knu14, p. 424] so `1` and
-        # `-1` are both accepted.
-        @test g == 1 || g == -1
-    end
-    test_relatively_prime(2*y*z - 1, y - z)
-    test_relatively_prime(2*y^2*z - y, y - z)
-    test_relatively_prime(2*y^2*z - y, y^3*z - y - z)
-    test_relatively_prime(2*y^3 + 2*y^2*z - y, y^3 + y^3*z - y - z)
-    test_relatively_prime(z^4 + 2*y^3 + 2*y^2*z - y, y*z^4 + y^3 + y^3*z - y - z)
+    @test gcd(p1, p2, algo) == z
+    test_relatively_prime(p1, p2, algo) = test_gcd_unit(o, p1, p2, algo)
+    test_relatively_prime(2o*y*z - o, y - z, algo)
+    test_relatively_prime(2o*y^2*z - y, y - z, algo)
+    test_relatively_prime(2o*y^2*z - y, y^3*z - y - z, algo)
+    test_relatively_prime(2o*y^3 + 2*y^2*z - y, y^3 + y^3*z - y - z, algo)
+    test_relatively_prime(z^4 + 2o*y^3 + 2*y^2*z - y, y*z^4 + y^3 + y^3*z - y - z, algo)
     test_relatively_prime(
-        y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        y*z^3 + z^4 + 2o*y^3 + 2*y^2*z - y,
         y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+        algo,
+    )
+    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+        test_relatively_prime(
+            -3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+            3o*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+            algo,
+        )
+    end
+    test_relatively_prime(
+        -z^6 - 3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        -y*z^6 - 3o*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
+        algo,
     )
     test_relatively_prime(
-        -3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
-        3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
-    )
-    test_relatively_prime(
-        -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
-        -y*z^6 - 3*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
-    )
-    test_relatively_prime(
-        -z^6 - 3*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
-        -y^2*z^6 - 3*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z,
+        -z^6 - 3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
+        -y^2*z^6 - 3o*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z,
+        algo,
     )
 
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
-    sym_test(a, b, 1)
-    sym_test(b, c, x + y + z)
-    sym_test(c, a, z^3 + y^2 + x)
-    triple_test(a, b, c)
+    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+        sym_test(a, b, 1, algo)
+    end
+    sym_test(b, c, x + y + z, algo)
+    sym_test(c, a, z^3 + y^2 + x, algo)
+    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))
+        triple_test(a, b, c, algo)
+    end
 end
 
 function lcm_test()
     Mod.@polyvar x
-    @test -(x-1) * (x+1)^2 == @inferred lcm(x^2 - 1, x^2 + 2x + 1)
-    @test -(x-1) * (x+1)^2 == @inferred lcm(x^2 + 2x + 1, x^2 - 1)
+    l = @inferred lcm(x^2 - 1, x^2 + 2x + 1)
+    exp = -(x-1) * (x+1)^2
+    @test l == exp || l == -exp
+    l = @inferred lcm(x^2 + 2x + 1, x^2 - 1)
+    @test l == exp || l == -exp
     @test x^2 - 1 == @inferred lcm(x^2 - 1, x - 1)
     @test x^2 - 1 == @inferred lcm(x - 1, x^2 - 1)
     @test       0 == @inferred lcm(x - x, x + 1)
@@ -250,13 +266,19 @@ end
     @testset "Division by multiple polynomials examples" begin
         multi_div_test()
     end
-    @testset "Univariate gcd" begin
-        univariate_gcd_test()
+    @testset "Univariate gcd primitive_rem=$primitive_rem" for primitive_rem in [false, true]
+        @testset "skip_last=$skip_last" for skip_last in [false, true]
+            univariate_gcd_test(GeneralizedEuclideanAlgorithm(primitive_rem, skip_last))
+        end
     end
-    @testset "Multivariate gcd $T" for T in [Int, Rational{BigInt}]
+    @testset "Multivariate gcd $T" for T in [Int, BigInt, Rational{BigInt}]
         if T != Rational{BigInt} || VERSION >= v"1.6"
             # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
-            multivariate_gcd_test(T)
+            @testset "primitive_rem=$primitive_rem" for primitive_rem in [false, true]
+                @testset "skip_last=$skip_last" for skip_last in [false, true]
+                    multivariate_gcd_test(T, GeneralizedEuclideanAlgorithm(primitive_rem, skip_last))
+                end
+            end
         end
     end
     @testset "lcm" begin

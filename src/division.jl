@@ -47,10 +47,11 @@ Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g;
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
 # FIXME What should we do for `Rational` ?
-function pseudo_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}})
+function pseudo_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}}, algo)
     return true, rem(f, g)
 end
-function pseudo_rem(f::APL, g::APL)
+
+function pseudo_rem(f::APL, g::APL, algo)
     ltg = leadingterm(g)
     rg = removeleadingterm(g)
     ltf = leadingterm(f)
@@ -61,8 +62,13 @@ function pseudo_rem(f::APL, g::APL)
         new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
         new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
         # Check with `::` that we don't have any type unstability on this variable.
-        f = primitive_part(new_f - new_g)::typeof(f)
-        @show f
+        f = (new_f - new_g)::typeof(f)
+        if algo.primitive_rem
+            f = primitive_part(f, algo)::typeof(f)
+        end
+        if algo.skip_last && maxdegree(f) == maxdegree(g)
+            break
+        end
         ltf = leadingterm(f)
     end
     return true, f

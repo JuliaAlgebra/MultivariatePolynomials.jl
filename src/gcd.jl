@@ -1,6 +1,8 @@
-Base.lcm(p::APL, q::APL) = p * div(q, gcd(p, q))
-Base.gcd(α, p::APL) = gcd(α, content(p))
-Base.gcd(p::APL, α) = gcd(content(p), α)
+export GeneralizedEuclideanAlgorithm
+
+Base.lcm(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = p * div(q, gcd(p, q, algo))
+Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(α, content(p))
+Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(content(p), α)
 
 #function MA.promote_operation(::typeof(gcd), P::Type{<:Number}, Q::Type{<:Number})
 #    return typeof(gcd(one(P), one(Q)))
@@ -54,7 +56,7 @@ This is the [`GeneralizedEuclideanAlgorithm`](@ref).
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
+function Base.gcd(p1::APL{T}, p2::APL{S}, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) where {T, S}
     # If one of these is zero, `shift` should be infinite
     # for this method to work so we exclude these cases.
     if isapproxzero(p1)
@@ -73,7 +75,7 @@ function Base.gcd(p1::APL{T}, p2::APL{S}) where {T, S}
     # Then, we subsitute `y[i] = x[i]^defl[i]`.
     q1 = deflate(p1, shift1, defl)
     q2 = deflate(p2, shift2, defl)
-    g = deflated_gcd(q1, q2)
+    g = deflated_gcd(q1, q2, algo)
     return inflate(g, shift, defl)::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 
@@ -152,19 +154,19 @@ function MA.operate(op::Union{typeof(deflate), typeof(inflate)}, p::AbstractPoly
     end)
 end
 
-function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
+function deflated_gcd(p1::APL{T}, p2::APL{S}, algo) where {T, S}
     i1, i2, num_common = _extracted_variable(p1, p2)
     if iszero(i1)
         if iszero(i2)
-            return univariate_gcd(p1, p2)
+            return univariate_gcd(p1, p2, algo)
         else
             if isapproxzero(p1)
                 return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
             end
             v2 = variables(p2)[i2]
             q2 = isolate_variable(p2, v2)
-            g = content(q2)
-            return gcd(p1, g)
+            g = content(q2, algo)
+            return gcd(p1, g, algo)
         end
     else
         if iszero(i2)
@@ -173,15 +175,15 @@ function deflated_gcd(p1::APL{T}, p2::APL{S}) where {T, S}
             end
             v1 = variables(p1)[i1]
             q1 = isolate_variable(p1, v1)
-            g = content(q1)
-            return gcd(g, p2)
+            g = content(q1, algo)
+            return gcd(g, p2, algo)
         else
             if num_common > 1
                 @assert i1 == i2
                 v1 = variables(p1)[i1]
-                return multivariate_gcd(p1, p2, v1)
+                return multivariate_gcd(p1, p2, v1, algo)
             else
-                return univariate_gcd(p1, p2)
+                return univariate_gcd(p1, p2, algo)
             end
         end
     end
@@ -244,8 +246,8 @@ function _extracted_variable(p1, p2)
     return best_var1, best_var2, num_common
 end
 
-function multivariate_gcd(p1::APL, p2::APL, var)
-    q = univariate_gcd(isolate_variable(p1, var), isolate_variable(p2, var))
+function multivariate_gcd(p1::APL, p2::APL, var, algo)
+    q = univariate_gcd(isolate_variable(p1, var), isolate_variable(p2, var), algo)
     return sum(coefficient(t) * monomial(t) for t in terms(q))::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 
@@ -275,7 +277,10 @@ See [`GeneralizedEuclideanAlgorithm`](@ref) and [`SubresultantAlgorithm`](@ref).
 abstract type AbstractUnivariateGCDAlgorithm end
 
 """
-    struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm end
+    struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
+        primitive_rem::Bool
+        skip_last::Bool
+    end
 
 Algorithm computing the greatest common divisor of univariate polynomials using
 the Euclidean algorithm generalized for polynomials with coefficients over a
@@ -285,7 +290,16 @@ a unique factorization domain, see [Knu14, Algorithm E, p. 426-427].
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm end
+struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
+    primitive_rem::Bool
+    skip_last::Bool
+    function GeneralizedEuclideanAlgorithm(
+        primitive_rem::Bool=false,
+        skip_last::Bool=false,
+    )
+        return new(primitive_rem, skip_last)
+    end
+end
 
 """
     struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
@@ -309,7 +323,7 @@ function primitive_univariate_gcd end
 
 # If `p` and `q` do not have the same time then the local variables `p` and `q`
 # won't be type stable.
-function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm=GeneralizedEuclideanAlgorithm())
+function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
     if maxdegree(p) < maxdegree(q)
         return primitive_univariate_gcd(q, p, algo)
     end
@@ -324,7 +338,7 @@ function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgo
             # divide the content of the other one.
             return one(R)
         end
-        divided, r = pseudo_rem(u, v)
+        divided, r = pseudo_rem(u, v, algo)
         if !divided
             error(
                 "Polynomial `$v` of degree `$(maxdegree(v))` and effective",
@@ -335,6 +349,9 @@ function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgo
                 " variable in common ? If yes, call `gcd` instead, otherwise,",
                 " please report this.",
             )
+        end
+        if !algo.primitive_rem
+            r = primitive_part(r, algo)::R
         end
         u, v = v, r::R
     end
@@ -367,20 +384,26 @@ If the coefficients are not `AbstractFloat`, this
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function univariate_gcd(p1::APL, p2::APL)
-    f1, g1 = primitive_part_content(p1)
-    f2, g2 = primitive_part_content(p2)
-    pp = primitive_univariate_gcd(f1, f2)
-    gg = gcd(g1, g2)#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
+function univariate_gcd(p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
+    f1, g1 = primitive_part_content(p1, algo)
+    f2, g2 = primitive_part_content(p2, algo)
+    pp = primitive_univariate_gcd(f1, f2, algo)
+    gg = _gcd(g1, g2, algo)#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
     # Multiply each coefficient by the gcd of the contents.
     return mapcoefficientsnz(Base.Fix1(*, gg), pp)
 end
 
-function univariate_gcd(p1::APL, p2::APL{<:AbstractFloat})
-    return primitive_univariate_gcd(p1, p2)
+function univariate_gcd(p1::APL, p2::APL{<:AbstractFloat}, algo::AbstractUnivariateGCDAlgorithm)
+    return primitive_univariate_gcd(p1, p2, algo)
 end
 
-_simplifier(a, b) = gcd(a, b)
+_gcd(a::APL, b::APL, algo) = gcd(a, b, algo)
+_gcd(a, b::APL, algo) = gcd(a, b, algo)
+_gcd(a::APL, b, algo) = gcd(a, b, algo)
+_gcd(a, b, algo) = gcd(a, b)
+
+_simplifier(a::APL, b::APL, algo) = gcd(a, b, algo)
+_simplifier(a, b, algo) = _gcd(a, b, algo)
 # Before Julia v1.4, it is not defined.
 # After Julia v1.4, it is defined as `gcd of num / lcm of den`.
 # We prefer `gcd of den`, otherwise,
@@ -388,7 +411,7 @@ _simplifier(a, b) = gcd(a, b)
 # will be transformed into
 # `a1*a2*...*an + a0*a2*...*an x + ...`
 # which makes the size of the `BigInt`s grow significantly which slows things down.
-_simplifier(a::Rational, b::Rational) = gcd(a.num, b.num) // gcd(a.den, b.den)
+_simplifier(a::Rational, b::Rational, algo) = gcd(a.num, b.num) // gcd(a.den, b.den)
 
 """
     content(poly::AbstractPolynomialLike{T}) where {T}
@@ -402,12 +425,12 @@ See also [`primitive_part_content`](@ref).
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function content(poly::APL{T}) where {T}
+function content(poly::APL{T}, algo) where {T}
     P = MA.promote_operation(gcd, T, T)
     # This is tricky to infer a `content` calls `gcd` which calls `content`, etc...
     # To help Julia break the loop, we annotate the result here.
     return reduce(
-        _simplifier,
+        (a, b) -> _simplifier(a, b, algo),
         coefficients(poly),
         init = zero(P),
     )::P
@@ -426,8 +449,8 @@ instead.
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-primitive_part(p::APL) = primitive_part_content(p)[1]
-primitive_part(p::APL{<:AbstractFloat}) = p
+primitive_part(p::APL, algo) = primitive_part_content(p, algo)[1]
+primitive_part(p::APL{<:AbstractFloat}, algo) = p
 
 """
     primitive_part_content(poly::AbstractPolynomialLike{T}) where {T}
@@ -442,7 +465,7 @@ computing the content first and this function avoid computing the content twice.
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function primitive_part_content(p)
-    g = content(p)
+function primitive_part_content(p, algo)
+    g = content(p, algo)
     return mapcoefficientsnz(Base.Fix2(_div, g), p), g
 end
