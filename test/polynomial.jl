@@ -1,3 +1,5 @@
+import MutableArithmetics
+const MA = MutableArithmetics
 const MP = MultivariatePolynomials
 @testset "Polynomial" begin
     Mod.@polyvar x

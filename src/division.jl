@@ -19,21 +19,81 @@ Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(min,
 Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(max, m1, m2)
 
 # _div(a, b) assumes that b divides a
+_div(a::Union{Rational, AbstractFloat}, b) = a / b
+_div(a, b) = div(a, b)
 _div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m2)
 function _div(t::AbstractTerm, m::AbstractMonomial)
-    coefficient(t) * _div(monomial(t), m)
+    term(coefficient(t), _div(monomial(t), m))
 end
 function _div(t1::AbstractTermLike, t2::AbstractTermLike)
-    (coefficient(t1) / coefficient(t2)) * _div(monomial(t1), monomial(t2))
+    term(_div(coefficient(t1), coefficient(t2)), _div(monomial(t1), monomial(t2)))
+end
+function _div(f::APL, g::APL)
+    lt = leadingterm(g)
+    rf = MA.copy_if_mutable(f)
+    rg = removeleadingterm(g)
+    q = zero(rf)
+    while !iszero(rf)
+        ltf = leadingterm(rf)
+        qt = _div(ltf, lt)
+        q = MA.add!(q, qt)
+        rf = MA.operate!(removeleadingterm, rf)
+        rf = MA.operate!(MA.sub_mul, rf, qt, rg)
+    end
+    return q
 end
 
 Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
-proddiff(x, y) = x/y - x/y
+# FIXME What should we do for `Rational` ?
+function pseudo_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}}, algo)
+    return true, rem(f, g)
+end
+
+function pseudo_rem(f::APL, g::APL, algo)
+    ltg = leadingterm(g)
+    rg = removeleadingterm(g)
+    ltf = leadingterm(f)
+    if !divides(monomial(ltg), ltf)
+        return false, f
+    end
+    while divides(monomial(ltg), ltf)
+        new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
+        new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
+        # Check with `::` that we don't have any type unstability on this variable.
+        f = (new_f - new_g)::typeof(f)
+        if algo.primitive_rem
+            f = primitive_part(f, algo)::typeof(f)
+        end
+        if algo.skip_last && maxdegree(f) == maxdegree(g)
+            break
+        end
+        ltf = leadingterm(f)
+    end
+    return true, f
+end
+function MA.promote_operation(
+    ::typeof(pseudo_rem),
+    ::Type{P},
+    ::Type{Q},
+) where {T,S<:Union{Rational, AbstractFloat},P<:APL{T},Q<:APL{S}}
+    return MA.promote_operation(rem, P, Q)
+end
+function MA.promote_operation(::typeof(pseudo_rem), ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+    U1 = MA.promote_operation(*, S, T)
+    U2 = MA.promote_operation(*, T, S)
+    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
+    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U1, U2))
+end
+
+function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, g::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+    U = MA.promote_operation(/, T, S)
+    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
+    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U, U))
+end
 function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
-    # `promote_type(typeof(f), typeof(g))` is needed for TypedPolynomials in case they use different variables
-    rf = convert(polynomialtype(promote_type(typeof(f), typeof(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
+    rf = convert(MA.promote_operation(div, typeof(f), typeof(g)), MA.copy_if_mutable(f))
     q = zero(rf)
     r = zero(rf)
     lt = leadingterm(g)
@@ -61,8 +121,7 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
     q, r
 end
 function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
-    # `promote_type(typeof(f), eltype(g))` is needed for TypedPolynomials in case they use different variables
-    rf = convert(polynomialtype(promote_type(typeof(f), eltype(g)), Base.promote_op(proddiff, T, S)), MA.copy_if_mutable(f))
+    rf = convert(MA.promote_operation(div, typeof(f), eltype(g)), MA.copy_if_mutable(f))
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
@@ -105,12 +164,3 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     end
     q, r
 end
-
-function Base.gcd(p::AbstractPolynomialLike{T}, q::AbstractPolynomialLike{S}) where {T, S}
-    if isapproxzero(q)
-        convert(polynomialtype(p, Base.promote_op(proddiff, T, S)), p)
-    else
-        gcd(q, rem(p, q))
-    end
-end
-Base.lcm(p::AbstractPolynomialLike, q::AbstractPolynomialLike) = p * div(q, gcd(p, q))

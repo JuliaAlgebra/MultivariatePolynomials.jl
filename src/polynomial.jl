@@ -56,9 +56,9 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([f(i) * mv[i] for i in 1:length(mv)])
+polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
 
-polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([α * m for (α, m) in zip(a, x)], s)
+polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([term(α, m) for (α, m) in zip(a, x)], s)
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
@@ -106,7 +106,7 @@ function uniqterms!(ts::AbstractVector{<: AbstractTerm})
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
             if monomial(ts[i]) == monomial(ts[j])
-                ts[i] = MA.add!(coefficient(ts[i]), coefficient(ts[j])) * monomial(ts[i])
+                ts[i] = term(MA.add!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
             else
                 if !iszero(ts[i])
                     i += 1
@@ -201,6 +201,11 @@ Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3,
 """
 monomials(p::APL) = monovec(monomial.(terms(p)))
 
+function isconstant(p::APL)
+    n = nterms(p)
+    return iszero(n) || (isone(n) && isconstant(first(terms(p))))
+end
+
 #$(SIGNATURES)
 """
     mindegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
@@ -234,10 +239,10 @@ Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `ma
 ### Examples
 Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
-function maxdegree(X::AbstractVector{<:AbstractTermLike}, args...)
-    isempty(X) ? 0 : maximum(t -> degree(t, args...), X)
+function maxdegree(X::AbstractVector{<:AbstractTermLike}, args::Vararg{Any,N}) where {N}
+    return mapreduce(t -> degree(t, args...), max, X, init=0)
 end
-function maxdegree(p::AbstractPolynomialLike, args...)
+function maxdegree(p::AbstractPolynomialLike, args::Vararg{Any,N}) where {N}
     maxdegree(terms(p), args...)
 end
 
@@ -264,6 +269,7 @@ end
 Return a vector of `eltype` `variable_union_type(p)` (see [`variable_union_type`](@ref)),
 containing all the variables that has nonzero degree in at least one term.
 That is, return all the variables `v` such that `maxdegree(p, v)` is not zero.
+The returned vector is sorted in decreasing order.
 """
 function effective_variables(p::AbstractPolynomialLike)
     VT = variable_union_type(p)
@@ -368,15 +374,15 @@ function monic(p::APL)
     polynomial!(_divtoone.(terms(p), α))
 end
 monic(m::AbstractMonomialLike) = m
-monic(t::AbstractTermLike{T}) where T = one(T) * monomial(t)
+monic(t::AbstractTermLike{T}) where T = term(one(T), monomial(t))
 
 function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
     U = Base.promote_op(/, T, S)
     β = coefficient(t)
     if β == α
-        one(U) * monomial(t)
+        term(one(U), monomial(t))
     else
-        (β / α) * monomial(t)
+        term((β / α), monomial(t))
     end
 end
 
@@ -395,12 +401,33 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
     # hence we can use Uniq
     polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
 end
-mapcoefficientsnz(f::Function, t::AbstractTermLike) = f(coefficient(t)) * monomial(t)
+mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
 
-Base.round(t::AbstractTermLike; args...) = round(coefficient(t); args...) * monomial(t)
+Base.round(t::AbstractTermLike; args...) = term(round(coefficient(t); args...), monomial(t))
 function Base.round(p::AbstractPolynomialLike; args...)
     # round(0.1) is zero so we cannot use SortedUniqState
     polynomial!(round.(terms(p); args...), SortedState())
+end
+
+"""
+    deg_num_leading_terms(p::AbstractPolynomialLike, var)
+
+Return `deg, num` where `deg = maxdegree(p, var)` and `num` is the number of
+terms `t` such that `degree(t, var) == deg`.
+"""
+function deg_num_leading_terms(p::AbstractPolynomialLike, var)
+    deg = 0
+    num = 0
+    for mono in monomials(p)
+        d = degree(mono, var)
+        if d > deg
+            deg = d
+            num = 1
+        elseif d == deg
+            num += 1
+        end
+    end
+    return deg, num
 end
 
 Base.ndims(::Union{Type{<:AbstractPolynomialLike}, AbstractPolynomialLike}) = 0

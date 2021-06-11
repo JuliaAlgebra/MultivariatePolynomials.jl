@@ -37,6 +37,7 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
 nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(p::APL) = length(variables(p))
 
 """
@@ -90,19 +91,19 @@ end
 
 Returns whether the monomial of `t` is constant.
 """
-isconstant(t::AbstractTermLike) = all(iszero.(exponents(t)))
+isconstant(t::AbstractTermLike) = all(iszero, exponents(t))
 isconstant(v::AbstractVariable) = false
 
 """
     powers(t::AbstractTermLike)
 
-Returns an tuple of the powers of the monomial of `t`.
+Returns an iterator over the powers of the monomial of `t`.
 
 ### Examples
 
 Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
 """
-powers(t::AbstractTermLike) = tuplezip(variables(t), exponents(t))
+powers(t::AbstractTermLike) = _zip(variables(t), exponents(t))
 
 """
     constantmonomial(p::AbstractPolynomialLike)
