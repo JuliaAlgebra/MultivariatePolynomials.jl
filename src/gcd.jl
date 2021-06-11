@@ -46,8 +46,8 @@ Addison-Wesley Professional. Third edition.
 struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
 
 Base.lcm(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = p * div(q, gcd(p, q, algo))
-Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(α, content(p))
-Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(content(p), α)
+Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(α, content(p, algo))
+Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(content(p, algo), α)
 
 #function MA.promote_operation(::typeof(gcd), P::Type{<:Number}, Q::Type{<:Number})
 #    return typeof(gcd(one(P), one(Q)))
@@ -362,7 +362,7 @@ function primitive_univariate_gcd(p::APL, q::APL, ::SubresultantAlgorithm)
 end
 
 """
-    univariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike)
+    univariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike, algo::AbstractUnivariateGCDAlgorithm)
 
 Return the *greatest common divisor* of the polynomials `p1` and `p2` that have
 at most one variable in common and for which the coefficients are either
@@ -414,7 +414,7 @@ _simplifier(a, b, algo) = _gcd(a, b, algo)
 _simplifier(a::Rational, b::Rational, algo) = gcd(a.num, b.num) // gcd(a.den, b.den)
 
 """
-    content(poly::AbstractPolynomialLike{T}) where {T}
+    content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
 Return the *content* of the polynomial `poly` over a unique factorization
 domain `S` as defined in [Knu14, (3) p. 423].
@@ -425,7 +425,7 @@ See also [`primitive_part_content`](@ref).
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function content(poly::APL{T}, algo) where {T}
+function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
     P = MA.promote_operation(gcd, T, T)
     # This is tricky to infer a `content` calls `gcd` which calls `content`, etc...
     # To help Julia break the loop, we annotate the result here.
@@ -437,7 +437,7 @@ function content(poly::APL{T}, algo) where {T}
 end
 
 """
-    primitive_part_content(poly::AbstractPolynomialLike{T}) where {T}
+    primitive_part_content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
 Return the *primitive part* of the polynomial `poly` over a unique
 factorization domain `S` as defined in [Knu14, (3) p. 423].
@@ -449,11 +449,11 @@ instead.
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-primitive_part(p::APL, algo) = primitive_part_content(p, algo)[1]
-primitive_part(p::APL{<:AbstractFloat}, algo) = p
+primitive_part(p::APL, algo::AbstractUnivariateGCDAlgorithm) = primitive_part_content(p, algo)[1]
+primitive_part(p::APL{<:AbstractFloat}, algo::AbstractUnivariateGCDAlgorithm) = p
 
 """
-    primitive_part_content(poly::AbstractPolynomialLike{T}) where {T}
+    primitive_part_content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
 Return the *primitive part* and *content* of the polynomial `poly` over a unique
 factorization domain `S` as defined in [Knu14, (3) p. 423]. This is more
@@ -465,7 +465,7 @@ computing the content first and this function avoid computing the content twice.
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function primitive_part_content(p, algo)
+function primitive_part_content(p, algo::AbstractUnivariateGCDAlgorithm)
     g = content(p, algo)
     return mapcoefficientsnz(Base.Fix2(_div, g), p), g
 end
