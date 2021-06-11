@@ -1,5 +1,50 @@
 export GeneralizedEuclideanAlgorithm
 
+"""
+    abstract type AbstractUnivariateGCDAlgorithm end
+
+Algorithm computing the greatest common divisor of univariate polynomials.
+See [`GeneralizedEuclideanAlgorithm`](@ref) and [`SubresultantAlgorithm`](@ref).
+"""
+abstract type AbstractUnivariateGCDAlgorithm end
+
+"""
+    struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
+        primitive_rem::Bool
+        skip_last::Bool
+    end
+
+Algorithm computing the greatest common divisor of univariate polynomials using
+the Euclidean algorithm generalized for polynomials with coefficients over a
+a unique factorization domain, see [Knu14, Algorithm E, p. 426-427].
+
+[Knu14] Knuth, D.E., 2014.
+*Art of computer programming, volume 2: Seminumerical algorithms.*
+Addison-Wesley Professional. Third edition.
+"""
+struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
+    primitive_rem::Bool
+    skip_last::Bool
+    function GeneralizedEuclideanAlgorithm(
+        primitive_rem::Bool=false,
+        skip_last::Bool=false,
+    )
+        return new(primitive_rem, skip_last)
+    end
+end
+
+"""
+    struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
+
+Algorithm computing the greatest common divisor of univariate polynomials using
+the Subresultant algorithm, see [Knu14, Algorithm C, p. 428-429].
+
+[Knu14] Knuth, D.E., 2014.
+*Art of computer programming, volume 2: Seminumerical algorithms.*
+Addison-Wesley Professional. Third edition.
+"""
+struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
+
 Base.lcm(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = p * div(q, gcd(p, q, algo))
 Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(α, content(p))
 Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(content(p), α)
@@ -267,51 +312,6 @@ function isolate_variable(poly::APL, var::AbstractVariable)
         term(polynomial(ts), var^d) for (d, ts) in dict
     ])
 end
-
-"""
-    abstract type AbstractUnivariateGCDAlgorithm end
-
-Algorithm computing the greatest common divisor of univariate polynomials.
-See [`GeneralizedEuclideanAlgorithm`](@ref) and [`SubresultantAlgorithm`](@ref).
-"""
-abstract type AbstractUnivariateGCDAlgorithm end
-
-"""
-    struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
-        primitive_rem::Bool
-        skip_last::Bool
-    end
-
-Algorithm computing the greatest common divisor of univariate polynomials using
-the Euclidean algorithm generalized for polynomials with coefficients over a
-a unique factorization domain, see [Knu14, Algorithm E, p. 426-427].
-
-[Knu14] Knuth, D.E., 2014.
-*Art of computer programming, volume 2: Seminumerical algorithms.*
-Addison-Wesley Professional. Third edition.
-"""
-struct GeneralizedEuclideanAlgorithm <: AbstractUnivariateGCDAlgorithm
-    primitive_rem::Bool
-    skip_last::Bool
-    function GeneralizedEuclideanAlgorithm(
-        primitive_rem::Bool=false,
-        skip_last::Bool=false,
-    )
-        return new(primitive_rem, skip_last)
-    end
-end
-
-"""
-    struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
-
-Algorithm computing the greatest common divisor of univariate polynomials using
-the Subresultant algorithm, see [Knu14, Algorithm C, p. 428-429].
-
-[Knu14] Knuth, D.E., 2014.
-*Art of computer programming, volume 2: Seminumerical algorithms.*
-Addison-Wesley Professional. Third edition.
-"""
-struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
 
 """
     primitive_univariate_gcd(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm)
