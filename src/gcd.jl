@@ -384,7 +384,10 @@ If the coefficients are not `AbstractFloat`, this
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function univariate_gcd(p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
+function univariate_gcd(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
+    return univariate_gcd(algebraic_structure(S, T), p1, p2, algo)
+end
+function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     f1, g1 = primitive_part_content(p1, algo)
     f2, g2 = primitive_part_content(p2, algo)
     pp = primitive_univariate_gcd(f1, f2, algo)
@@ -393,7 +396,7 @@ function univariate_gcd(p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     return mapcoefficientsnz(Base.Fix1(*, gg), pp)
 end
 
-function univariate_gcd(p1::APL, p2::APL{<:AbstractFloat}, algo::AbstractUnivariateGCDAlgorithm)
+function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     return primitive_univariate_gcd(p1, p2, algo)
 end
 

@@ -18,9 +18,19 @@ divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(min, m1, m2)
 Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(max, m1, m2)
 
+struct Field end
+struct UniqueFactorizationDomain end
+const UFD = UniqueFactorizationDomain
+
+algebraic_structure(::Type{<:Union{Rational, AbstractFloat}}, ::Type{<:Union{Rational, AbstractFloat}}) = Field()
+algebraic_structure(::Type{<:Union{Rational, AbstractFloat}}, ::Type) = Field()
+algebraic_structure(::Type, ::Type{<:Union{Rational, AbstractFloat}}) = Field()
+algebraic_structure(::Type, ::Type) = UFD()
+
 # _div(a, b) assumes that b divides a
-_div(a::Union{Rational, AbstractFloat}, b) = a / b
-_div(a, b) = div(a, b)
+_div(::Field, a, b) = a / b
+_div(::UFD, a, b) = div(a, b)
+_div(a, b) = _div(algebraic_structure(typeof(a), typeof(b)), a, b)
 _div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m2)
 function _div(t::AbstractTerm, m::AbstractMonomial)
     term(coefficient(t), _div(monomial(t), m))
@@ -46,12 +56,15 @@ end
 Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
-# FIXME What should we do for `Rational` ?
-function pseudo_rem(f::APL, g::APL{<:Union{Rational, AbstractFloat}}, algo)
+function pseudo_rem(f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _pseudo_rem(algebraic_structure(S, T), f, g, algo)
+end
+
+function _pseudo_rem(::Field, f::APL, g::APL, algo)
     return true, rem(f, g)
 end
 
-function pseudo_rem(f::APL, g::APL, algo)
+function _pseudo_rem(::UFD, f::APL, g::APL, algo)
     ltg = leadingterm(g)
     rg = removeleadingterm(g)
     ltf = leadingterm(f)
@@ -73,14 +86,28 @@ function pseudo_rem(f::APL, g::APL, algo)
     end
     return true, f
 end
+
 function MA.promote_operation(
     ::typeof(pseudo_rem),
     ::Type{P},
     ::Type{Q},
-) where {T,S<:Union{Rational, AbstractFloat},P<:APL{T},Q<:APL{S}}
+) where {T,S,P<:APL{T},Q<:APL{S}}
+    return _promote_operation(algebraic_structure(T, S), pseudo_rem, P, Q)
+end
+function _promote_operation(
+    ::Field,
+    ::typeof(pseudo_rem),
+    ::Type{P},
+    ::Type{Q},
+) where {P<:APL,Q<:APL}
     return MA.promote_operation(rem, P, Q)
 end
-function MA.promote_operation(::typeof(pseudo_rem), ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+function _promote_operation(
+    ::UFD,
+    ::typeof(pseudo_rem),
+    ::Type{P},
+    ::Type{Q},
+) where {T,S,P<:APL{T},Q<:APL{S}}
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
