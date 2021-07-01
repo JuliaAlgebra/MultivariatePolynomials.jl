@@ -357,7 +357,7 @@ Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
 function MA.mutable_operate_to!(output::AbstractPolynomial, op::MA.AddSubMul, x, args::Vararg{Any, N}) where N
     return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, *(args...))
 end
-function MA.mutable_operate!(op::MA.AddSubMul, x, y, z, args::Vararg{Any, N}) where N
+function MA.mutable_operate!(op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
     return MA.mutable_operate!(MA.add_sub_op(op), x, *(y, z, args...))
 end
 MA.buffer_for(::MA.AddSubMul, ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
