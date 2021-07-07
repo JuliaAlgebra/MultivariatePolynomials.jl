@@ -1,3 +1,9 @@
+if get(ENV, "GITHUB_ACTIONS", "") == "true"
+    import Pkg
+    Pkg.add(Pkg.PackageSpec(name = "DynamicPolynomials", rev = "master"))
+    Pkg.add(Pkg.PackageSpec(name = "TypedPolynomials", rev = "master"))
+end
+
 using Test
 using LinearAlgebra
 
