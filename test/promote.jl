@@ -24,8 +24,13 @@
     @test dot(X, [1 2; 3 4] * X) == x^2 + 5x*y + 4y^2
 
     function _t(a, b, T)
-        @test typeof(@inferred vcat(a, b)) == Vector{T}
-        @test typeof(@inferred vcat(b, a)) == Vector{T}
+        if VERSION < v"1.6"
+            @test typeof(@inferred vcat(a, b)) in [Vector{T}, Vector{Any}]
+            @test typeof(@inferred vcat(b, a)) in [Vector{T}, Vector{Any}]
+        else
+            @test typeof(@inferred vcat(a, b)) == Vector{T}
+            @test typeof(@inferred vcat(b, a)) == Vector{T}
+        end
     end
 
     function __test(a, PT, TT, MT)
