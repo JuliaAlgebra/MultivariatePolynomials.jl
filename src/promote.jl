@@ -28,6 +28,58 @@ function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S, T}
 end
 Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 Base.promote_rule(::Type{T}, ::Type{PT}) where {T, PT<:APL} = promote_rule_constant(T, PT)
+# Resolve method ambiguity with Base:
+Base.promote_rule(::Type{Any}, ::Type{<:APL}) = Any
+
+# We don't have any information on the MultivariatePolynomials implementation,
+# so we won't be able to convert the constant to `APL`.
+promote_rule_constant(::Type, PT::Type{AbstractMonomialLike}) = Any
+promote_rule_constant(::Type, PT::Type{AbstractTermLike{T}}) where {T} = Any
+promote_rule_constant(::Type, PT::Type{AbstractTermLike}) = Any
+promote_rule_constant(::Type, PT::Type{APL{T}}) where {T} = Any
+promote_rule_constant(::Type, PT::Type{APL}) = Any
+
+# AbstractMonomialLike{T}
+Base.promote_rule(::Type{AbstractMonomialLike}, ::Type{<:AbstractMonomialLike}) = AbstractMonomialLike
+Base.promote_rule(::Type{<:AbstractMonomialLike}, ::Type{AbstractMonomialLike}) = AbstractMonomialLike
+Base.promote_rule(::Type{AbstractMonomialLike}, ::Type{<:AbstractTermLike{T}}) where {T} = _atl(Int, T)
+Base.promote_rule(::Type{<:AbstractTermLike{T}}, ::Type{AbstractMonomialLike}) where {T} = _atl(Int, T)
+Base.promote_rule(::Type{AbstractMonomialLike}, ::Type{AbstractTermLike{T}}) where {T} = _atl(Int, T)
+Base.promote_rule(::Type{AbstractTermLike{T}}, ::Type{AbstractMonomialLike}) where {T} = _atl(Int, T)
+Base.promote_rule(::Type{AbstractMonomialLike}, ::Type{<:APL{T}}) where {T} = _apl(Int, T)
+Base.promote_rule(::Type{<:APL{T}}, ::Type{AbstractMonomialLike}) where {T} = _apl(Int, T)
+Base.promote_rule(::Type{AbstractMonomialLike}, ::Type{APL{T}}) where {T} = _apl(Int, T)
+Base.promote_rule(::Type{APL{T}}, ::Type{AbstractMonomialLike}) where {T} = _apl(Int, T)
+
+# AbstractTermLike{T}
+_atl(::Type{T}, ::Type{T}) where {T} = AbstractTermLike{T}
+_atl(::Type, ::Type) = AbstractTermLike
+__atl(::Type{T}, ::Type{<:AbstractTermLike{S}}) where {S,T} = _atl(T, S)
+__atl(::Type{T}, ::Type{<:APL{S}}) where {S,T} = _apl(T, S)
+Base.promote_rule(::Type{AbstractTermLike{T}}, P::Type{<:AbstractTermLike{S}}) where {S,T} = _atl(T, S)
+Base.promote_rule(P::Type{<:AbstractTermLike{S}}, ::Type{AbstractTermLike{T}}) where {S,T} = _atl(T, S)
+Base.promote_rule(::Type{AbstractTermLike{T}}, P::Type{<:APL{S}}) where {S,T} = _apl(T, S)
+Base.promote_rule(P::Type{<:APL{S}}, ::Type{AbstractTermLike{T}}) where {S,T} = _apl(T, S)
+Base.promote_rule(::Type{AbstractTermLike{T}}, P::Type{APL{S}}) where {S,T} = _apl(T, S)
+Base.promote_rule(P::Type{APL{S}}, ::Type{AbstractTermLike{T}}) where {S,T} = _apl(T, S)
+
+# AbstractTermLike
+Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:AbstractTermLike}) = AbstractTermLike
+Base.promote_rule(::Type{<:AbstractTermLike}, ::Type{AbstractTermLike}) = AbstractTermLike
+Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:APL}) = APL
+Base.promote_rule(::Type{<:APL}, ::Type{AbstractTermLike}) = APL
+Base.promote_rule(::Type{AbstractTermLike}, ::Type{APL}) = APL
+Base.promote_rule(::Type{APL}, ::Type{AbstractTermLike}) = APL
+
+# APL{T}
+_apl(::Type{T}, ::Type{T}) where {T} = APL{T}
+_apl(::Type, ::Type) = APL
+Base.promote_rule(::Type{APL{T}}, ::Type{<:APL{S}}) where {S,T} = _apl(S, T)
+Base.promote_rule(::Type{<:APL{S}}, ::Type{APL{T}}) where {S,T} = _apl(S, T)
+
+# APL
+Base.promote_rule(::Type{APL}, ::Type{<:APL}) = APL
+Base.promote_rule(::Type{<:APL}, ::Type{APL}) = APL
 
 # Rational
 promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
