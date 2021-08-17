@@ -60,9 +60,8 @@ function Base.convert(::Type{T}, p::AbstractPolynomial) where T <: AbstractTermL
 end
 
 MA.scaling(p::AbstractPolynomialLike{T}) where {T} = convert(T, p)
-Base.convert(::Type{Any}, p::APL) = p
 # Conversion polynomial -> scalar
-function Base.convert(S::Type{<:Union{Number, T}}, p::APL{T}) where T
+function scalarize(::Type{S}, p::APL) where S
     s = zero(S)
     for t in terms(p)
         if !isconstant(t)
@@ -73,5 +72,6 @@ function Base.convert(S::Type{<:Union{Number, T}}, p::APL{T}) where T
     end
     s
 end
+Base.convert(::Type{T}, p::APL) where T<:Number = scalarize(T, p)
 
 Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
