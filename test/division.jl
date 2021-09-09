@@ -143,6 +143,12 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     sym_test(f3, f1, x, algo)
     triple_test(f1, f2, f3, algo)
 
+    @testset "Issue #173" begin
+        p1 = o*x*y + x
+        p2 = x^2
+        sym_test(p1, p2, x, algo)
+    end
+
     p1 = o*z - z
     p2 = z
     @test gcd(p1, p2, algo) == z

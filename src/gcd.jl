@@ -164,11 +164,15 @@ function deflation(p::AbstractPolynomialLike)
     return s, d
 end
 
+function _zero_to_one_exp(defl::AbstractMonomial)
+    # TODO Make it faster by calling something like `mapexponents`.
+    return prod(variables(defl).^map(d -> iszero(d) ? one(d) : d, exponents(defl)))
+end
 function deflate(p::AbstractPolynomialLike, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
-    q = MA.operate(deflate, p, shift, defl)
+    q = MA.operate(deflate, p, shift, _zero_to_one_exp(defl))
     return q
 end
 function inflate(α, shift, defl)
@@ -178,7 +182,7 @@ function inflate(p::AbstractPolynomialLike, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
-    q = MA.operate(inflate, p, shift, defl)
+    q = MA.operate(inflate, p, shift, _zero_to_one_exp(defl))
     return q
 end
 
@@ -193,7 +197,6 @@ end
 
 # Inspired from to `AbstractAlgebra.deflate`
 function MA.operate(op::Union{typeof(deflate), typeof(inflate)}, p::AbstractPolynomialLike, shift, defl)
-    defl = prod(variables(defl).^map(d -> iszero(d) ? one(d) : d, exponents(defl)))
     return polynomial(map(terms(p)) do t
         return term(coefficient(t), MA.operate(op, monomial(t), shift, defl))
     end)
