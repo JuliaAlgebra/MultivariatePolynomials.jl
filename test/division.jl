@@ -116,6 +116,7 @@ function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
     test_gcdx_unit(x + 1, x + 1, x^2 - 1, algo)
     test_gcdx_unit(x + 1, x - x, x + 1, algo)
     test_gcdx_unit(x + 1, x + 1, x - x, algo)
+    test_gcdx_unit(x - x + 1, x + 1, x + 2, algo)
     @test       0  == @inferred gcd(x - x, x^2 - x^2, algo)
     @test       0  == @inferred gcd(x^2 - x^2, x - x, algo)
 end

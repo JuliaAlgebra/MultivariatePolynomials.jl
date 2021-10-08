@@ -68,7 +68,7 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
     ltf = leadingterm(f)
     q = zero(f)
     r = zero(f)
-    while divides(monomial(ltg), ltf)
+    while !iszero(f) && divides(monomial(ltg), ltf)
         new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
         qt = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
@@ -102,7 +102,7 @@ function _pseudo_rem(::UFD, f::APL, g::APL, algo)
     if !divides(monomial(ltg), ltf)
         return false, f
     end
-    while divides(monomial(ltg), ltf)
+    while !iszero(f) && divides(monomial(ltg), ltf)
         new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
         new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
         # Check with `::` that we don't have any type unstability on this variable.
