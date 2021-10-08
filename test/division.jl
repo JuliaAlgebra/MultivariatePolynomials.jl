@@ -134,6 +134,9 @@ end
 function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) where {T}
     Mod.@polyvar x y z
     o = one(T)
+    zr = zero(T)
+    sym_test(o * x, zr * x, o * x, algo)
+    sym_test(o * x + o, zr * x, o * x + o, algo)
     # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
     f1 = o * x * y + o * x
     f2 = o * y^2

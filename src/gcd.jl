@@ -107,8 +107,8 @@ function Base.gcd(p1::APL{T}, p2::APL{S}, algo::AbstractUnivariateGCDAlgorithm=G
     if isapproxzero(p1)
         return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
     end
-    if isapproxzero(p1)
-        return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p2)
+    if isapproxzero(p2)
+        return convert(MA.promote_operation(gcd, typeof(p1), typeof(p2)), p1)
     end
     shift1, defl1 = deflation(p1)
     shift2, defl2 = deflation(p2)
