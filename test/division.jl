@@ -96,15 +96,26 @@ function test_gcd_unit(expected, p1, p2, algo)
     @test g == expected || g == -expected
 end
 
+function test_gcdx_unit(expected, p1, p2, algo)
+    test_gcd_unit(expected, p1, p2, algo)
+    a, b, g = @inferred gcdx(p1, p2, algo)
+    # it does not make sense, in general, to speak of "the" greatest common
+    # divisor of u and v; there is a set of greatest common divisors, each
+    # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+    # `-expected` are both accepted.
+    @test iszero(MP.pseudo_rem(g, expected, algo)[2])
+    @test a * p1 + b * p2 == g
+end
+
 
 function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
     Mod.@polyvar x
-    test_gcd_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
-    test_gcd_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
-    test_gcd_unit(x + 1, x^2 - 1, x + 1, algo)
-    test_gcd_unit(x + 1, x + 1, x^2 - 1, algo)
-    test_gcd_unit(x + 1, x - x, x + 1, algo)
-    test_gcd_unit(x + 1, x + 1, x - x, algo)
+    test_gcdx_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
+    test_gcdx_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x^2 - 1, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x - x, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x - x, algo)
     @test       0  == @inferred gcd(x - x, x^2 - x^2, algo)
     @test       0  == @inferred gcd(x^2 - x^2, x - x, algo)
 end

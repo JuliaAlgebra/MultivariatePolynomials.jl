@@ -237,6 +237,35 @@ function deflated_gcd(p1::APL{T}, p2::APL{S}, algo) where {T, S}
     end
 end
 
+function Base.gcdx(p1::APL{T}, p2::APL{S}, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) where {T, S}
+    i1, i2, num_common = _extracted_variable(p1, p2)
+    R = MA.promote_operation(gcd, typeof(p1), typeof(p2))
+    if iszero(i1)
+        if iszero(i2)
+            return univariate_gcdx(p1, p2, algo)
+        else
+            if isapproxzero(p1)
+                return zero(R), one(R), convert(R, p2)
+            end
+            error("Not implemented yet")
+        end
+    else
+        if iszero(i2)
+            if isapproxzero(p2)
+                return one(R), zero(R), convert(R, p1)
+            end
+            error("Not implemented yet")
+        else
+            if num_common > 1
+                @assert i1 == i2
+                error("Not implemented yet")
+            else
+                return univariate_gcdx(p1, p2, algo)
+            end
+        end
+    end
+end
+
 # Returns first element in the union of two decreasing vectors
 function _extracted_variable(p1, p2)
     v1 = variables(p1)
@@ -324,6 +353,18 @@ which is a subtype of [`AbstractUnivariateGCDAlgorithm`](@ref).
 """
 function primitive_univariate_gcd end
 
+function not_divided_error(u, v)
+    error(
+        "Polynomial `$v` of degree `$(maxdegree(v))` and effective",
+        " variables `$(effective_variables(v))` does not divide",
+        " polynomial `$u` of degree `$(maxdegree(u))` and effective",
+        " variables `$(effective_variables(u))`. Did you call",
+        " `univariate_gcd` with polynomials with more than one",
+        " variable in common ? If yes, call `gcd` instead, otherwise,",
+        " please report this.",
+    )
+end
+
 # If `p` and `q` do not have the same time then the local variables `p` and `q`
 # won't be type stable.
 function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
@@ -343,15 +384,7 @@ function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgo
         end
         divided, r = pseudo_rem(u, v, algo)
         if !divided
-            error(
-                "Polynomial `$v` of degree `$(maxdegree(v))` and effective",
-                " variables `$(effective_variables(v))` does not divide",
-                " polynomial `$u` of degree `$(maxdegree(u))` and effective",
-                " variables `$(effective_variables(u))`. Did you call",
-                " `univariate_gcd` with polynomials with more than one",
-                " variable in common ? If yes, call `gcd` instead, otherwise,",
-                " please report this.",
-            )
+            not_divided_error(u, v)
         end
         if !algo.primitive_rem
             r = primitive_part(r, algo)::R
@@ -359,6 +392,30 @@ function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgo
         u, v = v, r::R
     end
 end
+
+function primitive_univariate_gcdx(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
+    if maxdegree(p) < maxdegree(q)
+        a, b, g = primitive_univariate_gcdx(q, p, algo)
+        return b, a, g
+    end
+    R = MA.promote_operation(gcd, typeof(p), typeof(q))
+    u = convert(R, p)
+    v = convert(R, q)
+    if isapproxzero(v)
+        return one(R), zero(R), u
+    end
+    q, r = pseudo_divrem(u, v, algo)
+    if iszero(q)
+        not_divided_error(u, v)
+    end
+    # TODO
+    #if !algo.primitive_rem
+    #    r = primitive_part(r, algo)::R
+    #end
+    a, b, g = primitive_univariate_gcdx(v, r, algo)
+    return b, (a - b * q), g
+end
+
 
 function primitive_univariate_gcd(p::APL, q::APL, ::SubresultantAlgorithm)
     error("Not implemented yet")
@@ -401,6 +458,21 @@ end
 
 function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     return primitive_univariate_gcd(p1, p2, algo)
+end
+
+function univariate_gcdx(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
+    return univariate_gcdx(algebraic_structure(S, T), p1, p2, algo)
+end
+function univariate_gcdx(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
+    f1, g1 = primitive_part_content(p1, algo)
+    f2, g2 = primitive_part_content(p2, algo)
+    a, b, pp = primitive_univariate_gcdx(f1, f2, algo)
+    gg = _gcd(g1, g2, algo)#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
+    # Multiply each coefficient by the gcd of the contents.
+    return a, b, mapcoefficientsnz(Base.Fix1(*, gg), pp)
+end
+function univariate_gcdx(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
+    return primitive_univariate_gcdx(p1, p2, algo)
 end
 
 _gcd(a::APL, b::APL, algo) = gcd(a, b, algo)
