@@ -56,6 +56,31 @@ end
 Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
+function pseudo_divrem(f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _pseudo_divrem(algebraic_structure(S, T), f, g, algo)
+end
+
+function _pseudo_divrem(::Field, f::APL, g::APL, algo)
+    q, r = divrem(f, g)
+    return one(q), q, r
+end
+
+function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
+    ltg = leadingterm(g)
+    rg = removeleadingterm(g)
+    ltf = leadingterm(f)
+    if iszero(f) || !divides(monomial(ltg), ltf)
+        return one(f), zero(f), zero(f)
+    else
+        st = constantterm(coefficient(ltg), f)
+        new_f = st * removeleadingterm(f)
+        qt = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
+        new_g = qt * rg
+        # Check with `::` that we don't have any type unstability on this variable.
+        return convert(typeof(f), st), convert(typeof(f), qt), (new_f - new_g)::typeof(f)
+    end
+end
+
 function pseudo_rem(f::APL{S}, g::APL{T}, algo) where {S,T}
     return _pseudo_rem(algebraic_structure(S, T), f, g, algo)
 end
@@ -71,7 +96,7 @@ function _pseudo_rem(::UFD, f::APL, g::APL, algo)
     if !divides(monomial(ltg), ltf)
         return false, f
     end
-    while divides(monomial(ltg), ltf)
+    while !iszero(f) && divides(monomial(ltg), ltf)
         new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
         new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
         # Check with `::` that we don't have any type unstability on this variable.
