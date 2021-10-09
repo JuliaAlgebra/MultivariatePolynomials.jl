@@ -106,6 +106,10 @@ function test_gcdx_unit(expected, p1, p2, algo)
     @test iszero(MP.pseudo_rem(g, expected, algo)[2])
     @test a * p1 + b * p2 == g
 end
+function _test_gcdx_unit(expected, p1, p2, algo)
+    test_gcdx_unit(expected, p1, p2, algo)
+    test_gcdx_unit(expected, p2, p1, algo)
+end
 
 
 function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
@@ -117,6 +121,8 @@ function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
     test_gcdx_unit(x + 1, x - x, x + 1, algo)
     test_gcdx_unit(x + 1, x + 1, x - x, algo)
     test_gcdx_unit(x - x + 1, x + 1, x + 2, algo)
+    test_gcdx_unit(x - x + 1, x + 1, 2x + 1, algo)
+    test_gcdx_unit(x - x + 1, x - 1, 2x^2 - 2x - 2, algo)
     @test       0  == @inferred gcd(x - x, x^2 - x^2, algo)
     @test       0  == @inferred gcd(x^2 - x^2, x - x, algo)
 end

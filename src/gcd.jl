@@ -393,27 +393,39 @@ function primitive_univariate_gcd(p::APL, q::APL, algo::GeneralizedEuclideanAlgo
     end
 end
 
-function primitive_univariate_gcdx(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
-    if maxdegree(p) < maxdegree(q)
-        a, b, g = primitive_univariate_gcdx(q, p, algo)
+function primitive_univariate_gcdx(u0::APL, v0::APL, algo::GeneralizedEuclideanAlgorithm)
+    if maxdegree(u0) < maxdegree(v0)
+        a, b, g = primitive_univariate_gcdx(v0, u0, algo)
         return b, a, g
     end
-    R = MA.promote_operation(gcd, typeof(p), typeof(q))
-    u = convert(R, p)
-    v = convert(R, q)
+    R = MA.promote_operation(gcd, typeof(u0), typeof(v0))
+    u = convert(R, u0)
+    v = convert(R, v0)
     if isapproxzero(v)
         return one(R), zero(R), u
+    elseif isconstant(v)
+        # `p` and `q` are primitive so if one of them is constant, it cannot
+        # divide the content of the other one.
+        return zero(R), one(R), v
     end
-    q, r = pseudo_divrem(u, v, algo)
+    # p * u = q * v + r
+    p, q, r = pseudo_divrem(u, v, algo)
     if iszero(q)
         not_divided_error(u, v)
+    end
+    if iszero(r)
+        # Shortcut, does not change the output
+        return zero(R), one(R), v
     end
     # TODO
     #if !algo.primitive_rem
     #    r = primitive_part(r, algo)::R
     #end
+    # a * v + b * r = g
+    # a * v + b * (p * u - q * v) = g
+    # b * p * u + (a - b * q) * v = g
     a, b, g = primitive_univariate_gcdx(v, r, algo)
-    return b, (a - b * q), g
+    return p * b, (a - b * q), g
 end
 
 
@@ -469,7 +481,7 @@ function univariate_gcdx(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlg
     a, b, pp = primitive_univariate_gcdx(f1, f2, algo)
     gg = _gcd(g1, g2, algo)#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
     # Multiply each coefficient by the gcd of the contents.
-    return a, b, mapcoefficientsnz(Base.Fix1(*, gg), pp)
+    return g2 * a, g1 * b, g1 * g2 * mapcoefficientsnz(Base.Fix1(*, gg), pp)
 end
 function univariate_gcdx(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     return primitive_univariate_gcdx(p1, p2, algo)
