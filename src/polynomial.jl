@@ -403,12 +403,6 @@ function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
 end
 mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
 
-Base.round(t::AbstractTermLike; args...) = term(round(coefficient(t); args...), monomial(t))
-function Base.round(p::AbstractPolynomialLike; args...)
-    # round(0.1) is zero so we cannot use SortedUniqState
-    polynomial!(round.(terms(p); args...), SortedState())
-end
-
 """
     deg_num_leading_terms(p::AbstractPolynomialLike, var)
 

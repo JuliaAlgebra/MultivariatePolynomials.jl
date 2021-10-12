@@ -4,6 +4,15 @@ using Combinatorics
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+function div_number_test()
+    Mod.@polyvar x
+    @test div(2x, 2) == x
+    @test div(6x + 9x^2, 3) == 2x + 3x^2
+    @test div(6x + 9x^2, 4) == x + 2x^2
+    @test div(10x^3, 4, RoundUp) == 3x^3
+    @test div(6x + 9x^2, 4, RoundUp) == 2x + 3x^2
+end
+
 function gcd_lcm_test()
     Mod.@polyvar x y z
     @test gcd(x*y, y) == y
@@ -278,6 +287,9 @@ function extracted_variable_test()
 end
 
 @testset "Division" begin
+    @testset "div by number" begin
+        div_number_test()
+    end
     @testset "GCD and LCM" begin
         gcd_lcm_test()
     end
