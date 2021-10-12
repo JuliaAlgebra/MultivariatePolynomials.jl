@@ -9,8 +9,10 @@ function div_number_test()
     @test div(2x, 2) == x
     @test div(6x + 9x^2, 3) == 2x + 3x^2
     @test div(6x + 9x^2, 4) == x + 2x^2
-    @test div(10x^3, 4, RoundUp) == 3x^3
-    @test div(6x + 9x^2, 4, RoundUp) == 2x + 3x^2
+    if VERSION >= v"1.6"
+        @test div(10x^3, 4, RoundUp) == 3x^3
+        @test div(6x + 9x^2, 4, RoundUp) == 2x + 3x^2
+    end
 end
 
 function gcd_lcm_test()
