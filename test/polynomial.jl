@@ -179,7 +179,7 @@ const MP = MultivariatePolynomials
     @testset "$f is a mutable copy, see issue DynamicPolynomials#62" for f in [zero, one]
         p = 2x + 1
         q = f(p)
-        q = MA.add!(q, 2y)
+        q = MA.add!!(q, 2y)
         @test p == 2x + 1
     end
 end

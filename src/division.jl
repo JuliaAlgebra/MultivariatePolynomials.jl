@@ -57,9 +57,9 @@ function _div(f::APL, g::APL)
     while !iszero(rf)
         ltf = leadingterm(rf)
         qt = _div(ltf, lt)
-        q = MA.add!(q, qt)
-        rf = MA.operate!(removeleadingterm, rf)
-        rf = MA.operate!(MA.sub_mul, rf, qt, rg)
+        q = MA.add!!(q, qt)
+        rf = MA.operate!!(removeleadingterm, rf)
+        rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
     end
     return q
 end
@@ -165,20 +165,20 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
     while !iszero(rf)
         ltf = leadingterm(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!(removeleadingterm, rf)
+            rf = MA.operate!!(removeleadingterm, rf)
         elseif divides(lm, ltf)
             qt = _div(ltf, lt)
-            q = MA.add!(q, qt)
-            rf = MA.operate!(removeleadingterm, rf)
-            rf = MA.operate!(MA.sub_mul, rf, qt, rg)
+            q = MA.add!!(q, qt)
+            rf = MA.operate!!(removeleadingterm, rf)
+            rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
         elseif lm > monomial(ltf)
             # Since the monomials are sorted in decreasing order,
             # lm is larger than all of them hence it cannot divide any of them
-            r = MA.add!(r, rf)
+            r = MA.add!!(r, rf)
             break
         else
-            r = MA.add!(r, ltf)
-            rf = MA.operate!(removeleadingterm, rf)
+            r = MA.add!!(r, ltf)
+            rf = MA.operate!!(removeleadingterm, rf)
         end
     end
     q, r
@@ -197,16 +197,16 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     while !iszero(rf)
         ltf = leadingterm(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!(removeleadingterm, rf)
+            rf = MA.operate!!(removeleadingterm, rf)
             continue
         end
         divisionoccured = false
         for i in useful
             if divides(lm[i], ltf)
                 qt = _div(ltf, lt[i])
-                q[i] = MA.add!(q[i], qt)
-                rf = MA.operate!(removeleadingterm, rf)
-                rf = MA.operate!(MA.sub_mul, rf, qt, rg[i])
+                q[i] = MA.add!!(q[i], qt)
+                rf = MA.operate!!(removeleadingterm, rf)
+                rf = MA.operate!!(MA.sub_mul, rf, qt, rg[i])
                 divisionoccured = true
                 break
             elseif lm[i] > monomial(ltf)
@@ -217,11 +217,11 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
         end
         if !divisionoccured
             if isempty(useful)
-                r = MA.add!(r, rf)
+                r = MA.add!!(r, rf)
                 break
             else
-                r = MA.add!(r, ltf)
-                rf = MA.operate!(removeleadingterm, rf)
+                r = MA.add!!(r, ltf)
+                rf = MA.operate!!(removeleadingterm, rf)
             end
         end
     end
