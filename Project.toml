@@ -12,7 +12,7 @@ MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 [compat]
 DataStructures = "0.17.7, 0.18"
 DynamicPolynomials = "0.3.16"
-MutableArithmetics = "0.2"
+MutableArithmetics = "0.2, 0.3"
 TypedPolynomials = "0.2.9"
 julia = "1"
 
