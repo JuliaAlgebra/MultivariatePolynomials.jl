@@ -105,8 +105,9 @@ const MP = MultivariatePolynomials
 
     @inferred polynomial(i -> float(i), [x, x*x])
     @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
-    for p in (polynomial(i -> float(i), [x, x*x]),
-              polynomial(i -> 3 - float(i), monovec([x*x, x])))
+    for p in [polynomial(i -> float(i), [x, x*x]),
+              polynomial(i -> 1.0, [x*x, x, x*x]),
+              polynomial(i -> 3 - float(i), monovec([x*x, x]))]
         @test coefficients(p) == [2.0, 1.0]
         @test monomials(p) == monovec([x^2, x])
     end
@@ -143,10 +144,16 @@ const MP = MultivariatePolynomials
     end
 
     @testset "Convertion" begin
+        Mod.@polyvar x y z
         p = 2.5x + 1 - 2.5x
         @test convert(Int, p) == 1
         @test convert(typeof(p), p) === p
         @test convert(Union{Nothing, typeof(p)}, p) === p
+        a = 2y
+        q = polynomial([a, z, -a], [x, 1, x])
+        @test convert_to_constant(q) == z
+        q = polynomial([a, z], [x, 1])
+        @test_throws InexactError convert_to_constant(q)
     end
 
     @testset "Vector" begin

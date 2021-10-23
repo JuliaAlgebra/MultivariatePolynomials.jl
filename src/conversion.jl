@@ -1,4 +1,4 @@
-export variable
+export variable, convert_to_constant
 
 function convertconstant end
 Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
@@ -60,18 +60,23 @@ function Base.convert(::Type{T}, p::AbstractPolynomial) where T <: AbstractTermL
 end
 
 MA.scaling(p::AbstractPolynomialLike{T}) where {T} = convert(T, p)
-# Conversion polynomial -> scalar
-function scalarize(::Type{S}, p::APL) where S
+# Conversion polynomial -> constant
+# We don't define a method for `Base.convert` to reduce invalidations;
+# see https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/172
+function convert_to_constant(::Type{S}, p::APL) where S
     s = zero(S)
     for t in terms(p)
         if !isconstant(t)
             # The polynomial is not constant
-            throw(InexactError(:convert, S, p))
+            throw(InexactError(:convert_to_constant, S, p))
         end
-        s += S(coefficient(t))
+        s = MA.add!!(s, convert(S, coefficient(t)))
     end
-    s
+    return s
 end
-Base.convert(::Type{T}, p::APL) where T<:Number = scalarize(T, p)
+Base.convert(::Type{T}, p::APL) where T<:Number = convert_to_constant(T, p)
+function convert_to_constant(p::APL{S}) where {S}
+    return convert_to_constant(S, p)
+end
 
 Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p

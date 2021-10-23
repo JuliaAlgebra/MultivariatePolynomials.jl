@@ -58,7 +58,10 @@ end
 
 polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
 
-polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([term(α, m) for (α, m) in zip(a, x)], s)
+function polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState())
+    # If `x` is e.g. `[v, 1]` then it will contains terms that are convertible to monomials.
+    return polynomial([term(α, convert(monomialtype(m), m)) for (α, m) in zip(a, x)], s)
+end
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)

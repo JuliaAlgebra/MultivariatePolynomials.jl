@@ -2,7 +2,7 @@ name = "MultivariatePolynomials"
 uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 license = "MIT"
 repo = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl"
-version = "0.3.18"
+version = "0.4.0"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
