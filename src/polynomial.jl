@@ -106,7 +106,7 @@ function uniqterms!(ts::AbstractVector{<: AbstractTerm})
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
             if monomial(ts[i]) == monomial(ts[j])
-                ts[i] = term(MA.add!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
+                ts[i] = term(MA.add!!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
             else
                 if !iszero(ts[i])
                     i += 1
