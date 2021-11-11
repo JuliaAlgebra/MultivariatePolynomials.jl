@@ -1,14 +1,16 @@
 export divides
 
-Base.round(t::AbstractTermLike; args...) = term(round(coefficient(t); args...), monomial(t))
 function Base.round(p::APL; args...)
-    # round(0.1) is zero so we cannot use SortedUniqState
-    polynomial!(round.(terms(p); args...), SortedState())
+    # round(0.1) is zero so we cannot use `mapcoefficientsnz`
+    return mapcoefficients(p) do term
+        round(term; args...)
+    end
 end
 
-Base.div(t::AbstractTermLike, α::Number, args...) = term(div(coefficient(t), α, args...), monomial(t))
 function Base.div(p::APL, α::Number, args...)
-    polynomial!(div.(terms(p), α, args...), SortedState())
+    return mapcoefficients(p) do term
+        div(p, α, args...)
+    end
 end
 
 """

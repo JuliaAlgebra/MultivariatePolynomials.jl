@@ -192,4 +192,21 @@ const MP = MultivariatePolynomials
         q = MA.add!!(q, 2y)
         @test p == 2x + 1
     end
+
+    @testset "mapcoefficients $nz" for nz in [false, true]
+        p = 2x + 1
+        @test mapcoefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
+        @test mapcoefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
+        @test p === mapcoefficients!(x -> x + 1, p, nonzero = nz)
+        @test p == 3x + 2
+        q = zero(p)
+        @test q === mapcoefficients_to!(q, x -> 2x, p, nonzero = nz)
+        @test q == 6x + 4
+        @test q === mapcoefficients_to!(q, x -> 2x, 3x, nonzero = nz)
+        @test q == 6x
+        @test q === mapcoefficients_to!(q, x -> 2x, x, nonzero = nz)
+        @test q == 2x
+        @test q === mapcoefficients_to!(q, x -> 2x, x^2, nonzero = nz)
+        @test q == 2x^2
+    end
 end

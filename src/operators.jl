@@ -216,7 +216,7 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
 Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
-Base.:-(p::APL) = polynomial!((-).(terms(p)))
+Base.:-(p::APL) = mapcoefficients(-, p)
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
 
@@ -243,38 +243,24 @@ end
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
 multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 
-_multconstant(α, f, t::AbstractTermLike) = mapcoefficientsnz(f, t)
-function _multconstant(α::T, f, p::AbstractPolynomial{S}) where {S, T}
-    if iszero(α)
-        zero(polynomialtype(p, MA.promote_operation(*, T, S)))
-    else
-        mapcoefficientsnz(f, p)
-    end
-end
-_multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomial(p))
-
-multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
-multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
-
 # TODO delete once DynamicPolynomials stops using it
-function _multconstant_to!(output, α, f, p)
-    if iszero(α)
-        MA.operate!(zero, output)
-    else
-        mapcoefficientsnz_to!(output, f, p)
-    end
+function _multconstant end
+function _multconstant_to! end
+
+multconstant(α, p::AbstractPolynomialLike) = mapcoefficients(Base.Fix1(*, α), p)
+multconstant(p::AbstractPolynomialLike, α) = mapcoefficients(Base.Fix2(*, α), p)
+
+function MA.operate_to!(output, ::typeof(multconstant), α, p::APL)
+    return mapcoefficients_to!(output, Base.Fix1(*, α), p)
 end
 function MA.operate_to!(output, ::typeof(multconstant), p::APL, α)
-    return _multconstant_to!(output, α, β -> β*α, p)
-end
-function MA.operate_to!(output, ::typeof(multconstant), α, p::APL)
-    return _multconstant_to!(output, α, β -> α*β, p)
-end
-function MA.operate!(::typeof(multconstant), p::APL, α)
-    return mapcoefficients!(Base.Fix2(*, α), p)
+    return mapcoefficients_to!(output, Base.Fix2(*, α), p)
 end
 function MA.operate!(::typeof(multconstant), α, p::APL)
     return mapcoefficients!(Base.Fix1(*, α), p)
+end
+function MA.operate!(::typeof(multconstant), p::APL, α)
+    return mapcoefficients!(Base.Fix2(*, α), p)
 end
 
 MA.operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
