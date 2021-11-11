@@ -407,6 +407,53 @@ end
 mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
 
 """
+    mapcoefficientsnz!(f::Function, p::AbstractPolynomialLike)
+
+Mutate `p` by replacing each coefficient `α` by `f(α)`.
+The function should never return zero for a nonzero `α`.
+The function returns `p`, which is identically equal to the first argument.
+"""
+function mapcoefficientsnz! end
+
+function mapcoefficientsnz_to! end
+
+"""
+    mapcoefficients!(f::Function, p::AbstractPolynomialLike)
+
+Mutate `p` by replacing each coefficient `α` by `f(α)`.
+The function may return zero in which case the term is dropped.
+The function returns `p`, which is identically equal to the first argument.
+
+See also [`mapcoefficients`](@ref).
+
+### Examples
+
+Let `p = 2x*y + 3x + 1`, after `mapcoefficients!(α -> mod(3α, 6), p)`, `p` is
+equal to `3x + 3`.
+"""
+function mapcoefficients! end
+
+"""
+    mapcoefficients(f::Function, p::AbstractPolynomialLike)
+
+Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
+The function may return zero in which case the term is dropped.
+
+See also [`mapcoefficients!`](@ref).
+
+### Examples
+
+Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
+"""
+function mapcoefficients(f::Function, p::AbstractPolynomialLike)
+    q = MA.mutable_copy(p)
+    mapcoefficients!(q, f)
+    return q
+end
+
+function mapcoefficients_to! end
+
+"""
     deg_num_leading_terms(p::AbstractPolynomialLike, var)
 
 Return `deg, num` where `deg = maxdegree(p, var)` and `num` is the number of

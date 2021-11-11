@@ -65,7 +65,11 @@ Base.:/(A::AbstractArray, p::APL) = map(f -> f / p, A)
 
 constant_function(::typeof(+)) = plusconstant
 constant_function(::typeof(-)) = minusconstant
-MA.operate!(op::Union{typeof(+), typeof(-)}, p::APL, α) = MA.operate!(constant_function(op), p, α)
+constant_function(::typeof(*)) = multconstant
+MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate!(constant_function(op), p, α)
+
+MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(multconstant, α, p)
+MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(multconstant, p, α)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.operate_to!(output, multconstant, α, p)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.operate_to!(output, multconstant, p, α)
 
@@ -250,8 +254,7 @@ _multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomia
 multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
 multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
 
-function mapcoefficientsnz_to! end
-
+# TODO delete once DynamicPolynomials stops using it
 function _multconstant_to!(output, α, f, p)
     if iszero(α)
         MA.operate!(zero, output)
@@ -260,10 +263,16 @@ function _multconstant_to!(output, α, f, p)
     end
 end
 function MA.operate_to!(output, ::typeof(multconstant), p::APL, α)
-    _multconstant_to!(output, α, β -> β*α, p)
+    return mapcoefficients_to!(output, Base.Fix2(*, α), p)
 end
 function MA.operate_to!(output, ::typeof(multconstant), α, p::APL)
-    _multconstant_to!(output, α, β -> α*β, p)
+    return mapcoefficients_to!(output, Base.Fix1(*, α), p)
+end
+function MA.operate!(::typeof(multconstant), p::APL, α)
+    return mapcoefficients!(Base.Fix2(*, α), p)
+end
+function MA.operate!(::typeof(multconstant), α, p::APL)
+    return mapcoefficients!(Base.Fix1(*, α), p)
 end
 
 MA.operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
