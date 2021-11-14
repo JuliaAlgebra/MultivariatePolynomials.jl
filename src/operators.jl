@@ -265,10 +265,10 @@ function _multconstant_to!(output, α, f, p)
     end
 end
 function MA.operate_to!(output, ::typeof(multconstant), p::APL, α)
-    return mapcoefficients_to!(output, Base.Fix2(*, α), p)
+    return _multconstant_to!(output, α, β -> β*α, p)
 end
 function MA.operate_to!(output, ::typeof(multconstant), α, p::APL)
-    return mapcoefficients_to!(output, Base.Fix1(*, α), p)
+    return _multconstant_to!(output, α, β -> α*β, p)
 end
 function MA.operate!(::typeof(multconstant), p::APL, α)
     return mapcoefficients!(Base.Fix2(*, α), p)
