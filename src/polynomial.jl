@@ -3,6 +3,7 @@ export coefficienttype, monomialtype
 export mindegree, maxdegree, extdegree, effective_variables
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
+export mapcoefficients, mapcoefficients!, mapcoefficients_to!
 
 LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int=2) = LinearAlgebra.norm(coefficients(p), r)
 
@@ -389,42 +390,39 @@ function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
     end
 end
 
-"""
-    mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
+# TODO deprecate
+mapcoefficientsnz(f::Function, p::APL) = mapcoefficients(f, p, nonzero = true)
+mapcoefficientsnz_to!(output::APL, f::Function, p::APL) = mapcoefficients_to!(output, f, p, nonzero = true)
 
-Returns the polynomial obtained by applying `f` to each coefficients where `f` is a function such that `f(x)` is nonzero if `x` is nonzero.
+"""
+    mapcoefficients(f::Function, p::AbstractPolynomialLike, nonzero = false)
+
+Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
+The function may return zero in which case the term is dropped.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+
+See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
 
 ### Examples
 
-Calling `mapcoefficientsnz(α -> α^2, 2x*y + 3x + 1)` should return `4x*y + 9x + 1`.
+Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
 """
-function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
-    # Invariant: p has only nonzero coefficient
-    # therefore f(α) will be nonzero for every coefficient α of p
-    # hence we can use Uniq
-    polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
+function mapcoefficients end
+function mapcoefficients(f::Function, t::AbstractTermLike; nonzero = false)
+    return term(f(coefficient(t)), monomial(t))
 end
-mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
 
 """
-    mapcoefficientsnz!(f::Function, p::AbstractPolynomialLike)
-
-Mutate `p` by replacing each coefficient `α` by `f(α)`.
-The function should never return zero for a nonzero `α`.
-The function returns `p`, which is identically equal to the first argument.
-"""
-function mapcoefficientsnz! end
-
-function mapcoefficientsnz_to! end
-
-"""
-    mapcoefficients!(f::Function, p::AbstractPolynomialLike)
+    mapcoefficients!(f::Function, p::AbstractPolynomialLike, nonzero = false)
 
 Mutate `p` by replacing each coefficient `α` by `f(α)`.
 The function may return zero in which case the term is dropped.
-The function returns `p`, which is identically equal to the first argument.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+The function returns `p`, which is identically equal to the second argument.
 
-See also [`mapcoefficients`](@ref).
+See also [`mapcoefficients`](@ref) and [`mapcoefficients_to!`](@ref).
 
 ### Examples
 
@@ -434,23 +432,16 @@ equal to `3x + 3`.
 function mapcoefficients! end
 
 """
-    mapcoefficients(f::Function, p::AbstractPolynomialLike)
+    mapcoefficients_to!(output::AbstractPolynomialLike, f::Function, p::AbstractPolynomialLike, nonzero = false)
 
-Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
+Mutate `output` by replacing each coefficient `α` of `p` by `f(α)`.
 The function may return zero in which case the term is dropped.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+The function returns `output`, which is identically equal to the first argument.
 
-See also [`mapcoefficients!`](@ref).
-
-### Examples
-
-Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
+See also [`mapcoefficients!`](@ref) and [`mapcoefficients`](@ref).
 """
-function mapcoefficients(f::Function, p::AbstractPolynomialLike)
-    q = MA.mutable_copy(p)
-    mapcoefficients!(q, f)
-    return q
-end
-
 function mapcoefficients_to! end
 
 """

@@ -70,8 +70,10 @@ MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate
 
 MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(multconstant, α, p)
 MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(multconstant, p, α)
+MA.operate!(op::typeof(/), p::APL, α) = mapcoefficients!(Base.Fix2(op, α), p)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.operate_to!(output, multconstant, α, p)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.operate_to!(output, multconstant, p, α)
+MA.operate_to!(output::APL, op::typeof(/), p::APL, α) = mapcoefficients_to!(output, Base.Fix2(op, α), p)
 
 function polynomial_merge!(
     n1::Int, n2::Int, get1::Function, get2::Function,
