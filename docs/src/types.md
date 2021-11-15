@@ -68,7 +68,9 @@ leadingmonomial
 removeleadingterm
 removemonomials
 monic
-mapcoefficientsnz
+mapcoefficients
+mapcoefficients!
+mapcoefficients_to!
 ```
 
 ## Rational Polynomial Function

@@ -1,5 +1,8 @@
+using Test
+using LinearAlgebra
 import MutableArithmetics
 const MA = MutableArithmetics
+using MultivariatePolynomials
 const MP = MultivariatePolynomials
 @testset "Polynomial" begin
     Mod.@polyvar x

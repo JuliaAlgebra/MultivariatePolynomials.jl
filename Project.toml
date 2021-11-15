@@ -11,9 +11,9 @@ MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 
 [compat]
 DataStructures = "0.17.7, 0.18"
-DynamicPolynomials = "0.3.16"
+DynamicPolynomials = "0.4"
 MutableArithmetics = "0.3"
-TypedPolynomials = "0.2.9"
+TypedPolynomials = "0.3"
 julia = "1"
 
 [extras]
