@@ -392,12 +392,6 @@ end
 
 # TODO deprecate
 mapcoefficientsnz(f::Function, p::APL) = mapcoefficients(f, p, nonzero = true)
-function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike) # TODO remove
-    # Invariant: p has only nonzero coefficient
-    # therefore f(α) will be nonzero for every coefficient α of p
-    # hence we can use Uniq
-    polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
-end
 mapcoefficientsnz_to!(output::APL, f::Function, p::APL) = mapcoefficients_to!(output, f, p, nonzero = true)
 
 """
@@ -415,6 +409,12 @@ See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
 Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
 """
 function mapcoefficients end
+function mapcoefficients(f::Function, p::AbstractPolynomialLike; nonzero = false) # TODO remove
+    # Invariant: p has only nonzero coefficient
+    # therefore f(α) will be nonzero for every coefficient α of p
+    # hence we can use Uniq
+    polynomial!(mapcoefficients.(f, terms(p)), nonzero ? SortedUniqState() : SortedState())
+end
 function mapcoefficients(f::Function, t::AbstractTermLike; nonzero = false)
     return term(f(coefficient(t)), monomial(t))
 end
