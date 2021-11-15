@@ -56,6 +56,13 @@ function _div(f::APL, g::APL)
     q = zero(rf)
     while !iszero(rf)
         ltf = leadingterm(rf)
+        if !divides(lt, ltf)
+            # In floating point arithmetics, it may happen
+            # that `rf` is not zero even if it cannot be reduced further.
+            # As `_div` assumes that `g` divides `f`, we know that
+            # `rf` is approximately zero anyway.
+            break
+        end
         qt = _div(ltf, lt)
         q = MA.add!!(q, qt)
         rf = MA.operate!!(removeleadingterm, rf)
