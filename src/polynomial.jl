@@ -392,6 +392,12 @@ end
 
 # TODO deprecate
 mapcoefficientsnz(f::Function, p::APL) = mapcoefficients(f, p, nonzero = true)
+function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike) # TODO remove
+    # Invariant: p has only nonzero coefficient
+    # therefore f(α) will be nonzero for every coefficient α of p
+    # hence we can use Uniq
+    polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
+end
 mapcoefficientsnz_to!(output::APL, f::Function, p::APL) = mapcoefficients_to!(output, f, p, nonzero = true)
 
 """
