@@ -45,9 +45,14 @@ Addison-Wesley Professional. Third edition.
 """
 struct SubresultantAlgorithm <: AbstractUnivariateGCDAlgorithm end
 
+_coefficient_gcd(α, β) = gcd(α, β)
+_coefficient_gcd(α::AbstractFloat, β) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::AbstractFloat, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+
 Base.lcm(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = p * div(q, gcd(p, q, algo))
-Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(α, content(p, algo))
-Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = gcd(content(p, algo), α)
+Base.gcd(α, p::APL, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = _coefficient_gcd(α, content(p, algo))
+Base.gcd(p::APL, α, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) = _coefficient_gcd(content(p, algo), α)
 
 #function MA.promote_operation(::typeof(gcd), P::Type{<:Number}, Q::Type{<:Number})
 #    return typeof(gcd(one(P), one(Q)))
@@ -524,6 +529,9 @@ function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
         coefficients(poly),
         init = zero(P),
     )::P
+end
+function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T<:AbstractFloat}
+    return one(T)
 end
 
 """

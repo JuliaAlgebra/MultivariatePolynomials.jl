@@ -139,15 +139,29 @@ function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
 end
 
 function _mult_test(a::Number, b)
-    return @test iszero(maxdegree(b))
+    @test iszero(maxdegree(b))
+end
+function _mult_test(a::Number, b::Number)
+    @test iszero(rem(a, b))
+    @test iszero(rem(b, a))
 end
 function _mult_test(a, b)
     @test iszero(rem(a, b))
     @test iszero(rem(b, a))
 end
 function mult_test(expected, a, b, algo)
-    g = @inferred gcd(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo)
     @test g isa promote_type(polynomialtype(a), polynomialtype(b))
+    _mult_test(expected, g)
+end
+function mult_test(expected, a::Number, b, algo)
+    g = @inferred MP._simplifier(a, b, algo)
+    @test g isa promote_type(typeof(a), MP.coefficienttype(b))
+    _mult_test(expected, g)
+end
+function mult_test(expected, a, b::Number, algo)
+    g = @inferred MP._simplifier(a, b, algo)
+    @test g isa promote_type(MP.coefficienttype(a), typeof(b))
     _mult_test(expected, g)
 end
 function sym_test(a, b, g, algo)
@@ -164,6 +178,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     Mod.@polyvar x y z
     o = one(T)
     zr = zero(T)
+    sym_test(o, o * x, o, algo)
     sym_test(o * x, zr * x, o * x, algo)
     sym_test(o * x + o, zr * x, o * x + o, algo)
     # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
@@ -224,7 +239,8 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     end
     sym_test(b, c, x + y + z, algo)
     sym_test(c, a, z^3 + y^2 + x, algo)
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))
+    if (T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))) &&
+        (T != Float64 || (algo != GeneralizedEuclideanAlgorithm(false, true) && algo != GeneralizedEuclideanAlgorithm(true, true)))
         triple_test(a, b, c, algo)
     end
 end
@@ -312,7 +328,7 @@ end
             univariate_gcd_test(GeneralizedEuclideanAlgorithm(primitive_rem, skip_last))
         end
     end
-    @testset "Multivariate gcd $T" for T in [Int, BigInt, Rational{BigInt}]
+    @testset "Multivariate gcd $T" for T in [Int, BigInt, Rational{BigInt}, Float64]
         if T != Rational{BigInt} || VERSION >= v"1.6"
             # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
             @testset "primitive_rem=$primitive_rem" for primitive_rem in [false, true]
