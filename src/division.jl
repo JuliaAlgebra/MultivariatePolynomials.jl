@@ -9,7 +9,7 @@ end
 
 function Base.div(p::APL, α::Number, args...)
     return mapcoefficients(p) do term
-        div(p, α, args...)
+        div(term, α, args...)
     end
 end
 
