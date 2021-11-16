@@ -409,7 +409,7 @@ See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
 Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
 """
 function mapcoefficients end
-function mapcoefficients(f::Function, p::AbstractPolynomialLike; nonzero = false) # TODO remove
+function mapcoefficients(f::Function, p::AbstractPolynomialLike; nonzero = false) # Not used by either TypedPolynomials or DynamicPolynomials but used by CustomPoly in tests. FIXME Remove in a breaking release
     # Invariant: p has only nonzero coefficient
     # therefore f(α) will be nonzero for every coefficient α of p
     # hence we can use Uniq
