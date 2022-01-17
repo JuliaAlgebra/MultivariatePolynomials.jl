@@ -196,6 +196,12 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
         sym_test(p1, p2, x, algo)
     end
 
+    @testset "Issue #104" begin
+        p1 = o - o * x
+        p2 = p1 * (o * y^2 + o)
+        sym_test(p1, p2, p1, algo)
+    end
+
     p1 = o*z - z
     p2 = z
     @test gcd(p1, p2, algo) == z

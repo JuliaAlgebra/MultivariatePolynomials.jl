@@ -23,9 +23,21 @@ function mapexponents_test()
     b = x * y
     c = MP.mapexponents!(+, a, b)
     @test variables(c) == variables(b)
+    @test degree(c, x) == 3
+    @test degree(c, y) == 1
     a = x^3
     d = MP.mapexponents_to!(a, -, b, b)
     @test variables(d) == variables(b)
+    @test degree(d, x) == 0
+    @test degree(d, y) == 0
+    # See https://github.com/JuliaAlgebra/DynamicPolynomials.jl/pull/105
+    e = x^1
+    f = x * y^2
+    g = MP.mapexponents!(div, e, f)
+    @test g === e
+    @test variables(e) == variables(f)
+    @test degree(e, x) == 1
+    @test degree(e, y) == 0
 end
 
 @testset "Monomial" begin
