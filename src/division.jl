@@ -35,15 +35,19 @@ struct Field end
 struct UniqueFactorizationDomain end
 const UFD = UniqueFactorizationDomain
 
-algebraic_structure(::Type{<:Union{Rational, AbstractFloat}}, ::Type{<:Union{Rational, AbstractFloat}}) = Field()
-algebraic_structure(::Type{<:Union{Rational, AbstractFloat}}, ::Type) = Field()
-algebraic_structure(::Type, ::Type{<:Union{Rational, AbstractFloat}}) = Field()
-algebraic_structure(::Type, ::Type) = UFD()
+algebraic_structure(::Type{<:Integer}) = UFD()
+algebraic_structure(::Type{<:AbstractPolynomialLike}) = UFD()
+# `Rational`, `AbstractFloat`, JuMP expressions, etc... are fields
+algebraic_structure(::Type) = Field()
+_field_absorb(::UFD, ::UFD) = UFD()
+_field_absorb(::UFD, ::Field) = Field()
+_field_absorb(::Field, ::UFD) = Field()
+_field_absorb(::Field, ::Field) = Field()
 
 # _div(a, b) assumes that b divides a
 _div(::Field, a, b) = a / b
 _div(::UFD, a, b) = div(a, b)
-_div(a, b) = _div(algebraic_structure(typeof(a), typeof(b)), a, b)
+_div(a, b) = _div(algebraic_structure(promote_type(typeof(a), typeof(b))), a, b)
 _div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m2)
 function _div(t::AbstractTerm, m::AbstractMonomial)
     term(coefficient(t), _div(monomial(t), m))
@@ -77,7 +81,7 @@ Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g;
 Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
 
 function pseudo_divrem(f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_divrem(algebraic_structure(S, T), f, g, algo)
+    return _pseudo_divrem(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
 end
 
 function _pseudo_divrem(::Field, f::APL, g::APL, algo)
@@ -102,7 +106,7 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
 end
 
 function pseudo_rem(f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_rem(algebraic_structure(S, T), f, g, algo)
+    return _pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
 end
 
 function _pseudo_rem(::Field, f::APL, g::APL, algo)
@@ -137,7 +141,7 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
 ) where {T,S,P<:APL{T},Q<:APL{S}}
-    return _promote_operation(algebraic_structure(T, S), pseudo_rem, P, Q)
+    return _promote_operation(algebraic_structure(MA.promote_operation(-, S, T)), pseudo_rem, P, Q)
 end
 function _promote_operation(
     ::Field,
