@@ -69,6 +69,7 @@ include("monomial.jl")
 include("term.jl")
 include("polynomial.jl")
 include("monovec.jl")
+include("ordering.jl")
 
 include("rational.jl")
 

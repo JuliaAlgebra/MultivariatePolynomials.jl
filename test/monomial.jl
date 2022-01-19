@@ -38,6 +38,7 @@ end
     @test one(x^2) isa AbstractMonomial
     @test (@inferred one(typeof(x^2))) == 1
     @test one(typeof(x^2)) isa AbstractMonomial
+    @test ordering(x) === GradedLex()
 
     Mod.@polyvar y[1:7]
     m = y[1] * y[3] * y[5] * y[7]

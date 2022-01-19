@@ -59,6 +59,7 @@ nterms
 coefficients
 coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike, vars)
 monomials
+ordering
 mindegree
 maxdegree
 extdegree

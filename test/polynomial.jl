@@ -144,6 +144,7 @@ const MP = MultivariatePolynomials
         f = 4*x*y^2*z + 4*z^2 - 5*x^3 + 7*x^2*z^2
         @test coefficients(f) == [7, 4, -5, 4]
         @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
+        @test ordering(f) === GradedLex()
     end
 
     @testset "Convertion" begin
