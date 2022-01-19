@@ -462,7 +462,7 @@ If the coefficients are not `AbstractFloat`, this
 Addison-Wesley Professional. Third edition.
 """
 function univariate_gcd(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
-    return univariate_gcd(algebraic_structure(S, T), p1, p2, algo)
+    return univariate_gcd(_field_absorb(algebraic_structure(S), algebraic_structure(T)), p1, p2, algo)
 end
 function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     f1, g1 = primitive_part_content(p1, algo)
@@ -478,7 +478,7 @@ function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAl
 end
 
 function univariate_gcdx(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
-    return univariate_gcdx(algebraic_structure(S, T), p1, p2, algo)
+    return univariate_gcdx(_field_absorb(algebraic_structure(S), algebraic_structure(T)), p1, p2, algo)
 end
 function univariate_gcdx(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     f1, g1 = primitive_part_content(p1, algo)

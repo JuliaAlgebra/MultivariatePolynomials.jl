@@ -39,6 +39,10 @@ algebraic_structure(::Type{<:Integer}) = UFD()
 algebraic_structure(::Type{<:AbstractPolynomialLike}) = UFD()
 # `Rational`, `AbstractFloat`, JuMP expressions, etc... are fields
 algebraic_structure(::Type) = Field()
+_field_absorb(::UFD, ::UFD) = UFD()
+_field_absorb(::UFD, ::Field) = Field()
+_field_absorb(::Field, ::UFD) = Field()
+_field_absorb(::Field, ::Field) = Field()
 
 # _div(a, b) assumes that b divides a
 _div(::Field, a, b) = a / b
