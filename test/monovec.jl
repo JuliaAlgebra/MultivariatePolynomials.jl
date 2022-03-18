@@ -54,7 +54,7 @@
 
     # See https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/111
     @testset "Indexing with vector of boolean" begin
-        vars = @polyvar x y
+        vars = Mod.@polyvar x y
         X = monomials(vars, 2)
         @test X[[true, false, true]] == monovec([x^2, y^2])
         X = monomials(vars, 0:1)
