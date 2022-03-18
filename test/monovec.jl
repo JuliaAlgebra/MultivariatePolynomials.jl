@@ -51,4 +51,14 @@
     @test monovec([x, x^2]) != monovec([x*y, x^2*y])
     @test monomials(x, 1:3) == monovec([x^3, x, x^2])
     @test monomials((x, y), 2) != monomials((x, y), 1)
+
+    # See https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/111
+    @testset "Indexing with vector of boolean" begin
+        vars = Mod.@polyvar x y
+        X = monomials(vars, 2)
+        @test X[[true, false, true]] == monovec([x^2, y^2])
+        X = monomials(vars, 0:1)
+        @test filter(mono -> degree(mono) == 1, X) == monovec([x, y])
+        @test filter(mono -> degree(mono) == 0, X) == monovec([x^0])
+    end
 end
