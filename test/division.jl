@@ -243,6 +243,9 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
         (T != Float64 || (algo != GeneralizedEuclideanAlgorithm(false, true) && algo != GeneralizedEuclideanAlgorithm(true, true)))
         triple_test(a, b, c, algo)
     end
+
+    # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/195
+    sym_test(x*(y^2) + 2x*y*z + x*(z^2) + x*y + x*z, y + z, y + z, algo)
 end
 
 function lcm_test()
@@ -302,6 +305,7 @@ function extracted_variable_test()
     _test(x^4 + y^5 + z^6, x^3 + y^2 + z, z, z)
     _test(x^6 + y^5 + z^4, x + y^2 + z^3, x, x)
     _test(x^6 + y + z^4 - y, x + y + z^3 - y, x, x)
+    _test(x*(y^2) + 2x*y*z + x*(z^2) + x*y + x*z, y + z, y, y)
 end
 
 @testset "Division" begin

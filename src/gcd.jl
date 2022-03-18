@@ -232,8 +232,8 @@ function deflated_gcd(p1::APL{T}, p2::APL{S}, algo) where {T, S}
             return gcd(g, p2, algo)
         else
             if num_common > 1
-                @assert i1 == i2
                 v1 = variables(p1)[i1]
+                @assert v1 == variables(p2)[i2]
                 return multivariate_gcd(p1, p2, v1, algo)
             else
                 return univariate_gcd(p1, p2, algo)
