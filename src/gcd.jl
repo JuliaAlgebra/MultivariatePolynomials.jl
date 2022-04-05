@@ -508,6 +508,17 @@ _simplifier(a, b, algo) = _gcd(a, b, algo)
 # which makes the size of the `BigInt`s grow significantly which slows things down.
 _simplifier(a::Rational, b::Rational, algo) = gcd(a.num, b.num) // gcd(a.den, b.den)
 
+function termwise_content(p::APL)
+    ts = terms(p)
+    length(ts) == 1 && return first(ts)
+    g = gcd(ts[1], ts[2])
+    isone(g) || for i in 3:length(ts)
+        g = gcd(g, ts[i])
+        isone(g) && break
+    end
+    return g
+end
+
 """
     content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
@@ -524,11 +535,27 @@ function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
     P = MA.promote_operation(gcd, T, T)
     # This is tricky to infer a `content` calls `gcd` which calls `content`, etc...
     # To help Julia break the loop, we annotate the result here.
-    return reduce(
-        (a, b) -> _simplifier(a, b, algo),
-        coefficients(poly),
-        init = zero(P),
-    )::P
+    coefs = coefficients(poly)
+    length(coefs) == 0 && return zero(T)
+    length(coefs) == 1 && return first(coefs)
+    if T <: APL
+        for i in eachindex(coefs)
+            if nterms(coefs[i]) == 1
+                g = gcd(termwise_content(coefs[1]), termwise_content(coefs[2]))
+                isone(g) || for i in 3:length(coefs)
+                    g = gcd(g, termwise_content(coefs[i]))
+                    isone(g) && break
+                end
+                return convert(P, g)
+            end
+        end
+    end
+    g = gcd(coefs[1], coefs[2])::P
+    isone(g) || for i in 3:length(coefs)
+        g = gcd(g, coefs[i])::P
+        isone(g) && break
+    end
+    return g::P
 end
 function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T<:AbstractFloat}
     return one(T)
