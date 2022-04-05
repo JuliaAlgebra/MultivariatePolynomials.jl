@@ -66,8 +66,8 @@ include("zip.jl")
 
 include("variable.jl")
 include("monomial.jl")
-include("term.jl")
-include("polynomial.jl")
+include("abstract_term.jl")
+include("abstract_polynomial.jl")
 include("monovec.jl")
 include("ordering.jl")
 
@@ -87,5 +87,9 @@ include("differentiation.jl")
 include("division.jl")
 include("gcd.jl")
 include("det.jl")
+
+include("term.jl")
+include("sequences.jl")
+include("polynomial.jl")
 
 end # module

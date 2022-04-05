@@ -23,6 +23,7 @@ When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 """
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
+term(coef, mono::AbstractMonomialLike) = termtype(mono, typeof(coef))(coef, mono)
 term(p::APL) = convert(termtype(p), p)
 
 """
@@ -42,12 +43,13 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
-termtype(::Union{T, Type{T}}) where T <: AbstractTerm = T
-termtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(first ∘ terms, P)
-termtype(p::Union{APL, Type{<:APL}}, ::Type{T}) where T = termtype(termtype(p), T)
-termtype(m::Union{M, Type{M}}) where M<:AbstractMonomialLike = termtype(m, Int)
-termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}) = termtype(monomialtype(v))
-termtype(v::Union{AbstractVariable, Type{<:AbstractVariable}}, ::Type{T}) where T = termtype(monomialtype(v), T)
+termtype(::Type{T}) where T <: AbstractTerm = T
+termtype(p::Type{<:APL}, ::Type{T}) where T = termtype(termtype(p), T)
+termtype(::Type{M}) where M<:AbstractMonomialLike = termtype(M, Int)
+termtype(v::Type{<:AbstractVariable}) = termtype(monomialtype(v))
+termtype(v::Type{<:AbstractVariable}, ::Type{T}) where T = termtype(monomialtype(v), T)
+termtype(p::APL, ::Type{T}) where {T} = termtype(typeof(p), T)
+termtype(p::APL) where {T} = termtype(typeof(p))
 termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = termtype(PT)
 termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = termtype(PT, T)
 
@@ -106,11 +108,11 @@ function coefficient(f::APL, m::AbstractMonomialLike, vars)
 end
 
 """
-    coefficient(p::AbstractPolynomialLike)
+    coefficienttype(p::AbstractPolynomialLike)
 
 Returns the coefficient type of `p`.
 
-    coefficient(::Type{PT}) where PT
+    coefficienttype(::Type{PT}) where PT
 
 Returns the coefficient type of a polynomial of type `PT`.
 
