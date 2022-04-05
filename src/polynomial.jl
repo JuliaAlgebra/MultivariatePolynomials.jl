@@ -141,7 +141,7 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Po
     end
     set(i, t::TT) = p.terms[i] = t
     push(t::TT) = push!(p.terms, t)
-    compare_monomials(t::TT, j::Int) = grlex(monomial(q.terms[j]), monomial(t))
+    compare_monomials(t::TT, j::Int) = -grlex(monomial(q.terms[j]), monomial(t))
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
     combine(t::TT, j::Int) = TT(MA.operate!!(op, coefficient(t), coefficient(q.terms[j])), monomial(t))
@@ -158,7 +158,7 @@ end
 function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polynomial)
     empty!(output.terms)
     mul_to_terms!(output.terms, p, q)
-    sort!(output.terms, lt=(>))
+    sort!(output.terms, lt=(<))
     uniqterms!(output.terms)
     return output
 end
@@ -182,6 +182,6 @@ function MA.operate!(::typeof(one), p::Polynomial{T}) where T
 end
 
 function MA.operate!(::typeof(removeleadingterm), p::Polynomial)
-    deleteat!(p.terms, 1)
+    pop!(p.terms)
     return p
 end

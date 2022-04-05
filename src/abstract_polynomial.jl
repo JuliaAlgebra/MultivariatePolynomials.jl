@@ -85,7 +85,7 @@ function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
 end
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState())
-    polynomial!(sort!(ts, lt=(>)), sortstate(s))
+    polynomial!(sort!(ts, lt=(<)), sortstate(s))
 end
 
 _collect(v::Vector) = v
@@ -305,7 +305,7 @@ function leadingterm(p::AbstractPolynomialLike)
     if iszero(p)
         zeroterm(p)
     else
-        first(terms(p))
+        last(terms(p))
     end
 end
 leadingterm(t::AbstractTermLike) = term(t)
@@ -328,7 +328,7 @@ end
 """
     leadingmonomial(p::AbstractPolynomialLike)
 
-Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `first(monomials(p))`.
+Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `last(monomials(p))`.
 
 ### Examples
 
@@ -352,7 +352,7 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 """
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
-    polynomial(terms(p)[2:end], SortedUniqState())
+    polynomial(terms(p)[1:(end-1)], SortedUniqState())
 end
 
 #$(SIGNATURES)
