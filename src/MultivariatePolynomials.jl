@@ -90,6 +90,7 @@ include("det.jl")
 
 include("term.jl")
 include("sequences.jl")
+include("lazy_iterators.jl")
 include("polynomial.jl")
 
 end # module

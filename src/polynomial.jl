@@ -6,6 +6,13 @@ struct Polynomial{CoeffType,T<:AbstractTerm{CoeffType},V<:AbstractVector{T}} <: 
     Polynomial{C, T, V}(terms::AbstractVector{T}) where {C, T, V} = new{C, T, V}(terms)
 end
 
+function coefficients(p::Polynomial)
+    return LazyMap{coefficienttype(p)}(coefficient, terms(p))
+end
+function monomials(p::Polynomial)
+    return LazyMap{monomialtype(p)}(monomial, terms(p))
+end
+
 const VectorPolynomial{C,T} = Polynomial{C,T,Vector{T}}
 
 termtype(::Type{<:Polynomial{C,T}}) where {C,T} = T
@@ -121,7 +128,7 @@ MA.mutability(::Type{<:VectorPolynomial}) = MA.IsMutable()
 
 # Terms are not mutable under the MutableArithmetics API
 function MA.mutable_copy(p::VectorPolynomial{C,TT}) where {C,TT}
-    return VectorPolynomial{C,TT}([TT(MA.copy_if_mutable(coefficien(term)), monomial(term)) for term in terms(p)])
+    return VectorPolynomial{C,TT}([TT(MA.copy_if_mutable(coefficient(term)), monomial(term)) for term in terms(p)])
 end
 Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 

@@ -9,6 +9,9 @@ coefficient(t::Term) = t.coefficient
 monomial(t::Term) = t.monomial
 termtype(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
 monomialtype(::Type{<:Term{C,M}}) where {C,M} = M
+function Base.copy(t::Term)
+    return Term(copy(t.coefficient), copy(t.monomial))
+end
 
 (t::Term)(s...) = substitute(Eval(), t, s)
 

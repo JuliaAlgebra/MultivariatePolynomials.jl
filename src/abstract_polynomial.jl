@@ -52,6 +52,12 @@ function polynomial(m::AbstractMonomialLike, ::Type{T}) where T
     t = convert(termtype(m, T), m)
     return polynomial(t, T)
 end
+function polynomial(t::AbstractTermLike, ::Type{T}) where T
+    return polynomial(convert(termtype(t, T), t), T)
+end
+function polynomial(t::AbstractTermLike{T}, ::Type{T}) where T
+    return polynomial(terms(t))
+end
 polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
 polynomial(p::APL{T}) where T = polynomial(p, T)
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
