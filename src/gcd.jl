@@ -338,7 +338,7 @@ function multivariate_gcd(p1::APL, p2::APL, var, algo)
 end
 
 function isolate_variable(poly::APL, var::AbstractVariable)
-    T = typeof(substitute(Subs(), zeroterm(poly), (var,) => (1,)))
+    T = termtype(poly)#typeof(substitute(Subs(), zeroterm(poly), (var,) => (1,)))
     dict = Dict{Int,Vector{T}}()
     for t in terms(poly)
         d = degree(t, var)

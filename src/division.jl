@@ -56,6 +56,7 @@ function _div(t1::AbstractTermLike, t2::AbstractTermLike)
     term(_div(coefficient(t1), coefficient(t2)), _div(monomial(t1), monomial(t2)))
 end
 function _div(f::APL, g::APL)
+    isone(g) && return f
     lt = leadingterm(g)
     rf = MA.copy_if_mutable(f)
     rg = removeleadingterm(g)
