@@ -132,6 +132,9 @@ end
 function Base.gcd(t1::AbstractTermLike{T}, t2::AbstractTermLike{S}, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) where {T, S}
     return term(gcd(coefficient(t1), coefficient(t2)), gcd(monomial(t1), monomial(t2)))
 end
+function Base.gcd(t1::AbstractTermLike{T}, t2::AbstractTermLike{S}, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) where {T, S}
+    return term(_coefficient_gcd(coefficient(t1), coefficient(t2)), gcd(monomial(t1), monomial(t2)))
+end
 
 # Inspired from to `AbstractAlgebra.deflation`
 function deflation(p::AbstractPolynomialLike)
@@ -556,7 +559,7 @@ function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
     end
     g = gcd(coefs[1], coefs[2])::P
     isone(g) || for i in 3:length(coefs)
-        g = gcd(g, coefs[i])::P
+        g = _simplifier(g, coefs[i], algo)::P
         isone(g) && break
     end
     return g::P
