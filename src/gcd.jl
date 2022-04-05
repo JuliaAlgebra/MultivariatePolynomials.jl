@@ -129,6 +129,10 @@ function Base.gcd(p1::APL{T}, p2::APL{S}, algo::AbstractUnivariateGCDAlgorithm=G
     return inflate(g, shift, defl)::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 
+function Base.gcd(t1::AbstractTermLike{T}, t2::AbstractTermLike{S}, algo::AbstractUnivariateGCDAlgorithm=GeneralizedEuclideanAlgorithm()) where {T, S}
+    return term(gcd(coefficient(t1), coefficient(t2)), gcd(monomial(t1), monomial(t2)))
+end
+
 # Inspired from to `AbstractAlgebra.deflation`
 function deflation(p::AbstractPolynomialLike)
     if iszero(p)
