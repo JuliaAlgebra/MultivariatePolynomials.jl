@@ -2,6 +2,9 @@ export variable, convert_to_constant
 
 function convertconstant end
 Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
+function convertconstant(::Type{TT}, α) where {TT<:AbstractTerm}
+    return term(α, constantmonomial(TT))
+end
 function Base.convert(::Type{P}, p::P) where {T, P<:AbstractPolynomial{T}}
     return p
 end
@@ -37,10 +40,10 @@ function Base.convert(::Type{M}, t::AbstractTerm) where M <: AbstractMonomialLik
     end
 end
 function Base.convert(TT::Type{<:AbstractTerm{T}}, m::AbstractMonomialLike) where T
-    return convert(TT, one(T) * m)
+    return convert(TT, term(one(T), convert(monomialtype(TT), m)))
 end
 function Base.convert(TT::Type{<:AbstractTerm{T}}, t::AbstractTerm) where T
-    return convert(TT, convert(T, coefficient(t)) * monomial(t))
+    return convert(TT, term(convert(T, coefficient(t)), convert(monomialtype(TT), monomial(t))))
 end
 
 # Base.convert(::Type{T}, t::T) where {T <: AbstractTerm} is ambiguous with above method.

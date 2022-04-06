@@ -48,6 +48,16 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
 polynomial(p::AbstractPolynomial) = p
+function polynomial(m::AbstractMonomialLike, ::Type{T}) where T
+    t = convert(termtype(m, T), m)
+    return polynomial(t, T)
+end
+function polynomial(t::AbstractTermLike, ::Type{T}) where T
+    return polynomial(convert(termtype(t, T), t), T)
+end
+function polynomial(t::AbstractTermLike{T}, ::Type{T}) where T
+    return polynomial(terms(t))
+end
 polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
 polynomial(p::APL{T}) where T = polynomial(p, T)
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
@@ -67,7 +77,9 @@ end
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 
-polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
+function polynomial!(ts::AbstractVector{TT}, s::SortedUniqState) where {TT<:AbstractTerm}
+    return polynomialtype(TT)(ts)
+end
 
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
@@ -105,7 +117,7 @@ polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialt
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
-function uniqterms!(ts::AbstractVector{<: AbstractTerm})
+function uniqterms!(ts::AbstractVector{<:AbstractTerm})
     i = firstindex(ts)
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
@@ -341,6 +353,9 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
     polynomial(terms(p)[2:end], SortedUniqState())
+end
+function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
+    return PT
 end
 
 #$(SIGNATURES)
