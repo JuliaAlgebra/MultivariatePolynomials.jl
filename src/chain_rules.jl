@@ -1,6 +1,7 @@
 import ChainRulesCore
 
 ChainRulesCore.@scalar_rule +(x::APL, y::APL) (true, true)
+ChainRulesCore.@scalar_rule -(x::APL, y::APL) (true, -1)
 function ChainRulesCore.frule((_, Δp, _), ::typeof(differentiate), p, x)
     return differentiate(p, x), differentiate(Δp, x)
 end
