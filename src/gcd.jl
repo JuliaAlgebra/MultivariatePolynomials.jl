@@ -512,6 +512,7 @@ _simplifier(a, b, algo) = _gcd(a, b, algo)
 # which makes the size of the `BigInt`s grow significantly which slows things down.
 _simplifier(a::Rational, b::Rational, algo) = gcd(a.num, b.num) // gcd(a.den, b.den)
 
+# Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
 function termwise_content(p::APL)
     ts = terms(p)
     length(ts) == 1 && return first(ts)
@@ -542,6 +543,7 @@ function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
     coefs = coefficients(poly)
     length(coefs) == 0 && return zero(T)
     length(coefs) == 1 && return first(coefs)
+    # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
     if T <: APL
         for i in eachindex(coefs)
             if nterms(coefs[i]) == 1
