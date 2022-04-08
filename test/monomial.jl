@@ -41,10 +41,11 @@ end
     @test ordering(x) === GradedLex()
 
     Mod.@polyvar y[1:7]
-    m = y[1] * y[3] * y[5] * y[7]
-    @test issorted(variables(y[2] * m), rev=true)
-    @test issorted(variables(m * y[4]), rev=true)
-    @test issorted(variables(y[6] * m), rev=true)
+    mono = y[1] * y[3] * y[5] * y[7]
+    alloc_test(() -> convert(typeof(mono), mono), 0)
+    @test issorted(variables(y[2] * mono), rev=true)
+    @test issorted(variables(mono * y[4]), rev=true)
+    @test issorted(variables(y[6] * mono), rev=true)
 
     @test nvariables(monovec([x^2, prod(y[2:4])])) == 4
 

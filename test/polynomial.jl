@@ -158,6 +158,7 @@ const MP = MultivariatePolynomials
         @test convert_to_constant(q) == z
         q = polynomial([a, z], [x, 1])
         @test_throws InexactError convert_to_constant(q)
+        alloc_test(() -> convert(typeof(p), p), 0)
     end
 
     @testset "Vector" begin

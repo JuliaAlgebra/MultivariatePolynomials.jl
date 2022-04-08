@@ -81,5 +81,3 @@ Base.convert(::Type{T}, p::APL) where T<:Number = convert_to_constant(T, p)
 function convert_to_constant(p::APL{S}) where {S}
     return convert_to_constant(S, p)
 end
-
-Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
