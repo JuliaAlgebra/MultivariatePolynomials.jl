@@ -3,8 +3,8 @@ export subs
 
 # TODO Vararg{<:...} -> Vararg{...}
 const Substitution = Pair{<:AbstractVariable}
-const MultiSubstitution{N} = Pair{Tuple{Vararg{AbstractVariable, N}}, Tuple{Vararg{Any, N}}}
-const MultiVectorSubstitution = Pair{Tuple{Vararg{AbstractVariable}}, <:AbstractVector}
+const MultiSubstitution{N} = Pair{<:Tuple{Vararg{AbstractVariable, N}}, <:Tuple{Vararg{Any, N}}}
+const MultiVectorSubstitution = Pair{<:Tuple{Vararg{AbstractVariable}}, <:AbstractVector}
 
 # When the variables are promoted to be in the same vector they could be promoted into a monomial
 const VectorMultiSubstitution = Pair{<:AbstractVector{<:AbstractMonomialLike}, <:Tuple}
