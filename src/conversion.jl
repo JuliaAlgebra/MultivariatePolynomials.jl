@@ -2,8 +2,8 @@ export variable, convert_to_constant
 
 function convertconstant end
 Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
-function convertconstant(::Type{TT}, α) where {TT<:AbstractTerm}
-    return term(α, constantmonomial(TT))
+function convertconstant(::Type{TT}, α) where {T,TT<:AbstractTerm{T}}
+    return term(convert(T, α), constantmonomial(TT))
 end
 function Base.convert(::Type{P}, p::P) where {T, P<:AbstractPolynomial{T}}
     return p
