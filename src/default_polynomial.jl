@@ -17,18 +17,10 @@ termtype(::Type{<:Polynomial{C,T}}) where {C,T} = T
 terms(p::Polynomial) = p.terms
 constantmonomial(::Union{Polynomial{C,TT},Type{Polynomial{C,TT}}}) where {C,TT} = constantmonomial(TT)
 function convertconstant(PT::Type{Polynomial{C,TT,Vector{TT}}}, α) where {C,TT}
-    t = term(convert(C, α), constantmonomial(TT))
-    return PT([t])
+    return convert(PT, term(convert(C, α), constantmonomial(TT)))
 end
-function Base.convert(PT::Type{Polynomial{C,TT,Vector{TT}}}, t::AbstractTermLike) where {C,TT}
-    if iszero(t)
-        return zero(PT)
-    else
-        return PT(TT[t])
-    end
-end
-function Base.convert(PT::Type{Polynomial{C,TT,V}}, p::Polynomial) where {C,TT,V}
-    return PT(convert(V, p.terms))
+function Base.convert(PT::Type{Polynomial{C,TT,V}}, p::AbstractPolynomialLike) where {C,TT,V}
+    return PT(convert(V, terms(p)))
 end
 function Base.convert(::Type{Polynomial{C}}, p::AbstractPolynomialLike) where {C}
     TT = termtype(p, C)
