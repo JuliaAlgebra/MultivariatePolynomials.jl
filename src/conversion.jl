@@ -5,6 +5,9 @@ Base.convert(::Type{P}, α) where P<:APL = convertconstant(P, α)
 function convertconstant(::Type{TT}, α) where {T,TT<:AbstractTerm{T}}
     return term(convert(T, α), constantmonomial(TT))
 end
+function convertconstant(::Type{PT}, α) where {PT<:AbstractPolynomial}
+    return convert(PT, convert(termtype(PT), α))
+end
 function Base.convert(::Type{P}, p::APL) where {T, P<:AbstractPolynomial{T}}
     error("`convert` not implemented for $P")
 end

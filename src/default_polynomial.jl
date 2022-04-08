@@ -16,9 +16,6 @@ const VectorPolynomial{C,T} = Polynomial{C,T,Vector{T}}
 termtype(::Type{<:Polynomial{C,T}}) where {C,T} = T
 terms(p::Polynomial) = p.terms
 constantmonomial(::Union{Polynomial{C,TT},Type{Polynomial{C,TT}}}) where {C,TT} = constantmonomial(TT)
-function convertconstant(PT::Type{Polynomial{C,TT,Vector{TT}}}, α) where {C,TT}
-    return convert(PT, term(convert(C, α), constantmonomial(TT)))
-end
 function Base.convert(PT::Type{Polynomial{C,TT,V}}, p::AbstractPolynomialLike) where {C,TT,V}
     return PT(convert(V, terms(p)))
 end
