@@ -10,6 +10,8 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
     end
     @testset "PolyVar" begin
         Mod.@polyvar x
+        alloc_test(() -> convert(typeof(x), x), 0)
+        alloc_test(() -> convert(variable_union_type(x), x), 0)
         @test 1 != x
         @test x != 0
         @test copy(x) == x

@@ -17,6 +17,9 @@ For `DynamicPolynomials`, all variables have the same type `PolyVar{C}` where
 `variable_union_type` should return `PolyVar{C}`.
 """
 function variable_union_type end
+variable_union_type(::Type{MT}) where {MT<:AbstractMonomialLike} = error("`variable_union_type` not implemented for $MT.")
+variable_union_type(::Type{PT}) where {PT<:APL} = variable_union_type(monomialtype(PT))
+variable_union_type(p::APL) = variable_union_type(typeof(p))
 
 """
     variable(p::AbstractPolynomialLike)
@@ -67,7 +70,8 @@ results in `TypedPolynomials.Variable{:x}`.
 """
 function similarvariable end
 
-similarvariable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s::Symbol) = similarvariable(p, Val{s})
+similarvariable(v::Union{AbstractVariable, Type{<:AbstractVariable}}, s::Symbol) = similarvariable(v, Val{s})
+similarvariable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s) = similarvariable(variable_union_type(p), s)
 
 """
     @similarvariable(p::AbstractPolynomialLike, variable)

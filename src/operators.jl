@@ -240,6 +240,7 @@ function MA.operate!(::typeof(minusconstant), p::APL, α)
 end
 
 # Coefficients and variables commute
+multconstant(α, v::AbstractMonomial) = termtype(v, typeof(α))(α, v)
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
 multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 

@@ -47,9 +47,10 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
-polynomial(p::AbstractPolynomial) = p
-polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
-polynomial(p::APL{T}) where T = polynomial(p, T)
+function polynomial end
+function polynomial(p::APL, args::Vararg{Type,N}) where {N}
+    return polynomial!(copy(p), args...)
+end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
     LinearAlgebra.dot(mv, Q * mv)
 end
@@ -65,9 +66,16 @@ function polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyStat
 end
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+
+function polynomial!(p::APL, args::Vararg{Any,N}) where N
+    return convert(polynomialtype(p, args...), p)
+end
+
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 
-polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
+function polynomial!(ts::AbstractVector{TT}, s::SortedUniqState) where {TT<:AbstractTerm}
+    return polynomialtype(TT)(ts)
+end
 
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
@@ -97,7 +105,9 @@ Returns the type that `p` would have if it was converted into a polynomial of co
 
 Returns the same as `polynomialtype(::PT, ::Type{T})`.
 """
-polynomialtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(polynomial, P)
+function polynomialtype end
+polynomialtype(::Type{T}) where T <: AbstractTerm = error("`polynomialtype` not implemented for $T")
+polynomialtype(::Union{P, Type{P}}) where P <: APL = polynomialtype(termtype(P))
 polynomialtype(::Union{P, Type{P}}) where P <: AbstractPolynomial = P
 polynomialtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = polynomialtype(termtype(M))
 polynomialtype(::Union{M, Type{M}}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
@@ -105,7 +115,7 @@ polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialt
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
-function uniqterms!(ts::AbstractVector{<: AbstractTerm})
+function uniqterms!(ts::AbstractVector{<:AbstractTerm})
     i = firstindex(ts)
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
@@ -341,6 +351,9 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
     polynomial(terms(p)[2:end], SortedUniqState())
+end
+function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
+    return PT
 end
 
 #$(SIGNATURES)

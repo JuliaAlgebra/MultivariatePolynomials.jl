@@ -87,7 +87,11 @@ include("differentiation.jl")
 include("division.jl")
 include("gcd.jl")
 include("det.jl")
-
 include("chain_rules.jl")
+
+include("default_term.jl")
+include("sequences.jl")
+include("lazy_iterators.jl")
+include("default_polynomial.jl")
 
 end # module

@@ -45,6 +45,7 @@ Base.iszero(::CoefNotComparable) = false
     @test degree(2x^2, y) == 0
 
     t = 3x^2*y^4
+    alloc_test(() -> convert(typeof(t), t), 0)
     typetests(t)
     typetests([t, 2x])
     @test (@inferred polynomial(t)) isa AbstractPolynomial{Int}

@@ -94,14 +94,14 @@ const MP = MultivariatePolynomials
     @test nvariables(x + y - x) == 2
     @test nvariables(x + x^2) == 1
 
-    @test coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3]) == [4, 0, 1, 3, 6, 0]
+    @test collect(coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3])) == [4, 0, 1, 3, 6, 0]
 
     # Doc examples
-    @test coefficients(4x^2*y + x*y + 2x) == [4, 1, 2]
-    @test coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y]) == [2, 3, 1, 0]
+    @test collect(coefficients(4x^2*y + x*y + 2x)) == [4, 1, 2]
+    @test collect(coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])) == [2, 3, 1, 0]
 
     p = polynomial([4, 9], [x, x*x])
-    @test coefficients(p) == [9, 4]
+    @test collect(coefficients(p)) == [9, 4]
     @test monomials(p)[1] == x^2
     @test monomials(p)[2] == x
     @test p == dot([4, 9], [x, x*x])
@@ -111,8 +111,8 @@ const MP = MultivariatePolynomials
     for p in [polynomial(i -> float(i), [x, x*x]),
               polynomial(i -> 1.0, [x*x, x, x*x]),
               polynomial(i -> 3 - float(i), monovec([x*x, x]))]
-        @test coefficients(p) == [2.0, 1.0]
-        @test monomials(p) == monovec([x^2, x])
+        @test collect(coefficients(p)) == [2.0, 1.0]
+        @test collect(monomials(p)) == monovec([x^2, x])
     end
 
     @test (x + y)' == x + y
@@ -138,12 +138,12 @@ const MP = MultivariatePolynomials
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
         p = 3*y^2 + 2*y*x
-        @test coefficients(p) == [2, 3]
-        @test monomials(p) == monovec([x*y, y^2])
+        @test collect(coefficients(p)) == [2, 3]
+        @test collect(monomials(p)) == monovec([x*y, y^2])
         # Examples from p. 59 of the 4th edition of "Ideals, Varieties, and Algorithms" of Cox, Little and O'Shea
         f = 4*x*y^2*z + 4*z^2 - 5*x^3 + 7*x^2*z^2
-        @test coefficients(f) == [7, 4, -5, 4]
-        @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
+        @test collect(coefficients(f)) == [7, 4, -5, 4]
+        @test collect(monomials(f)) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
         @test ordering(f) === GradedLex()
     end
 
@@ -158,6 +158,7 @@ const MP = MultivariatePolynomials
         @test convert_to_constant(q) == z
         q = polynomial([a, z], [x, 1])
         @test_throws InexactError convert_to_constant(q)
+        alloc_test(() -> convert(typeof(p), p), 0)
     end
 
     @testset "Vector" begin
