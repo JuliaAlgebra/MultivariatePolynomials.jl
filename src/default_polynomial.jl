@@ -16,16 +16,45 @@ const VectorPolynomial{C,T} = Polynomial{C,T,Vector{T}}
 termtype(::Type{<:Polynomial{C,T}}) where {C,T} = T
 terms(p::Polynomial) = p.terms
 constantmonomial(::Union{Polynomial{C,TT},Type{Polynomial{C,TT}}}) where {C,TT} = constantmonomial(TT)
-function convertconstant(::Type{Polynomial{C,TT,Vector{TT}}}, α) where {C,TT}
+function convertconstant(PT::Type{Polynomial{C,TT,Vector{TT}}}, α) where {C,TT}
     t = term(convert(C, α), constantmonomial(TT))
-    return Polynomial{C,TT,Vector{TT}}([t])
+    return PT([t])
 end
-Base.convert(PT::Type{Polynomial{C,TT,V}}, p::Polynomial) where {C,TT,V} = PT(convert(V, p.terms))
+function Base.convert(PT::Type{Polynomial{C,TT,Vector{TT}}}, t::AbstractTermLike) where {C,TT}
+    if iszero(t)
+        return zero(PT)
+    else
+        return PT(TT[t])
+    end
+end
+function Base.convert(PT::Type{Polynomial{C,TT,V}}, p::Polynomial) where {C,TT,V}
+    return PT(convert(V, p.terms))
+end
+function Base.convert(::Type{Polynomial{C}}, p::AbstractPolynomialLike) where {C}
+    TT = termtype(p, C)
+    return convert(Polynomial{C,TT,Vector{TT}}, p)
+end
+function Base.convert(::Type{Polynomial}, p::AbstractPolynomialLike)
+    return convert(Polynomial{coefficienttype(p)}, p)
+end
+
 
 _change_eltype(::Type{<:Vector}, ::Type{T}) where T = Vector{T}
 function polynomialtype(::Type{Polynomial{C, T, V}}, ::Type{NewC}) where {C, T, V, NewC}
     NewT = termtype(T, NewC)
     Polynomial{NewC, NewT, _change_eltype(V, NewT)}
+end
+
+function Base.promote_rule(::Type{Polynomial}, ::Type{<:AbstractPolynomialLike})
+    return Polynomial
+end
+function Base.promote_rule(::Type{<:AbstractPolynomialLike}, ::Type{Polynomial})
+    return Polynomial
+end
+function promote_rule_constant(::Type{T}, ::Type{Polynomial}) where T
+    return Any
+    # `convert(Polynomial{T}, ::T)` cannot be implemented as we don't know the type of the term
+    #return Polynomial{T}
 end
 
 (p::Polynomial)(s...) = substitute(Eval(), p, s)

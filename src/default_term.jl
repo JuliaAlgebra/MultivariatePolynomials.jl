@@ -15,12 +15,14 @@ end
 
 LinearAlgebra.adjoint(t::Term) = Term(adjoint(coefficient(t)), monomial(t))
 
-Base.convert(::Type{Term{T, M}}, m::AbstractMonomialLike) where {T, M} = Term(one(T), convert(M, m))
+Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T, M} = Term(one(T), convert(M, m))
+convertconstant(::Type{Term{C,M} where C}, α) where M = convert(Term{typeof(α),M}, α)
 
 Base.promote_rule(::Type{Term{C,M1} where {C}}, M2::Type{<:AbstractMonomialLike}) where {M1} = (Term{C,promote_type(M1, M2)} where {C})
 Base.promote_rule(M1::Type{<:AbstractMonomialLike}, ::Type{Term{C,M2} where {C}}) where {M2} = (Term{C,promote_type(M1, M2)} where {C})
 Base.promote_rule(::Type{Term{C,M1} where {C}}, ::Type{Term{T,M2}}) where {T,M1,M2} = (Term{C,promote_type(M1, M2)} where {C})
 Base.promote_rule(::Type{Term{T,M2}}, ::Type{Term{C,M1} where {C}}) where {T,M1,M2} = (Term{C,promote_type(M1, M2)} where {C})
+promote_rule_constant(::Type{T}, TT::Type{Term{C,M} where C}) where {T, M} = Any
 
 combine(t1::Term, t2::Term) = combine(promote(t1, t2)...)
 combine(t1::T, t2::T) where {T <: Term} = Term(t1.coefficient + t2.coefficient, t1.monomial)
