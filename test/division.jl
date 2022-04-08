@@ -151,7 +151,7 @@ function _mult_test(a, b)
 end
 function mult_test(expected, a, b, algo)
     g = @inferred MP._simplifier(a, b, algo)
-    @test g isa promote_type(polynomialtype(a), polynomialtype(b))
+    @test g isa Base.promote_typeof(a, b)
     _mult_test(expected, g)
 end
 function mult_test(expected, a::Number, b, algo)
