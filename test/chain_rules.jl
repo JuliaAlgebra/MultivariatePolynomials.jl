@@ -17,6 +17,16 @@ end
     p = 1.1x + y
     q = (-0.1 + im) * x - y
 
+    output, pullback = ChainRulesCore.rrule(+, q)
+    @test output == q
+    @test pullback(2) == (NoTangent(), 2)
+    @test pullback(x + 3) == (NoTangent(), x + 3)
+
+    output, pullback = ChainRulesCore.rrule(-, q)
+    @test output ≈ -q
+    @test pullback(2) == (NoTangent(), -2)
+    @test pullback(x + 3im) == (NoTangent(), -x - 3im)
+
     output, pullback = ChainRulesCore.rrule(+, p, q)
     @test output == (1.0 + im)x
     @test pullback(2) == (NoTangent(), 2, 2)
@@ -25,12 +35,18 @@ end
     output, pullback = ChainRulesCore.rrule(-, p, q)
     @test output ≈ (1.2 - im) * x + 2y
     @test pullback(2) == (NoTangent(), 2, -2)
-    @test pullback(x + 3) == (NoTangent(), x + 3, -x - 3)
+    @test pullback(im * x + 3) == (NoTangent(), im * x + 3, -im * x - 3)
 
     output, pullback = ChainRulesCore.rrule(differentiate, p, x)
     @test output == 1.1
     @test pullback(q) == (NoTangent(), (-0.2 + 2im) * x^2 - x*y, NoTangent())
     @test pullback(1x) == (NoTangent(), 2x^2, NoTangent())
+
+    test_chain_rule(dot, +, (p,), (q,), p)
+    test_chain_rule(dot, +, (q,), (p,), q)
+
+    test_chain_rule(dot, -, (p,), (q,), p)
+    test_chain_rule(dot, -, (p,), (p,), q)
 
     test_chain_rule(dot, +, (p, q), (q, p), p)
     test_chain_rule(dot, +, (p, q), (p, q), q)
