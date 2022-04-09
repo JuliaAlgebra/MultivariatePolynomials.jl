@@ -105,7 +105,7 @@ Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:Linea
 
 LinearAlgebra.adjoint(x::Polynomial) = polynomial!(adjoint.(terms(x)))
 
-function mapcoefficients(f::F, p::Polynomial; nonzero = false) where F
+function mapcoefficients(f::F, p::Polynomial; nonzero = false) where {F<:Function}
     terms = map(p.terms) do term
         mapcoefficients(f, term)
     end
@@ -114,7 +114,7 @@ function mapcoefficients(f::F, p::Polynomial; nonzero = false) where F
     end
     return polynomial!(terms)
 end
-function mapcoefficients!(f::F, p::Polynomial; nonzero = false) where F
+function mapcoefficients!(f::F, p::Polynomial; nonzero = false) where {F<:Function}
     for i in eachindex(p.terms)
         t = p.terms[i]
         p.terms[i] = Term(f(coefficient(t)), monomial(t))
@@ -125,7 +125,7 @@ function mapcoefficients!(f::F, p::Polynomial; nonzero = false) where F
     return p
 end
 
-function mapcoefficients_to!(output::Polynomial, f::F, p::Polynomial; nonzero = false) where F
+function mapcoefficients_to!(output::Polynomial, f::F, p::Polynomial; nonzero = false) where {F<:Function}
     resize!(output.terms, nterms(p))
     for i in eachindex(p.terms)
         t = p.terms[i]
