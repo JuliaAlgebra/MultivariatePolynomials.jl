@@ -151,7 +151,7 @@ function _mult_test(a, b)
 end
 function mult_test(expected, a, b, algo)
     g = @inferred MP._simplifier(a, b, algo)
-    @test g isa promote_type(polynomialtype(a), polynomialtype(b))
+    @test g isa Base.promote_typeof(a, b)
     _mult_test(expected, g)
 end
 function mult_test(expected, a::Number, b, algo)
@@ -213,7 +213,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
         y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
         algo,
     )
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+    if T != Int
         test_relatively_prime(
             -3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
             3o*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
