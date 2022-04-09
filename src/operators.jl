@@ -76,9 +76,9 @@ MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.opera
 MA.operate_to!(output::APL, op::typeof(/), p::APL, α) = mapcoefficients_to!(output, Base.Fix2(op, α), p)
 
 function polynomial_merge!(
-    n1::Int, n2::Int, get1::Function, get2::Function,
-    set::Function, push::Function, compare_monomials::Function,
-    combine::Function, keep::Function, resize::Function)
+    n1::Int, n2::Int, get1::F1, get2::F2,
+    set::F3, push::F4, compare_monomials::F5,
+    combine::F6, keep::F7, resize::F8) where {F1, F2, F3, F4, F5, F6, F7, F8}
     buffer = nothing
     i = j = k = 1
     # Invariant:
