@@ -58,7 +58,7 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
+polynomial(f::F, mv::AbstractVector{<:AbstractMonomialLike}) where F = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
 
 function polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState())
     # If `x` is e.g. `[v, 1]` then it will contains terms that are convertible to monomials.
@@ -404,8 +404,8 @@ function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
 end
 
 # TODO deprecate
-mapcoefficientsnz(f::Function, p::APL) = mapcoefficients(f, p, nonzero = true)
-mapcoefficientsnz_to!(output::APL, f::Function, p::APL) = mapcoefficients_to!(output, f, p, nonzero = true)
+mapcoefficientsnz(f::F, p::APL) where F = mapcoefficients(f, p, nonzero = true)
+mapcoefficientsnz_to!(output::APL, f::F, p::APL) where F = mapcoefficients_to!(output, f, p, nonzero = true)
 
 """
     mapcoefficients(f::Function, p::AbstractPolynomialLike, nonzero = false)
@@ -422,13 +422,13 @@ See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
 Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
 """
 function mapcoefficients end
-function mapcoefficients(f::Function, p::AbstractPolynomialLike; nonzero = false) # Not used by either TypedPolynomials or DynamicPolynomials but used by CustomPoly in tests. FIXME Remove in a breaking release
+function mapcoefficients(f::F, p::AbstractPolynomialLike; nonzero = false) where F # Not used by either TypedPolynomials or DynamicPolynomials but used by CustomPoly in tests. FIXME Remove in a breaking release
     # Invariant: p has only nonzero coefficient
     # therefore f(α) will be nonzero for every coefficient α of p
     # hence we can use Uniq
     polynomial!(mapcoefficients.(f, terms(p)), nonzero ? SortedUniqState() : SortedState())
 end
-function mapcoefficients(f::Function, t::AbstractTermLike; nonzero = false)
+function mapcoefficients(f::F, t::AbstractTermLike; nonzero = false) where F
     return term(f(coefficient(t)), monomial(t))
 end
 
