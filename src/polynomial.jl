@@ -3,6 +3,7 @@ export coefficienttype, monomialtype
 export mindegree, maxdegree, extdegree, effective_variables
 export leadingterm, leadingcoefficient, leadingmonomial
 export removeleadingterm, removemonomials, monic
+export mapcoefficients, mapcoefficients!, mapcoefficients_to!
 
 LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int=2) = LinearAlgebra.norm(coefficients(p), r)
 
@@ -46,9 +47,10 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
-polynomial(p::AbstractPolynomial) = p
-polynomial(p::APL{T}, ::Type{T}) where T = polynomial(terms(p))
-polynomial(p::APL{T}) where T = polynomial(p, T)
+function polynomial end
+function polynomial(p::APL, args::Vararg{Type,N}) where {N}
+    return polynomial!(copy(p), args...)
+end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
     LinearAlgebra.dot(mv, Q * mv)
 end
@@ -56,14 +58,24 @@ function polynomial(Q::AbstractMatrix, mv::AbstractVector, ::Type{T}) where T
     polynomial(polynomial(Q, mv), T)
 end
 
-polynomial(f::Function, mv::AbstractVector{<:AbstractMonomialLike}) = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
+polynomial(f::F, mv::AbstractVector{<:AbstractMonomialLike}) where {F<:Function} = polynomial!([term(f(i), mv[i]) for i in 1:length(mv)])
 
-polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState()) = polynomial([term(α, m) for (α, m) in zip(a, x)], s)
+function polynomial(a::AbstractVector, x::AbstractVector, s::ListState=MessyState())
+    # If `x` is e.g. `[v, 1]` then it will contains terms that are convertible to monomials.
+    return polynomial([term(α, convert(monomialtype(m), m)) for (α, m) in zip(a, x)], s)
+end
 
 polynomial(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
+
+function polynomial!(p::APL, args::Vararg{Any,N}) where N
+    return convert(polynomialtype(p, args...), p)
+end
+
 polynomial!(ts::AbstractVector, s::ListState=MessyState()) = sum(ts)
 
-polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedUniqState) = polynomial(coefficient.(ts), monomial.(ts), s)
+function polynomial!(ts::AbstractVector{TT}, s::SortedUniqState) where {TT<:AbstractTerm}
+    return polynomialtype(TT)(ts)
+end
 
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
@@ -93,7 +105,9 @@ Returns the type that `p` would have if it was converted into a polynomial of co
 
 Returns the same as `polynomialtype(::PT, ::Type{T})`.
 """
-polynomialtype(::Union{P, Type{P}}) where P <: APL = Base.promote_op(polynomial, P)
+function polynomialtype end
+polynomialtype(::Type{T}) where T <: AbstractTerm = error("`polynomialtype` not implemented for $T")
+polynomialtype(::Union{P, Type{P}}) where P <: APL = polynomialtype(termtype(P))
 polynomialtype(::Union{P, Type{P}}) where P <: AbstractPolynomial = P
 polynomialtype(::Union{M, Type{M}}) where M<:AbstractMonomialLike = polynomialtype(termtype(M))
 polynomialtype(::Union{M, Type{M}}, ::Type{T}) where {M<:AbstractMonomialLike, T} = polynomialtype(termtype(M, T))
@@ -101,12 +115,12 @@ polynomialtype(::Union{P, Type{P}}, ::Type{T}) where {P <: APL, T} = polynomialt
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = polynomialtype(PT)
 polynomialtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = polynomialtype(PT, T)
 
-function uniqterms!(ts::AbstractVector{<: AbstractTerm})
+function uniqterms!(ts::AbstractVector{<:AbstractTerm})
     i = firstindex(ts)
     for j in Iterators.drop(eachindex(ts), 1)
         if !iszero(ts[j])
             if monomial(ts[i]) == monomial(ts[j])
-                ts[i] = term(MA.add!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
+                ts[i] = term(MA.add!!(coefficient(ts[i]), coefficient(ts[j])), monomial(ts[i]))
             else
                 if !iszero(ts[i])
                     i += 1
@@ -338,6 +352,9 @@ function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
     polynomial(terms(p)[2:end], SortedUniqState())
 end
+function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
+    return PT
+end
 
 #$(SIGNATURES)
 """
@@ -386,28 +403,65 @@ function _divtoone(t::AbstractTermLike{T}, α::S) where {T, S}
     end
 end
 
-"""
-    mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
+# TODO deprecate
+mapcoefficientsnz(f::F, p::APL) where {F<:Function} = mapcoefficients(f, p, nonzero = true)
+mapcoefficientsnz_to!(output::APL, f::F, p::APL) where {F<:Function} = mapcoefficients_to!(output, f, p, nonzero = true)
 
-Returns the polynomial obtained by applying `f` to each coefficients where `f` is a function such that `f(x)` is nonzero if `x` is nonzero.
+"""
+    mapcoefficients(f::Function, p::AbstractPolynomialLike, nonzero = false)
+
+Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
+The function may return zero in which case the term is dropped.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+
+See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
 
 ### Examples
 
-Calling `mapcoefficientsnz(α -> α^2, 2x*y + 3x + 1)` should return `4x*y + 9x + 1`.
+Calling `mapcoefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x + 3`.
 """
-function mapcoefficientsnz(f::Function, p::AbstractPolynomialLike)
+function mapcoefficients end
+function mapcoefficients(f::F, p::AbstractPolynomialLike; nonzero = false) where {F<:Function} # Not used by either TypedPolynomials or DynamicPolynomials but used by CustomPoly in tests. FIXME Remove in a breaking release
     # Invariant: p has only nonzero coefficient
     # therefore f(α) will be nonzero for every coefficient α of p
     # hence we can use Uniq
-    polynomial!(mapcoefficientsnz.(f, terms(p)), SortedUniqState())
+    polynomial!(mapcoefficients.(f, terms(p)), nonzero ? SortedUniqState() : SortedState())
 end
-mapcoefficientsnz(f::Function, t::AbstractTermLike) = term(f(coefficient(t)), monomial(t))
+function mapcoefficients(f::F, t::AbstractTermLike; nonzero = false) where {F<:Function}
+    return term(f(coefficient(t)), monomial(t))
+end
 
-Base.round(t::AbstractTermLike; args...) = term(round(coefficient(t); args...), monomial(t))
-function Base.round(p::AbstractPolynomialLike; args...)
-    # round(0.1) is zero so we cannot use SortedUniqState
-    polynomial!(round.(terms(p); args...), SortedState())
-end
+"""
+    mapcoefficients!(f::Function, p::AbstractPolynomialLike, nonzero = false)
+
+Mutate `p` by replacing each coefficient `α` by `f(α)`.
+The function may return zero in which case the term is dropped.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+The function returns `p`, which is identically equal to the second argument.
+
+See also [`mapcoefficients`](@ref) and [`mapcoefficients_to!`](@ref).
+
+### Examples
+
+Let `p = 2x*y + 3x + 1`, after `mapcoefficients!(α -> mod(3α, 6), p)`, `p` is
+equal to `3x + 3`.
+"""
+function mapcoefficients! end
+
+"""
+    mapcoefficients_to!(output::AbstractPolynomialLike, f::Function, p::AbstractPolynomialLike, nonzero = false)
+
+Mutate `output` by replacing each coefficient `α` of `p` by `f(α)`.
+The function may return zero in which case the term is dropped.
+If the function is known to never returns zero for a nonzero input, `nonzero`
+can be set to `true` to get a small speedup.
+The function returns `output`, which is identically equal to the first argument.
+
+See also [`mapcoefficients!`](@ref) and [`mapcoefficients`](@ref).
+"""
+function mapcoefficients_to! end
 
 """
     deg_num_leading_terms(p::AbstractPolynomialLike, var)

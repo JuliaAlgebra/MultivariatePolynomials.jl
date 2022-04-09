@@ -1,5 +1,8 @@
+using Test
+using LinearAlgebra
 import MutableArithmetics
 const MA = MutableArithmetics
+using MultivariatePolynomials
 const MP = MultivariatePolynomials
 @testset "Polynomial" begin
     Mod.@polyvar x
@@ -91,24 +94,25 @@ const MP = MultivariatePolynomials
     @test nvariables(x + y - x) == 2
     @test nvariables(x + x^2) == 1
 
-    @test coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3]) == [4, 0, 1, 3, 6, 0]
+    @test collect(coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3])) == [4, 0, 1, 3, 6, 0]
 
     # Doc examples
-    @test coefficients(4x^2*y + x*y + 2x) == [4, 1, 2]
-    @test coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y]) == [2, 3, 1, 0]
+    @test collect(coefficients(4x^2*y + x*y + 2x)) == [4, 1, 2]
+    @test collect(coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])) == [2, 3, 1, 0]
 
     p = polynomial([4, 9], [x, x*x])
-    @test coefficients(p) == [9, 4]
+    @test collect(coefficients(p)) == [9, 4]
     @test monomials(p)[1] == x^2
     @test monomials(p)[2] == x
     @test p == dot([4, 9], [x, x*x])
 
     @inferred polynomial(i -> float(i), [x, x*x])
     @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
-    for p in (polynomial(i -> float(i), [x, x*x]),
-              polynomial(i -> 3 - float(i), monovec([x*x, x])))
-        @test coefficients(p) == [2.0, 1.0]
-        @test monomials(p) == monovec([x^2, x])
+    for p in [polynomial(i -> float(i), [x, x*x]),
+              polynomial(i -> 1.0, [x*x, x, x*x]),
+              polynomial(i -> 3 - float(i), monovec([x*x, x]))]
+        @test collect(coefficients(p)) == [2.0, 1.0]
+        @test collect(monomials(p)) == monovec([x^2, x])
     end
 
     @test (x + y)' == x + y
@@ -134,19 +138,27 @@ const MP = MultivariatePolynomials
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
         p = 3*y^2 + 2*y*x
-        @test coefficients(p) == [2, 3]
-        @test monomials(p) == monovec([x*y, y^2])
+        @test collect(coefficients(p)) == [2, 3]
+        @test collect(monomials(p)) == monovec([x*y, y^2])
         # Examples from p. 59 of the 4th edition of "Ideals, Varieties, and Algorithms" of Cox, Little and O'Shea
         f = 4*x*y^2*z + 4*z^2 - 5*x^3 + 7*x^2*z^2
-        @test coefficients(f) == [7, 4, -5, 4]
-        @test monomials(f) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
+        @test collect(coefficients(f)) == [7, 4, -5, 4]
+        @test collect(monomials(f)) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
+        @test ordering(f) === GradedLex()
     end
 
     @testset "Convertion" begin
+        Mod.@polyvar x y z
         p = 2.5x + 1 - 2.5x
         @test convert(Int, p) == 1
         @test convert(typeof(p), p) === p
         @test convert(Union{Nothing, typeof(p)}, p) === p
+        a = 2y
+        q = polynomial([a, z, -a], [x, 1, x])
+        @test convert_to_constant(q) == z
+        q = polynomial([a, z], [x, 1])
+        @test_throws InexactError convert_to_constant(q)
+        alloc_test(() -> convert(typeof(p), p), 0)
     end
 
     @testset "Vector" begin
@@ -179,7 +191,24 @@ const MP = MultivariatePolynomials
     @testset "$f is a mutable copy, see issue DynamicPolynomials#62" for f in [zero, one]
         p = 2x + 1
         q = f(p)
-        q = MA.add!(q, 2y)
+        q = MA.add!!(q, 2y)
         @test p == 2x + 1
+    end
+
+    @testset "mapcoefficients $nz" for nz in [false, true]
+        p = 2x + 1
+        @test mapcoefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
+        @test mapcoefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
+        @test p === mapcoefficients!(x -> x + 1, p, nonzero = nz)
+        @test p == 3x + 2
+        q = zero(p)
+        @test q === mapcoefficients_to!(q, x -> 2x, p, nonzero = nz)
+        @test q == 6x + 4
+        @test q === mapcoefficients_to!(q, x -> 2x, 3x, nonzero = nz)
+        @test q == 6x
+        @test q === mapcoefficients_to!(q, x -> 2x, x, nonzero = nz)
+        @test q == 2x
+        @test q === mapcoefficients_to!(q, x -> 2x, x^2, nonzero = nz)
+        @test q == 2x^2
     end
 end

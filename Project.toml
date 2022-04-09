@@ -2,19 +2,21 @@ name = "MultivariatePolynomials"
 uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 license = "MIT"
 repo = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl"
-version = "0.3.18"
+version = "0.4.6"
 
 [deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 
 [compat]
+ChainRulesCore = "1"
 DataStructures = "0.17.7, 0.18"
-DynamicPolynomials = "0.3.16"
-MutableArithmetics = "0.2"
-TypedPolynomials = "0.2.9"
-julia = "1"
+DynamicPolynomials = "0.4.5"
+MutableArithmetics = "0.3, 1"
+TypedPolynomials = "0.3.1"
+julia = "1.6"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"

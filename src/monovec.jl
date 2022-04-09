@@ -26,12 +26,34 @@ function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
 end
 monovec(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monovec(AbstractVector{monomialtype(TT)}(X))
 
+"""
+    monovec(a, X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
+
+Returns `b, Y` where `Y` is the vector of monomials of `X` in decreasing order
+and without any duplicates and `b` is the vector of corresponding coefficients
+in `a`, where coefficients of duplicate entries are summed together.
+
+### Examples
+
+Calling `monovec` on ``[2, 1, 4, 3, -1], [xy, x, xy, x^2y, x]`` should return
+``[3, 6, 0], [x^2y, xy, x]``.
+"""
 function monovec(a, x)
     if length(a) != length(x)
         throw(ArgumentError("There should be as many coefficient than monomials"))
     end
     σ, X = sortmonovec(x)
-    (a[σ], X)
+    b = a[σ]
+    if length(x) > length(X)
+        rev = Dict(X[j] => j for j in eachindex(σ))
+        for i in eachindex(x)
+            j = rev[x[i]]
+            if i != σ[j]
+                b[j] += a[i]
+            end
+        end
+    end
+    return b, X
 end
 
 """

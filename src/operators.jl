@@ -65,14 +65,20 @@ Base.:/(A::AbstractArray, p::APL) = map(f -> f / p, A)
 
 constant_function(::typeof(+)) = plusconstant
 constant_function(::typeof(-)) = minusconstant
-MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::APL, α) = MA.mutable_operate!(constant_function(op), p, α)
-MA.mutable_operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.mutable_operate_to!(output, multconstant, α, p)
-MA.mutable_operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.mutable_operate_to!(output, multconstant, p, α)
+constant_function(::typeof(*)) = multconstant
+MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate!(constant_function(op), p, α)
+
+MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(multconstant, α, p)
+MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(multconstant, p, α)
+MA.operate!(op::typeof(/), p::APL, α) = mapcoefficients!(Base.Fix2(op, α), p)
+MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.operate_to!(output, multconstant, α, p)
+MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.operate_to!(output, multconstant, p, α)
+MA.operate_to!(output::APL, op::typeof(/), p::APL, α) = mapcoefficients_to!(output, Base.Fix2(op, α), p)
 
 function polynomial_merge!(
-    n1::Int, n2::Int, get1::Function, get2::Function,
-    set::Function, push::Function, compare_monomials::Function,
-    combine::Function, keep::Function, resize::Function)
+    n1::Int, n2::Int, get1::F1, get2::F2,
+    set::F3, push::F4, compare_monomials::F5,
+    combine::F6, keep::F7, resize::F8) where {F1, F2, F3, F4, F5, F6, F7, F8}
     buffer = nothing
     i = j = k = 1
     # Invariant:
@@ -186,8 +192,8 @@ function polynomial_merge!(
 end
 
 
-#MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomial) = MA.mutable_operate_to!(p, op, p, q)
-MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomialLike) = MA.mutable_operate!(op, p, polynomial(q))
+#MA.operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomial) = MA.operate_to!(p, op, p, q)
+MA.operate!(op::Union{typeof(+), typeof(-)}, p::AbstractPolynomial, q::AbstractPolynomialLike) = MA.operate!(op, p, polynomial(q))
 
 function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
     for t1 in terms(p1)
@@ -210,7 +216,7 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
 Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
-Base.:-(p::APL) = polynomial!((-).(terms(p)))
+Base.:-(p::APL) = mapcoefficients(-, p)
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
 
@@ -218,56 +224,48 @@ Base.:*(p::Union{APL, RationalPoly}) = p
 # Need to add polynomial conversion for type stability
 plusconstant(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : p + constantterm(α, p)
 plusconstant(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : constantterm(α, p) + p
-function MA.mutable_operate!(::typeof(plusconstant), p::APL, α)
+function MA.operate!(::typeof(plusconstant), p::APL, α)
     if !iszero(α)
-        MA.mutable_operate!(+, p, constantterm(α, p))
+        MA.operate!(+, p, constantterm(α, p))
     end
     return p
 end
 minusconstant(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(-, S, T)) : p - constantterm(α, p)
 minusconstant(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) : constantterm(α, p) - p
-function MA.mutable_operate!(::typeof(minusconstant), p::APL, α)
+function MA.operate!(::typeof(minusconstant), p::APL, α)
     if !iszero(α)
-        MA.mutable_operate!(-, p, constantterm(α, p))
+        MA.operate!(-, p, constantterm(α, p))
     end
     return p
 end
 
 # Coefficients and variables commute
+multconstant(α, v::AbstractMonomial) = termtype(v, typeof(α))(α, v)
 multconstant(α, v::AbstractVariable) = multconstant(α, monomial(v)) # TODO linear term
 multconstant(m::AbstractMonomialLike, α) = multconstant(α, m)
 
-_multconstant(α, f, t::AbstractTermLike) = mapcoefficientsnz(f, t)
-function _multconstant(α::T, f, p::AbstractPolynomial{S}) where {S, T}
-    if iszero(α)
-        zero(polynomialtype(p, MA.promote_operation(*, T, S)))
-    else
-        mapcoefficientsnz(f, p)
-    end
-end
-_multconstant(α, f, p::AbstractPolynomialLike) = _multconstant(α, f, polynomial(p))
+# TODO delete once DynamicPolynomials stops using it
+function _multconstant end
+function _multconstant_to! end
 
-multconstant(α, p::AbstractPolynomialLike) = _multconstant(α, β -> α*β, p)
-multconstant(p::AbstractPolynomialLike, α) = _multconstant(α, β -> β*α, p)
+multconstant(α, p::AbstractPolynomialLike) = mapcoefficients(Base.Fix1(*, α), p)
+multconstant(p::AbstractPolynomialLike, α) = mapcoefficients(Base.Fix2(*, α), p)
 
-function mapcoefficientsnz_to! end
-
-function _multconstant_to!(output, α, f, p)
-    if iszero(α)
-        MA.mutable_operate!(zero, output)
-    else
-        mapcoefficientsnz_to!(output, f, p)
-    end
+function MA.operate_to!(output, ::typeof(multconstant), α, p::APL)
+    return mapcoefficients_to!(output, Base.Fix1(*, α), p)
 end
-function MA.mutable_operate_to!(output, ::typeof(multconstant), p::APL, α)
-    _multconstant_to!(output, α, β -> β*α, p)
+function MA.operate_to!(output, ::typeof(multconstant), p::APL, α)
+    return mapcoefficients_to!(output, Base.Fix2(*, α), p)
 end
-function MA.mutable_operate_to!(output, ::typeof(multconstant), α, p::APL)
-    _multconstant_to!(output, α, β -> α*β, p)
+function MA.operate!(::typeof(multconstant), α, p::APL)
+    return mapcoefficients!(Base.Fix1(*, α), p)
+end
+function MA.operate!(::typeof(multconstant), p::APL, α)
+    return mapcoefficients!(Base.Fix2(*, α), p)
 end
 
-MA.mutable_operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
-MA.mutable_operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = mapexponents!(+, m1, m2)
+MA.operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
+MA.operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = mapexponents!(+, m1, m2)
 Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
@@ -354,18 +352,18 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
 
-function MA.mutable_operate_to!(output::AbstractPolynomial, op::MA.AddSubMul, x, args::Vararg{Any, N}) where N
-    return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, *(args...))
+function MA.operate_to!(output::AbstractPolynomial, op::MA.AddSubMul, x, args::Vararg{Any, N}) where N
+    return MA.operate_to!(output, MA.add_sub_op(op), x, *(args...))
 end
-function MA.mutable_operate!(op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
-    return MA.mutable_operate!(MA.add_sub_op(op), x, *(y, z, args...))
+function MA.operate!(op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
+    return MA.operate!(MA.add_sub_op(op), x, *(y, z, args...))
 end
 MA.buffer_for(::MA.AddSubMul, ::Type{<:AbstractPolynomial}, args::Vararg{Type, N}) where {N} = zero(MA.promote_operation(*, args...))
-function MA.mutable_buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
-    product = MA.operate_to!(buffer, *, y, z, args...)
-    return MA.mutable_operate_to!(output, MA.add_sub_op(op), x, product)
+function MA.buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
+    product = MA.operate_to!!(buffer, *, y, z, args...)
+    return MA.operate_to!(output, MA.add_sub_op(op), x, product)
 end
-function MA.mutable_buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
-    product = MA.operate_to!(buffer, *, y, z, args...)
-    return MA.mutable_operate!(MA.add_sub_op(op), x, product)
+function MA.buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
+    product = MA.operate_to!!(buffer, *, y, z, args...)
+    return MA.operate!(MA.add_sub_op(op), x, product)
 end

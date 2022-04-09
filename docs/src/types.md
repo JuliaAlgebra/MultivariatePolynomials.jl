@@ -59,6 +59,7 @@ nterms
 coefficients
 coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike, vars)
 monomials
+ordering
 mindegree
 maxdegree
 extdegree
@@ -68,7 +69,9 @@ leadingmonomial
 removeleadingterm
 removemonomials
 monic
-mapcoefficientsnz
+mapcoefficients
+mapcoefficients!
+mapcoefficients_to!
 ```
 
 ## Rational Polynomial Function

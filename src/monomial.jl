@@ -26,6 +26,7 @@ For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two 
 """
 function variables end
 variables(t::AbstractTerm) = variables(monomial(t))
+variables(::Type{PT}) where {PT<:Union{AbstractPolynomial,AbstractTerm}} = variables(monomialtype(PT))
 
 """
     nvariables(p::AbstractPolynomialLike)
@@ -38,6 +39,7 @@ Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)`
 """
 nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
+nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomialtype(TT))
 nvariables(p::APL) = length(variables(p))
 
 """
@@ -115,6 +117,11 @@ Returns a constant monomial of the monomial type of `p` with the same variables 
 Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """
 function constantmonomial end
+function constantmonomial(::Type{MT}) where {MT<:AbstractMonomial}
+    error("`constantmonomial` not implemented for $MT.")
+end
+constantmonomial(::Type{PT}) where {PT<:APL} = constantmonomial(monomialtype(PT))
+constantmonomial(t::AbstractTerm) = constantmonomial(monomial(t))
 
 """
     mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)

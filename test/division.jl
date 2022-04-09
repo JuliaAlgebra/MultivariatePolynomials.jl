@@ -4,6 +4,17 @@ using Combinatorics
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+function div_number_test()
+    Mod.@polyvar x
+    @test div(2x, 2) == x
+    @test div(6x + 9x^2, 3) == 2x + 3x^2
+    @test div(6x + 9x^2, 4) == x + 2x^2
+    if VERSION >= v"1.6"
+        @test div(10x^3, 4, RoundUp) == 3x^3
+        @test div(6x + 9x^2, 4, RoundUp) == 2x + 3x^2
+    end
+end
+
 function gcd_lcm_test()
     Mod.@polyvar x y z
     @test gcd(x*y, y) == y
@@ -96,29 +107,61 @@ function test_gcd_unit(expected, p1, p2, algo)
     @test g == expected || g == -expected
 end
 
+function test_gcdx_unit(expected, p1, p2, algo)
+    test_gcd_unit(expected, p1, p2, algo)
+    a, b, g = @inferred gcdx(p1, p2, algo)
+    # it does not make sense, in general, to speak of "the" greatest common
+    # divisor of u and v; there is a set of greatest common divisors, each
+    # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+    # `-expected` are both accepted.
+    @test iszero(MP.pseudo_rem(g, expected, algo)[2])
+    @test a * p1 + b * p2 == g
+end
+function _test_gcdx_unit(expected, p1, p2, algo)
+    test_gcdx_unit(expected, p1, p2, algo)
+    test_gcdx_unit(expected, p2, p1, algo)
+end
+
 
 function univariate_gcd_test(algo=GeneralizedEuclideanAlgorithm())
     Mod.@polyvar x
-    test_gcd_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
-    test_gcd_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
-    test_gcd_unit(x + 1, x^2 - 1, x + 1, algo)
-    test_gcd_unit(x + 1, x + 1, x^2 - 1, algo)
-    test_gcd_unit(x + 1, x - x, x + 1, algo)
-    test_gcd_unit(x + 1, x + 1, x - x, algo)
+    test_gcdx_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
+    test_gcdx_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x^2 - 1, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x - x, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x - x, algo)
+    test_gcdx_unit(x - x + 1, x + 1, x + 2, algo)
+    test_gcdx_unit(x - x + 1, x + 1, 2x + 1, algo)
+    test_gcdx_unit(x - x + 1, x - 1, 2x^2 - 2x - 2, algo)
     @test       0  == @inferred gcd(x - x, x^2 - x^2, algo)
     @test       0  == @inferred gcd(x^2 - x^2, x - x, algo)
 end
 
 function _mult_test(a::Number, b)
-    return @test iszero(maxdegree(b))
+    @test iszero(maxdegree(b))
+end
+function _mult_test(a::Number, b::Number)
+    @test iszero(rem(a, b))
+    @test iszero(rem(b, a))
 end
 function _mult_test(a, b)
     @test iszero(rem(a, b))
     @test iszero(rem(b, a))
 end
 function mult_test(expected, a, b, algo)
-    g = @inferred gcd(a, b, algo)
-    @test g isa promote_type(polynomialtype(a), polynomialtype(b))
+    g = @inferred MP._simplifier(a, b, algo)
+    @test g isa Base.promote_typeof(a, b)
+    _mult_test(expected, g)
+end
+function mult_test(expected, a::Number, b, algo)
+    g = @inferred MP._simplifier(a, b, algo)
+    @test g isa promote_type(typeof(a), MP.coefficienttype(b))
+    _mult_test(expected, g)
+end
+function mult_test(expected, a, b::Number, algo)
+    g = @inferred MP._simplifier(a, b, algo)
+    @test g isa promote_type(MP.coefficienttype(a), typeof(b))
     _mult_test(expected, g)
 end
 function sym_test(a, b, g, algo)
@@ -134,6 +177,10 @@ end
 function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) where {T}
     Mod.@polyvar x y z
     o = one(T)
+    zr = zero(T)
+    sym_test(o, o * x, o, algo)
+    sym_test(o * x, zr * x, o * x, algo)
+    sym_test(o * x + o, zr * x, o * x + o, algo)
     # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
     f1 = o * x * y + o * x
     f2 = o * y^2
@@ -142,6 +189,12 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     sym_test(f2, f3, 1, algo)
     sym_test(f3, f1, x, algo)
     triple_test(f1, f2, f3, algo)
+
+    @testset "Issue #173" begin
+        p1 = o*x*y + x
+        p2 = x^2
+        sym_test(p1, p2, x, algo)
+    end
 
     p1 = o*z - z
     p2 = z
@@ -160,7 +213,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
         y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
         algo,
     )
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+    if T != Int
         test_relatively_prime(
             -3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
             3o*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
@@ -186,9 +239,13 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     end
     sym_test(b, c, x + y + z, algo)
     sym_test(c, a, z^3 + y^2 + x, algo)
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))
+    if (T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))) &&
+        (T != Float64 || (algo != GeneralizedEuclideanAlgorithm(false, true) && algo != GeneralizedEuclideanAlgorithm(true, true)))
         triple_test(a, b, c, algo)
     end
+
+    # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/195
+    sym_test(x*(y^2) + 2x*y*z + x*(z^2) + x*y + x*z, y + z, y + z, algo)
 end
 
 function lcm_test()
@@ -248,9 +305,13 @@ function extracted_variable_test()
     _test(x^4 + y^5 + z^6, x^3 + y^2 + z, z, z)
     _test(x^6 + y^5 + z^4, x + y^2 + z^3, x, x)
     _test(x^6 + y + z^4 - y, x + y + z^3 - y, x, x)
+    _test(x*(y^2) + 2x*y*z + x*(z^2) + x*y + x*z, y + z, y, y)
 end
 
 @testset "Division" begin
+    @testset "div by number" begin
+        div_number_test()
+    end
     @testset "GCD and LCM" begin
         gcd_lcm_test()
     end
@@ -271,7 +332,7 @@ end
             univariate_gcd_test(GeneralizedEuclideanAlgorithm(primitive_rem, skip_last))
         end
     end
-    @testset "Multivariate gcd $T" for T in [Int, BigInt, Rational{BigInt}]
+    @testset "Multivariate gcd $T" for T in [Int, BigInt, Rational{BigInt}, Float64]
         if T != Rational{BigInt} || VERSION >= v"1.6"
             # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
             @testset "primitive_rem=$primitive_rem" for primitive_rem in [false, true]
