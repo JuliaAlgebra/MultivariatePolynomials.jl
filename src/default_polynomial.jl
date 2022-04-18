@@ -177,19 +177,26 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Po
         end
     end
     combine = let p=p, q=q
-        (i, j) -> p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
-    end
-    combine = let q=q
-        (t, j) -> TT(MA.operate!!(op, coefficient(t), coefficient(q.terms[j])), monomial(t))
+        (i, j) -> begin
+            if i isa Int
+                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
+            else
+                typeof(i)(MA.operate!!(op, coefficient(i), coefficient(q.terms[j])), monomial(i))
+            end
+        end
     end
     resize = let p=p
         (n) -> resize!(p.terms, n)
     end
     # We can modify the coefficient since it's the result of `combine`.
     keep = let p=p
-        keep(t::Term) = !MA.iszero!!(coefficient(t))
-        keep(i::Int) = !MA.iszero!!(coefficient(p.terms[i]))
-        return keep
+        i -> begin
+            if i isa Int
+                !MA.iszero!!(coefficient(p.terms[i]))
+            else
+                !MA.iszero!!(coefficient(i))
+            end
+        end
     end
     polynomial_merge!(
         nterms(p), nterms(q), get1, get2, set, push,
