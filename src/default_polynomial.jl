@@ -151,21 +151,46 @@ Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 
 function grlex end
 function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Polynomial) where {T,TT}
-    get1(i) = p.terms[i]
-    function get2(i)
-        t = q.terms[i]
-        TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
+    get1 = let p=p
+        i -> p.terms[i]
     end
-    set(i, t::TT) = p.terms[i] = t
-    push(t::TT) = push!(p.terms, t)
-    compare_monomials(t::TT, j::Int) = grlex(monomial(q.terms[j]), monomial(t))
-    compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
-    combine(i::Int, j::Int) = p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
-    combine(t::TT, j::Int) = TT(MA.operate!!(op, coefficient(t), coefficient(q.terms[j])), monomial(t))
-    resize(n) = resize!(p.terms, n)
+    get2 = let p=p
+        i -> begin
+            t = q.terms[i]
+            TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
+        end
+    end
+    set = let p=p
+        (i, t) -> begin
+            p.terms[i] = t
+        end
+    end
+    push = let p=p
+        t -> push!(p.terms, t)
+    end
+    compare_monomials = let q=q
+        (t, j) -> begin
+            if t isa Int && j isa Int
+                t = get1(t)
+            end
+            grlex(monomial(q.terms[j]), monomial(t))
+        end
+    end
+    combine = let p=p, q=q
+        (i, j) -> p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
+    end
+    combine = let q=q
+        (t, j) -> TT(MA.operate!!(op, coefficient(t), coefficient(q.terms[j])), monomial(t))
+    end
+    resize = let p=p
+        (n) -> resize!(p.terms, n)
+    end
     # We can modify the coefficient since it's the result of `combine`.
-    keep(t::Term) = !MA.iszero!!(coefficient(t))
-    keep(i::Int) = !MA.iszero!!(coefficient(p.terms[i]))
+    keep = let p=p
+        keep(t::Term) = !MA.iszero!!(coefficient(t))
+        keep(i::Int) = !MA.iszero!!(coefficient(p.terms[i]))
+        return keep
+    end
     polynomial_merge!(
         nterms(p), nterms(q), get1, get2, set, push,
         compare_monomials, combine, keep, resize
