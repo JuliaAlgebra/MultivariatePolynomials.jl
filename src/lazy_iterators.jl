@@ -17,7 +17,7 @@ function Base.iterate(it::OneOrZeroElementVector)
 end
 Base.iterate(::OneOrZeroElementVector, ::Nothing) = nothing
 
-Base.getindex(it::OneOrZeroElementVector, i) = it.el
+Base.getindex(it::OneOrZeroElementVector, i::Integer) = it.el
 
 Iterators.reverse(it::OneOrZeroElementVector) = it
 
