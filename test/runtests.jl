@@ -25,4 +25,5 @@ end
 if try_import(:TypedPolynomials)
     Mod = TypedPolynomials
     include("commutativetests.jl")
+    include("allocations.jl")
 end
