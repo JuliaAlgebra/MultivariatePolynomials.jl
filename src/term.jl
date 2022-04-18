@@ -24,7 +24,7 @@ When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
 term(coef, mono::AbstractMonomialLike) = termtype(mono, typeof(coef))(coef, mono)
-term(p::APL) = convert(termtype(p), p)
+term(p::APL) = convert(termtype(typeof(p)), p)
 
 """
     termtype(p::AbstractPolynomialLike)

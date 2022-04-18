@@ -63,6 +63,7 @@ abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 const APL{T} = AbstractPolynomialLike{T}
 
 include("zip.jl")
+include("lazy_iterators.jl")
 
 include("variable.jl")
 include("monomial.jl")
@@ -91,7 +92,6 @@ include("chain_rules.jl")
 
 include("default_term.jl")
 include("sequences.jl")
-include("lazy_iterators.jl")
 include("default_polynomial.jl")
 
 end # module

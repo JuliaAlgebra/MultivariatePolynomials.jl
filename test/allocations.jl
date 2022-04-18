@@ -18,9 +18,13 @@ using TypedPolynomials
 function test_polynomial_merge()
     @polyvar x
     p = x^2 + x + 1
-    q = 2x + 3
-    alloc_test(0) do
-        add!!(p, q)
+    for q in [x, x^2, 2x, 2x + 3]
+        alloc_test(0) do
+            add!!(p, q)
+        end
+        alloc_test(0) do
+            sub!!(p, q)
+        end
     end
 end
 
