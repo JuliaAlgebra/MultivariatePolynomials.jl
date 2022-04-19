@@ -1,3 +1,26 @@
+# Allows `terms(::AbstractTerm)` to not allocate and be type stable
+struct OneOrZeroElementVector{T} <: AbstractVector{T}
+    empty::Bool
+    el::T
+end
+
+Base.size(it::OneOrZeroElementVector) = (length(it),)
+
+Base.length(it::OneOrZeroElementVector) = Int(!it.empty)
+
+function Base.iterate(it::OneOrZeroElementVector)
+    if it.empty
+        return nothing
+    else
+        return it.el, nothing
+    end
+end
+Base.iterate(::OneOrZeroElementVector, ::Nothing) = nothing
+
+Base.getindex(it::OneOrZeroElementVector, i::Integer) = it.el
+
+Iterators.reverse(it::OneOrZeroElementVector) = it
+
 # Copied from MathOptInterface
 """
     struct LazyMap{T, VT}

@@ -147,7 +147,7 @@ Returns an iterator over the nonzero terms of the polynomial `p` sorted in the d
 
 Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy, 2x]``.
 """
-terms(t::AbstractTermLike) = iszero(t) ? termtype(t)[] : [term(t)]
+terms(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), term(t))
 terms(p::AbstractPolynomialLike) = terms(polynomial(p))
 
 """
@@ -178,7 +178,7 @@ Returns an iterator over the coefficients of the monomials of `X` in `p` where `
 Calling `coefficients` on ``4x^2y + xy + 2x`` should return an iterator of ``[4, 1, 2]``.
 Calling `coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])` should return an iterator of ``[2, 3, 1, 0]``.
 """
-coefficients(p::APL) = coefficient.(terms(p))
+coefficients(p::APL{T}) where {T} = LazyMap{T}(coefficient, terms(p))
 function coefficients(p::APL{T}, X::AbstractVector) where T
     σ, mv = sortmonovec(X)
     @assert length(mv) == length(X) # no duplicate in X
@@ -214,6 +214,7 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
 monomials(p::APL) = monovec(monomial.(terms(p)))
+monomials(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), monomial(t))
 
 function isconstant(p::APL)
     n = nterms(p)

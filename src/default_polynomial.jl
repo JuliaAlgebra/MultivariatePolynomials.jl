@@ -150,13 +150,13 @@ end
 Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 
 function grlex end
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Polynomial) where {T,TT}
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Union{Polynomial,AbstractTermLike}) where {T,TT}
     get1 = let p=p
         i -> p.terms[i]
     end
     get2 = let p=p
         i -> begin
-            t = q.terms[i]
+            t = terms(q)[i]
             TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
         end
     end
@@ -173,15 +173,15 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Po
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            grlex(monomial(q.terms[j]), monomial(t))
+            grlex(monomials(q)[j], monomial(t))
         end
     end
     combine = let p=p, q=q
         (i, j) -> begin
             if i isa Int
-                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(q.terms[j])), monomial(p.terms[i]))
+                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficients(q)[j]), monomial(p.terms[i]))
             else
-                typeof(i)(MA.operate!!(op, coefficient(i), coefficient(q.terms[j])), monomial(i))
+                typeof(i)(MA.operate!!(op, coefficient(i), coefficients(q)[j]), monomial(i))
             end
         end
     end
