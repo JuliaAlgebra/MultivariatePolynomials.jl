@@ -322,9 +322,9 @@ function _promote_terms(t1::AbstractTerm{LinearAlgebra.UniformScaling{T}}, t2::A
     return promote(t1, t2)
 end
 
-LinearAlgebra.adjoint(v::AbstractVariable) = v
-LinearAlgebra.adjoint(m::AbstractMonomial) = m
-LinearAlgebra.adjoint(t::AbstractTerm) = _term(LinearAlgebra.adjoint(coefficient(t)), monomial(t))
+LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
+LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
+LinearAlgebra.adjoint(t::AbstractTerm) = _term(LinearAlgebra.adjoint(coefficient(t)), LinearAlgebra.adjoint(monomial(t)))
 LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
 LinearAlgebra.adjoint(r::RationalPoly) = adjoint(numerator(r)) / adjoint(denominator(r))
 
