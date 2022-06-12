@@ -93,7 +93,7 @@ variable is decomposed into its real- and imaginary parts.
 
 See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`real`](@ref).
 """
-Base.imag(x::AbstractVariable) = 0
+Base.imag(x::AbstractVariable) = MA.Zero()
 
 # extend to higher-level elements. We make all those type-stable (but we need convert, as the construction method may
 # deliver simpler types than the inputs if they were deliberately casted, e.g., term to monomial)
