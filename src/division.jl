@@ -126,7 +126,7 @@ function _pseudo_rem(::UFD, f::APL, g::APL, algo)
         # Check with `::` that we don't have any type unstability on this variable.
         f = (new_f - new_g)::typeof(f)
         if algo.primitive_rem
-            f = primitive_part(f, algo)::typeof(f)
+            f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
         if algo.skip_last && maxdegree(f) == maxdegree(g)
             break

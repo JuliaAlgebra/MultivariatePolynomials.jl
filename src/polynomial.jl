@@ -356,6 +356,8 @@ end
 function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
     return PT
 end
+MA.operate(::typeof(removeleadingterm), t::AbstractTermLike) = removeleadingterm(t)
+removeleadingterm(t::AbstractTermLike) = zero(t)
 
 #$(SIGNATURES)
 """
@@ -450,6 +452,13 @@ Let `p = 2x*y + 3x + 1`, after `mapcoefficients!(α -> mod(3α, 6), p)`, `p` is
 equal to `3x + 3`.
 """
 function mapcoefficients! end
+
+function mapcoefficients(f::F, p::APL, ::MA.IsNotMutable; nonzero = false) where {F<:Function}
+    return mapcoefficients(f, p; nonzero = nonzero)
+end
+function mapcoefficients(f::F, p::APL, ::MA.IsMutable; nonzero = false) where {F<:Function}
+    return mapcoefficients!(f, p; nonzero = nonzero)
+end
 
 """
     mapcoefficients_to!(output::AbstractPolynomialLike, f::Function, p::AbstractPolynomialLike, nonzero = false)

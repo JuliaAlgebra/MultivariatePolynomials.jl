@@ -1,6 +1,9 @@
 using LinearAlgebra, Test
 using Combinatorics
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
@@ -150,17 +153,17 @@ function _mult_test(a, b)
     @test iszero(rem(b, a))
 end
 function mult_test(expected, a, b, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa Base.promote_typeof(a, b)
     _mult_test(expected, g)
 end
 function mult_test(expected, a::Number, b, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa promote_type(typeof(a), MP.coefficienttype(b))
     _mult_test(expected, g)
 end
 function mult_test(expected, a, b::Number, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa promote_type(MP.coefficienttype(a), typeof(b))
     _mult_test(expected, g)
 end
