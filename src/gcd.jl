@@ -344,6 +344,9 @@ function multivariate_gcd(p1::APL, p2::APL, var, algo, m1::MA.MutableTrait, m2::
     return sum(coefficient(t) * monomial(t) for t in terms(q))::MA.promote_operation(gcd, typeof(p1), typeof(p2))
 end
 
+_vector(t::AbstractVector) = collect(t)
+_vector(t::Vector) = t
+
 """
     isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
 
@@ -353,7 +356,7 @@ The output can be mutated without affecting `poly` if `mutability` is
 `MA.IsNotMutable`.
 """
 function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
-    old_terms = sort!(terms(_copy(poly, mutability)), by = Base.Fix2(degree, var), rev=true)
+    old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var), rev=true)
     T = termtype(var, typeof(substitute(Subs(), zero(poly), (var,) => (1,))))
     new_terms = T[]
     i = firstindex(old_terms)
