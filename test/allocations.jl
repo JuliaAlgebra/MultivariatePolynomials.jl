@@ -28,5 +28,13 @@ function test_polynomial_merge()
     end
 end
 
+function test_promotion()
+    @polyvar x y
+    p = x * y + x + y + 1
+    alloc_test(0) do
+        promote_operation(MP.substitute, MP.Subs, typeof(p), Pair{typeof(x),Int})
+    end
+end
+
 end
 TestAllocations.runtests()

@@ -357,7 +357,8 @@ The output can be mutated without affecting `poly` if `mutability` is
 """
 function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
     old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var), rev=true)
-    T = termtype(var, typeof(substitute(Subs(), zero(poly), (var,) => (1,))))
+    U = MA.promote_operation(substitute, Subs, typeof(poly), Pair{typeof(var),Int})
+    T = termtype(var, U)
     new_terms = T[]
     i = firstindex(old_terms)
     while i <= lastindex(old_terms)
