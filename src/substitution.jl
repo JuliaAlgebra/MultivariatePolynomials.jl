@@ -96,7 +96,7 @@ The allowed substutions are:
 * `V => P` where `V` is a tuple or vector of variables and `P` a tuple or vector of polynomials, e.g. `(x, y) => (y, x)` or `(y, x) => (2, 1)`.
 
 The order of the variables is lexicographic with the name with TypedPolynomials and by order of creation with DynamicPolynomials.
-Since there is no guarantee on the order of the variables, substitution directly with a tuple or a vetor is not allowed.
+Since there is no guarantee on the order of the variables, substitution directly with a tuple or a vector is not allowed.
 You can use `p(variables(p) => (1, 2))` instead if you are sure of the order of the variables (e.g. the name order matches the creation order).
 
 ### Examples
