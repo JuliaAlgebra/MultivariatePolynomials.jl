@@ -252,7 +252,7 @@ Returns the maximal total degree of the monomials of `p`, i.e. `maximum(degree, 
 Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `maximum(degree.(terms(p), v))`.
 
 ### Examples
-Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
+Calling `maxdegree` on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
 function maxdegree(X::AbstractVector{<:AbstractTermLike}, args::Vararg{Any,N}) where {N}
     return mapreduce(t -> degree(t, args...), max, X, init=0)
@@ -272,7 +272,7 @@ Returns the extremal total degrees of the monomials of `p`, i.e. `(mindegree(p),
 Returns the extremal degrees of the monomials of `p` in the variable `v`, i.e. `(mindegree(p, v), maxdegree(p, v))`.
 
 ### Examples
-Calling `extdegree` on on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
+Calling `extdegree` on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
 """
 function extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, args...)
     (mindegree(p, args...), maxdegree(p, args...))
