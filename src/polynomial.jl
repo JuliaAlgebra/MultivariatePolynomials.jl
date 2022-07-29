@@ -415,7 +415,7 @@ mapcoefficientsnz_to!(output::APL, f::F, p::APL) where {F<:Function} = mapcoeffi
 
 Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
 The function may return zero in which case the term is dropped.
-If the function is known to never returns zero for a nonzero input, `nonzero`
+If the function is known to never return zero for a nonzero input, `nonzero`
 can be set to `true` to get a small speedup.
 
 See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
@@ -440,7 +440,7 @@ end
 
 Mutate `p` by replacing each coefficient `α` by `f(α)`.
 The function may return zero in which case the term is dropped.
-If the function is known to never returns zero for a nonzero input, `nonzero`
+If the function is known to never return zero for a nonzero input, `nonzero`
 can be set to `true` to get a small speedup.
 The function returns `p`, which is identically equal to the second argument.
 
