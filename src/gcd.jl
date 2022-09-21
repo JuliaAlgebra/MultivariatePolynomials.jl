@@ -175,8 +175,8 @@ function deflation(p::AbstractPolynomialLike)
     end
     @assert all(d -> d >= 0, shift)
     @assert all(d -> d >= 0, defl)
-    s = prod(variables(p).^shift)::monomialtype(p)
-    d = prod(variables(p).^defl)::monomialtype(p)
+    s = prod(variables(p).^shift; init = constantmonomial(p))::monomialtype(p)
+    d = prod(variables(p).^defl; init = constantmonomial(p))::monomialtype(p)
     return s, d
 end
 
@@ -357,7 +357,8 @@ The output can be mutated without affecting `poly` if `mutability` is
 """
 function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
     old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var), rev=true)
-    T = termtype(var, typeof(substitute(Subs(), zero(poly), (var,) => (1,))))
+    U = MA.promote_operation(substitute, Subs, typeof(poly), Pair{typeof(var),Int})
+    T = termtype(var, U)
     new_terms = T[]
     i = firstindex(old_terms)
     while i <= lastindex(old_terms)
