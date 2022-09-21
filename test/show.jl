@@ -1,3 +1,9 @@
+struct CustomLaTeXPrint end
+
+Base.:-(::CustomLaTeXPrint) = CustomLaTeXPrint()
+Base.iszero(::CustomLaTeXPrint) = false
+Base.show(io::IO, ::MIME"text/latex", ::CustomLaTeXPrint) = print(io, "a_a")
+
 @testset "Show" begin
     Mod.@polyvar x y z
     @test sprint(show, (x*y^2 + x + 1 + y)) == "xy² + x + y + 1"
@@ -37,4 +43,8 @@
     @test sprint(show, x[10]) == "x₁₀"
 
     @test sprint(print, 2x[1]^2+3x[3]+1+x[4]) == "2*x[1]^2 + 3*x[3] + x[4] + 1"
+
+    a = CustomLaTeXPrint()
+    @test sprint((io, x) -> show(io, MIME"text/latex"(), x), term(a, x[1]^2)) == "\$\$ (a_a)x_{1}^{2} \$\$"
+    @test sprint((io, x) -> show(io, MIME"text/latex"(), x), polynomial([a, a], [x[1]^2, x[2]])) == "\$\$ (a_a)x_{1}^{2} + (a_a)x_{2} \$\$"
 end

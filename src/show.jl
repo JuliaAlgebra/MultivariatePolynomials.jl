@@ -80,13 +80,13 @@ unicode_superscript(i) = unicode_superscripts[i+1]
 # TERM
 function _show(io::IO, mime, t::AbstractTerm)
     if isconstant(t)
-        print_coefficient(io, coefficient(t))
+        print_coefficient(io, mime, coefficient(t))
     else
         if should_print_coefficient(coefficient(t))
             if !should_print_coefficient(-coefficient(t))
                 print(io, '-')
             else
-                print_coefficient(io, coefficient(t))
+                print_coefficient(io, mime, coefficient(t))
                 if !iszero(t)
                     # Print a multiplication sign between coefficent and monmomial
                     # depending on the mime type
@@ -110,8 +110,22 @@ print_maybe_multiplication_sign(io::IO, mime) = nothing
 
 should_print_coefficient(x) = true  # By default, just print all coefficients
 should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one" coefficients
-print_coefficient(io::IO, coeff::Real) = print(io, coeff)
-print_coefficient(io::IO, coeff) = print(io, "(", coeff, ")")
+# `Int`, `Float64` don't support MIME"text/latex".
+# We could add a check with `showable` if a `Real` subtype supports it and
+# the feature is requested.
+print_coefficient(io::IO, mime, coeff::Real) = print(io, coeff)
+# JuMP expressions supports LaTeX output so `showable` will return `true`
+# for them. It is important for anonymous variables to display properly as well:
+# https://github.com/jump-dev/SumOfSquares.jl/issues/256
+function print_coefficient(io::IO, mime, coeff)
+    print(io, "(")
+    if showable(mime, coeff)
+        show(io, mime, coeff)
+    else
+        show(io, coeff)
+    end
+    print(io, ")")
+end
 
 # POLYNOMIAL
 function _show(io::IO, mime, p::AbstractPolynomial{T}) where T
