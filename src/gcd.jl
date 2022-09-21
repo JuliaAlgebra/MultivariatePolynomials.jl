@@ -175,8 +175,8 @@ function deflation(p::AbstractPolynomialLike)
     end
     @assert all(d -> d >= 0, shift)
     @assert all(d -> d >= 0, defl)
-    s = prod(variables(p).^shift)::monomialtype(p)
-    d = prod(variables(p).^defl)::monomialtype(p)
+    s = prod(variables(p).^shift; init = constantmonomial(p))::monomialtype(p)
+    d = prod(variables(p).^defl; init = constantmonomial(p))::monomialtype(p)
     return s, d
 end
 
