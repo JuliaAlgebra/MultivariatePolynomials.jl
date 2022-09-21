@@ -37,6 +37,7 @@ function test_promotion()
     alloc_test(0) do
         promote_operation(MP.substitute, MP.Subs, typeof(p), Pair{typeof(x),Int})
     end
+end
 
 function test_isapproxzero()
     @polyvar x y
