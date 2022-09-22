@@ -301,7 +301,7 @@ for op in [:+, :-]
             # and it will throw a MethodError in case the coefficients are not comparable
             if monomial(t1) == monomial(t2)
                 polynomial(_term($op(coefficient(t1), coefficient(t2)), monomial(t1)), S)
-            elseif monomial(t1) > monomial(t2)
+            elseif monomial(t1) < monomial(t2)
                 ts = _polynomial_2terms(t1, $op(t2), S)
             else
                 ts = _polynomial_2terms($op(t2), t1, S)

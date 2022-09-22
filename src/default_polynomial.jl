@@ -173,7 +173,7 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Un
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            grlex(monomials(q)[j], monomial(t))
+            -grlex(monomials(q)[j], monomial(t))
         end
     end
     combine = let p=p, q=q
@@ -207,7 +207,7 @@ end
 function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polynomial)
     empty!(output.terms)
     mul_to_terms!(output.terms, p, q)
-    sort!(output.terms, lt=(>))
+    sort!(output.terms, lt=(<))
     uniqterms!(output.terms)
     return output
 end
@@ -231,6 +231,6 @@ function MA.operate!(::typeof(one), p::Polynomial{T}) where T
 end
 
 function MA.operate!(::typeof(removeleadingterm), p::Polynomial)
-    deleteat!(p.terms, 1)
+    pop!(p.terms)
     return p
 end
