@@ -186,7 +186,7 @@ function coefficients(p::APL{T}, X::AbstractVector) where T
     i = 1
     for t in terms(p)
         m = monomial(t)
-        while i <= length(mv) && mv[i] > m
+        while i <= length(mv) && mv[i] < m
             c[σ[i]] = zero(T)
             i += 1
         end
@@ -374,7 +374,7 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
     q = zero(p)
     for t in terms(p)
         m = monomial(t)
-        while i <= length(smv) && smv[i] > m
+        while i <= length(smv) && smv[i] < m
             i += 1
         end
         if i > length(smv) || smv[i] != m

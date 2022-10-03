@@ -19,7 +19,7 @@ Returns the vector of monomials `X` in decreasing order and without any duplicat
 Calling `monovec` on ``[xy, x, xy, x^2y, x]`` should return ``[x^2y, xy, x]``.
 """
 function monovec(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
-    Y = sort(X, rev=true)
+    Y = sort(X)
     dups = findall(i -> Y[i] == Y[i-1], 2:length(Y))
     deleteat!(Y, dups)
     Y
@@ -75,7 +75,7 @@ Returns `σ`, the orders in which one must take the monomials in `X` to make the
 Calling `sortmonovec` on ``[xy, x, xy, x^2y, x]`` should return ``([4, 1, 2], [x^2y, xy, x])``.
 """
 function sortmonovec(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
-    σ = sortperm(X, rev=true)
+    σ = sortperm(X)
     dups = findall(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
     deleteat!(σ, dups)
     σ, X[σ]
