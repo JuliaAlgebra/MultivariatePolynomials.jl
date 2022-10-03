@@ -81,7 +81,7 @@ function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
 end
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState())
-    polynomial!(sort!(ts, lt=(>)), sortstate(s))
+    polynomial!(sort!(ts, lt=(<)), sortstate(s))
 end
 
 _collect(v::Vector) = v
