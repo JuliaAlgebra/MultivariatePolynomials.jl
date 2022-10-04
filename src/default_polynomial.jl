@@ -173,7 +173,7 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Un
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            -grlex(monomials(q)[j], monomial(t))
+            grlex(monomials(q)[j], monomial(t))
         end
     end
     combine = let p=p, q=q

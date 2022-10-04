@@ -92,7 +92,7 @@ function polynomial_merge!(
     while i <= n1 && j <= n2
         @assert buffer === nothing || isempty(buffer)
         comp = compare_monomials(i, j)
-        if comp > 0
+        if comp < 0
             if k == i
                 t0 = get1(i)
                 if buffer === nothing
@@ -126,15 +126,15 @@ function polynomial_merge!(
             @assert i == k
             t = first(buffer)
             comp = compare_monomials(t, j)
-            if comp >= 0
-                if comp > 0
+            if comp <= 0
+                if comp < 0
                     t = get2(j)
                 else
                     t = combine(t, j)
                 end
                 j += 1
             end
-            if comp <= 0
+            if comp >= 0
                 DataStructures.dequeue!(buffer)
             end
             # if `comp` is zero, we called `combine` so `t`
