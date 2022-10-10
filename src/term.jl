@@ -49,7 +49,7 @@ termtype(::Type{M}) where M<:AbstractMonomialLike = termtype(M, Int)
 termtype(v::Type{<:AbstractVariable}) = termtype(monomialtype(v))
 termtype(v::Type{<:AbstractVariable}, ::Type{T}) where T = termtype(monomialtype(v), T)
 termtype(p::APL, ::Type{T}) where {T} = termtype(typeof(p), T)
-termtype(p::APL) where {T} = termtype(typeof(p))
+termtype(p::APL) = termtype(typeof(p))
 termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = termtype(PT)
 termtype(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}, ::Type{T}) where {PT <: APL, T} = termtype(PT, T)
 

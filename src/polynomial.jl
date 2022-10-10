@@ -81,7 +81,7 @@ function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
 end
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState())
-    polynomial!(sort!(ts, lt=(>)), sortstate(s))
+    polynomial!(sort!(ts, lt=(<)), sortstate(s))
 end
 
 _collect(v::Vector) = v
@@ -186,7 +186,7 @@ function coefficients(p::APL{T}, X::AbstractVector) where T
     i = 1
     for t in terms(p)
         m = monomial(t)
-        while i <= length(mv) && mv[i] > m
+        while i <= length(mv) && mv[i] < m
             c[σ[i]] = zero(T)
             i += 1
         end
@@ -294,7 +294,7 @@ end
 """
     leadingterm(p::AbstractPolynomialLike)
 
-Returns the coefficient of the leading term, i.e. `first(terms(p))`.
+Returns the coefficient of the leading term, i.e. `last(terms(p))`.
 
 ### Examples
 
@@ -304,7 +304,7 @@ function leadingterm(p::AbstractPolynomialLike)
     if iszero(p)
         zeroterm(p)
     else
-        first(terms(p))
+        last(terms(p))
     end
 end
 leadingterm(t::AbstractTermLike) = term(t)
@@ -327,14 +327,14 @@ end
 """
     leadingmonomial(p::AbstractPolynomialLike)
 
-Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `first(monomials(p))`.
+Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `last(monomials(p))`.
 
 ### Examples
 
 Calling `leadingmonomial` on ``4x^2y + xy + 2x`` should return ``x^2y``.
 """
 function leadingmonomial(p::AbstractPolynomialLike)
-    # first(monomials(p)) would be more efficient for DynamicPolynomials but
+    # last(monomials(p)) would be more efficient for DynamicPolynomials but
     # monomial(leadingterm(p)) is more efficient for TypedPolynomials and is better if p is a term
     monomial(leadingterm(p))
 end
@@ -351,7 +351,7 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 """
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
-    polynomial(terms(p)[2:end], SortedUniqState())
+    polynomial(terms(p)[1:(end-1)], SortedUniqState())
 end
 function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
     return PT
@@ -374,7 +374,7 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
     q = zero(p)
     for t in terms(p)
         m = monomial(t)
-        while i <= length(smv) && smv[i] > m
+        while i <= length(smv) && smv[i] < m
             i += 1
         end
         if i > length(smv) || smv[i] != m

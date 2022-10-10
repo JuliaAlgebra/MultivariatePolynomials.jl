@@ -356,7 +356,7 @@ The output can be mutated without affecting `poly` if `mutability` is
 `MA.IsNotMutable`.
 """
 function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
-    old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var), rev=true)
+    old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var))
     U = MA.promote_operation(substitute, Subs, typeof(poly), Pair{typeof(var),Int})
     T = termtype(var, U)
     new_terms = T[]
@@ -400,8 +400,8 @@ function not_divided_error(u, v)
     )
 end
 
-# If `p` and `q` do not have the same time then the local variables `p` and `q`
-# won't be type stable.
+# If `p` and `q` do not have the same type then the local variables `p` and `q`
+# won't be type stable so we create `u` and `v`.
 function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
     if maxdegree(p) < maxdegree(q)
         return primitive_univariate_gcd!(q, p, algo)

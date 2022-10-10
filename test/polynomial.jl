@@ -7,9 +7,9 @@ const MP = MultivariatePolynomials
 @testset "Polynomial" begin
     Mod.@polyvar x
 
-    @test terms(polynomial([1, x^2, x, 2x^2])) == [3x^2, x, 1]
-    @test terms(polynomial([x, 3x^4, 2], MP.UniqState())) == [3x^4, x, 2]
-    @test terms(polynomial([x^3, 2x^3, x^2, -2x^2, x^2, x, 2, -2], MP.SortedState())) == [3x^3, x]
+    @test terms(polynomial([1, x^2, x, 2x^2])) == [1, x, 3x^2]
+    @test terms(polynomial([x, 3x^4, 2], MP.UniqState())) == [2, x, 3x^4]
+    @test terms(polynomial([-2, 2, x, x^2, -2x^2, x^2, x^3, 2x^3], MP.SortedState())) == [x, 3x^3]
 
     @test polynomial(1 + x) == 1 + x
     @test leadingterm(1 + x) == x
@@ -28,10 +28,10 @@ const MP = MultivariatePolynomials
     @inferred zero(1.0 + x)
 
     @test polynomial(1:2, [x, x^2]) == x + 2x^2
-    @test polynomial(1:2, monomials(x, 1:2)) == 2x + x^2
+    @test polynomial(1:2, monomials(x, 1:2)) == x + 2x^2
 
-    @test terms(polynomial(1 + x + x^2 - x + x^2)) == [2x^2, 1]
-    @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [2x^2, 1]
+    @test terms(polynomial(1 + x + x^2 - x + x^2)) == [1, 2x^2]
+    @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [1, 2x^2]
 
     @test (1.0 + x) * x == x^2 + x
     @test constantterm(1, x) * (1 - x) == 1 - x
@@ -49,7 +49,8 @@ const MP = MultivariatePolynomials
     p = 3x^2*y^4 + 2x
     @test +(p) === p
     @test *(p) === p
-    @test terms(p)[end] == 2x
+    @test terms(p)[1] == 2x
+    @test terms(p)[end] == 3x^2*y^4
     typetests(p)
     typetests([p, x + y])
     @test (@inferred polynomial(p)) isa AbstractPolynomial{Int}
@@ -97,22 +98,23 @@ const MP = MultivariatePolynomials
     @test collect(coefficients(x*y + 2 + 3x^2*y + 4x + 6y, [x, x*y^2, x*y, x^2*y, y, x^3])) == [4, 0, 1, 3, 6, 0]
 
     # Doc examples
-    @test collect(coefficients(4x^2*y + x*y + 2x)) == [4, 1, 2]
+    @test collect(coefficients(4x^2*y + x*y + 2x)) == [2, 1, 4]
     @test collect(coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])) == [2, 3, 1, 0]
 
-    p = polynomial([4, 9], [x, x*x])
-    @test collect(coefficients(p)) == [9, 4]
-    @test monomials(p)[1] == x^2
-    @test monomials(p)[2] == x
-    @test p == dot([4, 9], [x, x*x])
+    for p in [polynomial([4, 9], [x, x*x]), polynomial([9, 4], [x*x, x])]
+        @test collect(coefficients(p)) == [4, 9]
+        @test monomials(p)[1] == x
+        @test monomials(p)[2] == x^2
+        @test p == dot([4, 9], [x, x*x])
+    end
 
     @inferred polynomial(i -> float(i), [x, x*x])
     @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
     for p in [polynomial(i -> float(i), [x, x*x]),
               polynomial(i -> 1.0, [x*x, x, x*x]),
-              polynomial(i -> 3 - float(i), monovec([x*x, x]))]
-        @test collect(coefficients(p)) == [2.0, 1.0]
-        @test collect(monomials(p)) == monovec([x^2, x])
+              polynomial(i -> float(i), monovec([x*x, x]))]
+        @test collect(coefficients(p)) == [1.0, 2.0]
+        @test collect(monomials(p)) == monovec([x, x^2])
     end
 
     @test (x + y)' == x + y
@@ -127,7 +129,7 @@ const MP = MultivariatePolynomials
     @test polynomial([1 2; 3 4], [x^2, y], Float64) isa AbstractPolynomial{Float64}
     @test polynomial([1 2; 3 4], [y, x^2]) == y^2 + 5x^2*y + 4x^4
     @test polynomial([1 2; 3 4], [y, x^2], Float64) isa AbstractPolynomial{Float64}
-    @test polynomial([1 2; 3 4], monovec([y, x^2])) == x^4 + 5x^2*y + 4y^2
+    @test polynomial([1 2; 3 4], monovec([y, x^2])) == 4x^4 + 5x^2*y + y^2
     @test polynomial([1 2; 3 4], monovec([y, x^2]), Float64) isa AbstractPolynomial{Float64}
 
     @test (@inferred round(2.6x + 1.001x^2)) == 3x + 1x^2
@@ -138,11 +140,11 @@ const MP = MultivariatePolynomials
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
         p = 3*y^2 + 2*y*x
-        @test collect(coefficients(p)) == [2, 3]
+        @test collect(coefficients(p)) == [3, 2]
         @test collect(monomials(p)) == monovec([x*y, y^2])
         # Examples from p. 59 of the 4th edition of "Ideals, Varieties, and Algorithms" of Cox, Little and O'Shea
         f = 4*x*y^2*z + 4*z^2 - 5*x^3 + 7*x^2*z^2
-        @test collect(coefficients(f)) == [7, 4, -5, 4]
+        @test collect(coefficients(f)) == [4, -5, 4, 7]
         @test collect(monomials(f)) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
         @test ordering(f) === GradedLex()
     end
