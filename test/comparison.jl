@@ -83,18 +83,18 @@
         Mod.@polyvar x
         # Polynomial of multiple terms
         p = x + x^2
-        @test nothing != p
-        @test p != nothing
+        @test nothing !== p
+        @test p !== nothing
         @test Dict{Int,Int}() != p
-        @test p != Dict{Int,Int}()
+        @test p !== Dict{Int,Int}()
         # Polynomial of one term
         p = x + x^2 - x
-        @test p != nothing
-        @test p != Dict{Int,Int}()
+        @test p !== nothing
+        @test p !== Dict{Int,Int}()
         # Polynomial of no term
         # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
         p = x - x
-        @test p != nothing
-        @test p != Dict{Int,Int}()
+        @test p !== nothing
+        @test p !== Dict{Int,Int}()
     end
 end
