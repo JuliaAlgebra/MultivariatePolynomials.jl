@@ -61,4 +61,30 @@
         @test filter(mono -> degree(mono) == 1, X) == monovec([x, y])
         @test filter(mono -> degree(mono) == 0, X) == monovec([x^0])
     end
+
+    @testset "monomials" begin
+        Mod.@polyvar v[1:3]
+        @test monomials(v, 0:3) == [
+            v[1]^0,
+            v[3],
+            v[2],
+            v[1],
+            v[3]^2,
+            v[2]*v[3],
+            v[2]^2,
+            v[1]*v[3],
+            v[1]*v[2],
+            v[1]^2,
+            v[3]^3,
+            v[2]*v[3]^2,
+            v[2]^2*v[3],
+            v[2]^3,
+            v[1]*v[3]^2,
+            v[1]*v[2]*v[3],
+            v[1]*v[2]^2,
+            v[1]^2*v[3],
+            v[1]^2*v[2],
+            v[1]^3,
+        ]
+    end
 end
