@@ -223,23 +223,19 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
             algo,
         )
     end
-    @show @__LINE__
     test_relatively_prime(
         -z^6 - 3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
         -y*z^6 - 3o*y^3*z^3 - 2*y^5 + y^2*z^3 + y*z^4 + y^3 + y^3*z - y - z,
         algo,
     )
-    @show @__LINE__
     test_relatively_prime(
         -z^6 - 3o*y^2*z^3 - 3*y^4 + y*z^3 + z^4 + 2*y^3 + 2*y^2*z - y,
         -y^2*z^6 - 3o*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z,
         algo,
     )
-    @show @__LINE__
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
-    @show @__LINE__
     if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
         sym_test(a, b, 1, algo)
     end
