@@ -23,6 +23,8 @@
     @test Y[2] == 2x + 4y
     @test dot(X, [1 2; 3 4] * X) == x^2 + 5x*y + 4y^2
 
+    @test typeof(promote_type(Any, typeof(MP.changecoefficienttype(x + 1, Any)))) == Any
+
     function _t(a, b, T)
         if VERSION < v"1.6"
             @test typeof(@inferred vcat(a, b)) in [Vector{T}, Vector{Any}]

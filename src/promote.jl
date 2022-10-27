@@ -26,7 +26,6 @@ end
 function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S, T}
     return polynomialtype(PT, promote_type(S, T))
 end
-Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 Base.promote_rule(::Type{T}, ::Type{PT}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 # Resolve method ambiguity with Base:
 Base.promote_rule(::Type{Any}, ::Type{<:APL}) = Any
