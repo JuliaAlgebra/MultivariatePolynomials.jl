@@ -19,6 +19,7 @@ include("comparison.jl")
 
 include("substitution.jl")
 include("differentiation.jl")
+include("antidifferentiation.jl")
 include("division.jl")
 include("chain_rules.jl")
 

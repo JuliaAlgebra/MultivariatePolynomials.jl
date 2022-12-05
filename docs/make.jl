@@ -15,6 +15,7 @@ makedocs(
         "Types" => "types.md",
         "Substitution" => "substitution.md",
         "Differentiation" => "differentiation.md",
+        "Antidifferentiation" => "antidifferentiation.md",
         "Division" => "division.md",
     ]
 )
