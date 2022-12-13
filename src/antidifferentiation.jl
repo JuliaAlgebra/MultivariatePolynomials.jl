@@ -3,7 +3,7 @@ export antidifferentiate
 """
     antidifferentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Union{Int, Val}=1)
 
-Antidifferentiate `deg` times the polynomial `p` by the variable `v`. The free constant involded by
+Antidifferentiate `deg` times the polynomial `p` by the variable `v`. The free constant involved by
 the antidifferentiation is set to 0.
 
 
