@@ -50,6 +50,12 @@ substitute(st::AST, m::AbstractMonomial, s::Substitutions) = powersubstitute(st,
 ## Terms
 substitute(st::AST, t::AbstractTerm, s::Substitutions) = coefficient(t) * substitute(st, monomial(t), s)
 
+function MA.promote_operation(::typeof(substitute), ::Type{Subs}, ::Type{T}, args::Vararg{Type,N}) where {T<:AbstractTerm,N}
+    M = MA.promote_operation(substitute, Subs, monomialtype(T), args...)
+    U = coefficienttype(T)
+    return MA.promote_operation(*, U, M)
+end
+
 ## Polynomials
 _polynomial(α) = α
 _polynomial(p::APL) = polynomial(p)
@@ -59,13 +65,18 @@ function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
     else
         ts = terms(p)
         r1 = substitute(st, ts[1], s)
-        R = Base.promote_op(+, typeof(r1), typeof(r1))
+        R = MA.promote_operation(+, typeof(r1), typeof(r1))
         result::R = convert(R, r1)
         for i in 2:length(ts)
             result += substitute(st, ts[i], s)
         end
         result
     end
+end
+
+function MA.promote_operation(::typeof(substitute), ::Type{Subs}, ::Type{P}, args::Vararg{Type,N}) where {P<:AbstractPolynomial,N}
+    T = MA.promote_operation(substitute, Subs, termtype(P), args...)
+    return MA.promote_operation(+, T, T)
 end
 
 ## Fallbacks
@@ -96,7 +107,7 @@ The allowed substutions are:
 * `V => P` where `V` is a tuple or vector of variables and `P` a tuple or vector of polynomials, e.g. `(x, y) => (y, x)` or `(y, x) => (2, 1)`.
 
 The order of the variables is lexicographic with the name with TypedPolynomials and by order of creation with DynamicPolynomials.
-Since there is no guarantee on the order of the variables, substitution directly with a tuple or a vetor is not allowed.
+Since there is no guarantee on the order of the variables, substitution directly with a tuple or a vector is not allowed.
 You can use `p(variables(p) => (1, 2))` instead if you are sure of the order of the variables (e.g. the name order matches the creation order).
 
 ### Examples

@@ -1,5 +1,12 @@
 using BenchmarkTools
 
+function bench0(x, T=Rational{BigInt})
+    o = one(T)
+    p = o * x^2 + 2o * x + o
+    q = o * x + o
+    @benchmark gcd($p, $q)
+end
+
 function bench1(x, y, z, T=Rational{BigInt})
     o = one(T)
     p = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)

@@ -34,19 +34,19 @@
          3 2 4
          5 4 6]
     p = @inferred polynomial(P, [x*y, x^2, y^2])
-    @test coefficients(p) == [4, 3, 5, 4, 3, 2, 6, 5, 4]
-    @test monomials(p) == [x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y]
-    p = @inferred polynomial(Q, monovec([x*y, x^2, y^2]))
-    @test coefficients(p) == [4, 3, 5, 4, 3, 2, 6, 5, 4]
-    @test monomials(p) == [x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y]
+    @test coefficients(p) == reverse([4, 3, 5, 4, 3, 2, 6, 5, 4])
+    @test monomials(p) == reverse([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
+    p = @inferred polynomial(Q[3:-1:1, 3:-1:1], monovec([x*y, x^2, y^2]))
+    @test coefficients(p) == reverse([4, 3, 5, 4, 3, 2, 6, 5, 4])
+    @test monomials(p) == reverse([x^4, x^3*y, x^2*y^2, x*y^3, x*y*x^2, x*y*x*y, y^4, y^2*x^2, y^2*x*y])
     q = @inferred polynomial(zeros(Float64, 0, 0), emptymonovec(x))
     @test q isa AbstractPolynomialLike{Float64}
     @test q == 0
 end
 @testset "Noncommutative quadratic" begin
     Mod.@ncpolyvar x[1:2]
-    Q = Hermitian([1 2 + 3im; 2 - 3im 4])
+    Q = Hermitian([4 2 - 3im; 2 + 3im 1])
     p = 1x[1]^2 + (2 + 3im) * x[1] * x[2] + (2 - 3im) * x[2] * x[1] + 4x[2]^2
-    @test polynomial(Q, x) == p
+    @test polynomial(Q[2:-1:1, 2:-1:1], x) == p
     @test polynomial(Q, monovec(x)) == p
 end

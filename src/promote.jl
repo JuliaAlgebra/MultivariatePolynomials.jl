@@ -116,3 +116,9 @@ function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}}, QT::Type{<:APL{T}
     U = MA.promote_operation(+, ST, ST)
     return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
 end
+function MA.promote_operation(::typeof(*), ::Type{T}, ::Type{P}) where {T, U, P<:APL{U}}
+    return changecoefficienttype(P, MA.promote_operation(*, T, U))
+end
+function MA.promote_operation(::typeof(*), ::Type{P}, ::Type{T}) where {T, U, P<:APL{U}}
+    return changecoefficienttype(P, MA.promote_operation(*, U, T))
+end

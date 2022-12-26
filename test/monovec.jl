@@ -2,7 +2,7 @@
     Mod.@polyvar x y
     @test x > y
     @test x^2 > y^2
-    X = [x^2, x*y, y^2]
+    X = [y^2, x*y, x^2]
     @test isempty(@inferred monomials((x, y), 1:0))
     for (i, m) in enumerate(monomials((x, y), 2))
         @test m == X[i]
@@ -10,7 +10,7 @@
     for (i, m) in enumerate(monomials((x, y), 2:2))
         @test m == X[i]
     end
-    X = [x^2, y^2]
+    X = [y^2, x^2]
     for (i, m) in enumerate(monomials((x, y), 2, m -> m != x*y))
         @test m == X[i]
     end
@@ -27,23 +27,23 @@
     @test variables(X)[1] == x
     @test variables(X)[2] == y
     @test X[2:3][1] == x
-    @test X[2:3][2] == 1
+    @test X[2:3][2] == x * y
     @test monovec(X[[3, 2]])[1] == x
-    @test monovec(X[[3, 2]])[2] == 1
+    @test monovec(X[[3, 2]])[2] == x * y
     # Documentation examples
-    @test monovec([x*y, x, x*y, x^2*y, x]) == [x^2*y, x*y, x]
+    @test monovec([x*y, x, x*y, x^2*y, x]) == [x, x*y, x^2*y]
     @test monovectype([x*y, x, 1, x^2*y, x]) <: AbstractVector{typeof(x*y)}
     @test monovectype([x*y, x, x*y, x^2*y, x]) <: AbstractVector
     σ, smv = sortmonovec([x*y, x, x*y, x^2*y, x])
-    @test smv == [x^2*y, x*y, x]
-    @test σ[1] == 4
+    @test smv == [x, x*y, x^2*y]
+    @test σ[3] == 4
     @test σ[2] in (1, 3)
-    @test σ[3] in (2, 5)
-    @test mergemonovec([[x*y, x, x*y], [x^2*y, x]]) == [x^2*y, x*y, x]
+    @test σ[1] in (2, 5)
+    @test mergemonovec([[x*y, x, x*y], [x^2*y, x]]) == [x, x*y, x^2*y]
     @test_throws ArgumentError monovec([1, 2], [x^2])
-    σ, X = sortmonovec((y, x))
+    σ, X = sortmonovec((x, y))
     @test σ == [2, 1]
-    @test X == [x, y]
+    @test X == [y, x]
     @test monomialtype([x, y]) <: AbstractMonomial
     @test monomialtype([x^2, 1]) <: AbstractMonomial
     @test monomialtype([x*y, x+y]) <: AbstractMonomial
@@ -60,5 +60,31 @@
         X = monomials(vars, 0:1)
         @test filter(mono -> degree(mono) == 1, X) == monovec([x, y])
         @test filter(mono -> degree(mono) == 0, X) == monovec([x^0])
+    end
+
+    @testset "monomials" begin
+        Mod.@polyvar v[1:3]
+        @test monomials(v, 0:3) == [
+            v[1]^0,
+            v[3],
+            v[2],
+            v[1],
+            v[3]^2,
+            v[2]*v[3],
+            v[2]^2,
+            v[1]*v[3],
+            v[1]*v[2],
+            v[1]^2,
+            v[3]^3,
+            v[2]*v[3]^2,
+            v[2]^2*v[3],
+            v[2]^3,
+            v[1]*v[3]^2,
+            v[1]*v[2]*v[3],
+            v[1]*v[2]^2,
+            v[1]^2*v[3],
+            v[1]^2*v[2],
+            v[1]^3,
+        ]
     end
 end

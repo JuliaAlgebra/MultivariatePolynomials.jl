@@ -104,4 +104,6 @@ Base.:+(::C, ::C) = C()
 @testset "promote_operation with tricky types" begin
     Mod.@polyvar x
     @test MA.promote_operation(*, polynomialtype(x, A), polynomialtype(x, A)) == polynomialtype(x, C)
+    @test MA.promote_operation(*, polynomialtype(x, A), A) == polynomialtype(x, B)
+    @test MA.promote_operation(*, A, polynomialtype(x, A)) == polynomialtype(x, B)
 end

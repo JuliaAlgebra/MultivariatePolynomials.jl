@@ -81,7 +81,7 @@ function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
     polynomial!(uniqterms!(ts), SortedUniqState())
 end
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::UnsortedState=MessyState())
-    polynomial!(sort!(ts, lt=(>)), sortstate(s))
+    polynomial!(sort!(ts, lt=(<)), sortstate(s))
 end
 
 _collect(v::Vector) = v
@@ -186,7 +186,7 @@ function coefficients(p::APL{T}, X::AbstractVector) where T
     i = 1
     for t in terms(p)
         m = monomial(t)
-        while i <= length(mv) && mv[i] > m
+        while i <= length(mv) && mv[i] < m
             c[σ[i]] = zero(T)
             i += 1
         end
@@ -252,7 +252,7 @@ Returns the maximal total degree of the monomials of `p`, i.e. `maximum(degree, 
 Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `maximum(degree.(terms(p), v))`.
 
 ### Examples
-Calling `maxdegree` on on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
+Calling `maxdegree` on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
 function maxdegree(X::AbstractVector{<:AbstractTermLike}, args::Vararg{Any,N}) where {N}
     return mapreduce(t -> degree(t, args...), max, X, init=0)
@@ -272,7 +272,7 @@ Returns the extremal total degrees of the monomials of `p`, i.e. `(mindegree(p),
 Returns the extremal degrees of the monomials of `p` in the variable `v`, i.e. `(mindegree(p, v), maxdegree(p, v))`.
 
 ### Examples
-Calling `extdegree` on on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
+Calling `extdegree` on ``4x^2y + xy + 2x`` should return `(1, 3)`, `extdegree(4x^2y + xy + 2x, x)` should return `(1, 2)` and  `maxdegree(4x^2y + xy + 2x, y)` should return `(0, 1)`.
 """
 function extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}}, args...)
     (mindegree(p, args...), maxdegree(p, args...))
@@ -294,7 +294,7 @@ end
 """
     leadingterm(p::AbstractPolynomialLike)
 
-Returns the coefficient of the leading term, i.e. `first(terms(p))`.
+Returns the coefficient of the leading term, i.e. `last(terms(p))`.
 
 ### Examples
 
@@ -304,7 +304,7 @@ function leadingterm(p::AbstractPolynomialLike)
     if iszero(p)
         zeroterm(p)
     else
-        first(terms(p))
+        last(terms(p))
     end
 end
 leadingterm(t::AbstractTermLike) = term(t)
@@ -327,14 +327,14 @@ end
 """
     leadingmonomial(p::AbstractPolynomialLike)
 
-Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `first(monomials(p))`.
+Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))` or `last(monomials(p))`.
 
 ### Examples
 
 Calling `leadingmonomial` on ``4x^2y + xy + 2x`` should return ``x^2y``.
 """
 function leadingmonomial(p::AbstractPolynomialLike)
-    # first(monomials(p)) would be more efficient for DynamicPolynomials but
+    # last(monomials(p)) would be more efficient for DynamicPolynomials but
     # monomial(leadingterm(p)) is more efficient for TypedPolynomials and is better if p is a term
     monomial(leadingterm(p))
 end
@@ -351,11 +351,13 @@ Calling `removeleadingterm` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
 """
 function removeleadingterm(p::AbstractPolynomialLike)
     # Iterators.drop returns an Interators.Drop which is not an AbstractVector
-    polynomial(terms(p)[2:end], SortedUniqState())
+    polynomial(terms(p)[1:(end-1)], SortedUniqState())
 end
 function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT<:AbstractPolynomial}
     return PT
 end
+MA.operate(::typeof(removeleadingterm), t::AbstractTermLike) = removeleadingterm(t)
+removeleadingterm(t::AbstractTermLike) = zero(t)
 
 #$(SIGNATURES)
 """
@@ -372,7 +374,7 @@ function removemonomials(p::AbstractPolynomialLike, mv::AbstractVector{MT}) wher
     q = zero(p)
     for t in terms(p)
         m = monomial(t)
-        while i <= length(smv) && smv[i] > m
+        while i <= length(smv) && smv[i] < m
             i += 1
         end
         if i > length(smv) || smv[i] != m
@@ -413,7 +415,7 @@ mapcoefficientsnz_to!(output::APL, f::F, p::APL) where {F<:Function} = mapcoeffi
 
 Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
 The function may return zero in which case the term is dropped.
-If the function is known to never returns zero for a nonzero input, `nonzero`
+If the function is known to never return zero for a nonzero input, `nonzero`
 can be set to `true` to get a small speedup.
 
 See also [`mapcoefficients!`](@ref) and [`mapcoefficients_to!`](@ref).
@@ -438,7 +440,7 @@ end
 
 Mutate `p` by replacing each coefficient `α` by `f(α)`.
 The function may return zero in which case the term is dropped.
-If the function is known to never returns zero for a nonzero input, `nonzero`
+If the function is known to never return zero for a nonzero input, `nonzero`
 can be set to `true` to get a small speedup.
 The function returns `p`, which is identically equal to the second argument.
 
@@ -450,6 +452,13 @@ Let `p = 2x*y + 3x + 1`, after `mapcoefficients!(α -> mod(3α, 6), p)`, `p` is
 equal to `3x + 3`.
 """
 function mapcoefficients! end
+
+function mapcoefficients(f::F, p::APL, ::MA.IsNotMutable; nonzero = false) where {F<:Function}
+    return mapcoefficients(f, p; nonzero = nonzero)
+end
+function mapcoefficients(f::F, p::APL, ::MA.IsMutable; nonzero = false) where {F<:Function}
+    return mapcoefficients!(f, p; nonzero = nonzero)
+end
 
 """
     mapcoefficients_to!(output::AbstractPolynomialLike, f::Function, p::AbstractPolynomialLike, nonzero = false)

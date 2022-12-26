@@ -1,6 +1,9 @@
 using LinearAlgebra, Test
 using Combinatorics
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
@@ -150,17 +153,17 @@ function _mult_test(a, b)
     @test iszero(rem(b, a))
 end
 function mult_test(expected, a, b, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa Base.promote_typeof(a, b)
     _mult_test(expected, g)
 end
 function mult_test(expected, a::Number, b, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa promote_type(typeof(a), MP.coefficienttype(b))
     _mult_test(expected, g)
 end
 function mult_test(expected, a, b::Number, algo)
-    g = @inferred MP._simplifier(a, b, algo)
+    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
     @test g isa promote_type(MP.coefficienttype(a), typeof(b))
     _mult_test(expected, g)
 end
@@ -230,7 +233,6 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
         -y^2*z^6 - 3o*y^4*z^3 - 2*y^6 + y^3*z^3 + y^2*z^4 + y^5 + y^4*z - y^2 - y*z,
         algo,
     )
-
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
@@ -239,7 +241,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     end
     sym_test(b, c, x + y + z, algo)
     sym_test(c, a, z^3 + y^2 + x, algo)
-    if (T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(false, true))) &&
+    if T != Int &&
         (T != Float64 || (algo != GeneralizedEuclideanAlgorithm(false, true) && algo != GeneralizedEuclideanAlgorithm(true, true)))
         triple_test(a, b, c, algo)
     end

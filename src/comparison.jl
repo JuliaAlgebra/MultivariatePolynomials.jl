@@ -119,7 +119,7 @@ end
 
 isapproxzero(m::AbstractMonomialLike; kwargs...) = false
 isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwargs...)
-isapproxzero(p::APL; kwargs...) = all(isapproxzero.(terms(p); kwargs...))
+isapproxzero(p::APL; kwargs...) = all(term -> isapproxzero(term; kwargs...), terms(p))
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
