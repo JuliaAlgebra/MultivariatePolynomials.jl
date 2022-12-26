@@ -1,11 +1,12 @@
 """
     iscomplex(x::AbstractVariable)
 
-Return whether a given variable was declared as a complex or real-valued variable.
+Return whether a given variable was declared as a complex-valued variable (also their conjugates are complex, but their real
+and imaginary parts are not).
 By default, all variables are real-valued.
 """
-iscomplex(x::AbstractVariable) = false
-
+iscomplex(::AbstractVariable) = false
+Base.isreal(v::AbstractPolynomialLike) = !iscomplex(v)
 """
     isrealpart(x::AbstractVariable)
 
@@ -13,8 +14,7 @@ Return whether the given variable is the real part of a complex-valued variable.
 
 See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`isconj`](@ref isconj).
 """
-isrealpart(x::AbstractVariable) = false
-
+isrealpart(::AbstractVariable) = false
 """
     isimagpart(x::AbstractVariable)
 
@@ -22,8 +22,7 @@ Return whether the given variable is the imaginary part of a complex-valued vari
 
 See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isconj`](@ref isconj).
 """
-isimagpart(x::AbstractVariable) = false
-
+isimagpart(::AbstractVariable) = false
 """
     isconj(x::AbstractVariable)
 
@@ -31,8 +30,7 @@ Return whether the given variable is obtained by conjugating a user-defined comp
 
 See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isimagpart`](@ref isimagpart).
 """
-isconj(x::AbstractVariable) = false
-
+isconj(::AbstractVariable) = false
 """
     ordvar(x::Union{AbstractVariable, AbstractVector{<:AbstractVariable}})
 
@@ -93,15 +91,23 @@ variable is decomposed into its real- and imaginary parts.
 
 See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`real`](@ref).
 """
-Base.imag(x::AbstractVariable) = MA.Zero()
+Base.imag(::AbstractVariable) = MA.Zero()
 
 # extend to higher-level elements. We make all those type-stable (but we need convert, as the construction method may
 # deliver simpler types than the inputs if they were deliberately casted, e.g., term to monomial)
+function iscomplex(p::AbstractPolynomialLike)
+    for v in variables(p)
+        if !iszero(maxdegree(p, v)) && iscomplex(v)
+            return true
+        end
+    end
+    return false
+end
 Base.conj(x::M) where {M<:AbstractMonomial} =
     convert(M, reduce(*, conj(var)^exp for (var, exp) in zip(variables(x), exponents(x)); init=constantmonomial(x)))
 Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = monovec(conj.(x))
 Base.conj(x::T) where {T<:AbstractTerm} = convert(T, conj(coefficient(x)) * conj(monomial(x)))
-Base.conj(x::P) where {P<:AbstractPolynomial} = convert(P, sum(conj(t) for t in x))
+Base.conj(x::P) where {P<:AbstractPolynomial} = nterms(x) == 0 ? x : convert(P, sum(conj(t) for t in x))
 
 real_coefficient_type_polynomial_like(::AbstractPolynomialLike{R}) where {R<:Real} = R
 real_coefficient_type_polynomial_like(::AbstractPolynomialLike{Complex{R}}) where {R<:Real} = R
@@ -120,7 +126,8 @@ for fun in [:real, :imag]
             )
         end
         Base.$fun(x::AbstractVector{<:AbstractMonomial}) = map(Base.$fun, x)
-        Base.$fun(x::AbstractPolynomial{T}) where {T} = sum($fun(t) for t in x)
+        Base.$fun(x::AbstractPolynomial{T}) where {T} = nterms(x) == 0 ?
+            zero(polynomialtype(x, real_coefficient_type_polynomial_like(x))) : sum($fun(t) for t in x)
     end)
 end
 
@@ -167,8 +174,8 @@ end
 """
     halfdegree(t::AbstractTermLike)
 
-Return the equivalent of ceil(degree(t)/2) for real-valued terms or degree_complex(t) for terms with only complex variables;
-however, respect any mixing between complex and real-valued variables.
+Return the equivalent of `ceil(degree(t)/2)`` for real-valued terms or `degree_complex(t)` for terms with only complex
+variables; however, respect any mixing between complex and real-valued variables.
 """
 function halfdegree(t::AbstractTermLike)
     realdeg = 0
@@ -199,7 +206,7 @@ Return the minimal total complex degree of the monomials of `p`, i.e., `minimum(
 Return the minimal complex degree of the monomials of `p` in the variable `v`, i.e., `minimum(degree_complex.(terms(p), v))`.
 """
 mindegree_complex(X::AbstractVector{<:AbstractTermLike}, args...) =
-    isempty(X) ? 0 : minimum(t -> degree_complex(t, args...), X)
+    isempty(X) ? 0 : minimum(t -> degree_complex(t, args...), X, init=0)
 mindegree_complex(p::AbstractPolynomialLike, args...) = mindegree_complex(terms(p), args...)
 
 """
@@ -207,7 +214,7 @@ mindegree_complex(p::AbstractPolynomialLike, args...) = mindegree_complex(terms(
 
 Return the minmal half degree of the monomials of `p`, i.e., `minimum(halfdegree, terms(p))`
 """
-minhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...) = isempty(X) ? 0 : minimum(halfdegree, X)
+minhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...) = isempty(X) ? 0 : minimum(halfdegree, X, init=0)
 minhalfdegree(p::AbstractPolynomialLike) = minhalfdegree(terms(p))
 
 """
@@ -228,7 +235,7 @@ maxdegree_complex(p::AbstractPolynomialLike, args...) = maxdegree_complex(terms(
 
 Return the maximal half degree of the monomials of `p`, i.e., `maximum(halfdegree, terms(p))`
 """
-maxhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...) = isempty(X) ? 0 : maximum(halfdegree, X)
+maxhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...) = isempty(X) ? 0 : maximum(halfdegree, X, init=0)
 maxhalfdegree(p::AbstractPolynomialLike) = maxhalfdegree(terms(p))
 
 """
@@ -249,7 +256,7 @@ extdegree_complex(p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermL
 
 Return the extremal half degree of the monomials of `p`, i.e., `(minhalfdegree(p), maxhalfdegree(p))`
 """
-minhalfdegree(p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermLike}}) = (minhalfdegree(p), maxhalfdegree(p))
+exthalfdegree(p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermLike}}) = (minhalfdegree(p), maxhalfdegree(p))
 
 function ordvar(x::AbstractVector{<:AbstractVariable})
     # let's assume the number of elements in x is small, else a conversion to a dict (probably better OrderedDict) would

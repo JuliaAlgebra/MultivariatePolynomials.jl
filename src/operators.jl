@@ -327,6 +327,8 @@ LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 LinearAlgebra.adjoint(t::AbstractTerm) = _term(LinearAlgebra.adjoint(coefficient(t)), LinearAlgebra.adjoint(monomial(t)))
 LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
 LinearAlgebra.adjoint(r::RationalPoly) = adjoint(numerator(r)) / adjoint(denominator(r))
+LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractPolynomialLike} = T
+LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol) = (@assert(!iscomplex(v)); v)
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
 LinearAlgebra.transpose(m::AbstractMonomial) = m
