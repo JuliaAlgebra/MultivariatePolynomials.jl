@@ -1,3 +1,6 @@
+export iscomplex, isrealpart, isimagpart, isconj, ordvar, degree_complex, halfdegree, mindegree_complex, minhalfdegree,
+    maxdegree_complex, maxhalfdegree, extdegree_complex, exthalfdegree
+
 """
     iscomplex(x::AbstractVariable)
 
