@@ -12,6 +12,20 @@ function test_chain_rule(dot, op, args, Δin, Δout)
     @test dot(Δin, rΔin[2:end]) ≈ dot(fΔout, Δout)
 end
 
+function _dot(p, q)
+    monos = monovec([monomials(p); monomials(q)])
+    return dot(coefficient.(p, monos), coefficient.(q, monos))
+end
+function _dot(px::Tuple, qx::Tuple)
+    return _dot(first(px), first(qx)) + _dot(Base.tail(px), Base.tail(qx))
+end
+function _dot(::Tuple{}, ::Tuple{})
+    return MultivariatePolynomials.MA.Zero()
+end
+function _dot(::NoTangent, ::NoTangent)
+    return MultivariatePolynomials.MA.Zero()
+end
+
 @testset "ChainRulesCore" begin
     Mod.@polyvar x y
     p = 1.1x + y
@@ -42,30 +56,25 @@ end
     @test pullback(q) == (NoTangent(), (-0.2 + 2im) * x^2 - x*y, NoTangent())
     @test pullback(1x) == (NoTangent(), 2x^2, NoTangent())
 
-    test_chain_rule(dot, +, (p,), (q,), p)
-    test_chain_rule(dot, +, (q,), (p,), q)
+    for d in [dot, _dot]
+        test_chain_rule(d, +, (p,), (q,), p)
+        test_chain_rule(d, +, (q,), (p,), q)
 
-    test_chain_rule(dot, -, (p,), (q,), p)
-    test_chain_rule(dot, -, (p,), (p,), q)
+        test_chain_rule(d, -, (p,), (q,), p)
+        test_chain_rule(d, -, (p,), (p,), q)
 
-    test_chain_rule(dot, +, (p, q), (q, p), p)
-    test_chain_rule(dot, +, (p, q), (p, q), q)
+        test_chain_rule(d, +, (p, q), (q, p), p)
+        test_chain_rule(d, +, (p, q), (p, q), q)
 
-    test_chain_rule(dot, -, (p, q), (q, p), p)
-    test_chain_rule(dot, -, (p, q), (p, q), q)
-
-    test_chain_rule(dot, *, (p, q), (q, p), p * q)
-    test_chain_rule(dot, *, (p, q), (p, q), q * q)
-    test_chain_rule(dot, *, (q, p), (p, q), q * q)
-    test_chain_rule(dot, *, (p, q), (q, p), q * q)
-
-    function _dot(p, q)
-        monos = monomials(p + q)
-        return dot(coefficient.(p, monos), coefficient.(q, monos))
+        test_chain_rule(d, -, (p, q), (q, p), p)
+        test_chain_rule(d, -, (p, q), (p, q), q)
     end
-    function _dot(px::Tuple{<:AbstractPolynomial,NoTangent}, qx::Tuple{<:AbstractPolynomial,NoTangent})
-        return _dot(px[1], qx[1])
-    end
+
+    test_chain_rule(_dot, *, (p, q), (q, p), p * q)
+    test_chain_rule(_dot, *, (p, q), (p, q), q * q)
+    test_chain_rule(_dot, *, (q, p), (p, q), q * q)
+    test_chain_rule(_dot, *, (p, q), (q, p), q * q)
+
     test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), p)
     test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), differentiate(p, x))
     test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), differentiate(q, x))

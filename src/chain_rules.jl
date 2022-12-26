@@ -1,3 +1,9 @@
+# The publlback depends on the scalar product on the polynomials
+# With the scalar product `LinearAlgebra.dot(p, q) = p * q`, there is no pullback for `differentiate`
+# With the scalar product `_dot(p, q)` of `test/chain_rules.jl`, there is a pullback for `differentiate`
+# and the pullback for `*` changes.
+# We give the one for the scalar product `_dot`.
+
 import ChainRulesCore
 
 ChainRulesCore.@scalar_rule +(x::APL) true
@@ -22,7 +28,7 @@ function ChainRulesCore.frule((_, Δp, Δq), ::typeof(*), p::APL, q::APL)
     return p * q, MA.add_mul!!(p * Δq, q, Δp)
 end
 
-function _adjoint_mult(op::F, ts, p, Δ) where {F<:Function}
+function _mult_pullback(op::F, ts, p, Δ) where {F<:Function}
     for t in terms(p)
         c = coefficient(t)
         m = monomial(t)
@@ -38,20 +44,23 @@ function _adjoint_mult(op::F, ts, p, Δ) where {F<:Function}
 end
 function adjoint_mult_left(p, Δ)
     ts = MA.promote_operation(*, MA.promote_operation(adjoint, termtype(p)), termtype(Δ))[]
-    return _adjoint_mult(ts, p, Δ) do c, d
+    return _mult_pullback(ts, p, Δ) do c, d
         c' * d
     end
 end
 function adjoint_mult_right(p, Δ)
     ts = MA.promote_operation(*, termtype(Δ), MA.promote_operation(adjoint, termtype(p)))[]
-    return _adjoint_mult(ts, p, Δ) do c, d
+    return _mult_pullback(ts, p, Δ) do c, d
         d * c'
     end
 end
 
 function ChainRulesCore.rrule(::typeof(*), p::APL, q::APL)
     function times_pullback2(ΔΩ̇)
+        # This is for the scalar product `_dot`:
         return (ChainRulesCore.NoTangent(), adjoint_mult_right(q, ΔΩ̇), adjoint_mult_left(p, ΔΩ̇))
+        # For the scalar product `dot`, it would be instead:
+        return (ChainRulesCore.NoTangent(), ΔΩ̇ * q', p' * ΔΩ̇)
     end
     return p * q, times_pullback2
 end
@@ -82,6 +91,7 @@ end
 function ChainRulesCore.frule((_, Δp, _), ::typeof(differentiate), p, x)
     return differentiate(p, x), differentiate(Δp, x)
 end
+# This is for the scalar product `_dot`, there is no pullback for the scalar product `dot`
 function differentiate_pullback(Δdpdx, x)
     return ChainRulesCore.NoTangent(), x * differentiate(x * Δdpdx, x), ChainRulesCore.NoTangent()
 end
