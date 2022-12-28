@@ -105,26 +105,36 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
     end
 end
 
-function pseudo_rem(f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
+"""
+    pseudo_rem(f::APL, g::APL, algo)
+
+Return a `Bool` and the pseudo remainder of `f` modulo `g`.
+The `Bool` indicates whether the output is different from `f`.
+"""
+function pseudo_rem(f::APL, g::APL, algo)
+    return MA.operate!!(pseudo_rem, copy(f), g, algo)
 end
 
-function _pseudo_rem(::Field, f::APL, g::APL, algo)
+function MA.operate!!(::typeof(pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
+end
+
+function _pseudo_rem!(::Field, f::APL, g::APL, algo)
     return true, rem(f, g)
 end
 
-function _pseudo_rem(::UFD, f::APL, g::APL, algo)
+function _pseudo_rem!(::UFD, f::APL, g::APL, algo)
     ltg = leadingterm(g)
-    rg = removeleadingterm(g)
     ltf = leadingterm(f)
     if !divides(monomial(ltg), ltf)
         return false, f
     end
+    MA.operate!(removeleadingterm, g)
     while !iszero(f) && divides(monomial(ltg), ltf)
-        new_f = constantterm(coefficient(ltg), f) * removeleadingterm(f)
-        new_g = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg))) * rg
-        # Check with `::` that we don't have any type unstability on this variable.
-        f = (new_f - new_g)::typeof(f)
+        MA.operate!(removeleadingterm, f)
+        MA.operate!(*, f, constantterm(coefficient(ltg), f))
+        t = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
+        MA.operate!(MA.sub_mul, f, t, g)
         if algo.primitive_rem
             f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
@@ -133,6 +143,8 @@ function _pseudo_rem(::UFD, f::APL, g::APL, algo)
         end
         ltf = leadingterm(f)
     end
+    # Add it back as we cannot modify `g`
+    MA.operate!(+, g, ltg)
     return true, f
 end
 

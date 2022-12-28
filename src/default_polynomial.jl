@@ -150,30 +150,82 @@ end
 Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 
 function grlex end
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Union{Polynomial,AbstractTermLike}) where {T,TT}
-    get1 = let p=p
-        i -> p.terms[i]
+
+function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, push, resize, keep, q, t::AbstractTermLike...) where {T,TT}
+    compare_monomials = let t=t, get1=get1, q=q
+        (tp, j) -> begin
+            if tp isa Int && j isa Int
+                tp = get1(tp)
+            end
+            grlex(*(monomials(q)[j], monomial.(t)...), monomial(tp))
+        end
     end
-    get2 = let p=p
+    get2 = let t=t, q=q
         i -> begin
-            t = terms(q)[i]
-            TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
+            tq = terms(q)[i]
+            TT(MA.scaling_convert(T, MA.operate(MA.add_sub_op(op), *(coefficient(tq), coefficient.(t)...))), *(monomial(tq), monomial.(t)...))
         end
     end
-    set = let p=p
-        (i, t) -> begin
-            p.terms[i] = t
+    combine = let t=t, p=p, q=q
+        (i, j) -> begin
+            if i isa Int
+                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficients(q)[j], coefficient.(t)...), monomial(p.terms[i]))
+            else
+                typeof(i)(MA.operate!!(op, coefficient(i), coefficients(q)[j], coefficient.(t)...), monomial(i))
+            end
         end
     end
-    push = let p=p
-        t -> push!(p.terms, t)
+    polynomial_merge!(
+        nterms(p), nterms(q), get1, get2, set, push,
+        compare_monomials, combine, keep, resize
+    )
+    return
+end
+
+function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, push, resize, keep, t::AbstractTermLike, q::Polynomial) where {T,TT}
+    compare_monomials = let t=t, get1=get1, q=q
+        (tp, j) -> begin
+            if tp isa Int && j isa Int
+                tp = get1(tp)
+            end
+            grlex(monomial(t) * monomials(q)[j], monomial(tp))
+        end
     end
-    compare_monomials = let q=q
+    get2 = let t=t, q=q
+        i -> begin
+            tq = terms(q)[i]
+            TT(MA.scaling_convert(T, MA.operate(MA.add_sub_op(op), coefficient(t) * coefficient(tq))), monomial(t) * monomial(tq))
+        end
+    end
+    combine = let t=t, p=p, q=q
+        (i, j) -> begin
+            if i isa Int
+                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(t), coefficients(q)[j]), monomial(p.terms[i]))
+            else
+                typeof(i)(MA.operate!!(op, coefficient(i), coefficient(t), coefficients(q)[j]), monomial(i))
+            end
+        end
+    end
+    polynomial_merge!(
+        nterms(p), nterms(q), get1, get2, set, push,
+        compare_monomials, combine, keep, resize
+    )
+    return
+end
+
+function __polynomial_merge!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, get1, set, push, resize, keep, q::Union{Polynomial,AbstractTermLike}) where {T,TT}
+    compare_monomials = let get1=get1, q=q
         (t, j) -> begin
             if t isa Int && j isa Int
                 t = get1(t)
             end
             grlex(monomials(q)[j], monomial(t))
+        end
+    end
+    get2 = let q=q
+        i -> begin
+            t = terms(q)[i]
+            TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
         end
     end
     combine = let p=p, q=q
@@ -184,6 +236,25 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Un
                 typeof(i)(MA.operate!!(op, coefficient(i), coefficients(q)[j]), monomial(i))
             end
         end
+    end
+    polynomial_merge!(
+        nterms(p), nterms(q), get1, get2, set, push,
+        compare_monomials, combine, keep, resize
+    )
+    return
+end
+
+function _polynomial_merge!(op::Union{typeof(+), typeof(-), MA.AddSubMul}, p::Polynomial{T,TT}, args::Union{Polynomial,AbstractTermLike}...) where {T,TT}
+    get1 = let p=p
+        i -> p.terms[i]
+    end
+    set = let p=p
+        (i, t) -> begin
+            p.terms[i] = t
+        end
+    end
+    push = let p=p
+        t -> push!(p.terms, t)
     end
     resize = let p=p
         (n) -> resize!(p.terms, n)
@@ -198,12 +269,22 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Un
             end
         end
     end
-    polynomial_merge!(
-        nterms(p), nterms(q), get1, get2, set, push,
-        compare_monomials, combine, keep, resize
-    )
+    __polynomial_merge!(op, p, get1, set, push, resize, keep, args...)
     return p
 end
+
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Union{AbstractTermLike,Polynomial}) where {T,TT}
+    return _polynomial_merge!(op, p, q)
+end
+
+function MA.operate!(op::MA.AddSubMul, p::Polynomial{T,TT}, q::Polynomial, args::AbstractTermLike...) where {T,TT}
+    return _polynomial_merge!(op, p, q, args...)
+end
+
+function MA.operate!(op::MA.AddSubMul, p::Polynomial{T,TT}, t::AbstractTermLike, q::Polynomial) where {T,TT}
+    return _polynomial_merge!(op, p, t, q)
+end
+
 function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polynomial)
     empty!(output.terms)
     mul_to_terms!(output.terms, p, q)
@@ -213,6 +294,12 @@ function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polyn
 end
 function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
     return MA.operate_to!(p, *, MA.mutable_copy(p), q)
+end
+function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
+    for i in eachindex(p.terms)
+        p.terms[i] = MA.operate!!(*, p.terms[i], t)
+    end
+    return p
 end
 
 function MA.operate!(::typeof(zero), p::Polynomial)
