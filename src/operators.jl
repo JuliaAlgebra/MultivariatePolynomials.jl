@@ -68,7 +68,7 @@ Base.:/(A::AbstractArray, p::APL) = map(f -> f / p, A)
 right_constant_function(::typeof(+)) = right_constant_plus
 right_constant_function(::typeof(-)) = right_constant_minus
 right_constant_function(::typeof(*)) = right_constant_mult
-MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate!(constant_function(op), p, α)
+MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate!(right_constant_function(op), p, α)
 
 MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(left_constant_mult, α, p)
 MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(right_constant_mult, p, α)
