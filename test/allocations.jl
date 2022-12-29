@@ -86,8 +86,9 @@ function _pseudo_rem_test(p1, p2, algo)
     MA_copy_1 = mutable_copy(p1)
     backup_2 = deepcopy(p2)
     MA_copy_2 = mutable_copy(p2)
+    buffer = buffer_for(MP.pseudo_rem, typeof(p1), typeof(p2), typeof(algo))
     mutable_alloc_test(p1, 0) do p1
-        operate!!(MP.pseudo_rem, p1, p2, algo)
+        buffered_operate!!(buffer, MP.pseudo_rem, p1, p2, algo)
     end
     @test backup_1 == MA_copy_1
     @test backup_2 == MA_copy_2
@@ -98,11 +99,11 @@ end
 function _test_div(T)
     o = one(T)
     @polyvar x y
-    p1 = o * x * y + o * x + o * y + o
-    p2 = o * x + o
+    p1 = 1o * x^2 + 3o * x + 1o
+    p2 = 1o * x + 1o
     @testset "primitive_rem=$primitive_rem" for primitive_rem in [false, true]
         @testset "skip_last=$skip_last" for skip_last in [false, true]
-            algo =GeneralizedEuclideanAlgorithm(primitive_rem, skip_last)
+            algo = GeneralizedEuclideanAlgorithm(primitive_rem, skip_last)
             p1, p2 = _pseudo_rem_test(p1, p2, algo)
         end
     end
@@ -110,6 +111,7 @@ end
 
 function test_div()
     _test_div(Int)
+    _test_div(BigInt)
 end
 
 end

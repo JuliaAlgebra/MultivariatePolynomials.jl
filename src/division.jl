@@ -116,14 +116,26 @@ function pseudo_rem(f::APL, g::APL, algo)
 end
 
 function MA.operate!!(::typeof(pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
+    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, nothing)
 end
 
-function _pseudo_rem!(::Field, f::APL, g::APL, algo)
+function MA.buffered_operate!!(buffer, ::typeof(pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, buffer)
+end
+
+function MA.buffer_for(::typeof(pseudo_rem), F::Type{<:APL{S}}, G::Type{<:APL{T}}, A::Type) where {S,T}
+    _buffer_for_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), F, G, A)
+end
+
+_buffer_for_pseudo_rem(::Field, ::Type, ::Type, ::Type) = nothing
+function _pseudo_rem!(::Field, f::APL, g::APL, algo, ::Nothing)
     return true, rem(f, g)
 end
 
-function _pseudo_rem!(::UFD, f::APL, g::APL, algo)
+function _buffer_for_pseudo_rem(::UFD, F::Type, G::Type, ::Type)
+    return MA.buffer_for(MA.sub_mul, F, termtype(F), G)
+end
+function _pseudo_rem!(::UFD, f::APL, g::APL, algo, buffer)
     ltg = leadingterm(g)
     ltf = leadingterm(f)
     if !divides(monomial(ltg), ltf)
@@ -132,9 +144,9 @@ function _pseudo_rem!(::UFD, f::APL, g::APL, algo)
     MA.operate!(removeleadingterm, g)
     while !iszero(f) && divides(monomial(ltg), ltf)
         MA.operate!(removeleadingterm, f)
-        MA.operate!(*, f, constantterm(coefficient(ltg), f))
+        MA.operate!(right_constant_mult, f, coefficient(ltg))
         t = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
-        MA.operate!(MA.sub_mul, f, t, g)
+        MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
         if algo.primitive_rem
             f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
@@ -144,7 +156,7 @@ function _pseudo_rem!(::UFD, f::APL, g::APL, algo)
         ltf = leadingterm(f)
     end
     # Add it back as we cannot modify `g`
-    MA.operate!(+, g, ltg)
+    MA.operate!(unsafe_restore_leading_term, g, ltg)
     return true, f
 end
 
@@ -152,7 +164,8 @@ function MA.promote_operation(
     ::typeof(pseudo_rem),
     ::Type{P},
     ::Type{Q},
-) where {T,S,P<:APL{T},Q<:APL{S}}
+    ::Type{A},
+) where {T,S,P<:APL{T},Q<:APL{S},A}
     return _promote_operation(algebraic_structure(MA.promote_operation(-, S, T)), pseudo_rem, P, Q)
 end
 function _promote_operation(

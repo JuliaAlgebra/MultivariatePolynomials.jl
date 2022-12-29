@@ -64,8 +64,8 @@ end
 #function MA.promote_operation(::typeof(gcd), P::Type{<:Number}, Q::Type{<:Number})
 #    return typeof(gcd(one(P), one(Q)))
 #end
-function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL})
-    return MA.promote_operation(pseudo_rem, P, Q)
+function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL}, A::Type=GeneralizedEuclideanAlgorithm)
+    return MA.promote_operation(pseudo_rem, P, Q, A)
 end
 
 """

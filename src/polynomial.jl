@@ -359,6 +359,12 @@ end
 MA.operate(::typeof(removeleadingterm), t::AbstractTermLike) = removeleadingterm(t)
 removeleadingterm(t::AbstractTermLike) = zero(t)
 
+function unsafe_restore_leading_term end
+function MA.operate!(::typeof(unsafe_restore_leading_term), p::AbstractPolynomial, t::AbstractTermLike)
+    # `MA.add!` will copy the coefficient of `t` so `Polynomial` redefines this
+    return MA.add!!(p, t)
+end
+
 #$(SIGNATURES)
 """
 

@@ -182,7 +182,7 @@ function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, p
     return
 end
 
-function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, push, resize, keep, t::AbstractTermLike, q::Polynomial) where {T,TT}
+function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, push, resize, keep, t::AbstractTermLike, q::Polynomial, buffer=nothing) where {T,TT}
     compare_monomials = let t=t, get1=get1, q=q
         (tp, j) -> begin
             if tp isa Int && j isa Int
@@ -200,9 +200,9 @@ function __polynomial_merge!(op::MA.AddSubMul, p::Polynomial{T,TT}, get1, set, p
     combine = let t=t, p=p, q=q
         (i, j) -> begin
             if i isa Int
-                p.terms[i] = Term(MA.operate!!(op, coefficient(p.terms[i]), coefficient(t), coefficients(q)[j]), monomial(p.terms[i]))
+                p.terms[i] = Term(MA.buffered_operate!!(buffer, op, coefficient(p.terms[i]), coefficient(t), coefficients(q)[j]), monomial(p.terms[i]))
             else
-                typeof(i)(MA.operate!!(op, coefficient(i), coefficient(t), coefficients(q)[j]), monomial(i))
+                typeof(i)(MA.buffered_operate!!(buffer, op, coefficient(i), coefficient(t), coefficients(q)[j]), monomial(i))
             end
         end
     end
@@ -225,6 +225,7 @@ function __polynomial_merge!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT
     get2 = let q=q
         i -> begin
             t = terms(q)[i]
+            # `operate` makes sure we make a copy of the term as it may be stored directly in `p`
             TT(MA.scaling_convert(T, MA.operate(op, coefficient(t))), monomial(t))
         end
     end
@@ -244,7 +245,7 @@ function __polynomial_merge!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT
     return
 end
 
-function _polynomial_merge!(op::Union{typeof(+), typeof(-), MA.AddSubMul}, p::Polynomial{T,TT}, args::Union{Polynomial,AbstractTermLike}...) where {T,TT}
+function _polynomial_merge!(op::Union{typeof(+), typeof(-), MA.AddSubMul}, p::Polynomial{T,TT}, args...) where {T,TT}
     get1 = let p=p
         i -> p.terms[i]
     end
@@ -273,16 +274,23 @@ function _polynomial_merge!(op::Union{typeof(+), typeof(-), MA.AddSubMul}, p::Po
     return p
 end
 
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{T,TT}, q::Union{AbstractTermLike,Polynomial}) where {T,TT}
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial, q::Union{AbstractTermLike,Polynomial})
     return _polynomial_merge!(op, p, q)
 end
 
-function MA.operate!(op::MA.AddSubMul, p::Polynomial{T,TT}, q::Polynomial, args::AbstractTermLike...) where {T,TT}
+function MA.operate!(op::MA.AddSubMul, p::Polynomial, q::Polynomial, args::AbstractTermLike...)
     return _polynomial_merge!(op, p, q, args...)
 end
 
-function MA.operate!(op::MA.AddSubMul, p::Polynomial{T,TT}, t::AbstractTermLike, q::Polynomial) where {T,TT}
+function MA.operate!(op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
     return _polynomial_merge!(op, p, t, q)
+end
+
+function MA.buffer_for(op::MA.AddSubMul, ::Type{<:Polynomial{S}}, ::Type{<:Term{T}}, ::Type{<:Polynomial{U}}) where {S,T,U}
+    return MA.buffer_for(op, S, T, U)
+end
+function MA.buffered_operate!(buffer, op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
+    return _polynomial_merge!(op, p, t, q, buffer)
 end
 
 function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polynomial)
@@ -319,5 +327,11 @@ end
 
 function MA.operate!(::typeof(removeleadingterm), p::Polynomial)
     pop!(p.terms)
+    return p
+end
+
+function MA.operate!(::typeof(unsafe_restore_leading_term), p::Polynomial, t::AbstractTermLike)
+    # We don't need to copy the coefficient of `t`, this is why this function is called `unsafe`
+    push!(p.terms, t)
     return p
 end
