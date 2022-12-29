@@ -415,7 +415,7 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
         elseif isconstant(v)
             # `p` and `q` are primitive so if one of them is constant, it cannot
             # divide the content of the other one.
-            return one(R)
+            return MA.operate!!(one, u)
         end
         divided, r = MA.operate!!(pseudo_rem, u, v, algo)
         if !divided
