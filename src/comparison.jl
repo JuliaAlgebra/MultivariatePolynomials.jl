@@ -6,7 +6,7 @@ Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
 Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-# avoids the call to be transfered to eqconstant
+# avoids the call to be transfered to left_constant_eq
 Base.:(==)(α::Nothing, x::APL) = false
 Base.:(==)(x::APL, α::Nothing) = false
 Base.:(==)(α::Dict, x::APL) = false
@@ -26,19 +26,19 @@ function polyeqterm(p::AbstractPolynomial, t)
 end
 polyeqterm(p::APL, t) = polyeqterm(polynomial(p), t)
 
-eqconstant(α, v::AbstractVariable) = false
-eqconstant(v::AbstractVariable, α) = false
-function _termeqconstant(t::AbstractTermLike, α)
+left_constant_eq(α, v::AbstractVariable) = false
+right_constant_eq(v::AbstractVariable, α) = false
+function _term_constant_eq(t::AbstractTermLike, α)
     if iszero(t)
         iszero(α)
     else
         α == coefficient(t) && isconstant(t)
     end
 end
-eqconstant(α, t::AbstractTermLike) = _termeqconstant(t, α)
-eqconstant(t::AbstractTermLike, α) = _termeqconstant(t, α)
-eqconstant(α, p::APL) = polyeqterm(p, α)
-eqconstant(p::APL, α) = polyeqterm(p, α)
+left_constant_eq(α, t::AbstractTermLike) = _term_constant_eq(t, α)
+right_constant_eq(t::AbstractTermLike, α) = _term_constant_eq(t, α)
+left_constant_eq(α, p::APL) = polyeqterm(p, α)
+right_constant_eq(p::APL, α) = polyeqterm(p, α)
 
 function Base.:(==)(mono::AbstractMonomial, v::AbstractVariable)
     return isone(degree(mono)) && variable(mono) == v
