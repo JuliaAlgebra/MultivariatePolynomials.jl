@@ -39,36 +39,40 @@ end
 import SIMDPolynomials
 function bench_SP()
     x, y, z, t = [SIMDPolynomials.PackedMonomial{4,7}(i) for i in 0:3]
+    b0 = bench0(x)
     b1 = bench1(x, y, z)
     b2 = bench2(x, y, z, t)
     b3 = bench3(x, y, z, t)
-    return b1, b2, b3
+    return b0, b1, b2, b3
 end
 
 import DynamicPolynomials
 function bench_DP()
     DynamicPolynomials.@polyvar x y z t
+    b0 = bench0(x)
     b1 = bench1(x, y, z)
     b2 = bench2(x, y, z, t)
     b3 = bench3(x, y, z, t)
-    return b1, b2, b3
+    return b0, b1, b2, b3
 end
 
 import TypedPolynomials
 function bench_TP()
     TypedPolynomials.@polyvar x y z t
+    b0 = bench0(x)
     b1 = bench1(x, y, z)
     b2 = bench2(x, y, z, t)
     b3 = bench3(x, y, z, t)
-    return b1, b2, b3
+    return b0, b1, b2, b3
 end
 
 include("table.jl")
 
 function bench()
-    bs1, bs2, bs3 = bench_SP()
-    bd1, bd2, bd3 = bench_DP()
-    bt1, bt2, bt3 = bench_TP()
+    bs0, bs1, bs2, bs3 = bench_SP()
+    bd0, bd1, bd2, bd3 = bench_DP()
+    bt0, bt1, bt2, bt3 = bench_TP()
+    prettyprint(bs0, bd0, bt0)
     prettyprint(bs1, bd1, bt1)
     prettyprint(bs2, bd2, bt2)
     prettyprint(bs3, bd3, bt3)
