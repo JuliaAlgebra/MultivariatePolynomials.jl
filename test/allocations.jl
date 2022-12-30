@@ -21,7 +21,7 @@ function test_polynomial_merge()
     @polyvar x
     p = x^2 + x + 1
     # Want to avoid it converting everything to polynomial
-    Q = AbstractPolynomialLike[x, x^2, 2x, 2x + 3]
+    Q = AbstractPolynomialLike[x, x^2, 2x, 2x+3]
     for q in Q
         alloc_test(0) do
             add!!(p, q)
