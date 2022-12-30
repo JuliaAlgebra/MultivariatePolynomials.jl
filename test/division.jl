@@ -117,7 +117,7 @@ function test_gcdx_unit(expected, p1, p2, algo)
     # divisor of u and v; there is a set of greatest common divisors, each
     # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
     # `-expected` are both accepted.
-    @test iszero(MA.pseudo_rem(g, expected, algo)[2])
+    @test iszero(MP.pseudo_rem(g, expected, algo)[2])
     @test a * p1 + b * p2 == g
 end
 function _test_gcdx_unit(expected, p1, p2, algo)
@@ -236,7 +236,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(true, true))
         sym_test(a, b, 1, algo)
     end
     sym_test(b, c, x + y + z, algo)
