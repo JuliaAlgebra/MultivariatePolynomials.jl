@@ -28,7 +28,7 @@ function antidifferentiate end
 
 # Fallback for everything else
 antidifferentiate(α::T, v::AbstractVariable) where {T} = α * v
-antidifferentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 / 2 * v1 * v2 : v1 * v2
+antidifferentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 // 2 * v1 * v2 : v1 * v2
 antidifferentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * antidifferentiate(monomial(t), v)
 antidifferentiate(p::APL, v::AbstractVariable) = polynomial!(antidifferentiate.(terms(p), v), SortedState())
 
