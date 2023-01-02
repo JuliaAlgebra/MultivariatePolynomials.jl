@@ -152,20 +152,28 @@ function _mult_test(a, b)
     @test iszero(rem(a, b))
     @test iszero(rem(b, a))
 end
-function mult_test(expected, a, b, algo)
+
+include("independent.jl")
+
+function _gcd_test(expected, a, b, algo, expected_type)
+    A = deepcopy(a)
+    B = deepcopy(b)
     g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa Base.promote_typeof(a, b)
+    @test are_independent(g, a)
+    @test are_independent(g, b)
+    @test g isa expected_type
     _mult_test(expected, g)
+end
+
+
+function mult_test(expected, a, b, algo)
+    _gcd_test(expected, a, b, algo, Base.promote_typeof(a, b))
 end
 function mult_test(expected, a::Number, b, algo)
-    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa promote_type(typeof(a), MP.coefficienttype(b))
-    _mult_test(expected, g)
+    _gcd_test(expected, a, b, algo, promote_type(typeof(a), MP.coefficienttype(b)))
 end
 function mult_test(expected, a, b::Number, algo)
-    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa promote_type(MP.coefficienttype(a), typeof(b))
-    _mult_test(expected, g)
+    _gcd_test(expected, a, b, algo, promote_type(MP.coefficienttype(a), typeof(b)))
 end
 function sym_test(a, b, g, algo)
     mult_test(g, a, b, algo)
