@@ -108,34 +108,21 @@ end
 """
     pseudo_rem(f::APL, g::APL, algo)
 
-Return a `Bool` and the pseudo remainder of `f` modulo `g`.
-The `Bool` indicates whether the output is different from `f`.
+Return the pseudo remainder of `f` modulo `g` as defined in [Knu14, Algorithm R, p. 425].
+
+[Knu14] Knuth, D.E., 2014.
+*Art of computer programming, volume 2: Seminumerical algorithms.*
+Addison-Wesley Professional. Third edition.
 """
 function pseudo_rem(f::APL, g::APL, algo)
-    return MA.operate!!(pseudo_rem, copy(f), g, algo)
+    return MA.operate!!(pseudo_rem, MA.mutable_copy(f), g, algo)
 end
 
-function MA.operate!!(::typeof(pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, nothing)
-end
-
-function MA.buffered_operate!!(buffer, ::typeof(pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, buffer)
-end
-
-function MA.buffer_for(::typeof(pseudo_rem), F::Type{<:APL{S}}, G::Type{<:APL{T}}, A::Type) where {S,T}
-    _buffer_for_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), F, G, A)
-end
-
-_buffer_for_pseudo_rem(::Field, ::Type, ::Type, ::Type) = nothing
-function _pseudo_rem!(::Field, f::APL, g::APL, algo, ::Nothing)
-    return rem(f, g)
-end
-
-function _buffer_for_pseudo_rem(::UFD, F::Type, G::Type, ::Type)
+function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
     return MA.buffer_for(MA.sub_mul, F, termtype(F), G)
 end
-function _pseudo_rem!(::UFD, f::APL, g::APL, algo, buffer)
+
+function MA.buffered_operate!(buffer, ::typeof(pseudo_rem), f::APL, g::APL, algo)
     ltg = leadingterm(g)
     ltf = leadingterm(f)
     MA.operate!(removeleadingterm, g)
@@ -156,6 +143,31 @@ function _pseudo_rem!(::UFD, f::APL, g::APL, algo, buffer)
     MA.operate!(unsafe_restore_leading_term, g, ltg)
     return f
 end
+
+"""
+    rem_or_pseudo_rem(f::APL, g::APL, algo)
+
+If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](ref).
+"""
+function rem_or_pseudo_rem(f::APL, g::APL, algo)
+    return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
+end
+
+function MA.operate!!(::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _rem_or_pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, nothing)
+end
+
+function MA.buffered_operate!!(buffer, ::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return _rem_or_pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, buffer)
+end
+_rem_or_pseudo_rem!(::Field, f, g, algo, ::Nothing) = rem(f, g)
+_rem_or_pseudo_rem!(::UFD, f, g, algo, buffer) = MA.buffered_operate!(buffer, pseudo_rem, f, g, algo)
+
+function MA.buffer_for(::typeof(rem_or_pseudo_rem), F::Type{<:APL{S}}, G::Type{<:APL{T}}, A::Type) where {S,T}
+    _buffer_for_rem_or_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), F, G, A)
+end
+_buffer_for_rem_or_pseudo_rem(::UFD, F, G, A) = MA.buffer_for(pseudo_rem, F, G, A)
+_buffer_for_rem_or_pseudo_rem(::Field, F, G, A) = nothing
 
 function MA.promote_operation(
     ::typeof(pseudo_rem),
