@@ -129,7 +129,7 @@ end
 
 _buffer_for_pseudo_rem(::Field, ::Type, ::Type, ::Type) = nothing
 function _pseudo_rem!(::Field, f::APL, g::APL, algo, ::Nothing)
-    return true, rem(f, g)
+    return rem(f, g)
 end
 
 function _buffer_for_pseudo_rem(::UFD, F::Type, G::Type, ::Type)
@@ -138,9 +138,6 @@ end
 function _pseudo_rem!(::UFD, f::APL, g::APL, algo, buffer)
     ltg = leadingterm(g)
     ltf = leadingterm(f)
-    if !divides(monomial(ltg), ltf)
-        return false, f
-    end
     MA.operate!(removeleadingterm, g)
     while !iszero(f) && divides(monomial(ltg), ltf)
         MA.operate!(removeleadingterm, f)
@@ -157,7 +154,7 @@ function _pseudo_rem!(::UFD, f::APL, g::APL, algo, buffer)
     end
     # Add it back as we cannot modify `g`
     MA.operate!(unsafe_restore_leading_term, g, ltg)
-    return true, f
+    return f
 end
 
 function MA.promote_operation(

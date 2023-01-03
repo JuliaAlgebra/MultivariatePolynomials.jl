@@ -43,6 +43,24 @@ function test_polynomial_merge()
     end
 end
 
+function _test_leading(T)
+    @polyvar x y
+    p = T(4) * x^2 * y + x * y + 2x
+    alloc_test(0) do
+        leadingterm(p)
+    end
+    alloc_test(0) do
+        leadingcoefficient(p)
+    end
+    alloc_test(0) do
+        leadingmonomial(p)
+    end
+end
+
+function test_leading()
+    _test_leading(Int)
+    _test_leading(BigInt)
+end
 
 function test_promotion()
     @polyvar x y

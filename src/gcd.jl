@@ -419,8 +419,9 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
             # divide the content of the other one.
             return MA.operate!!(one, u)
         end
-        divided, r = MA.operate!!(pseudo_rem, u, v, algo)
-        if !divided
+        r = MA.operate!!(pseudo_rem, u, v, algo)
+
+        if !divides(leadingmonomial(v), leadingmonomial(f))
             not_divided_error(u, v)
         end
         if !algo.primitive_rem
