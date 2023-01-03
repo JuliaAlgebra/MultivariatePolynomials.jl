@@ -420,10 +420,10 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
             return MA.operate!!(one, u)
         end
 
-        nterms_before = nterms(u)
+        d_before = degree(leadingmonomial(u))
         r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
-        nterms_after = nterms(r)
-        if nterms_after == nterms_before
+        d_after = degree(leadingmonomial(r))
+        if d_after == d_before
             not_divided_error(u, v)
         end
 
