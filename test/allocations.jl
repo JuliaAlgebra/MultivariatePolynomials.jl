@@ -136,7 +136,7 @@ function _test_div(T)
 end
 
 function test_div()
-    @testset "$T" for T in [Int, BigInt]
+    @testset "$T" for T in [Int, BigInt] # TODO add Rational{BigInt} when https://github.com/jump-dev/MutableArithmetics.jl/issues/187 is fixed
         _test_div(T)
     end
 end
