@@ -117,7 +117,7 @@ function test_gcdx_unit(expected, p1, p2, algo)
     # divisor of u and v; there is a set of greatest common divisors, each
     # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
     # `-expected` are both accepted.
-    @test iszero(MP.pseudo_rem(g, expected, algo)[2])
+    @test iszero(MP.pseudo_rem(g, expected, algo))
     @test a * p1 + b * p2 == g
 end
 function _test_gcdx_unit(expected, p1, p2, algo)
