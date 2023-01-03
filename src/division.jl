@@ -187,7 +187,7 @@ function MA.promote_operation(
     ::Type{Q},
     ::Type{A},
 ) where {T,S,P<:APL{T},Q<:APL{S},A}
-    return _promote_operation(algebraic_structure(MA.promote_operation(-, S, T)), pseudo_rem, P, Q, A)
+    return _promote_operation_rem_or_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), P, Q, A)
 end
 function _promote_operation_rem_or_pseudo_rem(
     ::Field,
