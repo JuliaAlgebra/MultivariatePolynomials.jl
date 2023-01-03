@@ -66,7 +66,7 @@ end
 #    return typeof(gcd(one(P), one(Q)))
 #end
 function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL}, A::Type=GeneralizedEuclideanAlgorithm)
-    return MA.promote_operation(pseudo_rem, P, Q, A)
+    return MA.promote_operation(rem_or_pseudo_rem, P, Q, A)
 end
 
 """
@@ -419,7 +419,7 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
             # divide the content of the other one.
             return MA.operate!!(one, u)
         end
-        r = MA.operate!!(pseudo_rem, u, v, algo)
+        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
 
         if !divides(leadingmonomial(v), leadingmonomial(f))
             not_divided_error(u, v)

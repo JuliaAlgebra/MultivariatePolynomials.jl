@@ -118,6 +118,18 @@ function pseudo_rem(f::APL, g::APL, algo)
     return MA.operate!!(pseudo_rem, MA.mutable_copy(f), g, algo)
 end
 
+function MA.promote_operation(
+    ::typeof(pseudo_rem),
+    ::Type{P},
+    ::Type{Q},
+    ::Type{A},
+) where {T,S,P<:APL{T},Q<:APL{S},A}
+    U1 = MA.promote_operation(*, S, T)
+    U2 = MA.promote_operation(*, T, S)
+    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
+    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U1, U2))
+end
+
 function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
     return MA.buffer_for(MA.sub_mul, F, termtype(F), G)
 end
@@ -170,31 +182,28 @@ _buffer_for_rem_or_pseudo_rem(::UFD, F, G, A) = MA.buffer_for(pseudo_rem, F, G, 
 _buffer_for_rem_or_pseudo_rem(::Field, F, G, A) = nothing
 
 function MA.promote_operation(
-    ::typeof(pseudo_rem),
+    ::typeof(rem_or_pseudo_rem),
     ::Type{P},
     ::Type{Q},
     ::Type{A},
 ) where {T,S,P<:APL{T},Q<:APL{S},A}
-    return _promote_operation(algebraic_structure(MA.promote_operation(-, S, T)), pseudo_rem, P, Q)
+    return _promote_operation(algebraic_structure(MA.promote_operation(-, S, T)), pseudo_rem, P, Q, A)
 end
-function _promote_operation(
+function _promote_operation_rem_or_pseudo_rem(
     ::Field,
-    ::typeof(pseudo_rem),
     ::Type{P},
     ::Type{Q},
-) where {P<:APL,Q<:APL}
+    ::Type{A},
+) where {P<:APL,Q<:APL,A}
     return MA.promote_operation(rem, P, Q)
 end
-function _promote_operation(
+function _promote_operation_rem_or_pseudo_rem(
     ::UFD,
-    ::typeof(pseudo_rem),
     ::Type{P},
     ::Type{Q},
-) where {T,S,P<:APL{T},Q<:APL{S}}
-    U1 = MA.promote_operation(*, S, T)
-    U2 = MA.promote_operation(*, T, S)
-    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
-    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U1, U2))
+    ::Type{A},
+) where {P<:APL,Q<:APL,A}
+    return MA.promote_operation(pseudo_rem, P, Q, A)
 end
 
 function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, g::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
