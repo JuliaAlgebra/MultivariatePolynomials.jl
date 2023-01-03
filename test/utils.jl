@@ -5,6 +5,12 @@ using MultivariatePolynomials
 # Half size on 32-bit.
 const BIGINT_ALLOC = Sys.WORD_SIZE == 64 ? 48 : 24
 
+function mutable_alloc_test(f, x, n)
+    y = MultivariatePolynomials.MA.mutable_copy(x)
+    f(y) # compile
+    @test n == @allocated f(x)
+end
+
 function alloc_test(f, n)
     f() # compile
     @test n == @allocated f()

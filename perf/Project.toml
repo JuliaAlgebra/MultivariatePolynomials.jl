@@ -1,0 +1,5 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
+SIMDPolynomials = "4edc584b-a88b-4acf-80bb-891198a11e01"
+TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"

@@ -117,7 +117,7 @@ function test_gcdx_unit(expected, p1, p2, algo)
     # divisor of u and v; there is a set of greatest common divisors, each
     # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
     # `-expected` are both accepted.
-    @test iszero(MP.pseudo_rem(g, expected, algo)[2])
+    @test iszero(MP.pseudo_rem(g, expected, algo))
     @test a * p1 + b * p2 == g
 end
 function _test_gcdx_unit(expected, p1, p2, algo)
@@ -152,20 +152,28 @@ function _mult_test(a, b)
     @test iszero(rem(a, b))
     @test iszero(rem(b, a))
 end
-function mult_test(expected, a, b, algo)
+
+include("independent.jl")
+
+function _gcd_test(expected, a, b, algo, expected_type)
+    A = deepcopy(a)
+    B = deepcopy(b)
     g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa Base.promote_typeof(a, b)
+    @test are_independent(g, a)
+    @test are_independent(g, b)
+    @test g isa expected_type
     _mult_test(expected, g)
+end
+
+
+function mult_test(expected, a, b, algo)
+    _gcd_test(expected, a, b, algo, Base.promote_typeof(a, b))
 end
 function mult_test(expected, a::Number, b, algo)
-    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa promote_type(typeof(a), MP.coefficienttype(b))
-    _mult_test(expected, g)
+    _gcd_test(expected, a, b, algo, promote_type(typeof(a), MP.coefficienttype(b)))
 end
 function mult_test(expected, a, b::Number, algo)
-    g = @inferred MP._simplifier(a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
-    @test g isa promote_type(MP.coefficienttype(a), typeof(b))
-    _mult_test(expected, g)
+    _gcd_test(expected, a, b, algo, promote_type(MP.coefficienttype(a), typeof(b)))
 end
 function sym_test(a, b, g, algo)
     mult_test(g, a, b, algo)
@@ -236,7 +244,7 @@ function multivariate_gcd_test(::Type{T}, algo=GeneralizedEuclideanAlgorithm()) 
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
-    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false))
+    if T != Int || (algo != GeneralizedEuclideanAlgorithm(false, false) && algo != GeneralizedEuclideanAlgorithm(true, false) && algo != GeneralizedEuclideanAlgorithm(true, true))
         sym_test(a, b, 1, algo)
     end
     sym_test(b, c, x + y + z, algo)

@@ -294,7 +294,7 @@ end
 """
     leadingterm(p::AbstractPolynomialLike)
 
-Returns the coefficient of the leading term, i.e. `last(terms(p))`.
+Returns the leading term, i.e. `last(terms(p))`.
 
 ### Examples
 
@@ -319,9 +319,14 @@ Returns the coefficient of the leading term of `p`, i.e. `coefficient(leadingter
 
 Calling `leadingcoefficient` on ``4x^2y + xy + 2x`` should return ``4`` and calling it on ``0`` should return ``0``.
 """
-function leadingcoefficient(p::AbstractPolynomialLike)
-    coefficient(leadingterm(p))
+function leadingcoefficient(p::AbstractPolynomialLike{T}) where T
+    if iszero(p)
+        zero(T)
+    else
+        last(coefficients(p))
+    end
 end
+leadingcoefficient(t::AbstractTermLike) = coefficient(t)
 
 #$(SIGNATURES)
 """
@@ -334,10 +339,13 @@ Returns the monomial of the leading term of `p`, i.e. `monomial(leadingterm(p))`
 Calling `leadingmonomial` on ``4x^2y + xy + 2x`` should return ``x^2y``.
 """
 function leadingmonomial(p::AbstractPolynomialLike)
-    # last(monomials(p)) would be more efficient for DynamicPolynomials but
-    # monomial(leadingterm(p)) is more efficient for TypedPolynomials and is better if p is a term
-    monomial(leadingterm(p))
+    if iszero(p)
+        constantmonomial(p)
+    else
+        last(monomials(p))
+    end
 end
+leadingmonomial(t::AbstractTermLike) = monomial(t)
 
 #$(SIGNATURES)
 """
@@ -358,6 +366,12 @@ function MA.promote_operation(::typeof(removeleadingterm), ::Type{PT}) where {PT
 end
 MA.operate(::typeof(removeleadingterm), t::AbstractTermLike) = removeleadingterm(t)
 removeleadingterm(t::AbstractTermLike) = zero(t)
+
+function unsafe_restore_leading_term end
+function MA.operate!(::typeof(unsafe_restore_leading_term), p::AbstractPolynomial, t::AbstractTermLike)
+    # `MA.add!` will copy the coefficient of `t` so `Polynomial` redefines this
+    return MA.add!!(p, t)
+end
 
 #$(SIGNATURES)
 """

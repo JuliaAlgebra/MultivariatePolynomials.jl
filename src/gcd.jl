@@ -1,7 +1,8 @@
 export GeneralizedEuclideanAlgorithm
 
 _copy(p, ::MA.IsMutable) = p
-_copy(p, ::MA.IsNotMutable) = copy(p)
+# `Base.copy` does not copy anything for `BigInt` so we need `MA.copy_if_mutable`
+_copy(p, ::MA.IsNotMutable) = MA.copy_if_mutable(p)
 
 """
     abstract type AbstractUnivariateGCDAlgorithm end
@@ -64,8 +65,8 @@ end
 #function MA.promote_operation(::typeof(gcd), P::Type{<:Number}, Q::Type{<:Number})
 #    return typeof(gcd(one(P), one(Q)))
 #end
-function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL})
-    return MA.promote_operation(pseudo_rem, P, Q)
+function MA.promote_operation(::typeof(gcd), P::Type{<:APL}, Q::Type{<:APL}, A::Type=GeneralizedEuclideanAlgorithm)
+    return MA.promote_operation(rem_or_pseudo_rem, P, Q, A)
 end
 
 """
@@ -385,6 +386,7 @@ _polynomial(ts, state, ::MA.IsMutable) = polynomial!(ts, state)
 
 Returns the `gcd` of primitive polynomials `p` and `q` using algorithm `algo`
 which is a subtype of [`AbstractUnivariateGCDAlgorithm`](@ref).
+The function might modify `p` or `q`.
 """
 function primitive_univariate_gcd! end
 
@@ -415,12 +417,16 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
         elseif isconstant(v)
             # `p` and `q` are primitive so if one of them is constant, it cannot
             # divide the content of the other one.
-            return one(R)
+            return MA.operate!!(one, u)
         end
-        divided, r = pseudo_rem(u, v, algo)
-        if !divided
+
+        d_before = degree(leadingmonomial(u))
+        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
+        d_after = degree(leadingmonomial(r))
+        if d_after == d_before
             not_divided_error(u, v)
         end
+
         if !algo.primitive_rem
             r = primitive_part(r, algo, MA.IsMutable())::R
         end
@@ -504,7 +510,7 @@ function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgo
 end
 
 function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait)
-    return primitive_univariate_gcd!(p1, p2, algo)
+    return primitive_univariate_gcd!(_copy(p1, m1), _copy(p2, m2), algo)
 end
 
 function univariate_gcdx(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
@@ -568,8 +574,12 @@ Addison-Wesley Professional. Third edition.
 function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm, mutability::MA.MutableTrait) where {T}
     P = MA.promote_operation(gcd, T, T)
     coefs = coefficients(poly)
-    isempty(coefs) && return zero(P)
-    length(coefs) == 1 && return convert(P, _copy(first(coefs), mutability))
+    if isempty(coefs)
+        return zero(P)
+    end
+    if length(coefs) == 1
+        return convert(P, _copy(first(coefs), mutability))
+    end
     # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
     if T <: APL
         for i in eachindex(coefs)
@@ -592,7 +602,7 @@ function content(poly::APL{T}, algo::AbstractUnivariateGCDAlgorithm, mutability:
     end
     return g::P
 end
-function content(poly::APL{T}, ::AbstractUnivariateGCDAlgorithm, ::MA.MutableTrait) where {T<:AbstractFloat}
+function content(::APL{T}, ::AbstractUnivariateGCDAlgorithm, ::MA.MutableTrait) where {T<:AbstractFloat}
     return one(T)
 end
 

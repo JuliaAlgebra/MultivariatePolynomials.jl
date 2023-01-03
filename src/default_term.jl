@@ -31,8 +31,8 @@ function MA.promote_operation(::typeof(combine), ::Type{Term{S, M1}}, ::Type{Ter
     return Term{MA.promote_operation(+, S, T), promote_type(M1, M2)}
 end
 
-function MA.mutability(::Type{Term{C,T}}) where {C,T}
-    if MA.mutability(C) isa MA.IsMutable && MA.mutability(T) isa MA.IsMutable
+function MA.mutability(::Type{Term{C,M}}) where {C,M}
+    if MA.mutability(C) isa MA.IsMutable && MA.mutability(M) isa MA.IsMutable
         return MA.IsMutable()
     else
         return MA.IsNotMutable()

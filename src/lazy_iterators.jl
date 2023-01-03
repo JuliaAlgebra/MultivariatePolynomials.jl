@@ -61,6 +61,7 @@ Base.eltype(::LazyMap{T}) where {T} = T
 Base.getindex(it::LazyMap, i) = it.f(getindex(it.data, i))
 
 Base.eachindex(it::LazyMap) = Base.eachindex(it.data)
+Base.lastindex(it::LazyMap) = Base.lastindex(it.data)
 
 function Iterators.reverse(it::LazyMap{T}) where {T}
     return LazyMap{T}(it.f, Iterators.reverse(it.data))
