@@ -43,9 +43,7 @@ function test_polynomial_merge()
     end
 end
 
-function _test_leading(T)
-    @polyvar x y
-    p = T(4) * x^2 * y + x * y + 2x
+function __test_leading(p)
     alloc_test(0) do
         leadingterm(p)
     end
@@ -55,6 +53,11 @@ function _test_leading(T)
     alloc_test(0) do
         leadingmonomial(p)
     end
+end
+function _test_leading(T)
+    @polyvar x y
+    __test_leading(T(4) * x^2 * y + x * y + 2x)
+    __test_leading(T(4) * x^2 * y)
 end
 
 function test_leading()
