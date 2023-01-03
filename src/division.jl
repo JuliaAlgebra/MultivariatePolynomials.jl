@@ -134,16 +134,46 @@ function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
     return MA.buffer_for(MA.sub_mul, F, termtype(F), G)
 end
 
-function MA.buffered_operate!(buffer, ::typeof(pseudo_rem), f::APL, g::APL, algo)
+function _prepare_s_poly!(::typeof(pseudo_rem), f, ltf, ltg)
+    MA.operate!(right_constant_mult, f, coefficient(ltg))
+    return term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
+end
+
+function _prepare_s_poly!(::typeof(rem), ::APL, ltf, ltg)
+    return _div(ltf, ltg)
+end
+
+function MA.operate!(op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
+    return MA.buffered_operate!(nothing, op, f, g, algo)
+end
+
+function MA.buffered_operate!(buffer, op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
     ltg = leadingterm(g)
     ltf = leadingterm(f)
     MA.operate!(removeleadingterm, g)
-    while !iszero(f) && divides(monomial(ltg), ltf)
-        MA.operate!(removeleadingterm, f)
-        MA.operate!(right_constant_mult, f, coefficient(ltg))
-        t = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
-        MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
-        if algo.primitive_rem
+    not_divided_terms = nothing
+    while !iszero(f)
+        if isapproxzero(ltf) # TODO `, kwargs...)`
+            MA.operate!(removeleadingterm, f)
+        elseif !divides(monomial(ltg), ltf)
+            # Since the monomials are sorted in decreasing order,
+            # lm is larger than all of them hence it cannot divide any of them
+            # This is always the case for univariate.
+            # TODO We could also do early termination for Lex order even if `>` returns `false` here
+            if monomial(ltg) > monomial(ltf)
+                break
+            end
+            if isnothing(not_divided_terms)
+                not_divided_terms = termtype(f)
+            end
+            push!(not_divided_terms, ltf)
+            MA.operate!(removeleadingterm, f)
+        else
+            MA.operate!(removeleadingterm, f)
+            t = _prepare_s_poly!(op, f, ltf, ltg)
+            MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
+        end
+        if op === pseudo_rem && algo.primitive_rem
             f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
         if algo.skip_last && maxdegree(f) == maxdegree(g)
@@ -165,21 +195,20 @@ function rem_or_pseudo_rem(f::APL, g::APL, algo)
     return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
 end
 
-function MA.operate!!(::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _rem_or_pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, nothing)
+_op(::Field) = rem
+_op(::UFD) = pseudo_rem
+
+function MA.operate!(::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return MA.operate!(_op(algebraic_structure(MA.promote_operation(-, S, T))), f, g, algo)
 end
 
-function MA.buffered_operate!!(buffer, ::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _rem_or_pseudo_rem!(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo, buffer)
+function MA.buffered_operate!(buffer, ::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
+    return MA.buffered_operate!(buffer, _op(algebraic_structure(MA.promote_operation(-, S, T))), f, g, algo)
 end
-_rem_or_pseudo_rem!(::Field, f, g, algo, ::Nothing) = rem(f, g)
-_rem_or_pseudo_rem!(::UFD, f, g, algo, buffer) = MA.buffered_operate!(buffer, pseudo_rem, f, g, algo)
 
 function MA.buffer_for(::typeof(rem_or_pseudo_rem), F::Type{<:APL{S}}, G::Type{<:APL{T}}, A::Type) where {S,T}
-    _buffer_for_rem_or_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), F, G, A)
+    MA.buffer_for(_op(algebraic_structure(MA.promote_operation(-, S, T))), F, G, A)
 end
-_buffer_for_rem_or_pseudo_rem(::UFD, F, G, A) = MA.buffer_for(pseudo_rem, F, G, A)
-_buffer_for_rem_or_pseudo_rem(::Field, F, G, A) = nothing
 
 function MA.promote_operation(
     ::typeof(rem_or_pseudo_rem),
@@ -206,7 +235,10 @@ function _promote_operation_rem_or_pseudo_rem(
     return MA.promote_operation(pseudo_rem, P, Q, A)
 end
 
-function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, g::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+function MA.promote_operation(::typeof(rem), ::Type{P}, ::Type{Q}, ::Type{A}) where {P<:APL,Q<:APL,A}
+    return MA.promote_operation(rem, P, Q)
+end
+function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
     U = MA.promote_operation(/, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U, U))

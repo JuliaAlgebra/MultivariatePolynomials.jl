@@ -107,9 +107,9 @@ function _pseudo_rem_test(p1, p2, algo)
     MA_copy_1 = mutable_copy(p1)
     backup_2 = deepcopy(p2)
     MA_copy_2 = mutable_copy(p2)
-    buffer = buffer_for(MP.pseudo_rem, typeof(p1), typeof(p2), typeof(algo))
+    buffer = buffer_for(MP.rem_or_pseudo_rem, typeof(p1), typeof(p2), typeof(algo))
     mutable_alloc_test(p1, 0) do p1
-        buffered_operate!!(buffer, MP.pseudo_rem, p1, p2, algo)
+        buffered_operate!!(buffer, MP.rem_or_pseudo_rem, p1, p2, algo)
     end
     @test backup_1 == MA_copy_1
     @test backup_2 == MA_copy_2
@@ -136,8 +136,9 @@ function _test_div(T)
 end
 
 function test_div()
-    _test_div(Int)
-    _test_div(BigInt)
+    @testset "$T" for T in [Int, BigInt]
+        _test_div(T)
+    end
 end
 
 end

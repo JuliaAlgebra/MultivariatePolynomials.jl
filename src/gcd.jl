@@ -420,11 +420,12 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
             return MA.operate!!(one, u)
         end
 
-        if !divides(leadingmonomial(v), leadingmonomial(u))
+        nterms_before = nterms(u)
+        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
+        nterms_after = nterms(r)
+        if nterms_after == nterms_before
             not_divided_error(u, v)
         end
-
-        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
 
         if !algo.primitive_rem
             r = primitive_part(r, algo, MA.IsMutable())::R
