@@ -141,41 +141,42 @@ function Base.gcd(t1::AbstractTermLike{T}, t2::AbstractTermLike{S}, algo::Abstra
     return term(_coefficient_gcd(coefficient(t1), coefficient(t2)), gcd(monomial(t1), monomial(t2)))
 end
 
+function shift_deflation(p::AbstractPolynomialLike, v::AbstractVariable)
+    shift = -1
+    defl = 0
+    for mono in monomials(p)
+        exp = degree(mono, v)
+        if shift == -1
+            shift = exp
+        elseif exp < shift
+            # There are two cases:
+            # 1) If `defl[i]` is zero then it means all previous monomials
+            #    had degree `shift[i]` so we just set `defl[i]` to
+            #    `shift[i] - exp` or equivalently `gcd(0, shift[i] - exp)`.
+            # 2) If  `defl[i]` is positive then we have some monomials with
+            #    degree `shift[i]` and some with degree
+            #    `shift[i] + k * defl[i]` for some `k > 0`. We have
+            #    `gcd(shift[i] - exp, shift[i] + k1 * defl[i] - exp, shift[i] + k2 * defl[i] - exp, ...) =`
+            #    `gcd(shift[i] - exp, k1 * defl[i], k2 * defl[i], ...)`
+            #    Since `gcd(k1, k2, ...) = 1`, this is equal to
+            #    `gcd(shift[i] - exp, defl[i])`
+            defl = gcd(defl, shift - exp)
+            shift = exp
+        else
+            defl = gcd(defl, exp - shift)
+        end
+    end
+    return shift, defl
+end
+
 # Inspired from to `AbstractAlgebra.deflation`
 function deflation(p::AbstractPolynomialLike)
     if iszero(p)
         return constantmonomial(p), constantmonomial(p)
     end
-    shift = fill(-1, nvariables(p))
-    defl = zeros(Int, nvariables(p))
-    for mono in monomials(p)
-        exps = exponents(mono)
-        for i in eachindex(exps)
-            exp = exps[i]
-            @assert exp >= 0
-            if shift[i] == -1
-                shift[i] = exp
-            elseif exp < shift[i]
-                # There are two cases:
-                # 1) If `defl[i]` is zero then it means all previous monomials
-                #    had degree `shift[i]` so we just set `defl[i]` to
-                #    `shift[i] - exp` or equivalently `gcd(0, shift[i] - exp)`.
-                # 2) If  `defl[i]` is positive then we have some monomials with
-                #    degree `shift[i]` and some with degree
-                #    `shift[i] + k * defl[i]` for some `k > 0`. We have
-                #    `gcd(shift[i] - exp, shift[i] + k1 * defl[i] - exp, shift[i] + k2 * defl[i] - exp, ...) =`
-                #    `gcd(shift[i] - exp, k1 * defl[i], k2 * defl[i], ...)`
-                #    Since `gcd(k1, k2, ...) = 1`, this is equal to
-                #    `gcd(shift[i] - exp, defl[i])`
-                defl[i] = gcd(defl[i], shift[i] - exp)
-                shift[i] = exp
-            else
-                defl[i] = gcd(defl[i], exp - shift[i])
-            end
-        end
-    end
-    @assert all(d -> d >= 0, shift)
-    @assert all(d -> d >= 0, defl)
+    shift_defl = shift_deflation.(p, variables(p))
+    shift = getindex.(shift_defl, 1)
+    defl = getindex.(shift_defl, 2)
     s = prod(variables(p).^shift; init = constantmonomial(p))::monomialtype(p)
     d = prod(variables(p).^defl; init = constantmonomial(p))::monomialtype(p)
     return s, d
