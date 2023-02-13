@@ -1,5 +1,4 @@
 module TestAllocations
-
 include("utils.jl")
 
 function runtests()
@@ -85,6 +84,12 @@ function test_isapproxzero()
     end
     alloc_test(0) do
         isapproxzero(q; ztol = 1e-8)
+    end
+    alloc_test(0) do
+        iszero(q)
+    end
+    alloc_test(0) do
+        isone(q)
     end
 end
 
