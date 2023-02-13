@@ -342,8 +342,11 @@ function _extracted_variable(p1, p2)
 end
 
 function multivariate_gcd(p1::APL, p2::APL, var, algo, m1::MA.MutableTrait, m2::MA.MutableTrait)
-    q = univariate_gcd(isolate_variable(p1, var, m1), isolate_variable(p2, var, m2), algo, MA.IsMutable(), MA.IsMutable())
-    return sum(coefficient(t) * monomial(t) for t in terms(q))::MA.promote_operation(gcd, typeof(p1), typeof(p2))
+    q1 = isolate_variable(p1, var, m1)
+    q2 = isolate_variable(p2, var, m2)
+    q = univariate_gcd(q1, q2, algo, MA.IsMutable(), MA.IsMutable())
+    P = MA.promote_operation(gcd, typeof(p1), typeof(p2))
+    return flatten_variable!(termtype(P), q)::P
 end
 
 _vector(t::AbstractVector) = collect(t)
@@ -377,6 +380,17 @@ function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.Mutab
         i = j
     end
     return polynomial!(new_terms, SortedUniqState())
+end
+
+function flatten_variable!(::Type{TT}, poly::APL) where {TT<:AbstractTerm}
+    ts = TT[]
+    for t in terms(poly)
+        m = monomial(t)
+        for _t in terms(coefficient(t))
+            push!(ts, _t * m)
+        end
+    end
+    return polynomial!(ts)
 end
 
 _polynomial(ts, state, ::MA.IsNotMutable) = polynomial(ts, state)
