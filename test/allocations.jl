@@ -93,7 +93,7 @@ function test_isapproxzero()
     end
 end
 
-function _test_gcd(T)
+function _test_term_gcd(T)
     o = one(T)
     @polyvar x y
     t1 = o * x * y
@@ -103,8 +103,8 @@ function _test_gcd(T)
     end
 end
 
-function test_gcd()
-    _test_gcd(Int)
+function test_term_gcd()
+    _test_term_gcd(Int)
 end
 
 function _pseudo_rem_test(p1, p2, algo)
@@ -146,5 +146,22 @@ function test_div()
     end
 end
 
+function _test_univ_gcd(T, algo)
+    o = one(T)
+    @polyvar x
+    p1 = o * x^2 + 2o * x + o
+    p2 = o * x + o
+    mutable_alloc_test(mutable_copy(p1), 0) do p1
+        MP.univariate_gcd(p1, p2, algo, IsMutable(), IsMutable())
+    end
 end
+
+function test_univ_gcd()
+    algo = GeneralizedEuclideanAlgorithm()
+    _test_univ_gcd(Int, algo)
+    #_test_univ_gcd(BigInt, algo) # TODO
+end
+
+end
+
 TestAllocations.runtests()
