@@ -1,4 +1,4 @@
-export divides, pseudo_rem, rem_or_pseudo_rem
+export divides, div_multiple, pseudo_rem, rem_or_pseudo_rem
 
 function Base.round(p::APL; args...)
     # round(0.1) is zero so we cannot use `mapcoefficientsnz`
