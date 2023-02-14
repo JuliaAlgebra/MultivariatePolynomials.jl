@@ -5,6 +5,13 @@ Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
 Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
+Base.isone(v::AbstractVariable) = false
+Base.isone(m::AbstractMonomial) = isconstant(m)
+Base.isone(t::AbstractTerm) = isone(coefficient(t)) && isconstant(monomial(t))
+function Base.isone(p::AbstractPolynomial)
+    return isone(nterms(p)) && isone(first(terms(p)))
+end
+
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to left_constant_eq
 Base.:(==)(α::Nothing, x::APL) = false
