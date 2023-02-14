@@ -315,14 +315,14 @@ function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     end
     return p
 end
-function mapexponents(f, p::Polynomial, m::AbstractMonomial, ::MA.IsMutable)
+function mapexponents!(f, p::Polynomial, m::AbstractMonomial)
     for i in eachindex(p.terms)
         t = p.terms[i]
         p.terms[i] = term(coefficient(t), mapexponents(f, monomial(t), m))
     end
     return p
 end
-function mapexponents(f, p::Polynomial, m::AbstractMonomial, ::MA.IsNotMutable)
+function mapexponents(f, p::Polynomial, m::AbstractMonomial)
     return mapexponents(f, MA.mutable_copy(p), m, MA.IsMutable())
 end
 

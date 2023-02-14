@@ -137,6 +137,9 @@ mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponen
 function mapexponents_to! end
 function mapexponents! end
 
+mapexponents(f, a, b, ::MA.IsMutable) = mapexponents!(f, a, b)
+mapexponents(f, a, b, ::MA.IsNotMutable) = mapexponents(f, a, b)
+
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)
 MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike}) = monomialtype(MT)

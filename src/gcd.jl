@@ -390,7 +390,7 @@ function flatten_variable!(::Type{TT}, poly::APL) where {TT<:AbstractTerm}
             push!(ts, _t * m)
         end
     end
-    return polynomial!(ts)
+    return polynomial!(ts, UniqState())
 end
 
 _polynomial(ts, state, ::MA.IsNotMutable) = polynomial(ts, state)

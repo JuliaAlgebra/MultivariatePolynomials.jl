@@ -271,6 +271,8 @@ Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = term(coefficient(t), m *
 Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = term(coefficient(t), monomial(t) * m)
 Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = term(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
 
+MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike) = mapexponents!(+, p, t)
+Base.:*(p::APL, t::AbstractMonomialLike) = mapexponents(+, p, t)
 Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
 Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
 Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
