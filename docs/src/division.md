@@ -12,6 +12,7 @@ The `divrem` function returns ``(q, r)``.
 
 ```@docs
 divides
+div_multiple
 pseudo_rem
 rem_or_pseudo_rem
 ```

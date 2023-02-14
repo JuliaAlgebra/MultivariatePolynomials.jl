@@ -521,7 +521,10 @@ function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgo
     pp = primitive_univariate_gcd!(f1, f2, algo)
     gg = _gcd(g1, g2, algo, MA.IsMutable(), MA.IsMutable())#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
     # Multiply each coefficient by the gcd of the contents.
-    return mapcoefficients!(Base.Fix1(*, gg), pp, nonzero = true)
+    if !isone(gg)
+        MA.operate!(right_constant_mult, pp, gg)
+    end
+    return pp
 end
 
 function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait)
@@ -652,5 +655,5 @@ Addison-Wesley Professional. Third edition.
 """
 function primitive_part_content(p, algo::AbstractUnivariateGCDAlgorithm, mutability::MA.MutableTrait)
     g = content(p, algo, MA.IsNotMutable())
-    return mapcoefficients(Base.Fix2(_div, g), p, mutability; nonzero = true), g
+    return right_constant_div_multiple(p, g, mutability), g
 end

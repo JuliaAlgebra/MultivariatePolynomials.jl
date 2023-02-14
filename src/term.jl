@@ -102,7 +102,7 @@ function coefficient(f::APL, m::AbstractMonomialLike, vars)
         end
         match || continue
 
-        coeff += term(coefficient(t), _div(monomial(t), m))
+        coeff += term(coefficient(t), div_multiple(monomial(t), m))
     end
     coeff
 end

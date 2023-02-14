@@ -44,20 +44,49 @@ _field_absorb(::UFD, ::Field) = Field()
 _field_absorb(::Field, ::UFD) = Field()
 _field_absorb(::Field, ::Field) = Field()
 
-# _div(a, b) assumes that b divides a
-_div(::Field, a, b) = a / b
-_div(::UFD, a, b) = div(a, b)
-_div(a, b) = _div(algebraic_structure(promote_type(typeof(a), typeof(b))), a, b)
-_div(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(-, m1, m2)
-function _div(t::AbstractTerm, m::AbstractMonomial)
-    term(coefficient(t), _div(monomial(t), m))
+"""
+    div_multiple(a, b, ma::MA.MutableTrait)
+
+Return the division of `a` by `b` assuming that `a` is a multiple of `b`.
+If `a` is not a multiple of `b` then this function may return anything.
+"""
+div_multiple(::Field, a, b, ma::MA.MutableTrait) = a / b
+div_multiple(::UFD, a, b, ma::MA.IsMutable) = MA.operate!!(div, a, b)
+div_multiple(::UFD, a, b, ma::MA.IsNotMutable) = div(a, b)
+function div_multiple(a, b, ma::MA.MutableTrait=MA.IsNotMutable())
+    return div_multiple(algebraic_structure(promote_type(typeof(a), typeof(b))), a, b, ma)
 end
-function _div(t1::AbstractTermLike, t2::AbstractTermLike)
-    term(_div(coefficient(t1), coefficient(t2)), _div(monomial(t1), monomial(t2)))
+function div_multiple(m1::AbstractMonomialLike, m2::AbstractMonomialLike, ::MA.MutableTrait=MA.IsNotMutable())
+    return mapexponents(-, m1, m2)
 end
-function _div(f::APL, g::APL)
+function div_multiple(t::AbstractTerm, m::AbstractMonomial, mt::MA.MutableTrait=MA.IsNotMutable())
+    term(_copy(coefficient(t), mt), div_multiple(monomial(t), m))
+end
+function div_multiple(t1::AbstractTermLike, t2::AbstractTermLike, m1::MA.MutableTrait=MA.IsNotMutable())
+    term(div_multiple(coefficient(t1), coefficient(t2), m1), div_multiple(monomial(t1), monomial(t2)))
+end
+function right_constant_div_multiple(f::APL, g, mf::MA.MutableTrait=MA.IsNotMutable())
+    if isone(g)
+        return f
+    end
+    return mapcoefficients(coef -> div_multiple(coef, g, mf), f, mf; nonzero = true)
+end
+function div_multiple(f::APL, g::AbstractMonomialLike, mf::MA.MutableTrait=MA.IsNotMutable())
+    if isconstant(g)
+        return f
+    end
+    return mapexponents(-, f, g, mf)
+end
+function div_multiple(f::APL, g::AbstractTermLike, mf::MA.MutableTrait=MA.IsNotMutable())
+    f = right_constant_div_multiple(f, coefficient(g))
+    return div_multiple(f, monomial(g))
+end
+function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
     lt = leadingterm(g)
-    rf = MA.copy_if_mutable(f)
+    if nterms(g) == 1
+        return div_multiple(f, lt, mf)
+    end
+    rf = _copy(f, mf)
     rg = removeleadingterm(g)
     q = zero(rf)
     while !iszero(rf)
@@ -65,11 +94,11 @@ function _div(f::APL, g::APL)
         if !divides(lt, ltf)
             # In floating point arithmetics, it may happen
             # that `rf` is not zero even if it cannot be reduced further.
-            # As `_div` assumes that `g` divides `f`, we know that
+            # As `div_multiple` assumes that `g` divides `f`, we know that
             # `rf` is approximately zero anyway.
             break
         end
-        qt = _div(ltf, lt)
+        qt = div_multiple(ltf, lt)
         q = MA.add!!(q, qt)
         rf = MA.operate!!(removeleadingterm, rf)
         rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
@@ -98,7 +127,7 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
     else
         st = constantterm(coefficient(ltg), f)
         new_f = st * removeleadingterm(f)
-        qt = term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
+        qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
         # Check with `::` that we don't have any type unstability on this variable.
         return convert(typeof(f), st), convert(typeof(f), qt), (new_f - new_g)::typeof(f)
@@ -136,11 +165,11 @@ end
 
 function _prepare_s_poly!(::typeof(pseudo_rem), f, ltf, ltg)
     MA.operate!(right_constant_mult, f, coefficient(ltg))
-    return term(coefficient(ltf), _div(monomial(ltf), monomial(ltg)))
+    return term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
 end
 
 function _prepare_s_poly!(::typeof(rem), ::APL, ltf, ltg)
-    return _div(ltf, ltg)
+    return div_multiple(ltf, ltg)
 end
 
 function MA.operate!(op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
@@ -255,7 +284,7 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
         if isapproxzero(ltf; kwargs...)
             rf = MA.operate!!(removeleadingterm, rf)
         elseif divides(lm, ltf)
-            qt = _div(ltf, lt)
+            qt = div_multiple(ltf, lt)
             q = MA.add!!(q, qt)
             rf = MA.operate!!(removeleadingterm, rf)
             rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
@@ -291,7 +320,7 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
         divisionoccured = false
         for i in useful
             if divides(lm[i], ltf)
-                qt = _div(ltf, lt[i])
+                qt = div_multiple(ltf, lt[i])
                 q[i] = MA.add!!(q[i], qt)
                 rf = MA.operate!!(removeleadingterm, rf)
                 rf = MA.operate!!(MA.sub_mul, rf, qt, rg[i])

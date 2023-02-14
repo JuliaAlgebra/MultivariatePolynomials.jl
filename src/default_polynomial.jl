@@ -289,7 +289,7 @@ end
 function MA.buffer_for(op::MA.AddSubMul, ::Type{<:Polynomial{S}}, ::Type{<:AbstractTermLike{T}}, ::Type{<:Polynomial{U}}) where {S,T,U}
     return MA.buffer_for(op, S, T, U)
 end
-function MA.buffered_operate!(buffer, op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
+function MA.buffered_operate!(buffer::Polynomial, op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
     return _polynomial_merge!(op, p, t, q, buffer)
 end
 
@@ -301,13 +301,29 @@ function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polyn
     return output
 end
 function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
-    return MA.operate_to!(p, *, MA.mutable_copy(p), q)
+    if iszero(q)
+        return MA.operate!(zero, p)
+    elseif nterms(q) == 1
+        return MA.operate!(*, p, leadingterm(q))
+    else
+        return MA.operate_to!(p, *, MA.mutable_copy(p), q)
+    end
 end
 function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     for i in eachindex(p.terms)
         p.terms[i] = MA.operate!!(*, p.terms[i], t)
     end
     return p
+end
+function mapexponents(f, p::Polynomial, m::AbstractMonomial, ::MA.IsMutable)
+    for i in eachindex(p.terms)
+        t = p.terms[i]
+        p.terms[i] = term(coefficient(t), mapexponents(f, monomial(t), m))
+    end
+    return p
+end
+function mapexponents(f, p::Polynomial, m::AbstractMonomial, ::MA.IsNotMutable)
+    return mapexponents(f, MA.mutable_copy(p), m, MA.IsMutable())
 end
 
 function MA.operate!(::typeof(zero), p::Polynomial)
