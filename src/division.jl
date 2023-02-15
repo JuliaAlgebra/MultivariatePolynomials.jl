@@ -67,19 +67,19 @@ function div_multiple(t1::AbstractTermLike, t2::AbstractTermLike, m1::MA.Mutable
 end
 function right_constant_div_multiple(f::APL, g, mf::MA.MutableTrait=MA.IsNotMutable())
     if isone(g)
-        return f
+        return _copy(f, mf)
     end
     return mapcoefficients(coef -> div_multiple(coef, g, mf), f, mf; nonzero = true)
 end
 function div_multiple(f::APL, g::AbstractMonomialLike, mf::MA.MutableTrait=MA.IsNotMutable())
     if isconstant(g)
-        return f
+        return _copy(f, mf)
     end
     return mapexponents(-, f, g, mf)
 end
 function div_multiple(f::APL, g::AbstractTermLike, mf::MA.MutableTrait=MA.IsNotMutable())
-    f = right_constant_div_multiple(f, coefficient(g))
-    return div_multiple(f, monomial(g))
+    f = right_constant_div_multiple(f, coefficient(g), mf)
+    return div_multiple(f, monomial(g), MA.IsMutable())
 end
 function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
     lt = leadingterm(g)

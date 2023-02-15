@@ -323,7 +323,7 @@ function mapexponents!(f, p::Polynomial, m::AbstractMonomial)
     return p
 end
 function mapexponents(f, p::Polynomial, m::AbstractMonomial)
-    return mapexponents(f, MA.mutable_copy(p), m, MA.IsMutable())
+    return mapexponents!(f, MA.mutable_copy(p), m)
 end
 
 function MA.operate!(::typeof(zero), p::Polynomial)
