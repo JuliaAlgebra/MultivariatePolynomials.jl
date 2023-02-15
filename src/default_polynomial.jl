@@ -289,7 +289,7 @@ end
 function MA.buffer_for(op::MA.AddSubMul, ::Type{<:Polynomial{S}}, ::Type{<:AbstractTermLike{T}}, ::Type{<:Polynomial{U}}) where {S,T,U}
     return MA.buffer_for(op, S, T, U)
 end
-function MA.buffered_operate!(buffer::Polynomial, op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
+function MA.buffered_operate!(buffer, op::MA.AddSubMul, p::Polynomial, t::AbstractTermLike, q::Polynomial)
     return _polynomial_merge!(op, p, t, q, buffer)
 end
 

@@ -363,7 +363,7 @@ function MA.buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPol
     product = MA.operate_to!!(buffer, *, y, z, args...)
     return MA.operate_to!(output, MA.add_sub_op(op), x, product)
 end
-function MA.buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
+function MA.buffered_operate!(buffer, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!!(buffer, *, y, z, args...)
     return MA.operate!(MA.add_sub_op(op), x, product)
 end
