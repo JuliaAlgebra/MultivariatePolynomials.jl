@@ -397,7 +397,7 @@ _polynomial(ts, state, ::MA.IsNotMutable) = polynomial(ts, state)
 _polynomial(ts, state, ::MA.IsMutable) = polynomial!(ts, state)
 
 """
-    primitive_univariate_gcd!(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm)
+    primitive_univariate_gcd!(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm, buffer=nothing)
 
 Returns the `gcd` of primitive polynomials `p` and `q` using algorithm `algo`
 which is a subtype of [`AbstractUnivariateGCDAlgorithm`](@ref).
@@ -419,11 +419,19 @@ end
 
 # If `p` and `q` do not have the same type then the local variables `p` and `q`
 # won't be type stable so we create `u` and `v`.
-function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlgorithm)
+function primitive_univariate_gcd!(
+    p::APL,
+    q::APL,
+    algo::GeneralizedEuclideanAlgorithm,
+    buffer=nothing,
+)
     if maxdegree(p) < maxdegree(q)
-        return primitive_univariate_gcd!(q, p, algo)
+        return primitive_univariate_gcd!(q, p, algo, buffer)
     end
     R = MA.promote_operation(gcd, typeof(p), typeof(q))
+    if isnothing(buffer)
+        buffer = MA.buffer_for(rem_or_pseudo_rem, R, R, typeof(algo))
+    end
     u = convert(R, p)
     v = convert(R, q)
     while true
@@ -436,7 +444,7 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
         end
 
         d_before = degree(leadingmonomial(u))
-        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
+        r = MA.buffered_operate!!(buffer, rem_or_pseudo_rem, u, v, algo)
         d_after = degree(leadingmonomial(r))
         if d_after == d_before
             not_divided_error(u, v)
@@ -485,7 +493,7 @@ function primitive_univariate_gcdx(u0::APL, v0::APL, algo::GeneralizedEuclideanA
 end
 
 
-function primitive_univariate_gcd!(p::APL, q::APL, ::SubresultantAlgorithm)
+function primitive_univariate_gcd!(p::APL, q::APL, ::SubresultantAlgorithm, buffer=nothing)
     error("Not implemented yet")
 end
 
@@ -512,13 +520,28 @@ If the coefficients are not `AbstractFloat`, this
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function univariate_gcd(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait) where {S,T}
-    return univariate_gcd(_field_absorb(algebraic_structure(S), algebraic_structure(T)), p1, p2, algo, m1, m2)
+function univariate_gcd(
+    p1::APL{S},
+    p2::APL{T},
+    algo::AbstractUnivariateGCDAlgorithm,
+    m1::MA.MutableTrait,
+    m2::MA.MutableTrait,
+    buffer=nothing
+) where {S,T}
+    return univariate_gcd(_field_absorb(algebraic_structure(S), algebraic_structure(T)), p1, p2, algo, m1, m2, buffer)
 end
-function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait)
+function univariate_gcd(
+    ::UFD,
+    p1::APL,
+    p2::APL,
+    algo::AbstractUnivariateGCDAlgorithm,
+    m1::MA.MutableTrait,
+    m2::MA.MutableTrait,
+    buffer=nothing,
+)
     f1, g1 = primitive_part_content(p1, algo, m1)
     f2, g2 = primitive_part_content(p2, algo, m2)
-    pp = primitive_univariate_gcd!(f1, f2, algo)
+    pp = primitive_univariate_gcd!(f1, f2, algo, buffer)
     gg = _gcd(g1, g2, algo, MA.IsMutable(), MA.IsMutable())#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
     # Multiply each coefficient by the gcd of the contents.
     if !isone(gg)
@@ -527,8 +550,8 @@ function univariate_gcd(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgo
     return pp
 end
 
-function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait)
-    return primitive_univariate_gcd!(_copy(p1, m1), _copy(p2, m2), algo)
+function univariate_gcd(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm, m1::MA.MutableTrait, m2::MA.MutableTrait, buffer=nothing)
+    return primitive_univariate_gcd!(_copy(p1, m1), _copy(p2, m2), algo, buffer)
 end
 
 function univariate_gcdx(p1::APL{S}, p2::APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {S,T}
