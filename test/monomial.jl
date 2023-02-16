@@ -81,7 +81,7 @@ end
 
     @test monic(x^2) == x^2
 
-    @test MP._div(2x^2*y[1]^3, x*y[1]^2) == 2x*y[1]
+    @test MP.div_multiple(2x^2*y[1]^3, x*y[1]^2) == 2x*y[1]
 
     @test transpose(x) == x
     @test adjoint(x) == x

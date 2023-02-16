@@ -271,6 +271,8 @@ Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = term(coefficient(t), m *
 Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = term(coefficient(t), monomial(t) * m)
 Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = term(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
 
+MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike) = mapexponents!(+, p, t)
+Base.:*(p::APL, t::AbstractMonomialLike) = mapexponents(+, p, t)
 Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
 Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
 Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
@@ -361,7 +363,7 @@ function MA.buffered_operate_to!(buffer::AbstractPolynomial, output::AbstractPol
     product = MA.operate_to!!(buffer, *, y, z, args...)
     return MA.operate_to!(output, MA.add_sub_op(op), x, product)
 end
-function MA.buffered_operate!(buffer::AbstractPolynomial, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
+function MA.buffered_operate!(buffer, op::MA.AddSubMul, x::AbstractPolynomial, y, z, args::Vararg{Any, N}) where N
     product = MA.operate_to!!(buffer, *, y, z, args...)
     return MA.operate!(MA.add_sub_op(op), x, product)
 end

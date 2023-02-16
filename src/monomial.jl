@@ -130,12 +130,15 @@ If ``m_1 = \\prod x^{\\alpha_i}`` and ``m_2 = \\prod x^{\\beta_i}`` then it retu
 
 ### Examples
 
-The multiplication `m1 * m2` is equivalent to `mapexponents(+, m1, m2)`, the unsafe division `_div(m1, m2)` is equivalent to `mapexponents(-, m1, m2)`, `gcd(m1, m2)` is equivalent to `mapexponents(min, m1, m2)`, `lcm(m1, m2)` is equivalent to `mapexponents(max, m1, m2)`.
+The multiplication `m1 * m2` is equivalent to `mapexponents(+, m1, m2)`, the unsafe division `div_multiple(m1, m2)` is equivalent to `mapexponents(-, m1, m2)`, `gcd(m1, m2)` is equivalent to `mapexponents(min, m1, m2)`, `lcm(m1, m2)` is equivalent to `mapexponents(max, m1, m2)`.
 """
 mapexponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(f, monomial(m1), monomial(m2))
 
 function mapexponents_to! end
 function mapexponents! end
+
+mapexponents(f, a, b, ::MA.IsMutable) = mapexponents!(f, a, b)
+mapexponents(f, a, b, ::MA.IsNotMutable) = mapexponents(f, a, b)
 
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constantmonomial(TT)
 Base.one(t::AbstractMonomialLike) = constantmonomial(t)

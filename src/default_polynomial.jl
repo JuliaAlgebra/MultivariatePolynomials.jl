@@ -301,13 +301,30 @@ function MA.operate_to!(output::Polynomial, ::typeof(*), p::Polynomial, q::Polyn
     return output
 end
 function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
-    return MA.operate_to!(p, *, MA.mutable_copy(p), q)
+    if iszero(q)
+        return MA.operate!(zero, p)
+    elseif nterms(q) == 1
+        return MA.operate!(*, p, leadingterm(q))
+    else
+        return MA.operate_to!(p, *, MA.mutable_copy(p), q)
+    end
 end
 function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     for i in eachindex(p.terms)
         p.terms[i] = MA.operate!!(*, p.terms[i], t)
     end
     return p
+end
+function mapexponents!(f, p::Polynomial, m::AbstractMonomialLike)
+    for i in eachindex(p.terms)
+        t = p.terms[i]
+        p.terms[i] = term(coefficient(t), mapexponents(f, monomial(t), m))
+    end
+    return p
+end
+function mapexponents(f, p::Polynomial, m::AbstractMonomialLike)
+    P = MA.promote_operation(*, typeof(p), typeof(m))
+    return mapexponents!(f, MA.mutable_copy(convert(P, p)), m)
 end
 
 function MA.operate!(::typeof(zero), p::Polynomial)
