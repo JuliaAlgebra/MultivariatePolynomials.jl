@@ -429,9 +429,6 @@ function primitive_univariate_gcd!(
         return primitive_univariate_gcd!(q, p, algo, buffer)
     end
     R = MA.promote_operation(gcd, typeof(p), typeof(q))
-    if isnothing(buffer)
-        buffer = MA.buffer_for(rem_or_pseudo_rem, R, R, typeof(algo))
-    end
     u = convert(R, p)
     v = convert(R, q)
     while true
