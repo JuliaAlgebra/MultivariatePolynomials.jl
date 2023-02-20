@@ -147,19 +147,31 @@ function test_div()
 end
 
 function _test_univ_gcd(T, algo)
+    if T == BigInt && VERSION < v"1.0"
+        # Getting allocations on Julia v1.6
+        # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions/runs/4193583097/jobs/7270643628
+        return
+    end
     o = one(T)
     @polyvar x
     p1 = o * x^2 + 2o * x + o
     p2 = o * x + o
+    buffer = buffer_for(MP.rem_or_pseudo_rem, typeof(p1), typeof(p2), typeof(algo))
     mutable_alloc_test(mutable_copy(p1), 0) do p1
-        MP.univariate_gcd(p1, p2, algo, IsMutable(), IsMutable())
+        MP.primitive_univariate_gcd!(p1, p2, algo, buffer)
+    end
+    if T === Int
+        mutable_alloc_test(mutable_copy(p1), 0) do p1
+            MP.gcd(p1, p2, algo, IsMutable(), IsMutable())
+        end
     end
 end
 
 function test_univ_gcd()
     algo = GeneralizedEuclideanAlgorithm()
-    _test_univ_gcd(Int, algo)
-    #_test_univ_gcd(BigInt, algo) # TODO
+    @testset "$T" for T in [Int, BigInt]
+        _test_univ_gcd(T, algo)
+    end
 end
 
 end
