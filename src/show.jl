@@ -114,6 +114,14 @@ should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one"
 # We could add a check with `showable` if a `Real` subtype supports it and
 # the feature is requested.
 print_coefficient(io::IO, mime, coeff::Real) = print(io, coeff)
+# Scientific notation does not display well in LaTeX so we rewrite it
+function print_coefficient(io::IO, mime::MIME"text/latex", coeff::AbstractFloat)
+    s = string(coeff)
+    if occursin('e', s)
+        s = replace(s, 'e' => " \\cdot 10^{") * '}'
+    end
+    print(io, s)
+end
 # JuMP expressions supports LaTeX output so `showable` will return `true`
 # for them. It is important for anonymous variables to display properly as well:
 # https://github.com/jump-dev/SumOfSquares.jl/issues/256
