@@ -4,11 +4,21 @@
     @test x^2 > y^2
     X = [y^2, x*y, x^2]
     @test isempty(@inferred monomials((x, y), 1:0))
-    for (i, m) in enumerate(monomials((x, y), 2))
-        @test m == X[i]
+    monoss = [
+        monomials((x, y), 2),
+        monomials((x, y), 2:2),
+    ]
+    # TypedPolynomials is allowed to error on `monomials((y, x), 2)`
+    # because it would make `monomials` type unstable to sort the tuple of variables
+    # of different types
+    if typeof(x) === typeof(y)
+        push!(monoss, monomials((y, x), 2))
+        push!(monoss, monomials((y, x), 2:2))
     end
-    for (i, m) in enumerate(monomials((x, y), 2:2))
-        @test m == X[i]
+    for monos in monoss
+        for (i, m) in enumerate(monos)
+            @test m == X[i]
+        end
     end
     X = [y^2, x^2]
     for (i, m) in enumerate(monomials((x, y), 2, m -> m != x*y))
