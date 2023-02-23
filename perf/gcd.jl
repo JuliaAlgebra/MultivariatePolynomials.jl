@@ -97,3 +97,5 @@ function bench()
         bench(T)
     end
 end
+
+bench()

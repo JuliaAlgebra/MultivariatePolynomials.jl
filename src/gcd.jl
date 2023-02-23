@@ -432,11 +432,11 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
         elseif isconstant(v)
             # `p` and `q` are primitive so if one of them is constant, it cannot
             # divide the content of the other one.
-            return MA.operate!!(one, u)
+            return MA.operate!(one, u)
         end
 
         d_before = degree(leadingmonomial(u))
-        r = MA.operate!!(rem_or_pseudo_rem, u, v, algo)
+        r = MA.operate!(rem_or_pseudo_rem, u, v, algo)
         d_after = degree(leadingmonomial(r))
         if d_after == d_before
             not_divided_error(u, v)
