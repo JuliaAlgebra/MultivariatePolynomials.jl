@@ -28,6 +28,7 @@ end
 Base.inv(r::RationalPoly) = r.den / r.num
 Base.inv(p::APL{T}) where T = one(T) / p
 Base.:/(r::RationalPoly, p) = r.num / (r.den * p)
+Base.:/(r::RationalPoly, p::APL) = r.num / (r.den * p)
 Base.:/(r::RationalPoly, s::RationalPoly) = (r.num * s.den) / (s.num * r.den)
 function Base.:/(num::NT, den::DT) where {NT <: APL, DT <: APL}
     RationalPoly{NT, DT}(num, den)

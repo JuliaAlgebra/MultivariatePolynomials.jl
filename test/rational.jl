@@ -10,6 +10,7 @@
     @test eltype([2.0x / x^2, (x+x) / (1 + 2x^2)]) <: RationalPoly
     @test 2 * (1/x * (1-x)) + (1/x * x) * (1/x^2 * x^2) - (1-x)/x == (1-x)/x + 1
     @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
+    @test (x / (x + 1)) / (x - 1) == (x / (x - 1)) / (x + 1)
     #@test typeof(zero(1/x)) == Term{true, Int}
     @test iszero(zero(1/x))
     @test zero(1/x) == 0
