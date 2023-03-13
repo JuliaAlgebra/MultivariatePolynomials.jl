@@ -25,6 +25,9 @@ function Base.convert(::Type{RationalPoly{NT, DT}}, α) where {NT, DT}
     #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
 
+# This is called by the default implementation of `Base.oneunit`, still in Julia v1.8 at least
+RationalPoly{NT,DT}(r::RationalPoly{NT,DT}) where {NT,DT} = r
+
 Base.inv(r::RationalPoly) = r.den / r.num
 Base.inv(p::APL{T}) where T = one(T) / p
 Base.:/(r::RationalPoly, p) = r.num / (r.den * p)
