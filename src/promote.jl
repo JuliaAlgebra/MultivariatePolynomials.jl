@@ -27,9 +27,6 @@ function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S, T}
     return polynomialtype(PT, promote_type(S, T))
 end
 Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
-Base.promote_rule(::Type{T}, ::Type{PT}) where {T, PT<:APL} = promote_rule_constant(T, PT)
-# Resolve method ambiguity with Base:
-Base.promote_rule(::Type{Any}, ::Type{<:APL}) = Any
 
 # We don't have any information on the MultivariatePolynomials implementation,
 # so we won't be able to convert the constant to `APL`.
@@ -84,7 +81,6 @@ Base.promote_rule(::Type{<:APL}, ::Type{APL}) = APL
 # Rational
 promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
 
-Base.promote_rule(::Type{T}, ::Type{RT}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 Base.promote_rule(::Type{RT}, ::Type{T}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 
 promote_rule_rational(::Type{PT}, ::Type{RationalPoly{S, T}}) where {PT<:APL, S, T} = RationalPoly{promote_type(PT, S), promote_type(T, termtype(T))}
