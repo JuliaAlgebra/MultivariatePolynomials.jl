@@ -1,5 +1,5 @@
-export iscomplex, isrealpart, isimagpart, isconj, ordvar, degree_complex, halfdegree, mindegree_complex, minhalfdegree,
-    maxdegree_complex, maxhalfdegree, extdegree_complex, exthalfdegree
+export iscomplex, isrealpart, isimagpart, isconj, ordinary_variable, degree_complex, halfdegree, mindegree_complex,
+    minhalfdegree, maxdegree_complex, maxhalfdegree, extdegree_complex, exthalfdegree
 
 """
     iscomplex(x::AbstractVariable)
@@ -35,14 +35,14 @@ See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isima
 """
 isconj(::AbstractVariable) = false
 """
-    ordvar(x::Union{AbstractVariable, AbstractVector{<:AbstractVariable}})
+    ordinary_variable(x::Union{AbstractVariable, AbstractVector{<:AbstractVariable}})
 
 Given some (complex-valued) variable that was transformed by conjugation, taking its real part, or taking its
 imaginary part, return the original variable as it was defined by the user.
 
 See also [`conj`](@ref conj), [`real`](@ref), [`imag`](@ref).
 """
-ordvar(x::AbstractVariable) = x
+ordinary_variable(x::AbstractVariable) = x
 
 """
     conj(x::AbstractVariable)
@@ -261,14 +261,14 @@ Return the extremal half degree of the monomials of `p`, i.e., `(minhalfdegree(p
 """
 exthalfdegree(p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermLike}}) = (minhalfdegree(p), maxhalfdegree(p))
 
-function ordvar(x::AbstractVector{<:AbstractVariable})
+function ordinary_variable(x::AbstractVector{<:AbstractVariable})
     # let's assume the number of elements in x is small, else a conversion to a dict (probably better OrderedDict) would
     # be better
     results = similar(x, 0)
     sizehint!(results, length(x))
     j = 0
     for el in x
-        ov = ordvar(el)
+        ov = ordinary_variable(el)
         found = false
         for i in 1:j
             if results[i] == ov
