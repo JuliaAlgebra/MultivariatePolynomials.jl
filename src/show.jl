@@ -24,7 +24,7 @@ function _show(io::IO, mime::MIME, var::AbstractVariable)
     base, indices = name_base_indices(var)
     if isconj(var)
         for c in base
-            print(io, c, '\u0305')
+            print(io, c, '\u0305') # displays as overbar (̄z)
         end
     else
         print(io, base)
@@ -32,7 +32,7 @@ function _show(io::IO, mime::MIME, var::AbstractVariable)
     if !isempty(indices)
         print_subscript(io, mime, indices)
     end
-    isrealpart(var) && print(io, "ᵣ")
+    isrealpart(var) && print(io, "ᵣ") # suffixes for real and imaginary part: zᵣ, zᵢ
     isimagpart(var) && print(io, "ᵢ")
 end
 
