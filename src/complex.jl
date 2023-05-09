@@ -115,7 +115,7 @@ Base.conj(x::M) where {M<:AbstractMonomial} =
     convert(M, reduce(*, conj(var)^exp for (var, exp) in zip(variables(x), exponents(x)); init=constantmonomial(x)))
 Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = monovec(conj.(x))
 Base.conj(x::T) where {T<:AbstractTerm} = convert(T, conj(coefficient(x)) * conj(monomial(x)))
-Base.conj(x::P) where {P<:AbstractPolynomial} = nterms(x) == 0 ? x : convert(P, sum(conj(t) for t in x))
+Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) ? x : convert(P, sum(conj(t) for t in x))
 
 # Real and imaginary parts are harder to realize. The real part of a monomial can easily be a polynomial.
 for fun in [:real, :imag]
@@ -124,7 +124,7 @@ for fun in [:real, :imag]
             # We replace every complex variable by its decomposition into real and imaginary part
             substs = [var => real(var) + 1im * imag(var) for var in variables(x) if iscomplex(var)]
             # subs throws an error if it doesn't receive at least one substitution
-            full_version = length(substs) > 0 ? subs(x, substs...) : polynomial(x)
+            full_version = isempty(substs) > 0 ? polynomial(x) : subs(x, substs...)
             # Now everything that is imaginary can be recognized by its coefficient
             return convert(
                 polynomialtype(full_version, real(coefficienttype(full_version))),
@@ -132,7 +132,7 @@ for fun in [:real, :imag]
             )
         end
         Base.$fun(x::AbstractVector{<:AbstractMonomial}) = map(Base.$fun, x)
-        Base.$fun(x::AbstractPolynomial{T}) where {T} = nterms(x) == 0 ?
+        Base.$fun(x::AbstractPolynomial{T}) where {T} = iszero(nterms(x)) ?
             zero(polynomialtype(x, real(coefficienttype(x)))) : sum($fun(t) for t in x)
     end)
 end
