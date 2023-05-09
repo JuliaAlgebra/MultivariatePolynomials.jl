@@ -122,7 +122,8 @@ Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) || isreal(x) ?
 # Real and imaginary parts are harder to realize. The real part of a monomial can easily be a polynomial.
 for fun in [:real, :imag]
     eval(quote
-        function Base.$fun(x::Union{AbstractMonomial,AbstractTerm})
+        function Base.$fun(x::APL)
+            iszero(nterms(x)) && return zero(polynomialtype(x, real(coefficienttype(x))))
             # We replace every complex variable by its decomposition into real and imaginary part
             substs = [var => real(var) + 1im * imag(var) for var in variables(x) if iscomplex(var)]
             # subs throws an error if it doesn't receive at least one substitution
@@ -134,8 +135,6 @@ for fun in [:real, :imag]
             )
         end
         Base.$fun(x::AbstractVector{<:AbstractMonomial}) = map(Base.$fun, x)
-        Base.$fun(x::AbstractPolynomial{T}) where {T} = iszero(nterms(x)) ?
-            zero(polynomialtype(x, real(coefficienttype(x)))) : sum($fun(t) for t in x)
     end)
 end
 
