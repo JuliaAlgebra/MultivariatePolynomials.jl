@@ -126,7 +126,7 @@ for fun in [:real, :imag]
             # We replace every complex variable by its decomposition into real and imaginary part
             substs = [var => real(var) + 1im * imag(var) for var in variables(x) if iscomplex(var)]
             # subs throws an error if it doesn't receive at least one substitution
-            full_version = isempty(substs) > 0 ? polynomial(x) : subs(x, substs...)
+            full_version = isempty(substs) ? polynomial(x) : subs(x, substs...)
             # Now everything that is imaginary can be recognized by its coefficient
             return convert(
                 polynomialtype(full_version, real(coefficienttype(full_version))),
