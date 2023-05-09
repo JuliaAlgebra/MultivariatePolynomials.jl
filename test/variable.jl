@@ -1,4 +1,4 @@
-import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvariable
+import MultivariatePolynomials: AbstractVariable, similar_variable, @similar_variable
 
 @testset "Variable" begin
     @testset "polyvar macro index set" begin
@@ -61,22 +61,22 @@ import MultivariatePolynomials: AbstractVariable, similarvariable, @similarvaria
         Mod.@polyvar x y
         f = x^2 + y
 
-        z = similarvariable(f, Val{:z})
+        z = similar_variable(f, Val{:z})
         @test z isa AbstractVariable
 
-        z = similarvariable(typeof(f), Val{:z})
+        z = similar_variable(typeof(f), Val{:z})
         @test z isa AbstractVariable
 
-        @inferred similarvariable(f, Val{:z})
-        @inferred similarvariable(typeof(f), Val{:z})
+        @inferred similar_variable(f, Val{:z})
+        @inferred similar_variable(typeof(f), Val{:z})
 
-        w = similarvariable(f, :w)
+        w = similar_variable(f, :w)
         @test w isa AbstractVariable
 
-        @similarvariable f o
+        @similar_variable f o
         @test o isa AbstractVariable
 
-        m = @similarvariable f u
+        m = @similar_variable f u
         @test m isa AbstractVariable
     end
 end

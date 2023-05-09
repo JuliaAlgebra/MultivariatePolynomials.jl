@@ -126,7 +126,7 @@ function Base.gcd(p1::APL{T}, p2::APL{S}, algo::AbstractUnivariateGCDAlgorithm=G
     shift1, defl1 = deflation(p1)
     shift2, defl2 = deflation(p2)
     shift = gcd(shift1, shift2)
-    defl = mapexponents(gcd, defl1, defl2)
+    defl = map_exponents(gcd, defl1, defl2)
     # We factor out `x.^shift1` from `p1` and
     # `x.^shift2` from `p2`. The `gcd` of these
     # monomials is `x.^shift`.
@@ -172,18 +172,18 @@ end
 # Inspired from to `AbstractAlgebra.deflation`
 function deflation(p::AbstractPolynomialLike)
     if iszero(p)
-        return constantmonomial(p), constantmonomial(p)
+        return constant_monomial(p), constant_monomial(p)
     end
     shift_defl = shift_deflation.(p, variables(p))
     shift = getindex.(shift_defl, 1)
     defl = getindex.(shift_defl, 2)
-    s = prod(variables(p).^shift; init = constantmonomial(p))::monomialtype(p)
-    d = prod(variables(p).^defl; init = constantmonomial(p))::monomialtype(p)
+    s = prod(variables(p).^shift; init = constant_monomial(p))::monomial_type(p)
+    d = prod(variables(p).^defl; init = constant_monomial(p))::monomial_type(p)
     return s, d
 end
 
 function _zero_to_one_exp(defl::AbstractMonomial)
-    # TODO Make it faster by calling something like `mapexponents`.
+    # TODO Make it faster by calling something like `map_exponents`.
     return prod(variables(defl).^map(d -> iszero(d) ? one(d) : d, exponents(defl)))
 end
 function deflate(p::AbstractPolynomialLike, shift, defl)
@@ -194,7 +194,7 @@ function deflate(p::AbstractPolynomialLike, shift, defl)
     return q
 end
 function inflate(α, shift, defl)
-    return inflate(convert(polynomialtype(shift, typeof(α)), α), shift, defl)
+    return inflate(convert(polynomial_type(shift, typeof(α)), α), shift, defl)
 end
 function inflate(p::AbstractPolynomialLike, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
@@ -205,12 +205,12 @@ function inflate(p::AbstractPolynomialLike, shift, defl)
 end
 
 function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
-    mutable_mono = mapexponents(-, mono, shift)
-    return mapexponents!(div, mutable_mono, defl)
+    mutable_mono = map_exponents(-, mono, shift)
+    return map_exponents!(div, mutable_mono, defl)
 end
 function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
-    mutable_mono = mapexponents(*, mono, defl)
-    return mapexponents!(+, mutable_mono, shift)
+    mutable_mono = map_exponents(*, mono, defl)
+    return map_exponents!(+, mutable_mono, shift)
 end
 
 # Inspired from to `AbstractAlgebra.deflate`
@@ -346,7 +346,7 @@ function multivariate_gcd(p1::APL, p2::APL, var, algo, m1::MA.MutableTrait, m2::
     q2 = isolate_variable(p2, var, m2)
     q = univariate_gcd(q1, q2, algo, MA.IsMutable(), MA.IsMutable())
     P = MA.promote_operation(gcd, typeof(p1), typeof(p2))
-    return flatten_variable!(termtype(P), q)::P
+    return flatten_variable!(term_type(P), q)::P
 end
 
 _vector(t::AbstractVector) = collect(t)
@@ -363,7 +363,7 @@ The output can be mutated without affecting `poly` if `mutability` is
 function isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
     old_terms = sort!(_vector(terms(_copy(poly, mutability))), by = Base.Fix2(degree, var))
     U = MA.promote_operation(substitute, Subs, typeof(poly), Pair{typeof(var),Int})
-    T = termtype(var, U)
+    T = term_type(var, U)
     new_terms = T[]
     i = firstindex(old_terms)
     while i <= lastindex(old_terms)
@@ -435,9 +435,9 @@ function primitive_univariate_gcd!(p::APL, q::APL, algo::GeneralizedEuclideanAlg
             return MA.operate!(one, u)
         end
 
-        d_before = degree(leadingmonomial(u))
+        d_before = degree(leading_monomial(u))
         r = MA.operate!(rem_or_pseudo_rem, u, v, algo)
-        d_after = degree(leadingmonomial(r))
+        d_after = degree(leading_monomial(r))
         if d_after == d_before
             not_divided_error(u, v)
         end
@@ -540,7 +540,7 @@ function univariate_gcdx(::UFD, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlg
     a, b, pp = primitive_univariate_gcdx(f1, f2, algo)
     gg = _gcd(g1, g2, algo, MA.IsMutable(), MA.IsMutable())#::MA.promote_operation(gcd, typeof(g1), typeof(g2))
     # Multiply each coefficient by the gcd of the contents.
-    return g2 * a, g1 * b, g1 * g2 * mapcoefficients(Base.Fix1(*, gg), pp, nonzero = true)
+    return g2 * a, g1 * b, g1 * g2 * map_coefficients(Base.Fix1(*, gg), pp, nonzero = true)
 end
 function univariate_gcdx(::Field, p1::APL, p2::APL, algo::AbstractUnivariateGCDAlgorithm)
     return primitive_univariate_gcdx(p1, p2, algo)

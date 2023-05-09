@@ -2,29 +2,29 @@
 Base.promote_rule(::Type{M}, ::Type{M}) where {M<:AbstractMonomialLike} = M
 function Base.promote_rule(M1::Type{<:AbstractMonomialLike},
                            M2::Type{<:AbstractMonomialLike})
-    return promote_type(monomialtype(M1), monomialtype(M2))
+    return promote_type(monomial_type(M1), monomial_type(M2))
 end
 
 # TermLike
 Base.promote_rule(::Type{T}, ::Type{T}) where {T<:AbstractTermLike} = T
 function Base.promote_rule(TS::Type{<:AbstractTermLike{S}}, TT::Type{<:AbstractTermLike{T}}) where {S, T}
     U = promote_type(S, T)
-    M = promote_type(monomialtype(TS), monomialtype(TT))
-    return termtype(M, U)
+    M = promote_type(monomial_type(TS), monomial_type(TT))
+    return term_type(M, U)
 end
 function promote_rule_constant(::Type{S}, TT::Type{<:AbstractTermLike{T}}) where {S, T}
-    return termtype(TT, promote_type(S, T))
+    return term_type(TT, promote_type(S, T))
 end
 
 
 # PolynomialLike
 Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:APL} = PT
 function Base.promote_rule(PS::Type{<:APL}, PT::Type{<:APL})
-    return polynomialtype(promote_type(termtype(PS), termtype(PT)))
+    return polynomial_type(promote_type(term_type(PS), term_type(PT)))
 end
 
 function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S, T}
-    return polynomialtype(PT, promote_type(S, T))
+    return polynomial_type(PT, promote_type(S, T))
 end
 Base.promote_rule(::Type{PT}, ::Type{T}) where {T, PT<:APL} = promote_rule_constant(T, PT)
 
@@ -79,11 +79,11 @@ Base.promote_rule(::Type{APL}, ::Type{<:APL}) = APL
 Base.promote_rule(::Type{<:APL}, ::Type{APL}) = APL
 
 # Rational
-promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, termtype(DT))}
+promote_rule_constant(::Type{T}, ::Type{RationalPoly{NT, DT}}) where {T, NT, DT} = RationalPoly{promote_type(T, NT), promote_type(DT, term_type(DT))}
 
 Base.promote_rule(::Type{RT}, ::Type{T}) where {T, RT<:RationalPoly} = promote_rule_constant(T, RT)
 
-promote_rule_rational(::Type{PT}, ::Type{RationalPoly{S, T}}) where {PT<:APL, S, T} = RationalPoly{promote_type(PT, S), promote_type(T, termtype(T))}
+promote_rule_rational(::Type{PT}, ::Type{RationalPoly{S, T}}) where {PT<:APL, S, T} = RationalPoly{promote_type(PT, S), promote_type(T, term_type(T))}
 promote_rule_rational(::Type{RationalPoly{S, T}}, ::Type{RationalPoly{U, V}}) where {S, T, U, V} = RationalPoly{promote_type(S, U), promote_type(T, V)}
 
 Base.promote_rule(::Type{RS}, ::Type{RT}) where {RS<:RationalPoly, RT<:RationalPoly} = promote_rule_rational(RS, RT)
@@ -96,25 +96,25 @@ function MA.promote_operation(
     QT::Type{<:APL{T}}) where {S, T}
 
     U = MA.promote_operation(op, S, T)
-    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
+    return polynomial_type(promote_type(monomial_type(PT), monomial_type(QT)), U)
 end
 function MA.promote_operation(::typeof(*), MT1::Type{<:AbstractMonomialLike},
     MT2::Type{<:AbstractMonomialLike})
-    return promote_type(monomialtype(MT1), monomialtype(MT2))
+    return promote_type(monomial_type(MT1), monomial_type(MT2))
 end
 function MA.promote_operation(::typeof(*), TT::Type{<:AbstractTermLike{S}},
                               ST::Type{<:AbstractTermLike{T}}) where {S, T}
     U = MA.promote_operation(*, S, T)
-    return termtype(promote_type(monomialtype(TT), monomialtype(ST)), U)
+    return term_type(promote_type(monomial_type(TT), monomial_type(ST)), U)
 end
 function MA.promote_operation(::typeof(*), PT::Type{<:APL{S}}, QT::Type{<:APL{T}}) where {S, T}
     ST = MA.promote_operation(*, S, T)
     U = MA.promote_operation(+, ST, ST)
-    return polynomialtype(promote_type(monomialtype(PT), monomialtype(QT)), U)
+    return polynomial_type(promote_type(monomial_type(PT), monomial_type(QT)), U)
 end
 function MA.promote_operation(::typeof(*), ::Type{T}, ::Type{P}) where {T, U, P<:APL{U}}
-    return changecoefficienttype(P, MA.promote_operation(*, T, U))
+    return similar_type(P, MA.promote_operation(*, T, U))
 end
 function MA.promote_operation(::typeof(*), ::Type{P}, ::Type{T}) where {T, U, P<:APL{U}}
-    return changecoefficienttype(P, MA.promote_operation(*, U, T))
+    return similar_type(P, MA.promote_operation(*, U, T))
 end

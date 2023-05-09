@@ -34,8 +34,8 @@ end
 # They have been adapted to the grlex ordering
 function divides_test()
     Mod.@polyvar x y z
-    @test divides(leadingmonomial(x+y), x) # leadingmonomial(x+y) will be x^1*y^0 -> tricky test !
-    @test !divides(leadingmonomial(x^2+y), x)
+    @test divides(leading_monomial(x+y), x) # leading_monomial(x+y) will be x^1*y^0 -> tricky test !
+    @test !divides(leading_monomial(x^2+y), x)
     @test divides(x*y, x^2*y)
     @test divides(x*y, x*y^2)
     @test divides(y*z, x*y*z)
@@ -48,9 +48,9 @@ function leading_term_test()
     @test @inferred(monic(2x^2 + 4y + 2)) == x^2 + 2y + 1
     # See page 60
     p = 4x*y^2*z + 4z^2 + 7x^2*z^2 - 5x^3
-    @test leadingcoefficient(p) == 7
-    @test leadingmonomial(p) == x^2*z^2
-    @test leadingterm(p) == 7x^2*z^2
+    @test leading_coefficient(p) == 7
+    @test leading_monomial(p) == x^2*z^2
+    @test leading_term(p) == 7x^2*z^2
 end
 
 function divrem_test()

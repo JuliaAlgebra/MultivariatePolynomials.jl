@@ -27,7 +27,7 @@ jobs:
             os: ubuntu-latest
             arch: x64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
@@ -46,12 +46,12 @@ jobs:
         shell: julia --project=@. {0}
         run: |
           using Pkg
-          Pkg.add(PackageSpec(name="TypedPolynomials", rev="bl/refactor"))
+          Pkg.add(PackageSpec(name="TypedPolynomials", rev="bl/rename"))
       - name: DP#master
         shell: julia --project=@. {0}
         run: |
           using Pkg
-          Pkg.add(PackageSpec(name="DynamicPolynomials", rev="master"))
+          Pkg.add(PackageSpec(name="DynamicPolynomials", rev="bl/rename"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:

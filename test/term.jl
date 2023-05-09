@@ -22,7 +22,7 @@ Base.iszero(::CoefNotComparable) = false
     @test monic(2x^2) isa AbstractTerm{Int}
     @test monic(2x^2) == x^2
 
-    @test leadingterm(2x^2) == 2x^2
+    @test leading_term(2x^2) == 2x^2
     @test nterms(2x^2) == 1
     @test terms(2x^2) == [2x^2]
     @test nterms(0*x) == 0
@@ -31,13 +31,13 @@ Base.iszero(::CoefNotComparable) = false
     @test terms(0.0x) == typeof(0.0x)[]
 
     @test nterms(polynomial(0.0x)) == 0
-    @test nterms(convert(polynomialtype(0.0x), 0.0x)) == 0
+    @test nterms(convert(polynomial_type(0.0x), 0.0x)) == 0
 
     @test term(x) isa AbstractTerm
     @test term(x^2) == x^2
     @test term(1x^2) isa AbstractTerm
     @test term(1x) == x
-    @test zeroterm(1x) == 0*x
+    @test zero_term(1x) == 0*x
 
     Mod.@polyvar y
     @test degree(2x^2, x) == 2

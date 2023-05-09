@@ -34,9 +34,9 @@ end
 # Promotion between `I` and `1` is `Any`.
 # Promotion between `I` and `2I` is `UniformScaling`.
 for op in [:+, :-]
-    @eval Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(p1, mapcoefficientsnz(J -> J.λ, p2))
-    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL) = $op(mapcoefficientsnz(J -> J.λ, p1), p2)
-    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(mapcoefficientsnz(J -> J.λ, p1), p2)
+    @eval Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(p1, map_coefficients(J -> J.λ, p2, nonzero=true))
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL) = $op(map_coefficients(J -> J.λ, p1, nonzero=true), p2)
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(map_coefficients(J -> J.λ, p1, nonzero=true), p2)
 end
 Base.isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
 
@@ -72,10 +72,10 @@ MA.operate!(op::Union{typeof(+), typeof(-), typeof(*)}, p::APL, α) = MA.operate
 
 MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(left_constant_mult, α, p)
 MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(right_constant_mult, p, α)
-MA.operate!(op::typeof(/), p::APL, α) = mapcoefficients!(Base.Fix2(op, α), p)
+MA.operate!(op::typeof(/), p::APL, α) = map_coefficients!(Base.Fix2(op, α), p)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL) = MA.operate_to!(output, left_constant_mult, α, p)
 MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α) = MA.operate_to!(output, right_constant_mult, p, α)
-MA.operate_to!(output::APL, op::typeof(/), p::APL, α) = mapcoefficients_to!(output, Base.Fix2(op, α), p)
+MA.operate_to!(output::APL, op::typeof(/), p::APL, α) = map_coefficients_to!(output, Base.Fix2(op, α), p)
 
 function polynomial_merge!(
     n1::Int, n2::Int, get1::F1, get2::F2,
@@ -206,7 +206,7 @@ function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
     return ts
 end
 function Base.:*(p::AbstractPolynomial, q::AbstractPolynomial)
-    polynomial!(mul_to_terms!(MA.promote_operation(*, termtype(p), termtype(q))[], p, q))
+    polynomial!(mul_to_terms!(MA.promote_operation(*, term_type(p), term_type(q))[], p, q))
 end
 
 Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
@@ -218,61 +218,61 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
 Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
-Base.:-(p::APL) = mapcoefficients(-, p)
+Base.:-(p::APL) = map_coefficients(-, p)
 Base.:+(p::Union{APL, RationalPoly}) = p
 Base.:*(p::Union{APL, RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
-right_constant_plus(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : p + constantterm(α, p)
-left_constant_plus(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : constantterm(α, p) + p
+right_constant_plus(p::APL{S}, α::T)  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : p + constant_term(α, p)
+left_constant_plus(α::S, p::APL{T})  where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(+, S, T)) : constant_term(α, p) + p
 function MA.operate!(::typeof(right_constant_plus), p::APL, α)
     if !iszero(α)
-        MA.operate!(+, p, constantterm(α, p))
+        MA.operate!(+, p, constant_term(α, p))
     end
     return p
 end
-right_constant_minus(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(-, S, T)) : p - constantterm(α, p)
-left_constant_minus(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) : constantterm(α, p) - p
+right_constant_minus(p::APL{S}, α::T) where {S, T} = iszero(α) ? polynomial( p, MA.promote_operation(-, S, T)) : p - constant_term(α, p)
+left_constant_minus(α::S, p::APL{T}) where {S, T} = iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) : constant_term(α, p) - p
 function MA.operate!(::typeof(right_constant_minus), p::APL, α)
     if !iszero(α)
-        MA.operate!(-, p, constantterm(α, p))
+        MA.operate!(-, p, constant_term(α, p))
     end
     return p
 end
 
 # Coefficients and variables commute
-left_constant_mult(α, v::AbstractMonomial) = termtype(v, typeof(α))(α, v)
+left_constant_mult(α, v::AbstractMonomial) = term_type(v, typeof(α))(α, v)
 left_constant_mult(α, v::AbstractVariable) = left_constant_mult(α, monomial(v)) # TODO linear term
 right_constant_mult(m::AbstractMonomialLike, α) = left_constant_mult(α, m)
 
-left_constant_mult(α, p::AbstractPolynomialLike) = mapcoefficients(Base.Fix1(*, α), p)
-right_constant_mult(p::AbstractPolynomialLike, α) = mapcoefficients(Base.Fix2(*, α), p)
+left_constant_mult(α, p::AbstractPolynomialLike) = map_coefficients(Base.Fix1(*, α), p)
+right_constant_mult(p::AbstractPolynomialLike, α) = map_coefficients(Base.Fix2(*, α), p)
 
 function MA.operate_to!(output, ::typeof(left_constant_mult), α, p::APL)
-    return mapcoefficients_to!(output, Base.Fix1(*, α), p)
+    return map_coefficients_to!(output, Base.Fix1(*, α), p)
 end
 function MA.operate_to!(output, ::typeof(right_constant_mult), p::APL, α)
-    return mapcoefficients_to!(output, Base.Fix2(*, α), p)
+    return map_coefficients_to!(output, Base.Fix2(*, α), p)
 end
 function MA.operate!(::typeof(left_constant_mult), α, p::APL)
-    return mapcoefficients!(Base.Fix1(*, α), p)
+    return map_coefficients!(Base.Fix1(*, α), p)
 end
 function MA.operate!(::typeof(right_constant_mult), p::APL, α)
-    return mapcoefficients!(Base.Fix2(MA.mul!!, α), p)
+    return map_coefficients!(Base.Fix2(MA.mul!!, α), p)
 end
 
-MA.operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents_to!(output, +, m1, m2)
-MA.operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = mapexponents!(+, m1, m2)
-Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(+, m1, m2)
+MA.operate_to!(output::AbstractMonomial, ::typeof(*), m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents_to!(output, +, m1, m2)
+MA.operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = map_exponents!(+, m1, m2)
+Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
 Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = term(coefficient(t), m * monomial(t))
 Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = term(coefficient(t), monomial(t) * m)
 Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = term(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
 
-MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike) = mapexponents!(+, p, t)
-Base.:*(p::APL, t::AbstractMonomialLike) = mapexponents(+, p, t)
+MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike) = map_exponents!(+, p, t)
+Base.:*(p::APL, t::AbstractMonomialLike) = map_exponents(+, p, t)
 Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
 Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
 Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
@@ -285,7 +285,7 @@ function _polynomial_2terms(t1::TT, t2::TT, ::Type{T}) where {TT<:AbstractTerm, 
         polynomial(t1, T)
     else
         # not `polynomial!` because we `t1` and `t2` cannot be modified
-        polynomial(termtype(TT, T)[t1, t2], SortedUniqState())
+        polynomial(term_type(TT, T)[t1, t2], SortedUniqState())
     end
 end
 

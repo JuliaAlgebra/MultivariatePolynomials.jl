@@ -1,14 +1,14 @@
 export divides, div_multiple, pseudo_rem, rem_or_pseudo_rem
 
 function Base.round(p::APL; args...)
-    # round(0.1) is zero so we cannot use `mapcoefficientsnz`
-    return mapcoefficients(p) do term
+    # round(0.1) is zero so we cannot use `nonzero=true`
+    return map_coefficients(p) do term
         round(term; args...)
     end
 end
 
 function Base.div(p::APL, α::Number, args...)
-    return mapcoefficients(p) do term
+    return map_coefficients(p) do term
         div(term, α, args...)
     end
 end
@@ -28,8 +28,8 @@ function divides(t1::AbstractTermLike, t2::AbstractTermLike)
 end
 divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 
-Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(min, m1, m2)
-Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = mapexponents(max, m1, m2)
+Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(min, m1, m2)
+Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(max, m1, m2)
 
 struct Field end
 struct UniqueFactorizationDomain end
@@ -57,7 +57,7 @@ function div_multiple(a, b, ma::MA.MutableTrait=MA.IsNotMutable())
     return div_multiple(algebraic_structure(promote_type(typeof(a), typeof(b))), a, b, ma)
 end
 function div_multiple(m1::AbstractMonomialLike, m2::AbstractMonomialLike, ::MA.MutableTrait=MA.IsNotMutable())
-    return mapexponents(-, m1, m2)
+    return map_exponents(-, m1, m2)
 end
 function div_multiple(t::AbstractTerm, m::AbstractMonomial, mt::MA.MutableTrait=MA.IsNotMutable())
     term(_copy(coefficient(t), mt), div_multiple(monomial(t), m))
@@ -69,28 +69,28 @@ function right_constant_div_multiple(f::APL, g, mf::MA.MutableTrait=MA.IsNotMuta
     if isone(g)
         return _copy(f, mf)
     end
-    return mapcoefficients(coef -> div_multiple(coef, g, mf), f, mf; nonzero = true)
+    return map_coefficients(coef -> div_multiple(coef, g, mf), f, mf; nonzero = true)
 end
 function div_multiple(f::APL, g::AbstractMonomialLike, mf::MA.MutableTrait=MA.IsNotMutable())
     if isconstant(g)
         return _copy(f, mf)
     end
-    return mapexponents(-, f, g, mf)
+    return map_exponents(-, f, g, mf)
 end
 function div_multiple(f::APL, g::AbstractTermLike, mf::MA.MutableTrait=MA.IsNotMutable())
     f = right_constant_div_multiple(f, coefficient(g), mf)
     return div_multiple(f, monomial(g), MA.IsMutable())
 end
 function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
-    lt = leadingterm(g)
+    lt = leading_term(g)
     if nterms(g) == 1
         return div_multiple(f, lt, mf)
     end
     rf = _copy(f, mf)
-    rg = removeleadingterm(g)
+    rg = remove_leading_term(g)
     q = zero(rf)
     while !iszero(rf)
-        ltf = leadingterm(rf)
+        ltf = leading_term(rf)
         if !divides(lt, ltf)
             # In floating point arithmetics, it may happen
             # that `rf` is not zero even if it cannot be reduced further.
@@ -100,7 +100,7 @@ function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
         end
         qt = div_multiple(ltf, lt)
         q = MA.add!!(q, qt)
-        rf = MA.operate!!(removeleadingterm, rf)
+        rf = MA.operate!!(remove_leading_term, rf)
         rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
     end
     return q
@@ -119,14 +119,14 @@ function _pseudo_divrem(::Field, f::APL, g::APL, algo)
 end
 
 function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
-    ltg = leadingterm(g)
-    rg = removeleadingterm(g)
-    ltf = leadingterm(f)
+    ltg = leading_term(g)
+    rg = remove_leading_term(g)
+    ltf = leading_term(f)
     if iszero(f) || !divides(monomial(ltg), ltf)
         return one(f), zero(f), zero(f)
     else
-        st = constantterm(coefficient(ltg), f)
-        new_f = st * removeleadingterm(f)
+        st = constant_term(coefficient(ltg), f)
+        new_f = st * remove_leading_term(f)
         qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
         # Check with `::` that we don't have any type unstability on this variable.
@@ -156,11 +156,11 @@ function MA.promote_operation(
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
-    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U1, U2))
+    return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U1, U2))
 end
 
 function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
-    return MA.buffer_for(MA.sub_mul, F, termtype(F), G)
+    return MA.buffer_for(MA.sub_mul, F, term_type(F), G)
 end
 
 function _prepare_s_poly!(::typeof(pseudo_rem), f, ltf, ltg)
@@ -177,13 +177,13 @@ function MA.operate!(op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL,
 end
 
 function MA.buffered_operate!(buffer, op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
-    ltg = leadingterm(g)
-    ltf = leadingterm(f)
-    MA.operate!(removeleadingterm, g)
+    ltg = leading_term(g)
+    ltf = leading_term(f)
+    MA.operate!(remove_leading_term, g)
     not_divided_terms = nothing
     while !iszero(f)
         if isapproxzero(ltf) # TODO `, kwargs...)`
-            MA.operate!(removeleadingterm, f)
+            MA.operate!(remove_leading_term, f)
         elseif !divides(monomial(ltg), ltf)
             # Since the monomials are sorted in decreasing order,
             # lm is larger than all of them hence it cannot divide any of them
@@ -193,12 +193,12 @@ function MA.buffered_operate!(buffer, op::Union{typeof(rem), typeof(pseudo_rem)}
                 break
             end
             if isnothing(not_divided_terms)
-                not_divided_terms = termtype(f)
+                not_divided_terms = term_type(f)
             end
             push!(not_divided_terms, ltf)
-            MA.operate!(removeleadingterm, f)
+            MA.operate!(remove_leading_term, f)
         else
-            MA.operate!(removeleadingterm, f)
+            MA.operate!(remove_leading_term, f)
             t = _prepare_s_poly!(op, f, ltf, ltg)
             MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
         end
@@ -208,7 +208,7 @@ function MA.buffered_operate!(buffer, op::Union{typeof(rem), typeof(pseudo_rem)}
         if algo.skip_last && maxdegree(f) == maxdegree(g)
             break
         end
-        ltf = leadingterm(f)
+        ltf = leading_term(f)
     end
     # Add it back as we cannot modify `g`
     MA.operate!(unsafe_restore_leading_term, g, ltg)
@@ -270,23 +270,23 @@ end
 function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
     U = MA.promote_operation(/, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
-    return polynomialtype(promote_type(P, Q), MA.promote_operation(-, U, U))
+    return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
 function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
     rf = convert(MA.promote_operation(div, typeof(f), typeof(g)), MA.copy_if_mutable(f))
     q = zero(rf)
     r = zero(rf)
-    lt = leadingterm(g)
-    rg = removeleadingterm(g)
+    lt = leading_term(g)
+    rg = remove_leading_term(g)
     lm = monomial(lt)
     while !iszero(rf)
-        ltf = leadingterm(rf)
+        ltf = leading_term(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!!(removeleadingterm, rf)
+            rf = MA.operate!!(remove_leading_term, rf)
         elseif divides(lm, ltf)
             qt = div_multiple(ltf, lt)
             q = MA.add!!(q, qt)
-            rf = MA.operate!!(removeleadingterm, rf)
+            rf = MA.operate!!(remove_leading_term, rf)
             rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
         elseif lm > monomial(ltf)
             # Since the monomials are sorted in decreasing order,
@@ -295,7 +295,7 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
             break
         else
             r = MA.add!!(r, ltf)
-            rf = MA.operate!!(removeleadingterm, rf)
+            rf = MA.operate!!(remove_leading_term, rf)
         end
     end
     q, r
@@ -307,14 +307,14 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
     for i in eachindex(q)
         q[i] = zero(rf)
     end
-    lt = leadingterm.(g)
-    rg = removeleadingterm.(g)
+    lt = leading_term.(g)
+    rg = remove_leading_term.(g)
     lm = monomial.(lt)
     useful = BitSet(eachindex(g))
     while !iszero(rf)
-        ltf = leadingterm(rf)
+        ltf = leading_term(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!!(removeleadingterm, rf)
+            rf = MA.operate!!(remove_leading_term, rf)
             continue
         end
         divisionoccured = false
@@ -322,7 +322,7 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
             if divides(lm[i], ltf)
                 qt = div_multiple(ltf, lt[i])
                 q[i] = MA.add!!(q[i], qt)
-                rf = MA.operate!!(removeleadingterm, rf)
+                rf = MA.operate!!(remove_leading_term, rf)
                 rf = MA.operate!!(MA.sub_mul, rf, qt, rg[i])
                 divisionoccured = true
                 break
@@ -338,7 +338,7 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
                 break
             else
                 r = MA.add!!(r, ltf)
-                rf = MA.operate!!(removeleadingterm, rf)
+                rf = MA.operate!!(remove_leading_term, rf)
             end
         end
     end

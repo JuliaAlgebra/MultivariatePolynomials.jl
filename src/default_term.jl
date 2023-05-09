@@ -5,8 +5,8 @@ end
 
 coefficient(t::Term) = t.coefficient
 monomial(t::Term) = t.monomial
-termtype(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
-monomialtype(::Type{<:Term{C,M}}) where {C,M} = M
+term_type(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
+monomial_type(::Type{<:Term{C,M}}) where {C,M} = M
 function Base.copy(t::Term)
     return Term(copy(t.coefficient), copy(t.monomial))
 end
@@ -16,7 +16,7 @@ end
 LinearAlgebra.adjoint(t::Term) = Term(adjoint(coefficient(t)), monomial(t))
 
 Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T, M} = Term(one(T), convert(M, m))
-convertconstant(::Type{Term{C,M} where C}, α) where M = convert(Term{typeof(α),M}, α)
+convert_constant(::Type{Term{C,M} where C}, α) where M = convert(Term{typeof(α),M}, α)
 
 Base.promote_rule(::Type{Term{C,M1} where {C}}, M2::Type{<:AbstractMonomialLike}) where {M1} = (Term{C,promote_type(M1, M2)} where {C})
 Base.promote_rule(M1::Type{<:AbstractMonomialLike}, ::Type{Term{C,M2} where {C}}) where {M2} = (Term{C,promote_type(M1, M2)} where {C})

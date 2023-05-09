@@ -5,6 +5,8 @@
 | [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
 | [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
+**WARNING** MultivariatePolynomials v0.5 has a few breaking changes including the change in the order of monomials. This means that the leading term will now appear last in the order of monomials instead of first.
+
 This package provides an interface for manipulating multivariate polynomials.
 Implementing algorithms on polynomials using this interface will allow the algorithm to work for all polynomials implementing the interface.
 

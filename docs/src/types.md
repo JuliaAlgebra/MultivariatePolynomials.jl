@@ -12,8 +12,8 @@ variable
 name
 name_base_indices
 variable_union_type
-similarvariable
-@similarvariable
+similar_variable
+@similar_variable
 ```
 
 ## Monomials
@@ -21,7 +21,7 @@ similarvariable
 ```@docs
 AbstractMonomialLike
 AbstractMonomial
-monomialtype
+monomial_type
 variables
 effective_variables
 nvariables
@@ -29,8 +29,8 @@ exponents
 degree
 isconstant
 powers
-constantmonomial
-mapexponents
+constant_monomial
+map_exponents
 ```
 
 ## Terms
@@ -39,12 +39,12 @@ mapexponents
 AbstractTermLike
 AbstractTerm
 term
-termtype
+term_type
 coefficient
 coefficienttype
 monomial
-constantterm
-zeroterm
+constant_term
+zero_term
 ```
 
 ## Polynomials
@@ -53,7 +53,7 @@ zeroterm
 AbstractPolynomialLike
 AbstractPolynomial
 polynomial
-polynomialtype
+polynomial_type
 terms
 nterms
 coefficients
@@ -63,15 +63,15 @@ ordering
 mindegree
 maxdegree
 extdegree
-leadingterm
-leadingcoefficient
-leadingmonomial
-removeleadingterm
-removemonomials
+leading_term
+leading_coefficient
+leading_monomial
+remove_leading_term
+remove_monomials
 monic
-mapcoefficients
-mapcoefficients!
-mapcoefficients_to!
+map_coefficients
+map_coefficients!
+map_coefficients_to!
 ```
 
 ## Rational Polynomial Function
@@ -82,9 +82,9 @@ The numerator and denominator polynomials can be retrieved by the `numerator` an
 ## Monomial Vectors
 
 ```@docs
-monovec
-monovectype
-emptymonovec
-sortmonovec
-mergemonovec
+monomial_vector
+monomial_vector_type
+empty_monomial_vector
+sort_monomial_vector
+merge_monomial_vectors
 ```

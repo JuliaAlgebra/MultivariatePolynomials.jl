@@ -9,8 +9,8 @@ const MultiVectorSubstitution = Pair{<:Tuple{Vararg{AbstractVariable}}, <:Abstra
 # When the variables are promoted to be in the same vector they could be promoted into a monomial
 const VectorMultiSubstitution = Pair{<:AbstractVector{<:AbstractMonomialLike}, <:Tuple}
 const VectorMultiVectorSubstitution = Pair{<:AbstractVector{<:AbstractMonomialLike}, <:AbstractVector}
-_monov2vart(s::Pair{<:AbstractVector{<:AbstractMonomial}}) = variable.(Tuple(s.first)) => s.second
-_monov2vart(s) = s
+_monomial_vector_to_variable_tuple(s::Pair{<:AbstractVector{<:AbstractMonomial}}) = variable.(Tuple(s.first)) => s.second
+_monomial_vector_to_variable_tuple(s) = s
 
 const AbstractMultiSubstitution = Union{MultiSubstitution, MultiVectorSubstitution, VectorMultiVectorSubstitution, VectorMultiSubstitution}
 const AbstractSubstitution = Union{Substitution, AbstractMultiSubstitution}
@@ -28,7 +28,7 @@ is equivalent to:
 
     subs(polynomial, (x=>1, y=>2))
 """
-substitute(st::AST, p::APL, s::AbstractMultiSubstitution) = substitute(st, p, pairzip(_monov2vart(s)))
+substitute(st::AST, p::APL, s::AbstractMultiSubstitution) = substitute(st, p, pair_zip(_monomial_vector_to_variable_tuple(s)))
 
 # Evaluate the stream
 # If I do s2..., then
@@ -51,7 +51,7 @@ substitute(st::AST, m::AbstractMonomial, s::Substitutions) = powersubstitute(st,
 substitute(st::AST, t::AbstractTerm, s::Substitutions) = coefficient(t) * substitute(st, monomial(t), s)
 
 function MA.promote_operation(::typeof(substitute), ::Type{Subs}, ::Type{T}, args::Vararg{Type,N}) where {T<:AbstractTerm,N}
-    M = MA.promote_operation(substitute, Subs, monomialtype(T), args...)
+    M = MA.promote_operation(substitute, Subs, monomial_type(T), args...)
     U = coefficienttype(T)
     return MA.promote_operation(*, U, M)
 end
@@ -61,7 +61,7 @@ _polynomial(α) = α
 _polynomial(p::APL) = polynomial(p)
 function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
     if iszero(p)
-        _polynomial(substitute(st, zeroterm(p), s))
+        _polynomial(substitute(st, zero_term(p), s))
     else
         ts = terms(p)
         r1 = substitute(st, ts[1], s)
@@ -75,7 +75,7 @@ function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
 end
 
 function MA.promote_operation(::typeof(substitute), ::Type{Subs}, ::Type{P}, args::Vararg{Type,N}) where {P<:AbstractPolynomial,N}
-    T = MA.promote_operation(substitute, Subs, termtype(P), args...)
+    T = MA.promote_operation(substitute, Subs, term_type(P), args...)
     return MA.promote_operation(+, T, T)
 end
 
