@@ -328,7 +328,8 @@ LinearAlgebra.adjoint(t::AbstractTerm) = _term(LinearAlgebra.adjoint(coefficient
 LinearAlgebra.adjoint(p::AbstractPolynomialLike) = polynomial(map(LinearAlgebra.adjoint, terms(p)))
 LinearAlgebra.adjoint(r::RationalPoly) = adjoint(numerator(r)) / adjoint(denominator(r))
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractPolynomialLike} = T
-LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol) = (@assert(!iscomplex(v)); v)
+LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol) =
+    (iscomplex(v) && error("Complex-valued polynomials cannot be interpreted as hermitian scalars"); v)
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
 LinearAlgebra.transpose(m::AbstractMonomial) = m
