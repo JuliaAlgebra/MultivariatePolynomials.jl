@@ -9,11 +9,11 @@
 @deprecate mapexponents map_exponents
 @deprecate mapexponents! map_exponents!
 @deprecate monomialtype monomial_type
-@deprecate monovec monomial_vector
-@deprecate monomialvectype monomial_vector_type
+@deprecate monovectype monomial_vector_type
 @deprecate emptymonovec empty_monomial_vector
 @deprecate sortmonovec sort_monomial_vector
 @deprecate mergemonovec merge_monomial_vectors
+@deprecate monovec monomial_vector
 @deprecate leading_term leadingterm
 @deprecate leading_monomial leading_monomial
 @deprecate leading_coefficient leading_coefficient
