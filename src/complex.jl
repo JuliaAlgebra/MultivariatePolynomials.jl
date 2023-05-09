@@ -111,11 +111,11 @@ function iscomplex(p::AbstractPolynomialLike)
     end
     return false
 end
-Base.conj(x::M) where {M<:AbstractMonomial} =
+Base.conj(x::M) where {M<:AbstractMonomial} = isreal(x) ? x :
     convert(M, reduce(*, conj(var)^exp for (var, exp) in zip(variables(x), exponents(x)); init=constantmonomial(x)))
-Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = monovec(conj.(x))
-Base.conj(x::T) where {T<:AbstractTerm} = convert(T, conj(coefficient(x)) * conj(monomial(x)))
-Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) ? x : convert(P, sum(conj(t) for t in x))
+Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = all(isreal, x) ? x : monovec(conj.(x))
+Base.conj(x::T) where {T<:AbstractTerm} = isreal(x) ? x : convert(T, conj(coefficient(x)) * conj(monomial(x)))
+Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) || isreal(x) ? x : convert(P, sum(conj(t) for t in x))
 
 # Real and imaginary parts are harder to realize. The real part of a monomial can easily be a polynomial.
 for fun in [:real, :imag]
