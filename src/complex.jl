@@ -9,7 +9,9 @@ and imaginary parts are not).
 By default, all variables are real-valued.
 """
 iscomplex(::AbstractVariable) = false
+
 Base.isreal(v::AbstractPolynomialLike) = !iscomplex(v)
+
 """
     isrealpart(x::AbstractVariable)
 
@@ -18,6 +20,7 @@ Return whether the given variable is the real part of a complex-valued variable.
 See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`isconj`](@ref isconj).
 """
 isrealpart(::AbstractVariable) = false
+
 """
     isimagpart(x::AbstractVariable)
 
@@ -26,6 +29,7 @@ Return whether the given variable is the imaginary part of a complex-valued vari
 See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isconj`](@ref isconj).
 """
 isimagpart(::AbstractVariable) = false
+
 """
     isconj(x::AbstractVariable)
 
@@ -34,6 +38,7 @@ Return whether the given variable is obtained by conjugating a user-defined comp
 See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isimagpart`](@ref isimagpart).
 """
 isconj(::AbstractVariable) = false
+
 """
     ordinary_variable(x::Union{AbstractVariable, AbstractVector{<:AbstractVariable}})
 
