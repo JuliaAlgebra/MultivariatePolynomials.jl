@@ -34,9 +34,9 @@ end
 # Promotion between `I` and `1` is `Any`.
 # Promotion between `I` and `2I` is `UniformScaling`.
 for op in [:+, :-]
-    @eval Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(p1, map_coefficientsnz(J -> J.λ, p2))
-    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL) = $op(map_coefficientsnz(J -> J.λ, p1), p2)
-    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(map_coefficientsnz(J -> J.λ, p1), p2)
+    @eval Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(p1, map_coefficients(J -> J.λ, p2, nonzero=true))
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL) = $op(map_coefficients(J -> J.λ, p1, nonzero=true), p2)
+    @eval Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL{<:LinearAlgebra.UniformScaling}) = $op(map_coefficients(J -> J.λ, p1, nonzero=true), p2)
 end
 Base.isapprox(p1::APL, p2::APL; kwargs...) = isapprox(promote(p1, p2)...; kwargs...)
 

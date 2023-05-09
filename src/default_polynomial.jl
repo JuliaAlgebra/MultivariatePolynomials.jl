@@ -64,9 +64,9 @@ function join_terms!(output::AbstractArray{<:Term}, terms1::AbstractArray{<:Term
 end
 
 Base.:(+)(p1::Polynomial, p2::Polynomial) = polynomial!(join_terms(terms(p1), terms(p2)), SortedUniqState())
-Base.:(+)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 + map_coefficientsnz(J -> J.λ, p2)
-Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficientsnz(J -> J.λ, p1) + p2
-Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficientsnz(J -> J.λ, p1) + p2
+Base.:(+)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 + map_coefficients(J -> J.λ, p2, nonzero=true)
+Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficients(J -> J.λ, p1, nonzero=true) + p2
+Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficients(J -> J.λ, p1, nonzero=true) + p2
 function MA.operate_to!(result::Polynomial, ::typeof(+), p1::Polynomial, p2::Polynomial)
     if result === p1 || result === p2
         error("Cannot call `operate_to!(output, +, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.")
@@ -99,9 +99,9 @@ function MA.operate_to!(result::Polynomial, ::typeof(*), t::AbstractTermLike, p:
     end
 end
 Base.:(-)(p1::Polynomial, p2::Polynomial) = polynomial!(join_terms(terms(p1), (-).(terms(p2))))
-Base.:(-)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 - map_coefficientsnz(J -> J.λ, p2)
-Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficientsnz(J -> J.λ, p1) - p2
-Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficientsnz(J -> J.λ, p1) - p2
+Base.:(-)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 - map_coefficients(J -> J.λ, p2, nonzero=true)
+Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficients(J -> J.λ, p1, nonzero=true) - p2
+Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficients(J -> J.λ, p1, nonzero=true) - p2
 
 LinearAlgebra.adjoint(x::Polynomial) = polynomial!(adjoint.(terms(x)))
 

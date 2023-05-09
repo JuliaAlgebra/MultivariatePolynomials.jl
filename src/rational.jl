@@ -41,7 +41,7 @@ function Base.:/(num, den::APL)
 end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients
-Base.:/(num::APL, den) = map_coefficientsnz(α -> α/den, num)
+Base.:/(num::APL, den) = map_coefficients(α -> α/den, num, nonzero=true)
 
 function Base.:+(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)

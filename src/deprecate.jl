@@ -38,12 +38,12 @@ function changecoefficienttype(poly::APL, ::Type{T}) where {T}
     return similar(poly, T)
 end
 
-function map_coefficientsnz(f::F, p::APL) where {F<:Function}
-    Base.depwarn("`map_coefficientsnz(f, p)` is deprecated, use `map_coefficients(f, p, nonzero = true)` instead", :map_coefficientsnz)
+function mapcoefficientsnz(f::F, p::APL) where {F<:Function}
+    Base.depwarn("`mapcoefficientsnz(f, p)` is deprecated, use `map_coefficients(f, p, nonzero = true)` instead", :map_coefficientsnz)
     return map_coefficients(f, p, nonzero = true)
 end
 
-function map_coefficientsnz_to!(output::APL, f::F, p::APL) where {F<:Function}
-    Base.depwarn("`map_coefficientsnz_to!(output, f, p)` is deprecated, use `map_coefficients_to!(output, f, p, nonzero = true)` instead", :map_coefficientsnz_to!)
+function mapcoefficientsnz_to!(output::APL, f::F, p::APL) where {F<:Function}
+    Base.depwarn("`mapcoefficientsnz_to!(output, f, p)` is deprecated, use `map_coefficients_to!(output, f, p, nonzero = true)` instead", :map_coefficientsnz_to!)
     return map_coefficients_to!(output, f, p, nonzero = true)
 end

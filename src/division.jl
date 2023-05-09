@@ -1,7 +1,7 @@
 export divides, div_multiple, pseudo_rem, rem_or_pseudo_rem
 
 function Base.round(p::APL; args...)
-    # round(0.1) is zero so we cannot use `map_coefficientsnz`
+    # round(0.1) is zero so we cannot use `nonzero=true`
     return map_coefficients(p) do term
         round(term; args...)
     end
