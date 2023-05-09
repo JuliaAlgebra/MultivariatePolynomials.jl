@@ -267,9 +267,9 @@ MA.operate!(::typeof(*), m1::AbstractMonomial, m2::AbstractMonomialLike) = map_e
 Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(+, m1, m2)
 #Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = *(monomial(m1), monomial(m2))
 
-Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = term(coefficient(t), m * monomial(t))
-Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = term(coefficient(t), monomial(t) * m)
-Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = term(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
+Base.:*(m::AbstractMonomialLike, t::AbstractTermLike) = left_constant_mult(coefficient(t), m * monomial(t))
+Base.:*(t::AbstractTermLike, m::AbstractMonomialLike) = left_constant_mult(coefficient(t), monomial(t) * m)
+Base.:*(t1::AbstractTermLike, t2::AbstractTermLike) = left_constant_mult(coefficient(t1) * coefficient(t2), monomial(t1) * monomial(t2))
 
 MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike) = map_exponents!(+, p, t)
 Base.:*(p::APL, t::AbstractMonomialLike) = map_exponents(+, p, t)
