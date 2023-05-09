@@ -117,8 +117,6 @@ Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = monovec(conj.(x)
 Base.conj(x::T) where {T<:AbstractTerm} = convert(T, conj(coefficient(x)) * conj(monomial(x)))
 Base.conj(x::P) where {P<:AbstractPolynomial} = nterms(x) == 0 ? x : convert(P, sum(conj(t) for t in x))
 
-real_coefficient_type_polynomial_like(::AbstractPolynomialLike{R}) where {R<:Real} = R
-real_coefficient_type_polynomial_like(::AbstractPolynomialLike{Complex{R}}) where {R<:Real} = R
 # Real and imaginary parts are harder to realize. The real part of a monomial can easily be a polynomial.
 for fun in [:real, :imag]
     eval(quote
@@ -129,13 +127,13 @@ for fun in [:real, :imag]
             full_version = length(substs) > 0 ? subs(x, substs...) : polynomial(x)
             # Now everything that is imaginary can be recognized by its coefficient
             return convert(
-                polynomialtype(full_version, real_coefficient_type_polynomial_like(full_version)),
+                polynomialtype(full_version, real(coefficienttype(full_version))),
                 mapcoefficients!($fun, full_version)
             )
         end
         Base.$fun(x::AbstractVector{<:AbstractMonomial}) = map(Base.$fun, x)
         Base.$fun(x::AbstractPolynomial{T}) where {T} = nterms(x) == 0 ?
-            zero(polynomialtype(x, real_coefficient_type_polynomial_like(x))) : sum($fun(t) for t in x)
+            zero(polynomialtype(x, real(coefficienttype(x)))) : sum($fun(t) for t in x)
     end)
 end
 
