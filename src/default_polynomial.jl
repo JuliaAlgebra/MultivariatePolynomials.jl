@@ -8,20 +8,20 @@ function coefficients(p::Polynomial)
     return LazyMap{coefficienttype(p)}(coefficient, terms(p))
 end
 function monomials(p::Polynomial)
-    return LazyMap{monomialtype(p)}(monomial, terms(p))
+    return LazyMap{monomial_type(p)}(monomial, terms(p))
 end
 
 const VectorPolynomial{C,T} = Polynomial{C,T,Vector{T}}
 
-termtype(::Type{<:Polynomial{C,T}}) where {C,T} = T
+term_type(::Type{<:Polynomial{C,T}}) where {C,T} = T
 terms(p::Polynomial) = p.terms
-constantmonomial(::Union{Polynomial{C,TT},Type{Polynomial{C,TT}}}) where {C,TT} = constantmonomial(TT)
+constant_monomial(::Union{Polynomial{C,TT},Type{Polynomial{C,TT}}}) where {C,TT} = constant_monomial(TT)
 Base.convert(::Type{Polynomial{C,TT,V}}, p::Polynomial{C,TT,V}) where {C,TT,V} = p
 function Base.convert(PT::Type{Polynomial{C,TT,V}}, p::AbstractPolynomialLike) where {C,TT,V}
     return PT(convert(V, terms(p)))
 end
 function Base.convert(::Type{Polynomial{C}}, p::AbstractPolynomialLike) where {C}
-    TT = termtype(p, C)
+    TT = term_type(p, C)
     return convert(Polynomial{C,TT,Vector{TT}}, p)
 end
 function Base.convert(::Type{Polynomial}, p::AbstractPolynomialLike)
@@ -30,8 +30,8 @@ end
 
 
 _change_eltype(::Type{<:Vector}, ::Type{T}) where T = Vector{T}
-function polynomialtype(::Type{Polynomial{C, T, V}}, ::Type{NewC}) where {C, T, V, NewC}
-    NewT = termtype(T, NewC)
+function polynomial_type(::Type{Polynomial{C, T, V}}, ::Type{NewC}) where {C, T, V, NewC}
+    NewT = term_type(T, NewC)
     Polynomial{NewC, NewT, _change_eltype(V, NewT)}
 end
 
@@ -57,21 +57,21 @@ Base.one(p::Polynomial) = one(typeof(p))
 Base.zero(::Type{Polynomial{C,T,A}}) where {C,T,A} = Polynomial{C,T,A}(A())
 Base.zero(t::Polynomial) = zero(typeof(t))
 
-jointerms(terms1::AbstractArray{<:Term}, terms2::AbstractArray{<:Term}) = Sequences.mergesorted(terms1, terms2, compare, combine)
-function jointerms!(output::AbstractArray{<:Term}, terms1::AbstractArray{<:Term}, terms2::AbstractArray{<:Term})
+join_terms(terms1::AbstractArray{<:Term}, terms2::AbstractArray{<:Term}) = Sequences.merge_sorted(terms1, terms2, compare, combine)
+function join_terms!(output::AbstractArray{<:Term}, terms1::AbstractArray{<:Term}, terms2::AbstractArray{<:Term})
     resize!(output, length(terms1) + length(terms2))
-    Sequences.mergesorted!(output, terms1, terms2, compare, combine)
+    Sequences.merge_sorted!(output, terms1, terms2, compare, combine)
 end
 
-Base.:(+)(p1::Polynomial, p2::Polynomial) = polynomial!(jointerms(terms(p1), terms(p2)), SortedUniqState())
-Base.:(+)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 + mapcoefficientsnz(J -> J.λ, p2)
-Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = mapcoefficientsnz(J -> J.λ, p1) + p2
-Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = mapcoefficientsnz(J -> J.λ, p1) + p2
+Base.:(+)(p1::Polynomial, p2::Polynomial) = polynomial!(join_terms(terms(p1), terms(p2)), SortedUniqState())
+Base.:(+)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 + map_coefficientsnz(J -> J.λ, p2)
+Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficientsnz(J -> J.λ, p1) + p2
+Base.:(+)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficientsnz(J -> J.λ, p1) + p2
 function MA.operate_to!(result::Polynomial, ::typeof(+), p1::Polynomial, p2::Polynomial)
     if result === p1 || result === p2
         error("Cannot call `operate_to!(output, +, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.")
     end
-    jointerms!(result.terms, terms(p1), terms(p2))
+    join_terms!(result.terms, terms(p1), terms(p2))
     result
 end
 function MA.operate_to!(result::Polynomial, ::typeof(*), p::Polynomial, t::AbstractTermLike)
@@ -98,23 +98,23 @@ function MA.operate_to!(result::Polynomial, ::typeof(*), t::AbstractTermLike, p:
         return result
     end
 end
-Base.:(-)(p1::Polynomial, p2::Polynomial) = polynomial!(jointerms(terms(p1), (-).(terms(p2))))
-Base.:(-)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 - mapcoefficientsnz(J -> J.λ, p2)
-Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = mapcoefficientsnz(J -> J.λ, p1) - p2
-Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = mapcoefficientsnz(J -> J.λ, p1) - p2
+Base.:(-)(p1::Polynomial, p2::Polynomial) = polynomial!(join_terms(terms(p1), (-).(terms(p2))))
+Base.:(-)(p1::Polynomial, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = p1 - map_coefficientsnz(J -> J.λ, p2)
+Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial) = map_coefficientsnz(J -> J.λ, p1) - p2
+Base.:(-)(p1::Polynomial{<:LinearAlgebra.UniformScaling}, p2::Polynomial{<:LinearAlgebra.UniformScaling}) = map_coefficientsnz(J -> J.λ, p1) - p2
 
 LinearAlgebra.adjoint(x::Polynomial) = polynomial!(adjoint.(terms(x)))
 
-function mapcoefficients(f::F, p::Polynomial; nonzero = false) where {F<:Function}
+function map_coefficients(f::F, p::Polynomial; nonzero = false) where {F<:Function}
     terms = map(p.terms) do term
-        mapcoefficients(f, term)
+        map_coefficients(f, term)
     end
     if !nonzero
         filter!(!iszero, terms)
     end
     return polynomial!(terms)
 end
-function mapcoefficients!(f::F, p::Polynomial; nonzero = false) where {F<:Function}
+function map_coefficients!(f::F, p::Polynomial; nonzero = false) where {F<:Function}
     for i in eachindex(p.terms)
         t = p.terms[i]
         p.terms[i] = Term(f(coefficient(t)), monomial(t))
@@ -125,7 +125,7 @@ function mapcoefficients!(f::F, p::Polynomial; nonzero = false) where {F<:Functi
     return p
 end
 
-function mapcoefficients_to!(output::Polynomial, f::F, p::Polynomial; nonzero = false) where {F<:Function}
+function map_coefficients_to!(output::Polynomial, f::F, p::Polynomial; nonzero = false) where {F<:Function}
     resize!(output.terms, nterms(p))
     for i in eachindex(p.terms)
         t = p.terms[i]
@@ -136,8 +136,8 @@ function mapcoefficients_to!(output::Polynomial, f::F, p::Polynomial; nonzero = 
     end
     return output
 end
-function mapcoefficients_to!(output::Polynomial, f::Function, p::AbstractPolynomialLike; nonzero = false)
-    return mapcoefficients_to!(output, f, polynomial(p); nonzero = false)
+function map_coefficients_to!(output::Polynomial, f::Function, p::AbstractPolynomialLike; nonzero = false)
+    return map_coefficients_to!(output, f, polynomial(p); nonzero = false)
 end
 
 # The polynomials can be mutated.
@@ -304,7 +304,7 @@ function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
     if iszero(q)
         return MA.operate!(zero, p)
     elseif nterms(q) == 1
-        return MA.operate!(*, p, leadingterm(q))
+        return MA.operate!(*, p, leading_term(q))
     else
         return MA.operate_to!(p, *, MA.mutable_copy(p), q)
     end
@@ -315,16 +315,16 @@ function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     end
     return p
 end
-function mapexponents!(f, p::Polynomial, m::AbstractMonomialLike)
+function map_exponents!(f, p::Polynomial, m::AbstractMonomialLike)
     for i in eachindex(p.terms)
         t = p.terms[i]
-        p.terms[i] = term(coefficient(t), mapexponents(f, monomial(t), m))
+        p.terms[i] = term(coefficient(t), map_exponents(f, monomial(t), m))
     end
     return p
 end
-function mapexponents(f, p::Polynomial, m::AbstractMonomialLike)
+function map_exponents(f, p::Polynomial, m::AbstractMonomialLike)
     P = MA.promote_operation(*, typeof(p), typeof(m))
-    return mapexponents!(f, MA.mutable_copy(convert(P, p)), m)
+    return map_exponents!(f, MA.mutable_copy(convert(P, p)), m)
 end
 
 function MA.operate!(::typeof(zero), p::Polynomial)
@@ -333,16 +333,16 @@ function MA.operate!(::typeof(zero), p::Polynomial)
 end
 function MA.operate!(::typeof(one), p::Polynomial{T}) where T
     if isempty(p.terms)
-        push!(p.terms, constantterm(one(T), p))
+        push!(p.terms, constant_term(one(T), p))
     else
         t = p.terms[1]
-        p.terms[1] = Term(MA.one!!(coefficient(t)), constantmonomial(t))
+        p.terms[1] = Term(MA.one!!(coefficient(t)), constant_monomial(t))
         resize!(p.terms, 1)
     end
     return p
 end
 
-function MA.operate!(::typeof(removeleadingterm), p::Polynomial)
+function MA.operate!(::typeof(remove_leading_term), p::Polynomial)
     pop!(p.terms)
     return p
 end

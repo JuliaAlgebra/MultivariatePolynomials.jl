@@ -12,10 +12,10 @@ const MP = MultivariatePolynomials
     @test terms(polynomial([-2, 2, x, x^2, -2x^2, x^2, x^3, 2x^3], MP.SortedState())) == [x, 3x^3]
 
     @test polynomial(1 + x) == 1 + x
-    @test leadingterm(1 + x) == x
-    @test leadingterm(x - x) == 0
-    @test leadingmonomial(x - x) == 1
-    @test leadingcoefficient(x - x) == 0
+    @test leading_term(1 + x) == x
+    @test leading_term(x - x) == 0
+    @test leading_monomial(x - x) == 1
+    @test leading_coefficient(x - x) == 0
     @test one(1 + x) == one(1.0 + x) == 1
     @test zero(1 + x) == zero(1.0 + x) == 0
     @test 1 != 1 + x
@@ -34,7 +34,7 @@ const MP = MultivariatePolynomials
     @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [1, 2x^2]
 
     @test (1.0 + x) * x == x^2 + x
-    @test constantterm(1, x) * (1 - x) == 1 - x
+    @test constant_term(1, x) * (1 - x) == 1 - x
     @test promote_type(typeof(1-x), typeof(x)) <: AbstractPolynomial{Int}
     @test x != 1 - x
 
@@ -91,7 +91,7 @@ const MP = MultivariatePolynomials
     @test extdegree(x*y + 2 + x^2*y + x + y, y) == (0, 1)
     @test extdegree(x*y + x^2*y, x) == (1, 2)
     @test extdegree(x*y + x^2*y, y) == (1, 1)
-    @test leadingterm(x*y + 2 + x^2*y + x + y) == x^2*y
+    @test leading_term(x*y + 2 + x^2*y + x + y) == x^2*y
     @test nvariables(x + y - x) == 2
     @test nvariables(x + x^2) == 1
 
@@ -109,19 +109,19 @@ const MP = MultivariatePolynomials
     end
 
     @inferred polynomial(i -> float(i), [x, x*x])
-    @inferred polynomial(i -> 3 - float(i), monovec([x*x, x]))
+    @inferred polynomial(i -> 3 - float(i), monomial_vector([x*x, x]))
     for p in [polynomial(i -> float(i), [x, x*x]),
               polynomial(i -> 1.0, [x*x, x, x*x]),
-              polynomial(i -> float(i), monovec([x*x, x]))]
+              polynomial(i -> float(i), monomial_vector([x*x, x]))]
         @test collect(coefficients(p)) == [1.0, 2.0]
-        @test collect(monomials(p)) == monovec([x, x^2])
+        @test collect(monomials(p)) == monomial_vector([x, x^2])
     end
 
     @test (x + y)' == x + y
     @test transpose(x + y) == x + y
     @test transpose([1 2; 3 4] * x) == [1 3; 2 4] * x
 
-    @test removemonomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
+    @test remove_monomials(4x^2*y + x*y + 2x, [x*y]) == 4x^2*y + 2x
 
     @test_throws InexactError push!([1], x+1)
 
@@ -129,8 +129,8 @@ const MP = MultivariatePolynomials
     @test polynomial([1 2; 3 4], [x^2, y], Float64) isa AbstractPolynomial{Float64}
     @test polynomial([1 2; 3 4], [y, x^2]) == y^2 + 5x^2*y + 4x^4
     @test polynomial([1 2; 3 4], [y, x^2], Float64) isa AbstractPolynomial{Float64}
-    @test polynomial([1 2; 3 4], monovec([y, x^2])) == 4x^4 + 5x^2*y + y^2
-    @test polynomial([1 2; 3 4], monovec([y, x^2]), Float64) isa AbstractPolynomial{Float64}
+    @test polynomial([1 2; 3 4], monomial_vector([y, x^2])) == 4x^4 + 5x^2*y + y^2
+    @test polynomial([1 2; 3 4], monomial_vector([y, x^2]), Float64) isa AbstractPolynomial{Float64}
 
     @test (@inferred round(2.6x + 1.001x^2)) == 3x + 1x^2
     @test (@inferred round(3.1x*y)) == 3x*y
@@ -141,11 +141,11 @@ const MP = MultivariatePolynomials
         Mod.@polyvar x y z
         p = 3*y^2 + 2*y*x
         @test collect(coefficients(p)) == [3, 2]
-        @test collect(monomials(p)) == monovec([x*y, y^2])
+        @test collect(monomials(p)) == monomial_vector([x*y, y^2])
         # Examples from p. 59 of the 4th edition of "Ideals, Varieties, and Algorithms" of Cox, Little and O'Shea
         f = 4*x*y^2*z + 4*z^2 - 5*x^3 + 7*x^2*z^2
         @test collect(coefficients(f)) == [4, -5, 4, 7]
-        @test collect(monomials(f)) == monovec([x^2*z^2, x*y^2*z, x^3, z^2])
+        @test collect(monomials(f)) == monomial_vector([x^2*z^2, x*y^2*z, x^3, z^2])
         @test ordering(f) === GradedLex()
     end
 
@@ -197,20 +197,20 @@ const MP = MultivariatePolynomials
         @test p == 2x + 1
     end
 
-    @testset "mapcoefficients $nz" for nz in [false, true]
+    @testset "map_coefficients $nz" for nz in [false, true]
         p = 2x + 1
-        @test mapcoefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
-        @test mapcoefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
-        @test p === mapcoefficients!(x -> x + 1, p, nonzero = nz)
+        @test map_coefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
+        @test map_coefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
+        @test p === map_coefficients!(x -> x + 1, p, nonzero = nz)
         @test p == 3x + 2
         q = zero(p)
-        @test q === mapcoefficients_to!(q, x -> 2x, p, nonzero = nz)
+        @test q === map_coefficients_to!(q, x -> 2x, p, nonzero = nz)
         @test q == 6x + 4
-        @test q === mapcoefficients_to!(q, x -> 2x, 3x, nonzero = nz)
+        @test q === map_coefficients_to!(q, x -> 2x, 3x, nonzero = nz)
         @test q == 6x
-        @test q === mapcoefficients_to!(q, x -> 2x, x, nonzero = nz)
+        @test q === map_coefficients_to!(q, x -> 2x, x, nonzero = nz)
         @test q == 2x
-        @test q === mapcoefficients_to!(q, x -> 2x, x^2, nonzero = nz)
+        @test q === map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
         @test q == 2x^2
     end
 end

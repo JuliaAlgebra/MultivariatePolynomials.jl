@@ -44,13 +44,13 @@ end
 
 function __test_leading(p)
     alloc_test(0) do
-        leadingterm(p)
+        leading_term(p)
     end
     alloc_test(0) do
-        leadingcoefficient(p)
+        leading_coefficient(p)
     end
     alloc_test(0) do
-        leadingmonomial(p)
+        leading_monomial(p)
     end
 end
 function _test_leading(T)

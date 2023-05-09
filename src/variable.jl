@@ -1,4 +1,4 @@
-export name, name_base_indices, similarvariable, @similarvariable, variable_union_type
+export name, name_base_indices, similar_variable, @similar_variable, variable_union_type
 
 Base.copy(x::AbstractVariable) = x
 
@@ -18,7 +18,7 @@ For `DynamicPolynomials`, all variables have the same type `PolyVar{C}` where
 """
 function variable_union_type end
 variable_union_type(::Type{MT}) where {MT<:AbstractMonomialLike} = error("`variable_union_type` not implemented for $MT.")
-variable_union_type(::Type{PT}) where {PT<:APL} = variable_union_type(monomialtype(PT))
+variable_union_type(::Type{PT}) where {PT<:APL} = variable_union_type(monomial_type(PT))
 variable_union_type(p::APL) = variable_union_type(typeof(p))
 
 """
@@ -54,39 +54,39 @@ as a `Vector{Int}` or tuple of `Int`s.
 function name_base_indices end
 
 """
-    similarvariable(p::AbstractPolynomialLike, variable::Type{Val{V}})
+    similar_variable(p::AbstractPolynomialLike, variable::Type{Val{V}})
 
 Creates a new variable `V` based upon the the given source polynomial.
 
-    similarvariable(p::AbstractPolynomialLike, v::Symbol)
+    similar_variable(p::AbstractPolynomialLike, v::Symbol)
 
 Creates a new variable based upon the given source polynomial and the given symbol `v`. Note
 that this can lead to type instabilities.
 
 ### Examples
 
-Calling `similarvariable(typedpoly, Val{:x})` on a polynomial created with `TypedPolynomials`
+Calling `similar_variable(typedpoly, Val{:x})` on a polynomial created with `TypedPolynomials`
 results in `TypedPolynomials.Variable{:x}`.
 """
-function similarvariable end
+function similar_variable end
 
-similarvariable(v::Union{AbstractVariable, Type{<:AbstractVariable}}, s::Symbol) = similarvariable(v, Val{s})
-similarvariable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s) = similarvariable(variable_union_type(p), s)
+similar_variable(v::Union{AbstractVariable, Type{<:AbstractVariable}}, s::Symbol) = similar_variable(v, Val{s})
+similar_variable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s) = similar_variable(variable_union_type(p), s)
 
 """
-    @similarvariable(p::AbstractPolynomialLike, variable)
+    @similar_variable(p::AbstractPolynomialLike, variable)
 
-Calls `similarvariable(p, Val{variable})` and binds the result to a variable with the same
+Calls `similar_variable(p, Val{variable})` and binds the result to a variable with the same
 name.
 
 ### Examples
 
-Calling `@similarvariable typedpoly x` on a polynomial created with `TypedPolynomials`
+Calling `@similar_variable typedpoly x` on a polynomial created with `TypedPolynomials`
 binds `TypedPolynomials.Variable{:x}` to the variable `x`.
 """
-macro similarvariable(p, name)
-    Expr(:block, _makevar(p, name))
+macro similar_variable(p, name)
+    Expr(:block, _assign_new_variable(p, name))
 end
 
-_varconstructor(p, name::Symbol) = :(similarvariable($p, Val{$(esc(Expr(:quote, name)))}))
-_makevar(f, name::Symbol) = :($(esc(name)) = $(_varconstructor(:($(esc(f))), name)))
+_new_variable(p, name::Symbol) = :(similar_variable($p, Val{$(esc(Expr(:quote, name)))}))
+_assign_new_variable(f, name::Symbol) = :($(esc(name)) = $(_new_variable(:($(esc(f))), name)))

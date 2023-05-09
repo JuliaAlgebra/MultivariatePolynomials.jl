@@ -70,7 +70,7 @@ import Test: @inferred
 
     @testset "Subs with no variables" begin
         Mod.@polyvar x
-        t = convert(termtype(x, Int), 3)
+        t = convert(term_type(x, Int), 3)
         @test t == @inferred subs(t, x => x + 1)
         @test t == @inferred subs(t, x => x + 1.0)
         @test t == @inferred subs(t, x => 1x)

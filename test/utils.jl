@@ -20,37 +20,37 @@ struct CustomPoly{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
 CustomPoly(p::AbstractPolynomial{T}) where T = CustomPoly{T, typeof(p)}(p)
-MultivariatePolynomials.termtype(::Type{CustomPoly{T,P}}) where {T,P} = MultivariatePolynomials.termtype(P)
+MultivariatePolynomials.term_type(::Type{CustomPoly{T,P}}) where {T,P} = MultivariatePolynomials.term_type(P)
 MultivariatePolynomials.polynomial(p::CustomPoly) = p.p
 MultivariatePolynomials.polynomial(p::CustomPoly, T::Type) = polynomial(p.p, T)
 MultivariatePolynomials.variables(p::CustomPoly) = variables(p.p)
-MultivariatePolynomials.monomialtype(::Type{<:CustomPoly{T, P}}) where {T, P} = monomialtype(P)
-MultivariatePolynomials.constantmonomial(p::CustomPoly) = constantmonomial(p.p)
+MultivariatePolynomials.monomial_type(::Type{<:CustomPoly{T, P}}) where {T, P} = monomial_type(P)
+MultivariatePolynomials.constant_monomial(p::CustomPoly) = constant_monomial(p.p)
 Base.copy(p::CustomPoly) = CustomPoly(copy(p.p))
 
 struct CustomTerms{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
 CustomTerms(p::AbstractPolynomial{T}) where T = CustomTerms{T, typeof(p)}(p)
-MultivariatePolynomials.termtype(::Type{CustomTerms{T,P}}) where {T,P} = MultivariatePolynomials.termtype(P)
+MultivariatePolynomials.term_type(::Type{CustomTerms{T,P}}) where {T,P} = MultivariatePolynomials.term_type(P)
 MultivariatePolynomials.terms(p::CustomTerms) = terms(p.p)
 MultivariatePolynomials.variables(p::CustomTerms) = variables(p.p)
-MultivariatePolynomials.monomialtype(::Type{<:CustomTerms{T, P}}) where {T, P} = monomialtype(P)
-MultivariatePolynomials.constantmonomial(p::CustomPoly) = constantmonomial(p.p)
+MultivariatePolynomials.monomial_type(::Type{<:CustomTerms{T, P}}) where {T, P} = monomial_type(P)
+MultivariatePolynomials.constant_monomial(p::CustomPoly) = constant_monomial(p.p)
 Base.copy(p::CustomTerms) = CustomTerms(copy(p.p))
 
 function _typetests(x, ::Type{T}) where T
     @test (@inferred coefficienttype(x)) == Int
 
-    @test (@inferred monomialtype(x)) <: AbstractMonomial
+    @test (@inferred monomial_type(x)) <: AbstractMonomial
 
-    @test (@inferred termtype(x)) <: AbstractTerm{Int}
-    @test (@inferred termtype(x, Float64)) <: AbstractTerm{Float64}
+    @test (@inferred term_type(x)) <: AbstractTerm{Int}
+    @test (@inferred term_type(x, Float64)) <: AbstractTerm{Float64}
 
-    @test (@inferred polynomialtype(x)) <: AbstractPolynomial{Int}
-    @test (@inferred polynomialtype(x, Float64)) <: AbstractPolynomial{Float64}
+    @test (@inferred polynomial_type(x)) <: AbstractPolynomial{Int}
+    @test (@inferred polynomial_type(x, Float64)) <: AbstractPolynomial{Float64}
 
-    @test (@inferred monovectype(x)) <: AbstractArray{<:AbstractMonomial}
+    @test (@inferred monomial_vector_type(x)) <: AbstractArray{<:AbstractMonomial}
 end
 
 function typetests(x::Union{AbstractPolynomialLike{T}, Vector{<:AbstractPolynomialLike{T}}}) where T

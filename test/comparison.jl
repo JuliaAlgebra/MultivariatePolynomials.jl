@@ -19,8 +19,8 @@
     @testset "Equality" begin
         @testset "Monomial equality" begin
             Mod.@polyvar x y
-            @test 1 == constantmonomial(x)
-            @test 2 != constantmonomial(x)
+            @test 1 == constant_monomial(x)
+            @test 2 != constant_monomial(x)
             @test 2 != x
             @test 2 != x*y
             @test x*y != x
