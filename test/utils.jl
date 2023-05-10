@@ -16,30 +16,46 @@ function alloc_test(f, n)
     @test n == @allocated f()
 end
 
-struct CustomPoly{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
+struct CustomPoly{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
-CustomPoly(p::AbstractPolynomial{T}) where T = CustomPoly{T, typeof(p)}(p)
-MultivariatePolynomials.term_type(::Type{CustomPoly{T,P}}) where {T,P} = MultivariatePolynomials.term_type(P)
+CustomPoly(p::AbstractPolynomial{T}) where {T} = CustomPoly{T,typeof(p)}(p)
+function MultivariatePolynomials.term_type(::Type{CustomPoly{T,P}}) where {T,P}
+    return MultivariatePolynomials.term_type(P)
+end
 MultivariatePolynomials.polynomial(p::CustomPoly) = p.p
 MultivariatePolynomials.polynomial(p::CustomPoly, T::Type) = polynomial(p.p, T)
 MultivariatePolynomials.variables(p::CustomPoly) = variables(p.p)
-MultivariatePolynomials.monomial_type(::Type{<:CustomPoly{T, P}}) where {T, P} = monomial_type(P)
-MultivariatePolynomials.constant_monomial(p::CustomPoly) = constant_monomial(p.p)
+function MultivariatePolynomials.monomial_type(
+    ::Type{<:CustomPoly{T,P}},
+) where {T,P}
+    return monomial_type(P)
+end
+function MultivariatePolynomials.constant_monomial(p::CustomPoly)
+    return constant_monomial(p.p)
+end
 Base.copy(p::CustomPoly) = CustomPoly(copy(p.p))
 
-struct CustomTerms{T, P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
+struct CustomTerms{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
-CustomTerms(p::AbstractPolynomial{T}) where T = CustomTerms{T, typeof(p)}(p)
-MultivariatePolynomials.term_type(::Type{CustomTerms{T,P}}) where {T,P} = MultivariatePolynomials.term_type(P)
+CustomTerms(p::AbstractPolynomial{T}) where {T} = CustomTerms{T,typeof(p)}(p)
+function MultivariatePolynomials.term_type(::Type{CustomTerms{T,P}}) where {T,P}
+    return MultivariatePolynomials.term_type(P)
+end
 MultivariatePolynomials.terms(p::CustomTerms) = terms(p.p)
 MultivariatePolynomials.variables(p::CustomTerms) = variables(p.p)
-MultivariatePolynomials.monomial_type(::Type{<:CustomTerms{T, P}}) where {T, P} = monomial_type(P)
-MultivariatePolynomials.constant_monomial(p::CustomPoly) = constant_monomial(p.p)
+function MultivariatePolynomials.monomial_type(
+    ::Type{<:CustomTerms{T,P}},
+) where {T,P}
+    return monomial_type(P)
+end
+function MultivariatePolynomials.constant_monomial(p::CustomPoly)
+    return constant_monomial(p.p)
+end
 Base.copy(p::CustomTerms) = CustomTerms(copy(p.p))
 
-function _typetests(x, ::Type{T}) where T
+function _typetests(x, ::Type{T}) where {T}
     @test (@inferred coefficienttype(x)) == Int
 
     @test (@inferred monomial_type(x)) <: AbstractMonomial
@@ -50,10 +66,13 @@ function _typetests(x, ::Type{T}) where T
     @test (@inferred polynomial_type(x)) <: AbstractPolynomial{Int}
     @test (@inferred polynomial_type(x, Float64)) <: AbstractPolynomial{Float64}
 
-    @test (@inferred monomial_vector_type(x)) <: AbstractArray{<:AbstractMonomial}
+    @test (@inferred monomial_vector_type(x)) <:
+          AbstractArray{<:AbstractMonomial}
 end
 
-function typetests(x::Union{AbstractPolynomialLike{T}, Vector{<:AbstractPolynomialLike{T}}}) where T
+function typetests(
+    x::Union{AbstractPolynomialLike{T},Vector{<:AbstractPolynomialLike{T}}},
+) where {T}
     _typetests(x, T)
-    _typetests(typeof(x), T)
+    return _typetests(typeof(x), T)
 end

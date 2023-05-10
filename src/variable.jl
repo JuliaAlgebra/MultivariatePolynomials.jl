@@ -1,4 +1,5 @@
-export name, name_base_indices, similar_variable, @similar_variable, variable_union_type
+export name,
+    name_base_indices, similar_variable, @similar_variable, variable_union_type
 
 Base.copy(x::AbstractVariable) = x
 
@@ -17,8 +18,12 @@ For `DynamicPolynomials`, all variables have the same type `PolyVar{C}` where
 `variable_union_type` should return `PolyVar{C}`.
 """
 function variable_union_type end
-variable_union_type(::Type{MT}) where {MT<:AbstractMonomialLike} = error("`variable_union_type` not implemented for $MT.")
-variable_union_type(::Type{PT}) where {PT<:APL} = variable_union_type(monomial_type(PT))
+function variable_union_type(::Type{MT}) where {MT<:AbstractMonomialLike}
+    return error("`variable_union_type` not implemented for $MT.")
+end
+function variable_union_type(::Type{PT}) where {PT<:APL}
+    return variable_union_type(monomial_type(PT))
+end
 variable_union_type(p::APL) = variable_union_type(typeof(p))
 
 """
@@ -70,8 +75,18 @@ results in `TypedPolynomials.Variable{:x}`.
 """
 function similar_variable end
 
-similar_variable(v::Union{AbstractVariable, Type{<:AbstractVariable}}, s::Symbol) = similar_variable(v, Val{s})
-similar_variable(p::Union{AbstractPolynomialLike, Type{<:AbstractPolynomialLike}}, s) = similar_variable(variable_union_type(p), s)
+function similar_variable(
+    v::Union{AbstractVariable,Type{<:AbstractVariable}},
+    s::Symbol,
+)
+    return similar_variable(v, Val{s})
+end
+function similar_variable(
+    p::Union{AbstractPolynomialLike,Type{<:AbstractPolynomialLike}},
+    s,
+)
+    return similar_variable(variable_union_type(p), s)
+end
 
 """
     @similar_variable(p::AbstractPolynomialLike, variable)
@@ -85,8 +100,12 @@ Calling `@similar_variable typedpoly x` on a polynomial created with `TypedPolyn
 binds `TypedPolynomials.Variable{:x}` to the variable `x`.
 """
 macro similar_variable(p, name)
-    Expr(:block, _assign_new_variable(p, name))
+    return Expr(:block, _assign_new_variable(p, name))
 end
 
-_new_variable(p, name::Symbol) = :(similar_variable($p, Val{$(esc(Expr(:quote, name)))}))
-_assign_new_variable(f, name::Symbol) = :($(esc(name)) = $(_new_variable(:($(esc(f))), name)))
+function _new_variable(p, name::Symbol)
+    return :(similar_variable($p, Val{$(esc(Expr(:quote, name)))}))
+end
+function _assign_new_variable(f, name::Symbol)
+    return :($(esc(name)) = $(_new_variable(:($(esc(f))), name)))
+end

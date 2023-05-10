@@ -3,13 +3,13 @@ export divides, div_multiple, pseudo_rem, rem_or_pseudo_rem
 function Base.round(p::APL; args...)
     # round(0.1) is zero so we cannot use `nonzero=true`
     return map_coefficients(p) do term
-        round(term; args...)
+        return round(term; args...)
     end
 end
 
 function Base.div(p::APL, α::Number, args...)
     return map_coefficients(p) do term
-        div(term, α, args...)
+        return div(term, α, args...)
     end
 end
 
@@ -24,12 +24,16 @@ Calling `divides(2x^2y, 3xy)` should return false because `x^2y` does not divide
 However, calling `divides(3xy, 2x^2y)` should return true.
 """
 function divides(t1::AbstractTermLike, t2::AbstractTermLike)
-    divides(monomial(t1), monomial(t2))
+    return divides(monomial(t1), monomial(t2))
 end
 divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 
-Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(min, m1, m2)
-Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(max, m1, m2)
+function Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+    return map_exponents(min, m1, m2)
+end
+function Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+    return map_exponents(max, m1, m2)
+end
 
 struct Field end
 struct UniqueFactorizationDomain end
@@ -53,35 +57,72 @@ If `a` is not a multiple of `b` then this function may return anything.
 div_multiple(::Field, a, b, ma::MA.MutableTrait) = a / b
 div_multiple(::UFD, a, b, ma::MA.IsMutable) = MA.operate!!(div, a, b)
 div_multiple(::UFD, a, b, ma::MA.IsNotMutable) = div(a, b)
-function div_multiple(a, b, ma::MA.MutableTrait=MA.IsNotMutable())
-    return div_multiple(algebraic_structure(promote_type(typeof(a), typeof(b))), a, b, ma)
+function div_multiple(a, b, ma::MA.MutableTrait = MA.IsNotMutable())
+    return div_multiple(
+        algebraic_structure(promote_type(typeof(a), typeof(b))),
+        a,
+        b,
+        ma,
+    )
 end
-function div_multiple(m1::AbstractMonomialLike, m2::AbstractMonomialLike, ::MA.MutableTrait=MA.IsNotMutable())
+function div_multiple(
+    m1::AbstractMonomialLike,
+    m2::AbstractMonomialLike,
+    ::MA.MutableTrait = MA.IsNotMutable(),
+)
     return map_exponents(-, m1, m2)
 end
-function div_multiple(t::AbstractTerm, m::AbstractMonomial, mt::MA.MutableTrait=MA.IsNotMutable())
-    term(_copy(coefficient(t), mt), div_multiple(monomial(t), m))
+function div_multiple(
+    t::AbstractTerm,
+    m::AbstractMonomial,
+    mt::MA.MutableTrait = MA.IsNotMutable(),
+)
+    return term(_copy(coefficient(t), mt), div_multiple(monomial(t), m))
 end
-function div_multiple(t1::AbstractTermLike, t2::AbstractTermLike, m1::MA.MutableTrait=MA.IsNotMutable())
-    term(div_multiple(coefficient(t1), coefficient(t2), m1), div_multiple(monomial(t1), monomial(t2)))
+function div_multiple(
+    t1::AbstractTermLike,
+    t2::AbstractTermLike,
+    m1::MA.MutableTrait = MA.IsNotMutable(),
+)
+    return term(
+        div_multiple(coefficient(t1), coefficient(t2), m1),
+        div_multiple(monomial(t1), monomial(t2)),
+    )
 end
-function right_constant_div_multiple(f::APL, g, mf::MA.MutableTrait=MA.IsNotMutable())
+function right_constant_div_multiple(
+    f::APL,
+    g,
+    mf::MA.MutableTrait = MA.IsNotMutable(),
+)
     if isone(g)
         return _copy(f, mf)
     end
-    return map_coefficients(coef -> div_multiple(coef, g, mf), f, mf; nonzero = true)
+    return map_coefficients(
+        coef -> div_multiple(coef, g, mf),
+        f,
+        mf;
+        nonzero = true,
+    )
 end
-function div_multiple(f::APL, g::AbstractMonomialLike, mf::MA.MutableTrait=MA.IsNotMutable())
+function div_multiple(
+    f::APL,
+    g::AbstractMonomialLike,
+    mf::MA.MutableTrait = MA.IsNotMutable(),
+)
     if isconstant(g)
         return _copy(f, mf)
     end
     return map_exponents(-, f, g, mf)
 end
-function div_multiple(f::APL, g::AbstractTermLike, mf::MA.MutableTrait=MA.IsNotMutable())
+function div_multiple(
+    f::APL,
+    g::AbstractTermLike,
+    mf::MA.MutableTrait = MA.IsNotMutable(),
+)
     f = right_constant_div_multiple(f, coefficient(g), mf)
     return div_multiple(f, monomial(g), MA.IsMutable())
 end
-function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
+function div_multiple(f::APL, g::APL, mf::MA.MutableTrait = MA.IsNotMutable())
     lt = leading_term(g)
     if nterms(g) == 1
         return div_multiple(f, lt, mf)
@@ -106,11 +147,20 @@ function div_multiple(f::APL, g::APL, mf::MA.MutableTrait=MA.IsNotMutable())
     return q
 end
 
-Base.div(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[1]
-Base.rem(f::APL, g::Union{APL, AbstractVector{<:APL}}; kwargs...) = divrem(f, g; kwargs...)[2]
+function Base.div(f::APL, g::Union{APL,AbstractVector{<:APL}}; kwargs...)
+    return divrem(f, g; kwargs...)[1]
+end
+function Base.rem(f::APL, g::Union{APL,AbstractVector{<:APL}}; kwargs...)
+    return divrem(f, g; kwargs...)[2]
+end
 
 function pseudo_divrem(f::APL{S}, g::APL{T}, algo) where {S,T}
-    return _pseudo_divrem(algebraic_structure(MA.promote_operation(-, S, T)), f, g, algo)
+    return _pseudo_divrem(
+        algebraic_structure(MA.promote_operation(-, S, T)),
+        f,
+        g,
+        algo,
+    )
 end
 
 function _pseudo_divrem(::Field, f::APL, g::APL, algo)
@@ -130,7 +180,9 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
         qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
         # Check with `::` that we don't have any type unstability on this variable.
-        return convert(typeof(f), st), convert(typeof(f), qt), (new_f - new_g)::typeof(f)
+        return convert(typeof(f), st),
+        convert(typeof(f), qt),
+        (new_f - new_g)::typeof(f)
     end
 end
 
@@ -172,11 +224,22 @@ function _prepare_s_poly!(::typeof(rem), ::APL, ltf, ltg)
     return div_multiple(ltf, ltg)
 end
 
-function MA.operate!(op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
+function MA.operate!(
+    op::Union{typeof(rem),typeof(pseudo_rem)},
+    f::APL,
+    g::APL,
+    algo,
+)
     return MA.buffered_operate!(nothing, op, f, g, algo)
 end
 
-function MA.buffered_operate!(buffer, op::Union{typeof(rem), typeof(pseudo_rem)}, f::APL, g::APL, algo)
+function MA.buffered_operate!(
+    buffer,
+    op::Union{typeof(rem),typeof(pseudo_rem)},
+    f::APL,
+    g::APL,
+    algo,
+)
     ltg = leading_term(g)
     ltf = leading_term(f)
     MA.operate!(remove_leading_term, g)
@@ -227,16 +290,48 @@ end
 _op(::Field) = rem
 _op(::UFD) = pseudo_rem
 
-function MA.operate!(::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return MA.operate!(_op(algebraic_structure(MA.promote_operation(-, S, T))), f, g, algo)
+function MA.operate!(
+    ::typeof(rem_or_pseudo_rem),
+    f::APL{S},
+    g::APL{T},
+    algo,
+) where {S,T}
+    return MA.operate!(
+        _op(algebraic_structure(MA.promote_operation(-, S, T))),
+        f,
+        g,
+        algo,
+    )
 end
 
-function MA.buffered_operate!(buffer, ::typeof(rem_or_pseudo_rem), f::APL{S}, g::APL{T}, algo) where {S,T}
-    return MA.buffered_operate!(buffer, _op(algebraic_structure(MA.promote_operation(-, S, T))), f, g, algo)
+function MA.buffered_operate!(
+    buffer,
+    ::typeof(rem_or_pseudo_rem),
+    f::APL{S},
+    g::APL{T},
+    algo,
+) where {S,T}
+    return MA.buffered_operate!(
+        buffer,
+        _op(algebraic_structure(MA.promote_operation(-, S, T))),
+        f,
+        g,
+        algo,
+    )
 end
 
-function MA.buffer_for(::typeof(rem_or_pseudo_rem), F::Type{<:APL{S}}, G::Type{<:APL{T}}, A::Type) where {S,T}
-    MA.buffer_for(_op(algebraic_structure(MA.promote_operation(-, S, T))), F, G, A)
+function MA.buffer_for(
+    ::typeof(rem_or_pseudo_rem),
+    F::Type{<:APL{S}},
+    G::Type{<:APL{T}},
+    A::Type,
+) where {S,T}
+    return MA.buffer_for(
+        _op(algebraic_structure(MA.promote_operation(-, S, T))),
+        F,
+        G,
+        A,
+    )
 end
 
 function MA.promote_operation(
@@ -245,7 +340,12 @@ function MA.promote_operation(
     ::Type{Q},
     ::Type{A},
 ) where {T,S,P<:APL{T},Q<:APL{S},A}
-    return _promote_operation_rem_or_pseudo_rem(algebraic_structure(MA.promote_operation(-, S, T)), P, Q, A)
+    return _promote_operation_rem_or_pseudo_rem(
+        algebraic_structure(MA.promote_operation(-, S, T)),
+        P,
+        Q,
+        A,
+    )
 end
 function _promote_operation_rem_or_pseudo_rem(
     ::Field,
@@ -264,16 +364,28 @@ function _promote_operation_rem_or_pseudo_rem(
     return MA.promote_operation(pseudo_rem, P, Q, A)
 end
 
-function MA.promote_operation(::typeof(rem), ::Type{P}, ::Type{Q}, ::Type{A}) where {P<:APL,Q<:APL,A}
+function MA.promote_operation(
+    ::typeof(rem),
+    ::Type{P},
+    ::Type{Q},
+    ::Type{A},
+) where {P<:APL,Q<:APL,A}
     return MA.promote_operation(rem, P, Q)
 end
-function MA.promote_operation(::Union{typeof(div), typeof(rem)}, ::Type{P}, ::Type{Q}) where {T,S,P<:APL{T},Q<:APL{S}}
+function MA.promote_operation(
+    ::Union{typeof(div),typeof(rem)},
+    ::Type{P},
+    ::Type{Q},
+) where {T,S,P<:APL{T},Q<:APL{S}}
     U = MA.promote_operation(/, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
-function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
-    rf = convert(MA.promote_operation(div, typeof(f), typeof(g)), MA.copy_if_mutable(f))
+function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T,S}
+    rf = convert(
+        MA.promote_operation(div, typeof(f), typeof(g)),
+        MA.copy_if_mutable(f),
+    )
     q = zero(rf)
     r = zero(rf)
     lt = leading_term(g)
@@ -298,10 +410,17 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T, S}
             rf = MA.operate!!(remove_leading_term, rf)
         end
     end
-    q, r
+    return q, r
 end
-function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T, S}
-    rf = convert(MA.promote_operation(div, typeof(f), eltype(g)), MA.copy_if_mutable(f))
+function Base.divrem(
+    f::APL{T},
+    g::AbstractVector{<:APL{S}};
+    kwargs...,
+) where {T,S}
+    rf = convert(
+        MA.promote_operation(div, typeof(f), eltype(g)),
+        MA.copy_if_mutable(f),
+    )
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
@@ -342,5 +461,5 @@ function Base.divrem(f::APL{T}, g::AbstractVector{<:APL{S}}; kwargs...) where {T
             end
         end
     end
-    q, r
+    return q, r
 end

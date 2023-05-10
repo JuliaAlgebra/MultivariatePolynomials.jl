@@ -7,15 +7,17 @@
     @test 1.0 / x isa RationalPoly
     @inferred 1 / x
     @inferred 1.0 / x
-    @test eltype([2.0x / x^2, (x+x) / (1 + 2x^2)]) <: RationalPoly
-    @test 2 * (1/x * (1-x)) + (1/x * x) * (1/x^2 * x^2) - (1-x)/x == (1-x)/x + 1
-    @test (1/x + 1/x) / 2 == ((1 / (x^2 - 1) + (x+1)) - (x+1)) * ((x^2 - 1) / x)
+    @test eltype([2.0x / x^2, (x + x) / (1 + 2x^2)]) <: RationalPoly
+    @test 2 * (1 / x * (1 - x)) + (1 / x * x) * (1 / x^2 * x^2) - (1 - x) / x ==
+          (1 - x) / x + 1
+    @test (1 / x + 1 / x) / 2 ==
+          ((1 / (x^2 - 1) + (x + 1)) - (x + 1)) * ((x^2 - 1) / x)
     @test (x / (x + 1)) / (x - 1) == (x / (x - 1)) / (x + 1)
     #@test typeof(zero(1/x)) == Term{true, Int}
-    @test iszero(zero(1/x))
-    @test zero(1/x) == 0
-    @test one(1/x) == 1
-    @test oneunit(1/x^2) == 1
+    @test iszero(zero(1 / x))
+    @test zero(1 / x) == 0
+    @test one(1 / x) == 1
+    @test oneunit(1 / x^2) == 1
     #@test typeof(zero(RationalPoly{true, Float64, Int})) == Polynomial{true, Float64}
     #@test iszero(zero(RationalPoly{true, Float64, Int}))
     #@test typeof(x / 2) == Term{true, Float64}
@@ -28,9 +30,9 @@
     @test denominator(x / x^2) == x^2
     @test inv(x / x^2) == x
     @test x / x^2 == inv(x)
-    @test isone(((x+1) / (x-1)) / ((x+1) / (x-1)))
-    @test ((x+1)^2 / (x-1)) / ((x+1) / (x-1)) == x+1
-    poly = (x+1)/(x+2.0)
+    @test isone(((x + 1) / (x - 1)) / ((x + 1) / (x - 1)))
+    @test ((x + 1)^2 / (x - 1)) / ((x + 1) / (x - 1)) == x + 1
+    poly = (x + 1) / (x + 2.0)
     RType = typeof(poly)
     @test RType(true) == one(RType)
     @test RType(false) == zero(RType)

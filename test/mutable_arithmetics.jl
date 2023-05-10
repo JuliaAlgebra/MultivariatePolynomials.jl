@@ -89,9 +89,13 @@ end
 end
 
 @testset "MutableArithmetics with terms in $T" for T in [Int, BigInt]
-    if MA.mutability(T) isa MA.IsMutable && MA.mutability(typeof(x * y)) isa MA.IsMutable
+    if MA.mutability(T) isa MA.IsMutable &&
+       MA.mutability(typeof(x * y)) isa MA.IsMutable
         @testset "Int" begin
-            MA.Test.int_test(term_type(x, T), exclude = ["int_add", "int_add_mul", "int_zero"])
+            MA.Test.int_test(
+                term_type(x, T),
+                exclude = ["int_add", "int_add_mul", "int_zero"],
+            )
         end
     end
     a = T(2) * x^2
