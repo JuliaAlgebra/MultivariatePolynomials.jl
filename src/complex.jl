@@ -111,7 +111,7 @@ function iscomplex(p::AbstractPolynomialLike)
     end
     return false
 end
-MP.iscomplex(p::AbstractVector{<:AbstractMonomial}) = any(iscomplex, p)
+iscomplex(p::AbstractVector{<:AbstractMonomial}) = any(iscomplex, p)
 
 Base.conj(x::M) where {M<:AbstractMonomial} = isreal(x) ? x :
     convert(M, reduce(*, conj(var)^exp for (var, exp) in zip(variables(x), exponents(x)); init=constantmonomial(x)))
