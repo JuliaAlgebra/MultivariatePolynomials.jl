@@ -190,7 +190,7 @@ function mult_test(expected, a::Number, b, algo)
         a,
         b,
         algo,
-        promote_type(typeof(a), MP.coefficienttype(b)),
+        promote_type(typeof(a), MP.coefficient_type(b)),
     )
 end
 function mult_test(expected, a, b::Number, algo)
@@ -199,7 +199,7 @@ function mult_test(expected, a, b::Number, algo)
         a,
         b,
         algo,
-        promote_type(MP.coefficienttype(a), typeof(b)),
+        promote_type(MP.coefficient_type(a), typeof(b)),
     )
 end
 function sym_test(a, b, g, algo)
