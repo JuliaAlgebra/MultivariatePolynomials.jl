@@ -241,7 +241,7 @@ function MA.promote_operation(
 ) where {S,T}
     UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
     U = MA.promote_operation(*, S, T)
-    return term_type(UT, MA.promote_operation(*, U, coefficient_type(UT)))
+    return promote_operation_constant(*, U, UT)
 end
 function MA.promote_operation(
     ::typeof(*),
@@ -250,19 +250,37 @@ function MA.promote_operation(
 ) where {S,T}
     UP = MA.promote_operation(*, monomial_type(PT), monomial_type(QT))
     U = MA.promote_sum_mul(S, T)
-    return polynomial_type(UP, MA.promote_operation(*, U, coefficient_type(UP)))
+    return polynomial_type(promote_operation_constant(*, U, UP))
 end
-function MA.promote_operation(
+
+function promote_operation_constant(
+    ::typeof(*),
+    ::Type{T},
+    ::Type{M},
+) where {T,M<:AbstractMonomialLike}
+    return term_type(M, T)
+end
+
+function promote_operation_constant(
     ::typeof(*),
     ::Type{T},
     ::Type{P},
 ) where {T,U,P<:APL{U}}
     return similar_type(P, MA.promote_operation(*, T, U))
 end
+
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{T},
+    ::Type{P},
+) where {T,P<:APL}
+    return promote_operation_constant(*, T, P)
+end
+
 function MA.promote_operation(
     ::typeof(*),
     ::Type{P},
     ::Type{T},
-) where {T,U,P<:APL{U}}
-    return similar_type(P, MA.promote_operation(*, U, T))
+) where {T,P<:APL}
+    return promote_operation_constant(*, T, P)
 end
