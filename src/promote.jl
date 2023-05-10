@@ -263,12 +263,28 @@ end
 
 function promote_operation_constant(
     ::typeof(*),
+    ::Type{M},
+    ::Type{T},
+) where {T,M<:AbstractMonomialLike}
+    return term_type(M, T)
+end
+
+function promote_operation_constant(
+    ::typeof(*),
     ::Type{T},
     ::Type{P},
 ) where {T,U,P<:APL{U}}
     return similar_type(P, MA.promote_operation(*, T, U))
 end
 
+function promote_operation_constant(
+    ::typeof(*),
+    ::Type{P},
+    ::Type{T},
+) where {T,U,P<:APL{U}}
+    return similar_type(P, MA.promote_operation(*, U, T))
+end
+
 function MA.promote_operation(
     ::typeof(*),
     ::Type{T},
@@ -282,5 +298,5 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{T},
 ) where {T,P<:APL}
-    return promote_operation_constant(*, T, P)
+    return promote_operation_constant(*, P, T)
 end
