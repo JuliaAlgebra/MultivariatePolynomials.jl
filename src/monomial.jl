@@ -1,4 +1,11 @@
-export variables, nvariables, exponents, degree, isconstant, powers, constant_monomial, map_exponents
+export variables,
+    nvariables,
+    exponents,
+    degree,
+    isconstant,
+    powers,
+    constant_monomial,
+    map_exponents
 
 """
     monomial_type(p::AbstractPolynomialLike)
@@ -9,9 +16,15 @@ Return the type of the monomials of `p`.
 
 Returns the type of the monomials of a polynomial of type `PT`.
 """
-monomial_type(::Union{M, Type{M}}) where M<:AbstractMonomial = M
-monomial_type(::Union{PT, Type{PT}}) where PT <: APL = monomial_type(term_type(PT))
-monomial_type(::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where PT <: APL = monomial_type(PT)
+monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
+function monomial_type(::Union{PT,Type{PT}}) where {PT<:APL}
+    return monomial_type(term_type(PT))
+end
+function monomial_type(
+    ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
+) where {PT<:APL}
+    return monomial_type(PT)
+end
 
 """
     variables(p::AbstractPolynomialLike)
@@ -26,7 +39,11 @@ For instance, `variables([x^2*y, y*z][1])` is usually `(x, y, z)` since the two 
 """
 function variables end
 variables(t::AbstractTerm) = variables(monomial(t))
-variables(::Type{PT}) where {PT<:Union{AbstractPolynomial,AbstractTerm}} = variables(monomial_type(PT))
+function variables(
+    ::Type{PT},
+) where {PT<:Union{AbstractPolynomial,AbstractTerm}}
+    return variables(monomial_type(PT))
+end
 
 """
     nvariables(p::AbstractPolynomialLike)
@@ -37,7 +54,7 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
-nvariables(::Union{AbstractVariable, Type{<:AbstractVariable}}) = 1
+nvariables(::Union{AbstractVariable,Type{<:AbstractVariable}}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
 nvariables(p::APL) = length(variables(p))
@@ -118,9 +135,11 @@ Returns a constant monomial of the monomial type of a polynomial of type `PT`.
 """
 function constant_monomial end
 function constant_monomial(::Type{MT}) where {MT<:AbstractMonomial}
-    error("`constant_monomial` not implemented for $MT.")
+    return error("`constant_monomial` not implemented for $MT.")
 end
-constant_monomial(::Type{PT}) where {PT<:APL} = constant_monomial(monomial_type(PT))
+function constant_monomial(::Type{PT}) where {PT<:APL}
+    return constant_monomial(monomial_type(PT))
+end
 constant_monomial(t::AbstractTerm) = constant_monomial(monomial(t))
 
 """
@@ -132,7 +151,9 @@ If ``m_1 = \\prod x^{\\alpha_i}`` and ``m_2 = \\prod x^{\\beta_i}`` then it retu
 
 The multiplication `m1 * m2` is equivalent to `map_exponents(+, m1, m2)`, the unsafe division `div_multiple(m1, m2)` is equivalent to `map_exponents(-, m1, m2)`, `gcd(m1, m2)` is equivalent to `map_exponents(min, m1, m2)`, `lcm(m1, m2)` is equivalent to `map_exponents(max, m1, m2)`.
 """
-map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike) = map_exponents(f, monomial(m1), monomial(m2))
+function map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+    return map_exponents(f, monomial(m1), monomial(m2))
+end
 
 function map_exponents_to! end
 function map_exponents! end
@@ -142,7 +163,9 @@ map_exponents(f, a, b, ::MA.IsNotMutable) = map_exponents(f, a, b)
 
 Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constant_monomial(TT)
 Base.one(t::AbstractMonomialLike) = constant_monomial(t)
-MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike}) = monomial_type(MT)
+function MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike})
+    return monomial_type(MT)
+end
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).
 # This tries to convert a monomial to a variable which does not work.
@@ -150,4 +173,4 @@ MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike}) = monomial
 # using the variable type. The best we can do is return a monomial even
 # if it does not exactly match the definition of oneunit.
 Base.oneunit(v::AbstractVariable) = one(v)
-Base.oneunit(VT::Type{<: AbstractVariable}) = one(VT)
+Base.oneunit(VT::Type{<:AbstractVariable}) = one(VT)

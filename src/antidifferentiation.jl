@@ -28,16 +28,24 @@ function antidifferentiate end
 
 # Fallback for everything else
 antidifferentiate(α::T, v::AbstractVariable) where {T} = α * v
-antidifferentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 // 2 * v1 * v2 : v1 * v2
-antidifferentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * antidifferentiate(monomial(t), v)
-antidifferentiate(p::APL, v::AbstractVariable) = polynomial!(antidifferentiate.(terms(p), v), SortedState())
+function antidifferentiate(v1::AbstractVariable, v2::AbstractVariable)
+    return v1 == v2 ? 1 // 2 * v1 * v2 : v1 * v2
+end
+function antidifferentiate(t::AbstractTermLike, v::AbstractVariable)
+    return coefficient(t) * antidifferentiate(monomial(t), v)
+end
+function antidifferentiate(p::APL, v::AbstractVariable)
+    return polynomial!(antidifferentiate.(terms(p), v), SortedState())
+end
 
 # TODO: this signature is probably too wide and creates the potential
 # for stack overflows
 antidifferentiate(p::APL, xs) = [antidifferentiate(p, x) for x in xs]
 
 # antidifferentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
-antidifferentiate(p::APL, m::AbstractMonomial) = antidifferentiate(p, variable(m))
+function antidifferentiate(p::APL, m::AbstractMonomial)
+    return antidifferentiate(p, variable(m))
+end
 
 # The `R` argument indicates a desired result type. We use this in order
 # to attempt to preserve type-stability even though the value of `deg` cannot
@@ -55,11 +63,27 @@ function (_antidifferentiate_recursive(p, x, deg::Int, ::Type{R})::R) where {R}
     end
 end
 
-antidifferentiate(p, x, deg::Int) = _antidifferentiate_recursive(p, x, deg, Base.promote_op(antidifferentiate, typeof(p), typeof(x)))
-antidifferentiate(p::AbstractArray, x, deg::Int) = _antidifferentiate_recursive(p, x, deg, Any)
-antidifferentiate(p, x::Union{AbstractArray,Tuple}, deg::Int) = _antidifferentiate_recursive(p, x, deg, Any)
-antidifferentiate(p::AbstractArray, x::Union{AbstractArray,Tuple}, deg::Int) = _antidifferentiate_recursive(p, x, deg, Any)
-
+function antidifferentiate(p, x, deg::Int)
+    return _antidifferentiate_recursive(
+        p,
+        x,
+        deg,
+        Base.promote_op(antidifferentiate, typeof(p), typeof(x)),
+    )
+end
+function antidifferentiate(p::AbstractArray, x, deg::Int)
+    return _antidifferentiate_recursive(p, x, deg, Any)
+end
+function antidifferentiate(p, x::Union{AbstractArray,Tuple}, deg::Int)
+    return _antidifferentiate_recursive(p, x, deg, Any)
+end
+function antidifferentiate(
+    p::AbstractArray,
+    x::Union{AbstractArray,Tuple},
+    deg::Int,
+)
+    return _antidifferentiate_recursive(p, x, deg, Any)
+end
 
 # This is alternative, Val-based interface for nested antidifferentiation.
 # It has the advantage of not requiring an conversion or calls to

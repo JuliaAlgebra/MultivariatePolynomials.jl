@@ -1,4 +1,5 @@
-import MultivariatePolynomials: AbstractVariable, similar_variable, @similar_variable
+import MultivariatePolynomials:
+    AbstractVariable, similar_variable, @similar_variable
 
 @testset "Variable" begin
     @testset "polyvar macro index set" begin

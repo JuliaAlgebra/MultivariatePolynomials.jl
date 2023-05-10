@@ -43,9 +43,9 @@ end
     Mod.@polyvar y[1:7]
     mono = y[1] * y[3] * y[5] * y[7]
     alloc_test(() -> convert(typeof(mono), mono), 0)
-    @test issorted(variables(y[2] * mono), rev=true)
-    @test issorted(variables(mono * y[4]), rev=true)
-    @test issorted(variables(y[6] * mono), rev=true)
+    @test issorted(variables(y[2] * mono), rev = true)
+    @test issorted(variables(mono * y[4]), rev = true)
+    @test issorted(variables(y[6] * mono), rev = true)
 
     @test nvariables(monomial_vector([x^2, prod(y[2:4])])) == 4
 
@@ -57,7 +57,7 @@ end
     @test degree(x * y[2]^2, y[2]) == 2
 
     @test_throws InexactError variable(x^2)
-    @test_throws InexactError variable(x*y[1])
+    @test_throws InexactError variable(x * y[1])
     @test_throws InexactError variable(constant_monomial(typeof(x)))
 
     @test x != constant_monomial(typeof(x))
@@ -81,7 +81,7 @@ end
 
     @test monic(x^2) == x^2
 
-    @test MP.div_multiple(2x^2*y[1]^3, x*y[1]^2) == 2x*y[1]
+    @test MP.div_multiple(2x^2 * y[1]^3, x * y[1]^2) == 2x * y[1]
 
     @test transpose(x) == x
     @test adjoint(x) == x

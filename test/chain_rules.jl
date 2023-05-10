@@ -39,7 +39,7 @@ end
 
     output, pullback = ChainRulesCore.rrule(differentiate, p, x)
     @test output == 1.1
-    @test pullback(q) == (NoTangent(), (-0.2 + 2im) * x^2 - x*y, NoTangent())
+    @test pullback(q) == (NoTangent(), (-0.2 + 2im) * x^2 - x * y, NoTangent())
     @test pullback(1x) == (NoTangent(), 2x^2, NoTangent())
 
     test_chain_rule(dot, +, (p,), (q,), p)
@@ -63,11 +63,26 @@ end
         monos = monomials(p + q)
         return dot(coefficient.(p, monos), coefficient.(q, monos))
     end
-    function _dot(px::Tuple{<:AbstractPolynomial,NoTangent}, qx::Tuple{<:AbstractPolynomial,NoTangent})
+    function _dot(
+        px::Tuple{<:AbstractPolynomial,NoTangent},
+        qx::Tuple{<:AbstractPolynomial,NoTangent},
+    )
         return _dot(px[1], qx[1])
     end
     test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), p)
-    test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), differentiate(p, x))
-    test_chain_rule(_dot, differentiate, (p, x), (q, NoTangent()), differentiate(q, x))
+    test_chain_rule(
+        _dot,
+        differentiate,
+        (p, x),
+        (q, NoTangent()),
+        differentiate(p, x),
+    )
+    test_chain_rule(
+        _dot,
+        differentiate,
+        (p, x),
+        (q, NoTangent()),
+        differentiate(q, x),
+    )
     test_chain_rule(_dot, differentiate, (p, x), (p * q, NoTangent()), p)
 end

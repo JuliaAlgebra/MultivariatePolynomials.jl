@@ -62,10 +62,19 @@ end
     @test collect(exponents(X[3])) == [1, 0, 0]
     @test collect(exponents(X[2])) == [0, 1, 0]
     @test collect(exponents(X[1])) == [0, 0, 0]
-    X0 = [x^3, x^2*y, x*y^2, x*y*x, y^3, y^2*x, y*x^2, y*x*y]
+    X0 = [x^3, x^2 * y, x * y^2, x * y * x, y^3, y^2 * x, y * x^2, y * x * y]
     X1 = monomials([x, y], 3)
     X2 = monomial_vector(X0)
-    Z = reverse([[3,0,0,0],[2,1,0,0],[1,2,0,0],[1,1,1,0],[0,3,0,0],[0,2,1,0],[0,1,2,0],[0,1,1,1]])
+    Z = reverse([
+        [3, 0, 0, 0],
+        [2, 1, 0, 0],
+        [1, 2, 0, 0],
+        [1, 1, 1, 0],
+        [0, 3, 0, 0],
+        [0, 2, 1, 0],
+        [0, 1, 2, 0],
+        [0, 1, 1, 1],
+    ])
     @test X1 isa AbstractVector{<:AbstractMonomial}
     @test X2 isa AbstractVector{<:AbstractMonomial}
     @test length(X1) == length(X2) == length(Z)

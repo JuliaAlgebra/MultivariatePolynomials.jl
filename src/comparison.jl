@@ -109,35 +109,63 @@ end
 #    end
 #    return true
 #end
-Base.:(==)(p1::AbstractPolynomial, p2::AbstractPolynomial) = compare_terms(p1, p2, iszero, ==)
+function Base.:(==)(p1::AbstractPolynomial, p2::AbstractPolynomial)
+    return compare_terms(p1, p2, iszero, ==)
+end
 
-Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num*q.den == q.num*p.den
+Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num * q.den == q.num * p.den
 # Solve ambiguity with (::PolyType, ::Any)
-Base.:(==)(p::APL, q::RationalPoly) = p*q.den == q.num
+Base.:(==)(p::APL, q::RationalPoly) = p * q.den == q.num
 Base.:(==)(q::RationalPoly, p::APL) = p == q
-Base.:(==)(α, q::RationalPoly) = α*q.den == q.num
+Base.:(==)(α, q::RationalPoly) = α * q.den == q.num
 Base.:(==)(q::RationalPoly, α) = α == q
 
 # α could be a JuMP affine expression
-isapproxzero(α; ztol::Real=0.) = false
-function isapproxzero(α::Number; ztol::Real=Base.rtoldefault(α, α, 0))
-    abs(α) <= ztol
+isapproxzero(α; ztol::Real = 0.0) = false
+function isapproxzero(α::Number; ztol::Real = Base.rtoldefault(α, α, 0))
+    return abs(α) <= ztol
 end
 
 isapproxzero(m::AbstractMonomialLike; kwargs...) = false
-isapproxzero(t::AbstractTermLike; kwargs...) = isapproxzero(coefficient(t); kwargs...)
-isapproxzero(p::APL; kwargs...) = all(term -> isapproxzero(term; kwargs...), terms(p))
+function isapproxzero(t::AbstractTermLike; kwargs...)
+    return isapproxzero(coefficient(t); kwargs...)
+end
+function isapproxzero(p::APL; kwargs...)
+    return all(term -> isapproxzero(term; kwargs...), terms(p))
+end
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
-Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...) = isapprox(coefficient(t1), coefficient(t2); kwargs...) && monomial(t1) == monomial(t2)
-function Base.isapprox(p1::AbstractPolynomial{S}, p2::AbstractPolynomial{T};
-                       atol=0, ztol::Real=iszero(atol) ? Base.rtoldefault(S, T, 0) : atol, kwargs...) where {S, T}
-    return compare_terms(p1, p2, t -> isapproxzero(t; ztol=ztol),
-                         (x, y) -> isapprox(x, y; atol=atol, kwargs...))
+function Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...)
+    return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
+           monomial(t1) == monomial(t2)
+end
+function Base.isapprox(
+    p1::AbstractPolynomial{S},
+    p2::AbstractPolynomial{T};
+    atol = 0,
+    ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
+    kwargs...,
+) where {S,T}
+    return compare_terms(
+        p1,
+        p2,
+        t -> isapproxzero(t; ztol = ztol),
+        (x, y) -> isapprox(x, y; atol = atol, kwargs...),
+    )
 end
 
-Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...) = isapprox(p.num*q.den, q.num*p.den; kwargs...)
-Base.isapprox(p::RationalPoly, q::APL; kwargs...) = isapprox(p.num, q*p.den; kwargs...)
-Base.isapprox(p::APL, q::RationalPoly; kwargs...) = isapprox(p*q.den, q.num; kwargs...)
-Base.isapprox(q::RationalPoly{C}, α; kwargs...) where {C} = isapprox(q, constant_term(α, q.den); kwargs...)
-Base.isapprox(α, q::RationalPoly{C}; kwargs...) where {C} = isapprox(constant_term(α, q.den), q; kwargs...)
+function Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...)
+    return isapprox(p.num * q.den, q.num * p.den; kwargs...)
+end
+function Base.isapprox(p::RationalPoly, q::APL; kwargs...)
+    return isapprox(p.num, q * p.den; kwargs...)
+end
+function Base.isapprox(p::APL, q::RationalPoly; kwargs...)
+    return isapprox(p * q.den, q.num; kwargs...)
+end
+function Base.isapprox(q::RationalPoly{C}, α; kwargs...) where {C}
+    return isapprox(q, constant_term(α, q.den); kwargs...)
+end
+function Base.isapprox(α, q::RationalPoly{C}; kwargs...) where {C}
+    return isapprox(constant_term(α, q.den), q; kwargs...)
+end

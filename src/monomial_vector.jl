@@ -1,6 +1,12 @@
-export monomial_vector, monomial_vector_type, empty_monomial_vector, sort_monomial_vector, merge_monomial_vectors
+export monomial_vector,
+    monomial_vector_type,
+    empty_monomial_vector,
+    sort_monomial_vector,
+    merge_monomial_vectors
 
-monomials(v::AbstractVariable, degree, args...) = monomials((v,), degree, args...)
+function monomials(v::AbstractVariable, degree, args...)
+    return monomials((v,), degree, args...)
+end
 
 """
     empty_monomial_vector(p::AbstractPolynomialLike)
@@ -22,9 +28,11 @@ function monomial_vector(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
     Y = sort(X)
     dups = findall(i -> Y[i] == Y[i-1], 2:length(Y))
     deleteat!(Y, dups)
-    Y
+    return Y
 end
-monomial_vector(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = monomial_vector(AbstractVector{monomial_type(TT)}(X))
+function monomial_vector(X::AbstractVector{TT}) where {TT<:AbstractTermLike}
+    return monomial_vector(AbstractVector{monomial_type(TT)}(X))
+end
 
 """
     monomial_vector(a, X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
@@ -40,7 +48,9 @@ Calling `monomial_vector` on ``[2, 1, 4, 3, -1], [xy, x, xy, x^2y, x]`` should r
 """
 function monomial_vector(a, x)
     if length(a) != length(x)
-        throw(ArgumentError("There should be as many coefficient than monomials"))
+        throw(
+            ArgumentError("There should be as many coefficient than monomials"),
+        )
     end
     σ, X = sort_monomial_vector(x)
     b = a[σ]
@@ -61,8 +71,14 @@ end
 
 Returns the return type of `monomial_vector`.
 """
-monomial_vector_type(X::Union{AbstractVector{PT}, Type{<:AbstractVector{PT}}}) where {PT<:APL} = monomial_vector_type(PT)
-monomial_vector_type(::Union{PT, Type{PT}}) where {PT <: APL} = Vector{monomial_type(PT)}
+function monomial_vector_type(
+    X::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
+) where {PT<:APL}
+    return monomial_vector_type(PT)
+end
+function monomial_vector_type(::Union{PT,Type{PT}}) where {PT<:APL}
+    return Vector{monomial_type(PT)}
+end
 
 # If there are duplicates in X, the coefficients should be summed for a polynomial and they should be equal for a measure.
 """
@@ -74,13 +90,19 @@ Returns `σ`, the orders in which one must take the monomials in `X` to make the
 
 Calling `sort_monomial_vector` on ``[xy, x, xy, x^2y, x]`` should return ``([4, 1, 2], [x^2y, xy, x])``.
 """
-function sort_monomial_vector(X::AbstractVector{MT}) where {MT<:AbstractMonomial}
+function sort_monomial_vector(
+    X::AbstractVector{MT},
+) where {MT<:AbstractMonomial}
     σ = sortperm(X)
     dups = findall(i -> X[σ[i]] == X[σ[i-1]], 2:length(σ))
     deleteat!(σ, dups)
-    σ, X[σ]
+    return σ, X[σ]
 end
-sort_monomial_vector(X::AbstractVector{TT}) where {TT<:AbstractTermLike} = sort_monomial_vector(AbstractVector{monomial_type(TT)}(X))
+function sort_monomial_vector(
+    X::AbstractVector{TT},
+) where {TT<:AbstractTermLike}
+    return sort_monomial_vector(AbstractVector{monomial_type(TT)}(X))
+end
 sort_monomial_vector(X::Tuple) = sort_monomial_vector(vec(X))
 
 """
