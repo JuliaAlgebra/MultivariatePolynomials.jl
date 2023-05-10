@@ -114,7 +114,7 @@ end
 iscomplex(p::AbstractVector{<:AbstractMonomial}) = any(iscomplex, p)
 
 Base.conj(x::M) where {M<:AbstractMonomial} = isreal(x) ? x :
-    convert(M, reduce(*, conj(var)^exp for (var, exp) in zip(variables(x), exponents(x)); init=constantmonomial(x)))
+    convert(M, reduce(*, conj(var)^exp for (var, exp) in powers(x); init=constantmonomial(x)))
 Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}} = isreal(x) ? x : monovec(conj.(x))
 Base.conj(x::T) where {T<:AbstractTerm} = isreal(x) ? x : convert(T, conj(coefficient(x)) * conj(monomial(x)))
 Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) || isreal(x) ? x : convert(P, sum(conj(t) for t in x))
