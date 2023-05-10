@@ -1,3 +1,11 @@
+"""
+    struct Polynomial{CoeffType,T<:AbstractTerm{CoeffType},V<:AbstractVector{T}} <: AbstractPolynomial{CoeffType}
+        terms::V
+    end
+
+Representation of a multivariate polynomial as a vector of nonzero terms sorted
+in ascending monomial order.
+"""
 struct Polynomial{CoeffType,T<:AbstractTerm{CoeffType},V<:AbstractVector{T}} <:
        AbstractPolynomial{CoeffType}
     terms::V
@@ -7,8 +15,16 @@ struct Polynomial{CoeffType,T<:AbstractTerm{CoeffType},V<:AbstractVector{T}} <:
     end
 end
 
+# It shouldn't be needed to call this. A polynomial should always be in
+# canonical format so it is only called inside an internal call.
+function _canonicalize!(p::Polynomial)
+    sort!(p.terms)
+    uniqterms!(p.terms)
+    return
+end
+
 function coefficients(p::Polynomial)
-    return LazyMap{coefficienttype(p)}(coefficient, terms(p))
+    return LazyMap{coefficient_type(p)}(coefficient, terms(p))
 end
 function monomials(p::Polynomial)
     return LazyMap{monomial_type(p)}(monomial, terms(p))
@@ -43,7 +59,7 @@ function Base.convert(
     return convert(Polynomial{C,TT,Vector{TT}}, p)
 end
 function Base.convert(::Type{Polynomial}, p::AbstractPolynomialLike)
-    return convert(Polynomial{coefficienttype(p)}, p)
+    return convert(Polynomial{coefficient_type(p)}, p)
 end
 
 _change_eltype(::Type{<:Vector}, ::Type{T}) where {T} = Vector{T}
@@ -141,6 +157,9 @@ function MA.operate_to!(
             # TODO could use MA.mul_to!! for indices that were presents in `result` before the `resize!`.
             result.terms[i] = p.terms[i] * t
         end
+        if !multiplication_preserves_monomial_order(typeof(result))
+            _canonicalize!(result)
+        end
         return result
     end
 end
@@ -157,6 +176,9 @@ function MA.operate_to!(
         for i in eachindex(p.terms)
             # TODO could use MA.mul_to!! for indices that were presents in `result` before the `resize!`.
             result.terms[i] = t * p.terms[i]
+        end
+        if !multiplication_preserves_monomial_order(typeof(result))
+            _canonicalize!(result)
         end
         return result
     end
@@ -268,7 +290,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(*(monomials(q)[j], monomial.(t)...), monomial(tp))
+            grlex(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -338,12 +360,28 @@ function __polynomial_merge!(
     q::Polynomial,
     buffer = nothing,
 ) where {T,TT}
+    if !multiplication_preserves_monomial_order(typeof(p))
+        # This function assumes that the monomials of `t * q` will preserve the
+        # order of the terms of `q` so if it's not the case, we fallback to
+        # another one.
+        __polynomial_merge!(
+            MA.add_sub_op(op),
+            p,
+            get1,
+            set,
+            push,
+            resize,
+            keep,
+            t * q,
+        )
+        return
+    end
     compare_monomials = let t = t, get1 = get1, q = q
         (tp, j) -> begin
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(monomial(t) * monomials(q)[j], monomial(tp))
+            grlex(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -550,8 +588,7 @@ function MA.operate_to!(
 )
     empty!(output.terms)
     mul_to_terms!(output.terms, p, q)
-    sort!(output.terms, lt = (<))
-    uniqterms!(output.terms)
+    _canonicalize!(output)
     return output
 end
 function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
@@ -566,6 +603,9 @@ end
 function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     for i in eachindex(p.terms)
         p.terms[i] = MA.operate!!(*, p.terms[i], t)
+    end
+    if !multiplication_preserves_monomial_order(typeof(p))
+        _canonicalize!(p)
     end
     return p
 end

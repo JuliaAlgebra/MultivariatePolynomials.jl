@@ -239,20 +239,18 @@ function MA.promote_operation(
     TT::Type{<:AbstractTermLike{S}},
     ST::Type{<:AbstractTermLike{T}},
 ) where {S,T}
+    UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
     U = MA.promote_operation(*, S, T)
-    return term_type(promote_type(monomial_type(TT), monomial_type(ST)), U)
+    return term_type(UT, MA.promote_operation(*, U, coefficient_type(UT)))
 end
 function MA.promote_operation(
     ::typeof(*),
     PT::Type{<:APL{S}},
     QT::Type{<:APL{T}},
 ) where {S,T}
-    ST = MA.promote_operation(*, S, T)
-    U = MA.promote_operation(+, ST, ST)
-    return polynomial_type(
-        promote_type(monomial_type(PT), monomial_type(QT)),
-        U,
-    )
+    UP = MA.promote_operation(*, monomial_type(PT), monomial_type(QT))
+    U = MA.promote_sum_mul(S, T)
+    return polynomial_type(UP, MA.promote_operation(*, U, coefficient_type(UP)))
 end
 function MA.promote_operation(
     ::typeof(*),

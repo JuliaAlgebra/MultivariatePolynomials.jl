@@ -98,7 +98,7 @@ function MA.promote_operation(
     args::Vararg{Type,N},
 ) where {T<:AbstractTerm,N}
     M = MA.promote_operation(substitute, Subs, monomial_type(T), args...)
-    U = coefficienttype(T)
+    U = coefficient_type(T)
     return MA.promote_operation(*, U, M)
 end
 

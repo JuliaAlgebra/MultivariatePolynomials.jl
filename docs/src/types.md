@@ -31,6 +31,7 @@ isconstant
 powers
 constant_monomial
 map_exponents
+multiplication_preserves_monomial_order
 ```
 
 ## Terms
@@ -38,10 +39,11 @@ map_exponents
 ```@docs
 AbstractTermLike
 AbstractTerm
+Term
 term
 term_type
 coefficient
-coefficienttype
+coefficient_type
 monomial
 constant_term
 zero_term
@@ -52,6 +54,7 @@ zero_term
 ```@docs
 AbstractPolynomialLike
 AbstractPolynomial
+Polynomial
 polynomial
 polynomial_type
 terms

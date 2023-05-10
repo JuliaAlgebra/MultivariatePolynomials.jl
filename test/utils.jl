@@ -56,7 +56,7 @@ end
 Base.copy(p::CustomTerms) = CustomTerms(copy(p.p))
 
 function _typetests(x, ::Type{T}) where {T}
-    @test (@inferred coefficienttype(x)) == Int
+    @test (@inferred coefficient_type(x)) == Int
 
     @test (@inferred monomial_type(x)) <: AbstractMonomial
 
