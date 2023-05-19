@@ -1,12 +1,30 @@
-struct Term{CoeffType, M <: AbstractMonomial} <: AbstractTerm{CoeffType}
+"""
+    struct Term{CoeffType,M<:AbstractMonomial} <: AbstractTerm{CoeffType}
+        coefficient::CoeffType
+        monomial::M
+    end
+
+A representation of the multiplication between a `coefficient` and a `monomial`.
+
+!!! note
+    The `coefficient` does not need to be a `Number`. It can be for instance a
+    multivariate polynomial. When computing a multivariate `gcd`, it is
+    actually reformulated as a univariate `gcd` in one of the variable with
+    coefficients being multivariate polynomials in the other variables.
+    To create such a term, use [`term`](@ref) instead of `*`.
+    For instance, if `p` is a polynomial and `m` is a monomial, `p * m` will
+    multiply each term of `p` with `m` but `term(p, m)` will create a term
+    with `p` as coefficient and `m` as monomial.
+"""
+struct Term{CoeffType,M<:AbstractMonomial} <: AbstractTerm{CoeffType}
     coefficient::CoeffType
     monomial::M
 end
 
 coefficient(t::Term) = t.coefficient
 monomial(t::Term) = t.monomial
-termtype(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
-monomialtype(::Type{<:Term{C,M}}) where {C,M} = M
+term_type(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
+monomial_type(::Type{<:Term{C,M}}) where {C,M} = M
 function Base.copy(t::Term)
     return Term(copy(t.coefficient), copy(t.monomial))
 end
@@ -15,24 +33,54 @@ end
 
 LinearAlgebra.adjoint(t::Term) = Term(adjoint(coefficient(t)), monomial(t))
 
-Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T, M} = Term(one(T), convert(M, m))
-convertconstant(::Type{Term{C,M} where C}, α) where M = convert(Term{typeof(α),M}, α)
-
-Base.promote_rule(::Type{Term{C,M1} where {C}}, M2::Type{<:AbstractMonomialLike}) where {M1} = (Term{C,promote_type(M1, M2)} where {C})
-Base.promote_rule(M1::Type{<:AbstractMonomialLike}, ::Type{Term{C,M2} where {C}}) where {M2} = (Term{C,promote_type(M1, M2)} where {C})
-Base.promote_rule(::Type{Term{C,M1} where {C}}, ::Type{Term{T,M2}}) where {T,M1,M2} = (Term{C,promote_type(M1, M2)} where {C})
-Base.promote_rule(::Type{Term{T,M2}}, ::Type{Term{C,M1} where {C}}) where {T,M1,M2} = (Term{C,promote_type(M1, M2)} where {C})
-promote_rule_constant(::Type{T}, TT::Type{Term{C,M} where C}) where {T, M} = Any
-
-combine(t1::Term, t2::Term) = combine(promote(t1, t2)...)
-combine(t1::T, t2::T) where {T <: Term} = Term(t1.coefficient + t2.coefficient, t1.monomial)
-compare(t1::Term, t2::Term) = monomial(t1) < monomial(t2)
-function MA.promote_operation(::typeof(combine), ::Type{Term{S, M1}}, ::Type{Term{T, M2}}) where {S, T, M1, M2}
-    return Term{MA.promote_operation(+, S, T), promote_type(M1, M2)}
+function Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T,M}
+    return Term(one(T), convert(M, m))
+end
+function convert_constant(::Type{Term{C,M} where C}, α) where {M}
+    return convert(Term{typeof(α),M}, α)
 end
 
-function MA.mutability(::Type{Term{C,T}}) where {C,T}
-    if MA.mutability(C) isa MA.IsMutable && MA.mutability(T) isa MA.IsMutable
+function Base.promote_rule(
+    ::Type{Term{C,M1} where {C}},
+    M2::Type{<:AbstractMonomialLike},
+) where {M1}
+    return (Term{C,promote_type(M1, M2)} where {C})
+end
+function Base.promote_rule(
+    M1::Type{<:AbstractMonomialLike},
+    ::Type{Term{C,M2} where {C}},
+) where {M2}
+    return (Term{C,promote_type(M1, M2)} where {C})
+end
+function Base.promote_rule(
+    ::Type{Term{C,M1} where {C}},
+    ::Type{Term{T,M2}},
+) where {T,M1,M2}
+    return (Term{C,promote_type(M1, M2)} where {C})
+end
+function Base.promote_rule(
+    ::Type{Term{T,M2}},
+    ::Type{Term{C,M1} where {C}},
+) where {T,M1,M2}
+    return (Term{C,promote_type(M1, M2)} where {C})
+end
+promote_rule_constant(::Type{T}, TT::Type{Term{C,M} where C}) where {T,M} = Any
+
+combine(t1::Term, t2::Term) = combine(promote(t1, t2)...)
+function combine(t1::T, t2::T) where {T<:Term}
+    return Term(t1.coefficient + t2.coefficient, t1.monomial)
+end
+compare(t1::Term, t2::Term) = monomial(t1) < monomial(t2)
+function MA.promote_operation(
+    ::typeof(combine),
+    ::Type{Term{S,M1}},
+    ::Type{Term{T,M2}},
+) where {S,T,M1,M2}
+    return Term{MA.promote_operation(+, S, T),promote_type(M1, M2)}
+end
+
+function MA.mutability(::Type{Term{C,M}}) where {C,M}
+    if MA.mutability(C) isa MA.IsMutable && MA.mutability(M) isa MA.IsMutable
         return MA.IsMutable()
     else
         return MA.IsNotMutable()

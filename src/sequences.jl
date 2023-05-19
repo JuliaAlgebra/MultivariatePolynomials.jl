@@ -4,7 +4,14 @@ module Sequences
 import MutableArithmetics
 const MA = MutableArithmetics
 
-function mergesorted!(result, v1::AbstractArray, v2::AbstractArray, isless, combine, filter=x -> !iszero(x))
+function merge_sorted!(
+    result,
+    v1::AbstractArray,
+    v2::AbstractArray,
+    isless,
+    combine,
+    filter = x -> !iszero(x),
+)
     i = 1
     i1 = 1
     i2 = 1
@@ -46,14 +53,19 @@ function mergesorted!(result, v1::AbstractArray, v2::AbstractArray, isless, comb
         end
     end
     resize!(result, i - 1)
-    result
+    return result
 end
 
-function mergesorted(v1::AbstractArray, v2::AbstractArray, isless=Base.isless,
-                     combine=Base.:+, filter=x -> !iszero(x))
+function merge_sorted(
+    v1::AbstractArray,
+    v2::AbstractArray,
+    isless = Base.isless,
+    combine = Base.:+,
+    filter = x -> !iszero(x),
+)
     T = MA.promote_operation(combine, eltype(v1), eltype(v2))
     result = Vector{T}(undef, length(v1) + length(v2))
-    mergesorted!(result, v1, v2, isless, combine, filter)
+    return merge_sorted!(result, v1, v2, isless, combine, filter)
 end
 
 end

@@ -4,10 +4,10 @@ import LinearAlgebra
 
 import DataStructures
 
-import MutableArithmetics
-const MA = MutableArithmetics
+import MutableArithmetics as MA
 
 export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
+
 """
     AbstractPolynomialLike{T}
 
@@ -69,7 +69,7 @@ include("variable.jl")
 include("monomial.jl")
 include("term.jl")
 include("polynomial.jl")
-include("monovec.jl")
+include("monomial_vector.jl")
 include("ordering.jl")
 
 include("rational.jl")
@@ -86,6 +86,7 @@ include("comparison.jl")
 
 include("substitution.jl")
 include("differentiation.jl")
+include("antidifferentiation.jl")
 include("division.jl")
 include("gcd.jl")
 include("det.jl")
@@ -94,5 +95,7 @@ include("chain_rules.jl")
 include("default_term.jl")
 include("sequences.jl")
 include("default_polynomial.jl")
+
+include("deprecate.jl")
 
 end # module

@@ -1,10 +1,10 @@
 @testset "Non-commutative Monomial" begin
     Mod.@ncpolyvar x
-    X_ = constantmonomial(typeof(x))
+    X_ = constant_monomial(typeof(x))
     @test nvariables(X_) == 0
     @test isempty(X_.vars)
     @test isempty(X_.z)
-    X0 = constantmonomial(x)
+    X0 = constant_monomial(x)
     for Y in [x^0, X0]
         @test nvariables(Y) == 1
         @test variables(Y)[1] == x
@@ -38,13 +38,13 @@
 end
 @testset "Non-commutative MonomialVector" begin
     Mod.@ncpolyvar x y
-    X = emptymonovec(typeof(x))
+    X = empty_monomial_vector(typeof(x))
     @test iszero(nvariables(X))
     @test isempty(variables(X))
-    X = emptymonovec(x)
+    X = empty_monomial_vector(x)
     @test nvariables(X) == 1
     @test variables(X)[1] == x
-    X = monovec([y, x])
+    X = monomial_vector([y, x])
     @test X[1] == y
     @test X[2] == x
     # `variables` may return `[x, y, x, y]` if the polynomial has, e.g., the monomial `x * y * x * y`.
@@ -62,10 +62,19 @@ end
     @test collect(exponents(X[3])) == [1, 0, 0]
     @test collect(exponents(X[2])) == [0, 1, 0]
     @test collect(exponents(X[1])) == [0, 0, 0]
-    X0 = [x^3, x^2*y, x*y^2, x*y*x, y^3, y^2*x, y*x^2, y*x*y]
+    X0 = [x^3, x^2 * y, x * y^2, x * y * x, y^3, y^2 * x, y * x^2, y * x * y]
     X1 = monomials([x, y], 3)
-    X2 = monovec(X0)
-    Z = reverse([[3,0,0,0],[2,1,0,0],[1,2,0,0],[1,1,1,0],[0,3,0,0],[0,2,1,0],[0,1,2,0],[0,1,1,1]])
+    X2 = monomial_vector(X0)
+    Z = reverse([
+        [3, 0, 0, 0],
+        [2, 1, 0, 0],
+        [1, 2, 0, 0],
+        [1, 1, 1, 0],
+        [0, 3, 0, 0],
+        [0, 2, 1, 0],
+        [0, 1, 2, 0],
+        [0, 1, 1, 1],
+    ])
     @test X1 isa AbstractVector{<:AbstractMonomial}
     @test X2 isa AbstractVector{<:AbstractMonomial}
     @test length(X1) == length(X2) == length(Z)

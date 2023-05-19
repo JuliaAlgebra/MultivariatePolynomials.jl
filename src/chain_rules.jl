@@ -22,7 +22,9 @@ function ChainRulesCore.frule((_, Δp, _), ::typeof(differentiate), p, x)
     return differentiate(p, x), differentiate(Δp, x)
 end
 function pullback(Δdpdx, x)
-    return ChainRulesCore.NoTangent(), x * differentiate(x * Δdpdx, x), ChainRulesCore.NoTangent()
+    return ChainRulesCore.NoTangent(),
+    x * differentiate(x * Δdpdx, x),
+    ChainRulesCore.NoTangent()
 end
 function ChainRulesCore.rrule(::typeof(differentiate), p, x)
     dpdx = differentiate(p, x)

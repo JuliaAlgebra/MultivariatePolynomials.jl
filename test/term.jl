@@ -1,5 +1,4 @@
-struct CoefNotComparable
-end
+struct CoefNotComparable end
 Base.iszero(::CoefNotComparable) = false
 
 @testset "Term" begin
@@ -14,37 +13,37 @@ Base.iszero(::CoefNotComparable) = false
     #@inferred one(1.0x)
     @inferred zero(1.0x)
 
-    @test !isapproxzero((1+1e-10im)*x^2)
-    @test isapproxzero(1e-10im*x^2)
+    @test !isapproxzero((1 + 1e-10im) * x^2)
+    @test isapproxzero(1e-10im * x^2)
 
     @test monic(2.0x) isa AbstractTerm{Float64}
     @test monic(2.0x) == x
     @test monic(2x^2) isa AbstractTerm{Int}
     @test monic(2x^2) == x^2
 
-    @test leadingterm(2x^2) == 2x^2
+    @test leading_term(2x^2) == 2x^2
     @test nterms(2x^2) == 1
     @test terms(2x^2) == [2x^2]
-    @test nterms(0*x) == 0
-    @test terms(0*x) == typeof(0*x)[]
+    @test nterms(0 * x) == 0
+    @test terms(0 * x) == typeof(0 * x)[]
     @test nterms(0.0x) == 0
     @test terms(0.0x) == typeof(0.0x)[]
 
     @test nterms(polynomial(0.0x)) == 0
-    @test nterms(convert(polynomialtype(0.0x), 0.0x)) == 0
+    @test nterms(convert(polynomial_type(0.0x), 0.0x)) == 0
 
     @test term(x) isa AbstractTerm
     @test term(x^2) == x^2
     @test term(1x^2) isa AbstractTerm
     @test term(1x) == x
-    @test zeroterm(1x) == 0*x
+    @test zero_term(1x) == 0 * x
 
     Mod.@polyvar y
     @test degree(2x^2, x) == 2
     @test degree(2x^2, y) == 0
     @test degree(2x^2, y) == 0
 
-    t = 3x^2*y^4
+    t = 3x^2 * y^4
     alloc_test(() -> convert(typeof(t), t), 0)
     typetests(t)
     typetests([t, 2x])

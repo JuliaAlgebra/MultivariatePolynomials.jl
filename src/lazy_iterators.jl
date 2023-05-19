@@ -32,7 +32,7 @@ Iterator over the elements of `data` mapped by `f`. This is similar to
 `Base.Generator(f, data)` except that the `eltype` of a `LazyMap` is given at
 construction while the `eltype` of `Base.Generator(f, data)` is `Any`.
 """
-struct LazyMap{T,VT,F}
+struct LazyMap{T,VT,F} <: AbstractVector{T}
     f::F
     data::VT
 end
@@ -61,6 +61,7 @@ Base.eltype(::LazyMap{T}) where {T} = T
 Base.getindex(it::LazyMap, i) = it.f(getindex(it.data, i))
 
 Base.eachindex(it::LazyMap) = Base.eachindex(it.data)
+Base.lastindex(it::LazyMap) = Base.lastindex(it.data)
 
 function Iterators.reverse(it::LazyMap{T}) where {T}
     return LazyMap{T}(it.f, Iterators.reverse(it.data))

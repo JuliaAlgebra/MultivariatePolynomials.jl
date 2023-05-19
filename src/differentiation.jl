@@ -33,23 +33,32 @@ differentiate( [x^2+y, z^2+4x], [x, y, z]) # should return [2x 1 0; 4 0 2z]
 function differentiate end
 
 # Fallback for everything else
-differentiate(α::T, v::AbstractVariable) where T = zero(T)
+differentiate(α::T, v::AbstractVariable) where {T} = zero(T)
 differentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 : 0
-differentiate(t::AbstractTermLike, v::AbstractVariable) = coefficient(t) * differentiate(monomial(t), v)
+function differentiate(t::AbstractTermLike, v::AbstractVariable)
+    return coefficient(t) * differentiate(monomial(t), v)
+end
 # The polynomial function will take care of removing the zeros
-differentiate(p::APL, v::AbstractVariable) = polynomial!(differentiate.(terms(p), v), SortedState())
-differentiate(p::RationalPoly, v::AbstractVariable) = (differentiate(p.num, v) * p.den - p.num * differentiate(p.den, v)) / p.den^2
-
-const ARPL = Union{APL, RationalPoly}
-
-function differentiate(ps::AbstractArray{PT}, xs::AbstractArray) where {PT <: ARPL}
-    differentiate.(reshape(ps, (size(ps)..., 1)), reshape(xs, 1, :))
+function differentiate(p::APL, v::AbstractVariable)
+    return polynomial!(differentiate.(terms(p), v), SortedState())
+end
+function differentiate(p::RationalPoly, v::AbstractVariable)
+    return (differentiate(p.num, v) * p.den - p.num * differentiate(p.den, v)) /
+           p.den^2
 end
 
-function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT <: ARPL}
-    differentiate(ps, collect(xs))
+const ARPL = Union{APL,RationalPoly}
+
+function differentiate(
+    ps::AbstractArray{PT},
+    xs::AbstractArray,
+) where {PT<:ARPL}
+    return differentiate.(reshape(ps, (size(ps)..., 1)), reshape(xs, 1, :))
 end
 
+function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT<:ARPL}
+    return differentiate(ps, collect(xs))
+end
 
 # TODO: this signature is probably too wide and creates the potential
 # for stack overflows
@@ -70,15 +79,31 @@ function (_differentiate_recursive(p, x, deg::Int, ::Type{R})::R) where {R}
     elseif deg == 0
         return p
     else
-        return differentiate(differentiate(p, x), x, deg-1)
+        return differentiate(differentiate(p, x), x, deg - 1)
     end
 end
 
-differentiate(p, x, deg::Int) = _differentiate_recursive(p, x, deg, Base.promote_op(differentiate, typeof(p), typeof(x)))
-differentiate(p::AbstractArray, x,                              deg::Int) = _differentiate_recursive(p, x, deg, Any)
-differentiate(p,                x::Union{AbstractArray, Tuple}, deg::Int) = _differentiate_recursive(p, x, deg, Any)
-differentiate(p::AbstractArray, x::Union{AbstractArray, Tuple}, deg::Int) = _differentiate_recursive(p, x, deg, Any)
-
+function differentiate(p, x, deg::Int)
+    return _differentiate_recursive(
+        p,
+        x,
+        deg,
+        Base.promote_op(differentiate, typeof(p), typeof(x)),
+    )
+end
+function differentiate(p::AbstractArray, x, deg::Int)
+    return _differentiate_recursive(p, x, deg, Any)
+end
+function differentiate(p, x::Union{AbstractArray,Tuple}, deg::Int)
+    return _differentiate_recursive(p, x, deg, Any)
+end
+function differentiate(
+    p::AbstractArray,
+    x::Union{AbstractArray,Tuple},
+    deg::Int,
+)
+    return _differentiate_recursive(p, x, deg, Any)
+end
 
 # This is alternative, Val-based interface for nested differentiation.
 # It has the advantage of not requiring an conversion or calls to
@@ -87,7 +112,7 @@ differentiate(p::AbstractArray, x::Union{AbstractArray, Tuple}, deg::Int) = _dif
 differentiate(p, x, ::Val{0}) = p
 differentiate(p, x, ::Val{1}) = differentiate(p, x)
 
-function differentiate(p, x, deg::Val{N}) where N
+function differentiate(p, x, deg::Val{N}) where {N}
     if N < 0
         throw(DomainError(deg))
     else

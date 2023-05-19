@@ -1,19 +1,24 @@
-const TypesWithShow = Union{AbstractVariable, AbstractMonomial, AbstractTerm,
-                            AbstractPolynomial, RationalPoly}
+const TypesWithShow = Union{
+    AbstractVariable,
+    AbstractMonomial,
+    AbstractTerm,
+    AbstractPolynomial,
+    RationalPoly,
+}
 function Base.show(io::IO, mime::MIME"text/latex", p::TypesWithShow)
     print(io, "\$\$ ")
     _show(io, mime, p)
-    print(io, " \$\$")
+    return print(io, " \$\$")
 end
 
 # If the MIME is not specified, IJulia thinks that it supports images, ...
 # and then use the result of show and tries to interpret it as an svg, ...
 # We need the two methods to avoid ambiguity
 function Base.show(io::IO, mime::MIME"text/plain", p::TypesWithShow)
-    _show(io, mime, p)
+    return _show(io, mime, p)
 end
 function Base.show(io::IO, mime::MIME"text/print", p::TypesWithShow)
-    _show(io, mime, p)
+    return _show(io, mime, p)
 end
 
 Base.print(io::IO, p::TypesWithShow) = show(io, MIME"text/print"(), p)
@@ -49,7 +54,7 @@ function _show(io::IO, mime::MIME"text/print", var::AbstractVariable)
 end
 
 function print_subscript(io::IO, ::MIME"text/latex", index)
-    print(io, "_{", join(index, ","), "}")
+    return print(io, "_{", join(index, ","), "}")
 end
 function print_subscript(io::IO, mime, indices)
     if length(indices) == 1
@@ -59,7 +64,7 @@ function print_subscript(io::IO, mime, indices)
     end
 end
 
-const unicode_subscripts = ("₀","₁","₂","₃","₄","₅","₆","₇","₈","₉")
+const unicode_subscripts = ("₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉")
 unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # MONOMIALS
@@ -88,10 +93,10 @@ end
 print_exponent(io::IO, ::MIME"text/latex", exp) = print(io, "^{", exp, "}")
 print_exponent(io::IO, ::MIME"text/print", exp) = print(io, "^", exp)
 function print_exponent(io::IO, mime, exp)
-    print(io, join(unicode_superscript.(reverse(digits(exp)))))
+    return print(io, join(unicode_superscript.(reverse(digits(exp)))))
 end
 
-const unicode_superscripts = ("⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹")
+const unicode_superscripts = ("⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹")
 unicode_superscript(i) = unicode_superscripts[i+1]
 
 # TERM
@@ -131,6 +136,14 @@ should_print_coefficient(x::Number) = !isone(x) # For numbers, we omit any "one"
 # We could add a check with `showable` if a `Real` subtype supports it and
 # the feature is requested.
 print_coefficient(io::IO, mime, coeff::Real) = print(io, coeff)
+# Scientific notation does not display well in LaTeX so we rewrite it
+function print_coefficient(io::IO, mime::MIME"text/latex", coeff::AbstractFloat)
+    s = string(coeff)
+    if occursin('e', s)
+        s = replace(s, 'e' => " \\cdot 10^{") * '}'
+    end
+    return print(io, s)
+end
 # JuMP expressions supports LaTeX output so `showable` will return `true`
 # for them. It is important for anonymous variables to display properly as well:
 # https://github.com/jump-dev/SumOfSquares.jl/issues/256
@@ -141,11 +154,11 @@ function print_coefficient(io::IO, mime, coeff)
     else
         show(io, coeff)
     end
-    print(io, ")")
+    return print(io, ")")
 end
 
 # POLYNOMIAL
-function _show(io::IO, mime, p::AbstractPolynomial{T}) where T
+function _show(io::IO, mime, p::AbstractPolynomial{T}) where {T}
     ts = terms(p)
     if isempty(ts)
         print(io, zero(T))
@@ -172,5 +185,5 @@ function _show(io::IO, mime, p::RationalPoly)
     _show(io, mime, p.num)
     print(io, mime isa MIME"text/latex" ? "}{" : ") / (")
     _show(io, mime, p.den)
-    print(io, mime isa MIME"text/latex" ? "}" : ")")
+    return print(io, mime isa MIME"text/latex" ? "}" : ")")
 end

@@ -4,7 +4,7 @@ include("zip.jl")
 include("variable.jl")
 include("monomial.jl")
 include("term.jl")
-include("monovec.jl")
+include("monomial_vector.jl")
 include("polynomial.jl")
 include("det.jl")
 
