@@ -123,6 +123,10 @@ Base.conj(x::P) where {P<:AbstractPolynomial} = iszero(nterms(x)) || isreal(x) ?
 for fun in [:real, :imag]
     eval(quote
         function Base.$fun(x::APL)
+            # Note: x may also be a polynomial; we could handle this case separately by performing the replacement in each
+            # individual term, then adding them all up. This could potentially lower the overall memory requirement (in case
+            # the expansions of the individual terms simplify) at the expense of not being able to exploit optimizations that
+            # subst can do by knowing the full polynomial.
             iszero(nterms(x)) && return zero(polynomialtype(x, real(coefficienttype(x))))
             # We replace every complex variable by its decomposition into real and imaginary part
             substs = [var => real(var) + 1im * imag(var) for var in variables(x) if iscomplex(var)]
