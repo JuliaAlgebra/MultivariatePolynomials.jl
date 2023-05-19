@@ -9,7 +9,7 @@ import MultivariatePolynomials:
         @test length(z) == 2
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
     end
-    @testset "PolyVar" begin
+    @testset "Variable" begin
         Mod.@polyvar x
         alloc_test(() -> convert(typeof(x), x), 0)
         alloc_test(() -> convert(variable_union_type(x), x), 0)
