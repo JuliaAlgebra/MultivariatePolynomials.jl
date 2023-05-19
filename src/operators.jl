@@ -449,7 +449,10 @@ end
 LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
 LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 function LinearAlgebra.adjoint(t::AbstractTerm)
-    return _term(LinearAlgebra.adjoint(coefficient(t)), LinearAlgebra.adjoint(monomial(t)))
+    return _term(
+        LinearAlgebra.adjoint(coefficient(t)),
+        LinearAlgebra.adjoint(monomial(t)),
+    )
 end
 function LinearAlgebra.adjoint(p::AbstractPolynomialLike)
     return polynomial(map(LinearAlgebra.adjoint, terms(p)))
@@ -459,7 +462,9 @@ function LinearAlgebra.adjoint(r::RationalPoly)
 end
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractPolynomialLike} = T
 function LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol)
-    iscomplex(v) && error("Complex-valued polynomials cannot be interpreted as hermitian scalars")
+    iscomplex(v) && error(
+        "Complex-valued polynomials cannot be interpreted as hermitian scalars",
+    )
     return v
 end
 

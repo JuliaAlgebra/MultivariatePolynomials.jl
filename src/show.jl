@@ -38,7 +38,7 @@ function _show(io::IO, mime::MIME, var::AbstractVariable)
         print_subscript(io, mime, indices)
     end
     isrealpart(var) && print(io, "ᵣ") # suffixes for real and imaginary part: zᵣ, zᵢ
-    isimagpart(var) && print(io, "ᵢ")
+    return isimagpart(var) && print(io, "ᵢ")
 end
 
 function _show(io::IO, mime::MIME"text/print", var::AbstractVariable)
@@ -50,7 +50,7 @@ function _show(io::IO, mime::MIME"text/print", var::AbstractVariable)
         print(io, name(var))
     end
     isrealpart(var) && print(io, "ᵣ")
-    isimagpart(var) && print(io, "ᵢ")
+    return isimagpart(var) && print(io, "ᵢ")
 end
 
 function print_subscript(io::IO, ::MIME"text/latex", index)
