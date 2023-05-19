@@ -18,9 +18,10 @@ Springer Science & Business Media, **2013**.
 abstract type AbstractMonomialOrdering end
 
 """
-    compare(a, b, order::AbstractMonomialOrdering)
+    compare(a, b, order::Type{<:AbstractMonomialOrdering})
 
 Returns a negative number if `a < b`, a positive number if `a > b` and zero if `a == b`.
+The comparison is done according to `order`.
 """
 function compare end
 
@@ -71,11 +72,11 @@ end
 _deg(exponents) = sum(exponents)
 _deg(mono::AbstractMonomial) = degree(mono)
 
-function compare(a, b, ordering::Graded)
+function compare(a, b, ::Type{Graded{O}}) where {O}
     deg_a = _deg(a)
     deg_b = _deg(b)
     if deg_a == deg_b
-        return compare(a, b, ordering.same_degree_ordering)
+        return compare(a, b, O)
     else
         return deg_a - deg_b
     end
@@ -86,7 +87,8 @@ end
         reverse_order::O
     end
 
-Monomial ordering defined by `compare(a, b, order) = compare(b, a, order.reverse_order)`..
+Monomial ordering defined by
+`compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)`.
 
 Reverse Lex Order defined in [CLO13, Exercise 2.2.9, p. 61] where it is abbreviated as *rinvlex*.
 can be obtained as `Reverse(InverseLexOrder())`.
@@ -102,7 +104,7 @@ struct Reverse{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     reverse_ordering::O
 end
 
-compare(a, b, ordering::Reverse) = compare(b, a, ordering.reverse_ordering)
+compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
 
 function monomials(v::AbstractVariable, degree, args...)
     return monomials((v,), degree, args...)
