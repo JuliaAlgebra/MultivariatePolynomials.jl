@@ -204,9 +204,17 @@ Springer Science & Business Media, **2013**.
 """
 struct LexOrder <: AbstractMonomialOrdering end
 
-function compare(exp1::AbstractVector{T}, exp2::AbstractVector{T}, ::Type{LexOrder}) where {T}
+function compare(
+    exp1::AbstractVector{T},
+    exp2::AbstractVector{T},
+    ::Type{LexOrder},
+) where {T}
     if eachindex(exp1) != eachindex(exp2)
-        throw(ArgumentError("Cannot compare exponent vectors `$exp1` and `$exp2` of different indices."))
+        throw(
+            ArgumentError(
+                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
+            ),
+        )
     end
     @inbounds for i in eachindex(exp1)
         Δ = exp1[i] - exp2[i]
@@ -235,9 +243,17 @@ SIAM Journal on Matrix Analysis and Applications, 34(1), 102-125, *2013*.
 """
 struct InverseLexOrder <: AbstractMonomialOrdering end
 
-function compare(exp1::AbstractVector{T}, exp2::AbstractVector{T}, ::Type{InverseLexOrder}) where {T}
+function compare(
+    exp1::AbstractVector{T},
+    exp2::AbstractVector{T},
+    ::Type{InverseLexOrder},
+) where {T}
     if eachindex(exp1) != eachindex(exp2)
-        throw(ArgumentError("Cannot compare exponent vectors `$exp1` and `$exp2` of different indices."))
+        throw(
+            ArgumentError(
+                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
+            ),
+        )
     end
     @inbounds for i in Iterators.Reverse(eachindex(exp1))
         Δ = exp1[i] - exp2[i]

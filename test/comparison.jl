@@ -150,25 +150,25 @@
         @test MP.compare([1, 1, 0], [1, 0, 1], grlex) == 1
         Mod.@polyvar x y z
         # [CLO13, p. 58]
-        @test MP.compare(1:3, [3, 2, 0], lex)     < 0
-        @test MP.compare(1:3, [3, 2, 0], grlex)   > 0
+        @test MP.compare(1:3, [3, 2, 0], lex) < 0
+        @test MP.compare(1:3, [3, 2, 0], grlex) > 0
         @test MP.compare(1:3, [3, 2, 0], rinvlex) < 0
         @test MP.compare(1:3, [3, 2, 0], grevlex) > 0
-        @test MP.compare([1, 2, 4], [1, 1, 5], lex)     > 0
-        @test MP.compare([1, 2, 4], [1, 1, 5], grlex)   > 0
+        @test MP.compare([1, 2, 4], [1, 1, 5], lex) > 0
+        @test MP.compare([1, 2, 4], [1, 1, 5], grlex) > 0
         @test MP.compare([1, 2, 4], [1, 1, 5], rinvlex) > 0
         @test MP.compare([1, 2, 4], [1, 1, 5], grevlex) > 0
-        @test MP.compare(x * y^2 * z^3, x^3 * y^2, lex)     < 0
-        @test MP.compare(x * y^2 * z^3, x^3 * y^2, grlex)   > 0
+        @test MP.compare(x * y^2 * z^3, x^3 * y^2, lex) < 0
+        @test MP.compare(x * y^2 * z^3, x^3 * y^2, grlex) > 0
         @test MP.compare(x * y^2 * z^3, x^3 * y^2, rinvlex) < 0
         @test MP.compare(x * y^2 * z^3, x^3 * y^2, grevlex) > 0
-        @test MP.compare(x * y^2 * z^4, x * y * z^5, lex)     > 0
-        @test MP.compare(x * y^2 * z^4, x * y * z^5, grlex)   > 0
+        @test MP.compare(x * y^2 * z^4, x * y * z^5, lex) > 0
+        @test MP.compare(x * y^2 * z^4, x * y * z^5, grlex) > 0
         @test MP.compare(x * y^2 * z^4, x * y * z^5, rinvlex) > 0
         @test MP.compare(x * y^2 * z^4, x * y * z^5, grevlex) > 0
         # [CLO13, p. 59]
-        @test MP.compare(x^5 * y * z, x^4 * y * z^2, lex)     > 0
-        @test MP.compare(x^5 * y * z, x^4 * y * z^2, grlex)   > 0
+        @test MP.compare(x^5 * y * z, x^4 * y * z^2, lex) > 0
+        @test MP.compare(x^5 * y * z, x^4 * y * z^2, grlex) > 0
         @test MP.compare(x^5 * y * z, x^4 * y * z^2, rinvlex) > 0
         @test MP.compare(x^5 * y * z, x^4 * y * z^2, grevlex) > 0
         # [CLO13] Cox, D., Little, J., & OShea, D.
