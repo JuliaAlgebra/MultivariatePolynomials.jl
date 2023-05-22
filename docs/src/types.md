@@ -14,6 +14,10 @@ name_base_indices
 variable_union_type
 similar_variable
 @similar_variable
+isrealpart
+isimagpart
+isconj
+ordinary_variable
 ```
 
 ## Monomials
@@ -47,6 +51,8 @@ coefficient_type
 monomial
 constant_term
 zero_term
+degree_complex
+halfdegree
 ```
 
 ## Polynomials
@@ -75,6 +81,13 @@ monic
 map_coefficients
 map_coefficients!
 map_coefficients_to!
+iscomplex
+mindegree_complex
+minhalfdegree
+maxdegree_complex
+maxhalfdegree
+extdegree_complex
+exthalfdegree
 ```
 
 ## Rational Polynomial Function
