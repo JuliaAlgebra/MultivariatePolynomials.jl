@@ -272,8 +272,6 @@ function MA.mutable_copy(p::VectorPolynomial{C,TT}) where {C,TT}
 end
 Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 
-function grlex end
-
 function __polynomial_merge!(
     op::MA.AddSubMul,
     p::Polynomial{T,TT},
@@ -290,7 +288,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
+            compare(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -381,7 +379,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
+            compare(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -456,7 +454,7 @@ function __polynomial_merge!(
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            grlex(monomials(q)[j], monomial(t))
+            compare(monomials(q)[j], monomial(t))
         end
     end
     get2 = let q = q

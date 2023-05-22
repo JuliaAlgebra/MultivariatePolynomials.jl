@@ -70,7 +70,6 @@ combine(t1::Term, t2::Term) = combine(promote(t1, t2)...)
 function combine(t1::T, t2::T) where {T<:Term}
     return Term(t1.coefficient + t2.coefficient, t1.monomial)
 end
-compare(t1::Term, t2::Term) = monomial(t1) < monomial(t2)
 function MA.promote_operation(
     ::typeof(combine),
     ::Type{Term{S,M1}},
