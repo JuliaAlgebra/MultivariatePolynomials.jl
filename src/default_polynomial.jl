@@ -107,7 +107,13 @@ function join_terms!(
     terms2::AbstractArray{<:Term},
 )
     resize!(output, length(terms1) + length(terms2))
-    return Sequences.merge_sorted!(output, terms1, terms2, compare_monomials, combine)
+    return Sequences.merge_sorted!(
+        output,
+        terms1,
+        terms2,
+        compare_monomials,
+        combine,
+    )
 end
 
 function Base.:(+)(p1::Polynomial, p2::Polynomial)
