@@ -93,11 +93,13 @@ Base.one(p::Polynomial) = one(typeof(p))
 Base.zero(::Type{Polynomial{C,T,A}}) where {C,T,A} = Polynomial{C,T,A}(A())
 Base.zero(t::Polynomial) = zero(typeof(t))
 
+compare_monomials(a, b) = compare(monomial(a), monomial(b))
+
 function join_terms(
     terms1::AbstractArray{<:Term},
     terms2::AbstractArray{<:Term},
 )
-    return Sequences.merge_sorted(terms1, terms2, compare, combine)
+    return Sequences.merge_sorted(terms1, terms2, compare_monomials, combine)
 end
 function join_terms!(
     output::AbstractArray{<:Term},
@@ -105,7 +107,13 @@ function join_terms!(
     terms2::AbstractArray{<:Term},
 )
     resize!(output, length(terms1) + length(terms2))
-    return Sequences.merge_sorted!(output, terms1, terms2, compare, combine)
+    return Sequences.merge_sorted!(
+        output,
+        terms1,
+        terms2,
+        compare_monomials,
+        combine,
+    )
 end
 
 function Base.:(+)(p1::Polynomial, p2::Polynomial)
