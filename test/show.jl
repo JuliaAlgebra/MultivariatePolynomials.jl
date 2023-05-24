@@ -2,7 +2,9 @@ struct CustomLaTeXPrint end
 
 Base.:-(::CustomLaTeXPrint) = CustomLaTeXPrint()
 Base.iszero(::CustomLaTeXPrint) = false
-Base.show(io::IO, ::MIME"text/latex", ::CustomLaTeXPrint) = print(io, " \$\$ \\[\\(a_a \\) \\]\t  \$\$")
+function Base.show(io::IO, ::MIME"text/latex", ::CustomLaTeXPrint)
+    return print(io, " \$\$ \\[\\(a_a \\) \\]\t  \$\$")
+end
 
 @testset "Show" begin
     Mod.@polyvar x y z
