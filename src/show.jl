@@ -129,13 +129,35 @@ function print_coefficient(io::IO, mime::MIME"text/latex", coeff::AbstractFloat)
     end
     return print(io, s)
 end
+
+function _trim_LaTeX(s::AbstractString)
+    i = firstindex(s)
+    j = lastindex(s)
+    while true
+        if i < j && isspace(s[i])
+            i = nextind(s, i)
+        elseif i < j && isspace(s[j])
+            j = prevind(s, j)
+        elseif i < j && s[i] == '$' && s[j] == '$'
+            i = nextind(s, i)
+            j = prevind(s, j)
+        elseif i < j && ((s[i:i+1] == "\\(" && s[j-1:j] == "\\)") || (s[i:i+1] == "\\[" && s[j-1:j] == "\\]"))
+            i = nextind(s, i, 2)
+            j = prevind(s, j, 2)
+        else
+            return s[i:j]
+        end
+    end
+end
+
 # JuMP expressions supports LaTeX output so `showable` will return `true`
 # for them. It is important for anonymous variables to display properly as well:
 # https://github.com/jump-dev/SumOfSquares.jl/issues/256
+# Since they add `$$` around it, we need to trim it with `_trim_LaTeX`
 function print_coefficient(io::IO, mime, coeff)
     print(io, "(")
     if showable(mime, coeff)
-        show(io, mime, coeff)
+        print(io, _trim_LaTeX(sprint(show, mime, coeff)))
     else
         show(io, coeff)
     end
