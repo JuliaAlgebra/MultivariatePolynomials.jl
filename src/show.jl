@@ -142,8 +142,8 @@ function _trim_LaTeX(s::AbstractString)
             i = nextind(s, i)
             j = prevind(s, j)
         elseif i < j && (
-            (s[i:i+1] == "\\(" && s[j-1:j] == "\\)") ||
-            (s[i:i+1] == "\\[" && s[j-1:j] == "\\]")
+            (s[i:nextind(s, i)] == "\\(" && s[prevind(s, j):j] == "\\)") ||
+            (s[i:nextind(s, i)] == "\\[" && s[prevind(s, j):j] == "\\]")
         )
             i = nextind(s, i, 2)
             j = prevind(s, j, 2)
