@@ -60,7 +60,7 @@ isconj(::AbstractVariable) = false
 Given some (complex-valued) variable that was transformed by conjugation, taking its real part, or taking its
 imaginary part, return the original variable as it was defined by the user.
 
-See also [`conj`](@ref), [`real`](@ref), [`imag`](@ref).
+See also `conj`, `real`, `imag`.
 """
 ordinary_variable(x::AbstractVariable) = x
 
@@ -95,7 +95,7 @@ unchanged.
 Return the real part of `x` by applying `real` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`imag`](@ref).
+See also [`iscomplex`](@ref), [`isrealpart`](@ref), `imag`.
 """
 Base.real(x::AbstractVariable) = x
 
@@ -112,7 +112,7 @@ Return the imaginary part of a given variable if it was declared as a complex va
 Return the imaginary part of `x` by applying `imag` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref), [`isimagpart`](@ref), [`real`](@ref).
+See also [`iscomplex`](@ref), [`isimagpart`](@ref), `real`.
 """
 Base.imag(::AbstractVariable) = MA.Zero()
 
