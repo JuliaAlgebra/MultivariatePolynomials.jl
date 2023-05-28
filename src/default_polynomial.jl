@@ -93,11 +93,13 @@ Base.one(p::Polynomial) = one(typeof(p))
 Base.zero(::Type{Polynomial{C,T,A}}) where {C,T,A} = Polynomial{C,T,A}(A())
 Base.zero(t::Polynomial) = zero(typeof(t))
 
+compare_monomials(a, b) = compare(monomial(a), monomial(b))
+
 function join_terms(
     terms1::AbstractArray{<:Term},
     terms2::AbstractArray{<:Term},
 )
-    return Sequences.merge_sorted(terms1, terms2, compare, combine)
+    return Sequences.merge_sorted(terms1, terms2, compare_monomials, combine)
 end
 function join_terms!(
     output::AbstractArray{<:Term},
@@ -105,7 +107,13 @@ function join_terms!(
     terms2::AbstractArray{<:Term},
 )
     resize!(output, length(terms1) + length(terms2))
-    return Sequences.merge_sorted!(output, terms1, terms2, compare, combine)
+    return Sequences.merge_sorted!(
+        output,
+        terms1,
+        terms2,
+        compare_monomials,
+        combine,
+    )
 end
 
 function Base.:(+)(p1::Polynomial, p2::Polynomial)
@@ -272,8 +280,6 @@ function MA.mutable_copy(p::VectorPolynomial{C,TT}) where {C,TT}
 end
 Base.copy(p::VectorPolynomial) = MA.mutable_copy(p)
 
-function grlex end
-
 function __polynomial_merge!(
     op::MA.AddSubMul,
     p::Polynomial{T,TT},
@@ -290,7 +296,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
+            compare(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -381,7 +387,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            grlex(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
+            compare(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -456,7 +462,7 @@ function __polynomial_merge!(
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            grlex(monomials(q)[j], monomial(t))
+            compare(monomials(q)[j], monomial(t))
         end
     end
     get2 = let q = q

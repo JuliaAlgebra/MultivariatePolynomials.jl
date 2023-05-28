@@ -19,8 +19,6 @@
 @deprecate leading_coefficient leading_coefficient
 @deprecate removeleadingterm remove_leading_term
 @deprecate removemonomials remove_monomials
-@deprecate mergesorted merge_sorted
-@deprecate mergesorted! merge_sorted!
 @deprecate coefficienttype coefficient_type
 @deprecate constantterm constant_term
 @deprecate zeroterm zero_term

@@ -70,7 +70,6 @@ combine(t1::Term, t2::Term) = combine(promote(t1, t2)...)
 function combine(t1::T, t2::T) where {T<:Term}
     return Term(t1.coefficient + t2.coefficient, t1.monomial)
 end
-compare(t1::Term, t2::Term) = monomial(t1) < monomial(t2)
 function MA.promote_operation(
     ::typeof(combine),
     ::Type{Term{S,M1}},
@@ -85,4 +84,34 @@ function MA.mutability(::Type{Term{C,M}}) where {C,M}
     else
         return MA.IsNotMutable()
     end
+end
+
+function MA.mutable_copy(t::Term)
+    return Term(
+        MA.copy_if_mutable(coefficient(t)),
+        MA.copy_if_mutable(monomial(t)),
+    )
+end
+
+function MA.operate_to!(
+    t::Term,
+    ::typeof(*),
+    t1::AbstractTermLike,
+    t2::AbstractTermLike,
+)
+    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
+    MA.operate_to!(t.monomial, *, monomial(t1), monomial(t2))
+    return t
+end
+
+function MA.operate!(::typeof(*), t1::Term, t2::AbstractTermLike)
+    MA.operate!(*, t1.coefficient, coefficient(t2))
+    MA.operate!(*, t1.monomial, monomial(t2))
+    return t1
+end
+
+function MA.operate!(::typeof(one), t::Term)
+    MA.operate!(one, t.coefficient)
+    MA.operate!(constant_monomial, t.monomial)
+    return t
 end

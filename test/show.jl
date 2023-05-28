@@ -1,8 +1,12 @@
-struct CustomLaTeXPrint end
+struct CustomLaTeXPrint
+    s::String
+end
 
-Base.:-(::CustomLaTeXPrint) = CustomLaTeXPrint()
+Base.:-(s::CustomLaTeXPrint) = s
 Base.iszero(::CustomLaTeXPrint) = false
-Base.show(io::IO, ::MIME"text/latex", ::CustomLaTeXPrint) = print(io, "a_a")
+function Base.show(io::IO, ::MIME"text/latex", s::CustomLaTeXPrint)
+    return print(io, s.s)
+end
 
 @testset "Show" begin
     Mod.@polyvar x y z
@@ -55,11 +59,15 @@ Base.show(io::IO, ::MIME"text/latex", ::CustomLaTeXPrint) = print(io, "a_a")
     @test sprint(print, 2x[1]^2 + 3x[3] + 1 + x[4]) ==
           "1 + x[4] + 3*x[3] + 2*x[1]^2"
 
-    a = CustomLaTeXPrint()
+    a = CustomLaTeXPrint(" \$\$ \\[\\(α_β∀ \\) \\]\t  \$\$")
     @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==
-          "\$\$ (a_a)x_{1}^{2} \$\$"
+          "\$\$ (α_β∀)x_{1}^{2} \$\$"
     @test sprint(
         (io, x) -> show(io, "text/latex", x),
         polynomial([a, a], [x[1]^2, x[2]]),
-    ) == "\$\$ (a_a)x_{2} + (a_a)x_{1}^{2} \$\$"
+    ) == "\$\$ (α_β∀)x_{2} + (α_β∀)x_{1}^{2} \$\$"
+    # Test that the check for `\\)` handles unicode well
+    a = CustomLaTeXPrint("\\(β∀")
+    @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==
+          "\$\$ (\\(β∀)x_{1}^{2} \$\$"
 end
