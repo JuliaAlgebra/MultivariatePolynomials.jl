@@ -32,7 +32,7 @@ end
 
 Return whether the given variable is the real part of a complex-valued variable.
 
-See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`isconj`](@ref isconj).
+See also [`iscomplex`](@ref), [`isimagpart`](@ref), [`isconj`](@ref).
 """
 isrealpart(::AbstractVariable) = false
 
@@ -41,7 +41,7 @@ isrealpart(::AbstractVariable) = false
 
 Return whether the given variable is the imaginary part of a complex-valued variable.
 
-See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isconj`](@ref isconj).
+See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`isconj`](@ref).
 """
 isimagpart(::AbstractVariable) = false
 
@@ -50,7 +50,7 @@ isimagpart(::AbstractVariable) = false
 
 Return whether the given variable is obtained by conjugating a user-defined complex-valued variable.
 
-See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`isimagpart`](@ref isimagpart).
+See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`isimagpart`](@ref).
 """
 isconj(::AbstractVariable) = false
 
@@ -60,7 +60,7 @@ isconj(::AbstractVariable) = false
 Given some (complex-valued) variable that was transformed by conjugation, taking its real part, or taking its
 imaginary part, return the original variable as it was defined by the user.
 
-See also [`conj`](@ref conj), [`real`](@ref), [`imag`](@ref).
+See also [`conj`](@ref), [`real`](@ref), [`imag`](@ref).
 """
 ordinary_variable(x::AbstractVariable) = x
 
@@ -77,7 +77,7 @@ variable unchanged.
 
 Return the complex conjugate of `x` by applying conjugation to all coefficients and variables.
 
-See also [`iscomplex`](@ref iscomplex), [`isconj`](@ref isconj).
+See also [`iscomplex`](@ref), [`isconj`](@ref).
 """
 Base.conj(x::AbstractVariable) = x
 
@@ -95,7 +95,7 @@ unchanged.
 Return the real part of `x` by applying `real` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref iscomplex), [`isrealpart`](@ref isrealpart), [`imag`](@ref).
+See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`imag`](@ref).
 """
 Base.real(x::AbstractVariable) = x
 
@@ -112,7 +112,7 @@ Return the imaginary part of a given variable if it was declared as a complex va
 Return the imaginary part of `x` by applying `imag` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref iscomplex), [`isimagpart`](@ref isimagpart), [`real`](@ref).
+See also [`iscomplex`](@ref), [`isimagpart`](@ref), [`real`](@ref).
 """
 Base.imag(::AbstractVariable) = MA.Zero()
 
@@ -136,12 +136,12 @@ function Base.conj(x::M) where {M<:AbstractMonomial}
         reduce(
             *,
             conj(var)^exp for (var, exp) in powers(x);
-            init = constantmonomial(x),
+            init = constant_monomial(x),
         ),
     )
 end
 function Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}}
-    return isreal(x) ? x : monovec(conj.(x))
+    return isreal(x) ? x : monomial_vector(conj.(x))
 end
 function Base.conj(x::T) where {T<:AbstractTerm}
     return isreal(x) ? x : convert(T, conj(coefficient(x)) * conj(monomial(x)))
@@ -161,7 +161,7 @@ for fun in [:real, :imag]
                 # the expansions of the individual terms simplify) at the expense of not being able to exploit optimizations that
                 # subst can do by knowing the full polynomial.
                 iszero(nterms(x)) &&
-                    return zero(polynomialtype(x, real(coefficienttype(x))))
+                    return zero(polynomial_type(x, real(coefficient_type(x))))
                 # We replace every complex variable by its decomposition into real and imaginary part
                 substs = [
                     var => real(var) + 1im * imag(var) for
@@ -172,11 +172,11 @@ for fun in [:real, :imag]
                     isempty(substs) ? polynomial(x) : subs(x, substs...)
                 # Now everything that is imaginary can be recognized by its coefficient
                 return convert(
-                    polynomialtype(
+                    polynomial_type(
                         full_version,
-                        real(coefficienttype(full_version)),
+                        real(coefficient_type(full_version)),
                     ),
-                    mapcoefficients!($fun, full_version),
+                    map_coefficients!($fun, full_version),
                 )
             end
             function Base.$fun(x::AbstractVector{<:AbstractMonomial})
@@ -200,7 +200,7 @@ To be well-defined, the monomial must not contain real parts or imaginary parts 
 
 Returns the exponent of the variable `v` or its conjugate in the monomial of the term `t`, whatever is larger.
 
-See also [`isconj`](@ref isconj).
+See also [`isconj`](@ref).
 """
 function degree_complex(t::AbstractTermLike)
     vars = variables(t)
