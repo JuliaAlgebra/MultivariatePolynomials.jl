@@ -9,6 +9,7 @@ include("polynomial.jl")
 include("det.jl")
 
 include("rational.jl")
+include("complex.jl")
 
 include("promote.jl")
 include("hash.jl")
