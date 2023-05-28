@@ -124,6 +124,7 @@ function iscomplex(p::AbstractPolynomialLike)
             return true
         end
     end
+    all(isreal, coefficients(p)) || return true
     return false
 end
 iscomplex(p::AbstractVector{<:AbstractMonomial}) = any(iscomplex, p)
