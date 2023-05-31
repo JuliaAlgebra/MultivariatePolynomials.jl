@@ -305,7 +305,7 @@ function MA.promote_operation(
     ::typeof(*),
     ::Type{P},
     ::Type{RationalPoly{NT,DT}},
-) where {P<:APL,NT,DT}
+) where {P<:_APL,NT,DT}
     return RationalPoly{MA.promote_operation(*, P, NT),DT}
 end
 
@@ -313,7 +313,7 @@ function MA.promote_operation(
     ::typeof(*),
     ::Type{RationalPoly{NT,DT}},
     ::Type{P},
-) where {P<:APL,NT,DT}
+) where {P<:_APL,NT,DT}
     return RationalPoly{MA.promote_operation(*, NT, P),DT}
 end
 
