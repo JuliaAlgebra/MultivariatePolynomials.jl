@@ -130,7 +130,9 @@ function MA.promote_operation(
 end
 
 ## Fallbacks
-substitute(st::_AST, p::_APL, s::Substitutions) = substitute(st, polynomial(p), s)
+function substitute(st::_AST, p::_APL, s::Substitutions)
+    return substitute(st, polynomial(p), s)
+end
 function substitute(st::_AST, q::RationalPoly, s::Substitutions)
     return substitute(st, q.num, s) / substitute(st, q.den, s)
 end

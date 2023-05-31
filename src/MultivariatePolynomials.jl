@@ -101,7 +101,6 @@ for sym in names(@__MODULE__; all = true)
     if sym in _EXCLUDE_SYMBOLS ||
        startswith(sym_string, "_") ||
        startswith(sym_string, "@_")
-       println("Excluded: $sym")
         continue
     end
     if !(
@@ -110,9 +109,7 @@ for sym in names(@__MODULE__; all = true)
     )
         continue
     end
-    println("Exported: $sym")
     @eval export $sym
 end
-
 
 end # module
