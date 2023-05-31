@@ -1,7 +1,3 @@
-export isapproxzero
-
-export LexOrder, InverseLexOrder, Reverse, Graded
-
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
 Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
@@ -16,10 +12,10 @@ end
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 # avoids the call to be transfered to left_constant_eq
-Base.:(==)(α::Nothing, x::APL) = false
-Base.:(==)(x::APL, α::Nothing) = false
-Base.:(==)(α::Dict, x::APL) = false
-Base.:(==)(x::APL, α::Dict) = false
+Base.:(==)(α::Nothing, x::_APL) = false
+Base.:(==)(x::_APL, α::Nothing) = false
+Base.:(==)(α::Dict, x::_APL) = false
+Base.:(==)(x::_APL, α::Dict) = false
 Base.:(==)(α::Nothing, x::RationalPoly) = false
 Base.:(==)(x::RationalPoly, α::Nothing) = false
 Base.:(==)(α::Dict, x::RationalPoly) = false
@@ -33,7 +29,7 @@ function right_term_eq(p::AbstractPolynomial, t)
         nterms(p) == 1 && leading_term(p) == t
     end
 end
-right_term_eq(p::APL, t) = right_term_eq(polynomial(p), t)
+right_term_eq(p::_APL, t) = right_term_eq(polynomial(p), t)
 
 left_constant_eq(α, v::AbstractVariable) = false
 right_constant_eq(v::AbstractVariable, α) = false
@@ -46,8 +42,8 @@ function _term_constant_eq(t::AbstractTermLike, α)
 end
 left_constant_eq(α, t::AbstractTermLike) = _term_constant_eq(t, α)
 right_constant_eq(t::AbstractTermLike, α) = _term_constant_eq(t, α)
-left_constant_eq(α, p::APL) = right_term_eq(p, α)
-right_constant_eq(p::APL, α) = right_term_eq(p, α)
+left_constant_eq(α, p::_APL) = right_term_eq(p, α)
+right_constant_eq(p::_APL, α) = right_term_eq(p, α)
 
 function Base.:(==)(mono::AbstractMonomial, v::AbstractVariable)
     return isone(degree(mono)) && variable(mono) == v
@@ -117,8 +113,8 @@ end
 
 Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num * q.den == q.num * p.den
 # Solve ambiguity with (::PolyType, ::Any)
-Base.:(==)(p::APL, q::RationalPoly) = p * q.den == q.num
-Base.:(==)(q::RationalPoly, p::APL) = p == q
+Base.:(==)(p::_APL, q::RationalPoly) = p * q.den == q.num
+Base.:(==)(q::RationalPoly, p::_APL) = p == q
 Base.:(==)(α, q::RationalPoly) = α * q.den == q.num
 Base.:(==)(q::RationalPoly, α) = α == q
 
@@ -132,7 +128,7 @@ isapproxzero(m::AbstractMonomialLike; kwargs...) = false
 function isapproxzero(t::AbstractTermLike; kwargs...)
     return isapproxzero(coefficient(t); kwargs...)
 end
-function isapproxzero(p::APL; kwargs...)
+function isapproxzero(p::_APL; kwargs...)
     return all(term -> isapproxzero(term; kwargs...), terms(p))
 end
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
@@ -159,10 +155,10 @@ end
 function Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...)
     return isapprox(p.num * q.den, q.num * p.den; kwargs...)
 end
-function Base.isapprox(p::RationalPoly, q::APL; kwargs...)
+function Base.isapprox(p::RationalPoly, q::_APL; kwargs...)
     return isapprox(p.num, q * p.den; kwargs...)
 end
-function Base.isapprox(p::APL, q::RationalPoly; kwargs...)
+function Base.isapprox(p::_APL, q::RationalPoly; kwargs...)
     return isapprox(p * q.den, q.num; kwargs...)
 end
 function Base.isapprox(q::RationalPoly{C}, α; kwargs...) where {C}

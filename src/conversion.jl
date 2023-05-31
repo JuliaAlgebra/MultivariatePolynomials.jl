@@ -1,14 +1,12 @@
-export variable, convert_to_constant
-
 function convert_constant end
-Base.convert(::Type{P}, α) where {P<:APL} = convert_constant(P, α)
+Base.convert(::Type{P}, α) where {P<:_APL} = convert_constant(P, α)
 function convert_constant(::Type{TT}, α) where {T,TT<:AbstractTerm{T}}
     return term(convert(T, α), constant_monomial(TT))
 end
 function convert_constant(::Type{PT}, α) where {PT<:AbstractPolynomial}
     return convert(PT, convert(term_type(PT), α))
 end
-function Base.convert(::Type{P}, p::APL) where {T,P<:AbstractPolynomial{T}}
+function Base.convert(::Type{P}, p::_APL) where {T,P<:AbstractPolynomial{T}}
     return error("`convert` not implemented for $P")
 end
 
@@ -84,7 +82,7 @@ MA.scaling(p::AbstractPolynomialLike{T}) where {T} = convert(T, p)
 # Conversion polynomial -> constant
 # We don't define a method for `Base.convert` to reduce invalidations;
 # see https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/172
-function convert_to_constant(::Type{S}, p::APL) where {S}
+function convert_to_constant(::Type{S}, p::_APL) where {S}
     s = zero(S)
     for t in terms(p)
         if !isconstant(t)
@@ -95,10 +93,10 @@ function convert_to_constant(::Type{S}, p::APL) where {S}
     end
     return s
 end
-Base.convert(::Type{T}, p::APL) where {T<:Number} = convert_to_constant(T, p)
-function convert_to_constant(p::APL{S}) where {S}
+Base.convert(::Type{T}, p::_APL) where {T<:Number} = convert_to_constant(T, p)
+function convert_to_constant(p::_APL{S}) where {S}
     return convert_to_constant(S, p)
 end
 
-# Also covers, e.g., `convert(APL, ::P)` where `P<:APL`
-Base.convert(::Type{PT}, p::PT) where {PT<:APL} = p
+# Also covers, e.g., `convert(_APL, ::P)` where `P<:_APL`
+Base.convert(::Type{PT}, p::PT) where {PT<:_APL} = p

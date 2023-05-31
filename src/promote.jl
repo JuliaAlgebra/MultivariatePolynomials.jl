@@ -25,25 +25,25 @@ function promote_rule_constant(
 end
 
 # PolynomialLike
-Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:APL} = PT
-function Base.promote_rule(PS::Type{<:APL}, PT::Type{<:APL})
+Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:_APL} = PT
+function Base.promote_rule(PS::Type{<:_APL}, PT::Type{<:_APL})
     return polynomial_type(promote_type(term_type(PS), term_type(PT)))
 end
 
-function promote_rule_constant(::Type{S}, PT::Type{<:APL{T}}) where {S,T}
+function promote_rule_constant(::Type{S}, PT::Type{<:_APL{T}}) where {S,T}
     return polynomial_type(PT, promote_type(S, T))
 end
-function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:APL}
+function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:_APL}
     return promote_rule_constant(T, PT)
 end
 
 # We don't have any information on the MultivariatePolynomials implementation,
-# so we won't be able to convert the constant to `APL`.
+# so we won't be able to convert the constant to `_APL`.
 promote_rule_constant(::Type, PT::Type{AbstractMonomialLike}) = Any
 promote_rule_constant(::Type, PT::Type{AbstractTermLike{T}}) where {T} = Any
 promote_rule_constant(::Type, PT::Type{AbstractTermLike}) = Any
-promote_rule_constant(::Type, PT::Type{APL{T}}) where {T} = Any
-promote_rule_constant(::Type, PT::Type{APL}) = Any
+promote_rule_constant(::Type, PT::Type{_APL{T}}) where {T} = Any
+promote_rule_constant(::Type, PT::Type{_APL}) = Any
 
 # AbstractMonomialLike{T}
 function Base.promote_rule(
@@ -84,24 +84,24 @@ function Base.promote_rule(
 end
 function Base.promote_rule(
     ::Type{AbstractMonomialLike},
-    ::Type{<:APL{T}},
+    ::Type{<:_APL{T}},
 ) where {T}
     return _apl(Int, T)
 end
 function Base.promote_rule(
-    ::Type{<:APL{T}},
+    ::Type{<:_APL{T}},
     ::Type{AbstractMonomialLike},
 ) where {T}
     return _apl(Int, T)
 end
 function Base.promote_rule(
     ::Type{AbstractMonomialLike},
-    ::Type{APL{T}},
+    ::Type{_APL{T}},
 ) where {T}
     return _apl(Int, T)
 end
 function Base.promote_rule(
-    ::Type{APL{T}},
+    ::Type{_APL{T}},
     ::Type{AbstractMonomialLike},
 ) where {T}
     return _apl(Int, T)
@@ -111,7 +111,7 @@ end
 _atl(::Type{T}, ::Type{T}) where {T} = AbstractTermLike{T}
 _atl(::Type, ::Type) = AbstractTermLike
 __atl(::Type{T}, ::Type{<:AbstractTermLike{S}}) where {S,T} = _atl(T, S)
-__atl(::Type{T}, ::Type{<:APL{S}}) where {S,T} = _apl(T, S)
+__atl(::Type{T}, ::Type{<:_APL{S}}) where {S,T} = _apl(T, S)
 function Base.promote_rule(
     ::Type{AbstractTermLike{T}},
     P::Type{<:AbstractTermLike{S}},
@@ -126,24 +126,24 @@ function Base.promote_rule(
 end
 function Base.promote_rule(
     ::Type{AbstractTermLike{T}},
-    P::Type{<:APL{S}},
+    P::Type{<:_APL{S}},
 ) where {S,T}
     return _apl(T, S)
 end
 function Base.promote_rule(
-    P::Type{<:APL{S}},
+    P::Type{<:_APL{S}},
     ::Type{AbstractTermLike{T}},
 ) where {S,T}
     return _apl(T, S)
 end
 function Base.promote_rule(
     ::Type{AbstractTermLike{T}},
-    P::Type{APL{S}},
+    P::Type{_APL{S}},
 ) where {S,T}
     return _apl(T, S)
 end
 function Base.promote_rule(
-    P::Type{APL{S}},
+    P::Type{_APL{S}},
     ::Type{AbstractTermLike{T}},
 ) where {S,T}
     return _apl(T, S)
@@ -156,20 +156,20 @@ end
 function Base.promote_rule(::Type{<:AbstractTermLike}, ::Type{AbstractTermLike})
     return AbstractTermLike
 end
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:APL}) = APL
-Base.promote_rule(::Type{<:APL}, ::Type{AbstractTermLike}) = APL
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{APL}) = APL
-Base.promote_rule(::Type{APL}, ::Type{AbstractTermLike}) = APL
+Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:_APL}) = _APL
+Base.promote_rule(::Type{<:_APL}, ::Type{AbstractTermLike}) = _APL
+Base.promote_rule(::Type{AbstractTermLike}, ::Type{_APL}) = _APL
+Base.promote_rule(::Type{_APL}, ::Type{AbstractTermLike}) = _APL
 
-# APL{T}
-_apl(::Type{T}, ::Type{T}) where {T} = APL{T}
-_apl(::Type, ::Type) = APL
-Base.promote_rule(::Type{APL{T}}, ::Type{<:APL{S}}) where {S,T} = _apl(S, T)
-Base.promote_rule(::Type{<:APL{S}}, ::Type{APL{T}}) where {S,T} = _apl(S, T)
+# _APL{T}
+_apl(::Type{T}, ::Type{T}) where {T} = _APL{T}
+_apl(::Type, ::Type) = _APL
+Base.promote_rule(::Type{_APL{T}}, ::Type{<:_APL{S}}) where {S,T} = _apl(S, T)
+Base.promote_rule(::Type{<:_APL{S}}, ::Type{_APL{T}}) where {S,T} = _apl(S, T)
 
-# APL
-Base.promote_rule(::Type{APL}, ::Type{<:APL}) = APL
-Base.promote_rule(::Type{<:APL}, ::Type{APL}) = APL
+# _APL
+Base.promote_rule(::Type{_APL}, ::Type{<:_APL}) = _APL
+Base.promote_rule(::Type{<:_APL}, ::Type{_APL}) = _APL
 
 # Rational
 function promote_rule_constant(
@@ -186,7 +186,7 @@ end
 function promote_rule_rational(
     ::Type{PT},
     ::Type{RationalPoly{S,T}},
-) where {PT<:APL,S,T}
+) where {PT<:_APL,S,T}
     return RationalPoly{promote_type(PT, S),promote_type(T, term_type(T))}
 end
 function promote_rule_rational(
@@ -205,21 +205,21 @@ end
 function Base.promote_rule(
     ::Type{PT},
     ::Type{RT},
-) where {PT<:APL,RT<:RationalPoly}
+) where {PT<:_APL,RT<:RationalPoly}
     return promote_rule_rational(PT, RT)
 end
 function Base.promote_rule(
     ::Type{RT},
     ::Type{PT},
-) where {PT<:APL,RT<:RationalPoly}
+) where {PT<:_APL,RT<:RationalPoly}
     return promote_rule_rational(PT, RT)
 end
 
 # MutableArithmetics
 function MA.promote_operation(
     op::Union{typeof(+),typeof(-)},
-    PT::Type{<:APL{S}},
-    QT::Type{<:APL{T}},
+    PT::Type{<:_APL{S}},
+    QT::Type{<:_APL{T}},
 ) where {S,T}
     U = MA.promote_operation(op, S, T)
     return polynomial_type(
@@ -245,8 +245,8 @@ function MA.promote_operation(
 end
 function MA.promote_operation(
     ::typeof(*),
-    PT::Type{<:APL{S}},
-    QT::Type{<:APL{T}},
+    PT::Type{<:_APL{S}},
+    QT::Type{<:_APL{T}},
 ) where {S,T}
     UP = MA.promote_operation(*, monomial_type(PT), monomial_type(QT))
     U = MA.promote_sum_mul(S, T)
@@ -273,7 +273,7 @@ function promote_operation_constant(
     ::typeof(*),
     ::Type{T},
     ::Type{P},
-) where {T,U,P<:APL{U}}
+) where {T,U,P<:_APL{U}}
     return similar_type(P, MA.promote_operation(*, T, U))
 end
 
@@ -281,7 +281,7 @@ function promote_operation_constant(
     ::typeof(*),
     ::Type{P},
     ::Type{T},
-) where {T,U,P<:APL{U}}
+) where {T,U,P<:_APL{U}}
     return similar_type(P, MA.promote_operation(*, U, T))
 end
 
@@ -289,7 +289,7 @@ function MA.promote_operation(
     ::typeof(*),
     ::Type{T},
     ::Type{P},
-) where {T,P<:APL}
+) where {T,P<:_APL}
     return promote_operation_constant(*, T, P)
 end
 
@@ -297,6 +297,6 @@ function MA.promote_operation(
     ::typeof(*),
     ::Type{P},
     ::Type{T},
-) where {T,P<:APL}
+) where {T,P<:_APL}
     return promote_operation_constant(*, P, T)
 end

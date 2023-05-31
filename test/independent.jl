@@ -15,15 +15,15 @@ function are_independent(a::Rational, b::Real)
     return are_independent(a.num, b) && are_independent(a.den, b)
 end
 
-function are_independent(a::Number, p::MP.APL)
+function are_independent(a::Number, p::MP._APL)
     return all(are_independent(a, coef) for coef in MP.coefficients(p))
 end
 
-function are_independent(p::MP.APL, a::Number)
+function are_independent(p::MP._APL, a::Number)
     return are_independent(a, p)
 end
 
-function are_independent(p::MP.APL, q::MP.APL)
+function are_independent(p::MP._APL, q::MP._APL)
     for t in terms(p)
         for s in terms(q)
             if !are_independent(coefficient(t), coefficient(s))

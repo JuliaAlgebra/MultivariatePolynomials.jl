@@ -1,5 +1,3 @@
-export constant_term, term, term_type, zero_term, coefficient, monomial
-
 """
     term(coef, mono::AbstractMonomialLike)
 
@@ -26,7 +24,7 @@ term(coef, var::AbstractVariable) = term(coef, monomial(var))
 function term(coef, mono::AbstractMonomialLike)
     return term_type(mono, typeof(coef))(coef, mono)
 end
-term(p::APL) = convert(term_type(typeof(p)), p)
+term(p::_APL) = convert(term_type(typeof(p)), p)
 
 """
     term_type(p::AbstractPolynomialLike)
@@ -46,23 +44,23 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
 term_type(::Type{T}) where {T<:AbstractTerm} = T
-term_type(p::Type{<:APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
+term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
 term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)
 end
-term_type(p::APL, ::Type{T}) where {T} = term_type(typeof(p), T)
-term_type(p::APL) = term_type(typeof(p))
+term_type(p::_APL, ::Type{T}) where {T} = term_type(typeof(p), T)
+term_type(p::_APL) = term_type(typeof(p))
 function term_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {PT<:APL}
+) where {PT<:_APL}
     return term_type(PT)
 end
 function term_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
     ::Type{T},
-) where {PT<:APL,T}
+) where {PT<:_APL,T}
     return term_type(PT, T)
 end
 
@@ -106,7 +104,7 @@ Returns the coefficient of the monomial `m` of the polynomial `p` considered as 
 Calling `coefficient((a+b)x^2+2x+y*x^2, x^2, [x,y])` should return `a+b`.
 Calling `coefficient((a+b)x^2+2x+y*x^2, x^2, [x])` should return `a+b+y`.
 """
-function coefficient(f::APL, m::AbstractMonomialLike, vars)
+function coefficient(f::_APL, m::AbstractMonomialLike, vars)
     coeff = zero(f)
     for t in terms(f)
         match = true
@@ -140,7 +138,7 @@ calling `coefficient_type` on ``xy`` should return `Int`.
 """
 function coefficient_type(
     ::Union{PT,Type{PT},AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {T,PT<:APL{T}}
+) where {T,PT<:_APL{T}}
     return T
 end
 #coefficient_type(::{T, Type{T}}) where {T} = T
@@ -183,8 +181,8 @@ Equivalent to `constant_term(zero(T), p)`.
 
 Equivalent to `constant_term(zero(T), PT)`.
 """
-zero_term(::Type{PT}) where {T,PT<:APL{T}} = constant_term(zero(T), PT)
-zero_term(p::APL{T}) where {T} = constant_term(zero(T), p)
+zero_term(::Type{PT}) where {T,PT<:_APL{T}} = constant_term(zero(T), PT)
+zero_term(p::_APL{T}) where {T} = constant_term(zero(T), p)
 
 function Base.zero(::Type{TT}) where {T,TT<:AbstractTermLike{T}}
     return zero(polynomial_type(TT))
