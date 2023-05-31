@@ -300,3 +300,30 @@ function MA.promote_operation(
 ) where {T,P<:_APL}
     return promote_operation_constant(*, P, T)
 end
+
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{P},
+    ::Type{RationalPoly{NT,DT}},
+) where {P<:APL,NT,DT}
+    return RationalPoly{MA.promote_operation(*, P, NT),DT}
+end
+
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{RationalPoly{NT,DT}},
+    ::Type{P},
+) where {P<:APL,NT,DT}
+    return RationalPoly{MA.promote_operation(*, NT, P),DT}
+end
+
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{RationalPoly{NS,DS}},
+    ::Type{RationalPoly{NT,DT}},
+) where {NS,DS,NT,DT}
+    return RationalPoly{
+        MA.promote_operation(*, NS, NT),
+        MA.promote_operation(*, DS, DT),
+    }
+end

@@ -118,3 +118,34 @@ Base.:+(::C, ::C) = C()
     @test MA.promote_operation(*, A, polynomial_type(x, A)) ==
           polynomial_type(x, B)
 end
+
+function __promote_prod(::Type{A}, ::Type{B}, ::Type{C}) where {A,B,C}
+    @test MA.promote_operation(*, A, B) == C
+    @test MA.promote_operation(*, B, A) == C
+end
+
+@testset "promote_operation with Rational" begin
+    Mod.@polyvar x
+    V = typeof(x)
+    M = monomial_type(V)
+    T = term_type(V, Int)
+    P = polynomial_type(V, Float64)
+    function _promote_prod(::Type{A}, ::Type{B}, ::Type{C}) where {A,B,C}
+        __promote_prod(A, B, C)
+        __promote_prod(RationalPoly{A,B}, RationalPoly{B,A}, RationalPoly{C,C})
+        __promote_prod(RationalPoly{A,A}, RationalPoly{B,B}, RationalPoly{C,C})
+        for U in [V, M, T, P]
+            __promote_prod(A, RationalPoly{B,U}, RationalPoly{C,U})
+        end
+    end
+    _promote_prod(V, V, M)
+    for U in [V, M]
+        _promote_prod(U, M, M)
+    end
+    for U in [V, M, T]
+        _promote_prod(U, T, T)
+    end
+    for U in [V, M, T, P]
+        _promote_prod(U, P, P)
+    end
+end
