@@ -1,5 +1,3 @@
-export differentiate
-
 """
     differentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Union{Int, Val}=1)
 
@@ -39,7 +37,7 @@ function differentiate(t::AbstractTermLike, v::AbstractVariable)
     return coefficient(t) * differentiate(monomial(t), v)
 end
 # The polynomial function will take care of removing the zeros
-function differentiate(p::APL, v::AbstractVariable)
+function differentiate(p::_APL, v::AbstractVariable)
     return polynomial!(differentiate.(terms(p), v), SortedState())
 end
 function differentiate(p::RationalPoly, v::AbstractVariable)
@@ -47,25 +45,25 @@ function differentiate(p::RationalPoly, v::AbstractVariable)
            p.den^2
 end
 
-const ARPL = Union{APL,RationalPoly}
+const _ARPL = Union{_APL,RationalPoly}
 
 function differentiate(
     ps::AbstractArray{PT},
     xs::AbstractArray,
-) where {PT<:ARPL}
+) where {PT<:_ARPL}
     return differentiate.(reshape(ps, (size(ps)..., 1)), reshape(xs, 1, :))
 end
 
-function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT<:ARPL}
+function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT<:_ARPL}
     return differentiate(ps, collect(xs))
 end
 
 # TODO: this signature is probably too wide and creates the potential
 # for stack overflows
-differentiate(p::ARPL, xs) = [differentiate(p, x) for x in xs]
+differentiate(p::_ARPL, xs) = [differentiate(p, x) for x in xs]
 
 # differentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
-differentiate(p::ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
+differentiate(p::_ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
 
 # The `R` argument indicates a desired result type. We use this in order
 # to attempt to preserve type-stability even though the value of `deg` cannot

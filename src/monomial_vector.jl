@@ -1,9 +1,3 @@
-export monomial_vector,
-    monomial_vector_type,
-    empty_monomial_vector,
-    sort_monomial_vector,
-    merge_monomial_vectors
-
 function monomials(v::AbstractVariable, degree, args...)
     return monomials((v,), degree, args...)
 end
@@ -73,10 +67,10 @@ Returns the return type of `monomial_vector`.
 """
 function monomial_vector_type(
     X::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {PT<:APL}
+) where {PT<:_APL}
     return monomial_vector_type(PT)
 end
-function monomial_vector_type(::Union{PT,Type{PT}}) where {PT<:APL}
+function monomial_vector_type(::Union{PT,Type{PT}}) where {PT<:_APL}
     return Vector{monomial_type(PT)}
 end
 

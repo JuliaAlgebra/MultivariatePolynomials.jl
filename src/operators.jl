@@ -33,36 +33,36 @@ end
 # is a polynomial of JuMP affine expression but if we promote it would be a
 # polynomial of quadratic expression
 for op in [:+, :-, :(==)]
-    @eval Base.$op(p1::APL, p2::APL) = $op(promote(p1, p2)...)
+    @eval Base.$op(p1::_APL, p2::_APL) = $op(promote(p1, p2)...)
 end
 # Promotion between `I` and `1` is `Any`.
 # Promotion between `I` and `2I` is `UniformScaling`.
 for op in [:+, :-]
-    @eval function Base.$op(p1::APL, p2::APL{<:LinearAlgebra.UniformScaling})
+    @eval function Base.$op(p1::_APL, p2::_APL{<:LinearAlgebra.UniformScaling})
         return $op(p1, map_coefficients(J -> J.λ, p2, nonzero = true))
     end
-    @eval function Base.$op(p1::APL{<:LinearAlgebra.UniformScaling}, p2::APL)
+    @eval function Base.$op(p1::_APL{<:LinearAlgebra.UniformScaling}, p2::_APL)
         return $op(map_coefficients(J -> J.λ, p1, nonzero = true), p2)
     end
     @eval function Base.$op(
-        p1::APL{<:LinearAlgebra.UniformScaling},
-        p2::APL{<:LinearAlgebra.UniformScaling},
+        p1::_APL{<:LinearAlgebra.UniformScaling},
+        p2::_APL{<:LinearAlgebra.UniformScaling},
     )
         return $op(map_coefficients(J -> J.λ, p1, nonzero = true), p2)
     end
 end
-function Base.isapprox(p1::APL, p2::APL; kwargs...)
+function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
     return isapprox(promote(p1, p2)...; kwargs...)
 end
 
-# @eval $op(p::APL, α) = $op(promote(p, α)...) would be less efficient
+# @eval $op(p::_APL, α) = $op(promote(p, α)...) would be less efficient
 for (op, fun) in [
     (:+, :right_constant_plus),
     (:-, :right_constant_minus),
     (:*, :right_constant_mult),
     (:(==), :right_constant_eq),
 ]
-    @eval Base.$op(p::APL, α) = $fun(p, α)
+    @eval Base.$op(p::_APL, α) = $fun(p, α)
 end
 for (op, fun) in [
     (:+, :left_constant_plus),
@@ -70,43 +70,43 @@ for (op, fun) in [
     (:*, :left_constant_mult),
     (:(==), :left_constant_eq),
 ]
-    @eval Base.$op(α, p::APL) = $fun(α, p)
+    @eval Base.$op(α, p::_APL) = $fun(α, p)
 end
 ## Fix ambiguity between above methods and methods in MA
-Base.:+(::MA.Zero, p::APL) = MA.copy_if_mutable(p)
-Base.:+(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
-Base.:-(::MA.Zero, p::APL) = MA.operate(-, p)
-Base.:-(p::APL, ::MA.Zero) = MA.copy_if_mutable(p)
+Base.:+(::MA.Zero, p::_APL) = MA.copy_if_mutable(p)
+Base.:+(p::_APL, ::MA.Zero) = MA.copy_if_mutable(p)
+Base.:-(::MA.Zero, p::_APL) = MA.operate(-, p)
+Base.:-(p::_APL, ::MA.Zero) = MA.copy_if_mutable(p)
 
-# Special case AbstractArrays of APLs
+# Special case AbstractArrays of _APLs
 # We add these instead of relying on the broadcasting API since the above method definitions are very wide.
 # In particular, there is support for Matrices as coefficents. In order to avoid issues like #104 we therefore
 # explicitly define this (instead of implictly getting unexpected results).
 for op in [:+, :-]
-    @eval Base.$op(p::APL, A::AbstractArray{<:APL}) = map(f -> $op(p, f), A)
-    @eval Base.$op(A::AbstractArray{<:APL}, p::APL) = map(f -> $op(f, p), A)
+    @eval Base.$op(p::_APL, A::AbstractArray{<:_APL}) = map(f -> $op(p, f), A)
+    @eval Base.$op(A::AbstractArray{<:_APL}, p::_APL) = map(f -> $op(f, p), A)
 end
-Base.:*(p::APL, A::AbstractArray) = map(f -> p * f, A)
-Base.:*(A::AbstractArray, p::APL) = map(f -> f * p, A)
-Base.:/(A::AbstractArray, p::APL) = map(f -> f / p, A)
+Base.:*(p::_APL, A::AbstractArray) = map(f -> p * f, A)
+Base.:*(A::AbstractArray, p::_APL) = map(f -> f * p, A)
+Base.:/(A::AbstractArray, p::_APL) = map(f -> f / p, A)
 
 right_constant_function(::typeof(+)) = right_constant_plus
 right_constant_function(::typeof(-)) = right_constant_minus
 right_constant_function(::typeof(*)) = right_constant_mult
-function MA.operate!(op::Union{typeof(+),typeof(-),typeof(*)}, p::APL, α)
+function MA.operate!(op::Union{typeof(+),typeof(-),typeof(*)}, p::_APL, α)
     return MA.operate!(right_constant_function(op), p, α)
 end
 
-MA.operate!(op::typeof(*), α, p::APL) = MA.operate!(left_constant_mult, α, p)
-MA.operate!(op::typeof(*), p::APL, α) = MA.operate!(right_constant_mult, p, α)
-MA.operate!(op::typeof(/), p::APL, α) = map_coefficients!(Base.Fix2(op, α), p)
-function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::APL)
+MA.operate!(op::typeof(*), α, p::_APL) = MA.operate!(left_constant_mult, α, p)
+MA.operate!(op::typeof(*), p::_APL, α) = MA.operate!(right_constant_mult, p, α)
+MA.operate!(op::typeof(/), p::_APL, α) = map_coefficients!(Base.Fix2(op, α), p)
+function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::_APL)
     return MA.operate_to!(output, left_constant_mult, α, p)
 end
-function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::APL, α)
+function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::_APL, α)
     return MA.operate_to!(output, right_constant_mult, p, α)
 end
-function MA.operate_to!(output::APL, op::typeof(/), p::APL, α)
+function MA.operate_to!(output::_APL, op::typeof(/), p::_APL, α)
     return map_coefficients_to!(output, Base.Fix2(op, α), p)
 end
 
@@ -243,7 +243,7 @@ function MA.operate!(
     return MA.operate!(op, p, polynomial(q))
 end
 
-function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::APL, p2::APL)
+function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::_APL, p2::_APL)
     for t1 in terms(p1)
         for t2 in terms(p2)
             push!(ts, t1 * t2)
@@ -261,8 +261,8 @@ function Base.:*(p::AbstractPolynomial, q::AbstractPolynomial)
     )
 end
 
-Base.isapprox(p::APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
-Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
+Base.isapprox(p::_APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
+Base.isapprox(α, p::_APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy the monomial
@@ -270,35 +270,35 @@ Base.isapprox(α, p::APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
 Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
-Base.:-(p::APL) = map_coefficients(-, p)
-Base.:+(p::Union{APL,RationalPoly}) = p
-Base.:*(p::Union{APL,RationalPoly}) = p
+Base.:-(p::_APL) = map_coefficients(-, p)
+Base.:+(p::Union{_APL,RationalPoly}) = p
+Base.:*(p::Union{_APL,RationalPoly}) = p
 
 # Avoid adding a zero constant that might artificially increase the Newton polytope
 # Need to add polynomial conversion for type stability
-function right_constant_plus(p::APL{S}, α::T) where {S,T}
+function right_constant_plus(p::_APL{S}, α::T) where {S,T}
     return iszero(α) ? polynomial(p, MA.promote_operation(+, S, T)) :
            p + constant_term(α, p)
 end
-function left_constant_plus(α::S, p::APL{T}) where {S,T}
+function left_constant_plus(α::S, p::_APL{T}) where {S,T}
     return iszero(α) ? polynomial(p, MA.promote_operation(+, S, T)) :
            constant_term(α, p) + p
 end
-function MA.operate!(::typeof(right_constant_plus), p::APL, α)
+function MA.operate!(::typeof(right_constant_plus), p::_APL, α)
     if !iszero(α)
         MA.operate!(+, p, constant_term(α, p))
     end
     return p
 end
-function right_constant_minus(p::APL{S}, α::T) where {S,T}
+function right_constant_minus(p::_APL{S}, α::T) where {S,T}
     return iszero(α) ? polynomial(p, MA.promote_operation(-, S, T)) :
            p - constant_term(α, p)
 end
-function left_constant_minus(α::S, p::APL{T}) where {S,T}
+function left_constant_minus(α::S, p::_APL{T}) where {S,T}
     return iszero(α) ? polynomial(-p, MA.promote_operation(-, S, T)) :
            constant_term(α, p) - p
 end
-function MA.operate!(::typeof(right_constant_minus), p::APL, α)
+function MA.operate!(::typeof(right_constant_minus), p::_APL, α)
     if !iszero(α)
         MA.operate!(-, p, constant_term(α, p))
     end
@@ -317,16 +317,16 @@ function right_constant_mult(p::AbstractPolynomialLike, α)
     return map_coefficients(Base.Fix2(*, α), p)
 end
 
-function MA.operate_to!(output, ::typeof(left_constant_mult), α, p::APL)
+function MA.operate_to!(output, ::typeof(left_constant_mult), α, p::_APL)
     return map_coefficients_to!(output, Base.Fix1(*, α), p)
 end
-function MA.operate_to!(output, ::typeof(right_constant_mult), p::APL, α)
+function MA.operate_to!(output, ::typeof(right_constant_mult), p::_APL, α)
     return map_coefficients_to!(output, Base.Fix2(*, α), p)
 end
-function MA.operate!(::typeof(left_constant_mult), α, p::APL)
+function MA.operate!(::typeof(left_constant_mult), α, p::_APL)
     return map_coefficients!(Base.Fix1(*, α), p)
 end
-function MA.operate!(::typeof(right_constant_mult), p::APL, α)
+function MA.operate!(::typeof(right_constant_mult), p::_APL, α)
     return map_coefficients!(Base.Fix2(MA.mul!!, α), p)
 end
 
@@ -363,13 +363,13 @@ function Base.:*(t1::AbstractTermLike, t2::AbstractTermLike)
     )
 end
 
-function MA.operate!(::typeof(*), p::APL, t::AbstractMonomialLike)
+function MA.operate!(::typeof(*), p::_APL, t::AbstractMonomialLike)
     return map_exponents!(+, p, t)
 end
-Base.:*(p::APL, t::AbstractMonomialLike) = map_exponents(+, p, t)
-Base.:*(t::AbstractTermLike, p::APL) = polynomial!(map(te -> t * te, terms(p)))
-Base.:*(p::APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
-Base.:*(p::APL, q::APL) = polynomial(p) * polynomial(q)
+Base.:*(p::_APL, t::AbstractMonomialLike) = map_exponents(+, p, t)
+Base.:*(t::AbstractTermLike, p::_APL) = polynomial!(map(te -> t * te, terms(p)))
+Base.:*(p::_APL, t::AbstractTermLike) = polynomial!(map(te -> te * t, terms(p)))
+Base.:*(p::_APL, q::_APL) = polynomial(p) * polynomial(q)
 
 # guaranteed that monomial(t1) > monomial(t2)
 function _polynomial_2terms(
@@ -479,8 +479,8 @@ end
 LinearAlgebra.dot(x, p::AbstractPolynomialLike) = x' * p
 LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
 
-LinearAlgebra.symmetric_type(PT::Type{<:APL}) = PT
-LinearAlgebra.symmetric(p::APL, ::Symbol) = p
+LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT
+LinearAlgebra.symmetric(p::_APL, ::Symbol) = p
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """

@@ -1,5 +1,3 @@
-export GeneralizedEuclideanAlgorithm
-
 _copy(p, ::MA.IsMutable) = p
 # `Base.copy` does not copy anything for `BigInt` so we need `MA.copy_if_mutable`
 _copy(p, ::MA.IsNotMutable) = MA.copy_if_mutable(p)
@@ -57,15 +55,15 @@ function _coefficient_gcd(α::AbstractFloat, β::AbstractFloat)
 end
 
 function Base.lcm(
-    p::APL,
-    q::APL,
+    p::_APL,
+    q::_APL,
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
 )
     return p * div(q, gcd(p, q, algo))
 end
 function Base.gcd(
     α,
-    p::APL,
+    p::_APL,
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
     mα::MA.MutableTrait = MA.IsNotMutable(),
     mp::MA.MutableTrait = MA.IsNotMutable(),
@@ -73,7 +71,7 @@ function Base.gcd(
     return _coefficient_gcd(α, content(p, algo, mp))
 end
 function Base.gcd(
-    p::APL,
+    p::_APL,
     α,
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
     mp::MA.MutableTrait = MA.IsNotMutable(),
@@ -87,8 +85,8 @@ end
 #end
 function MA.promote_operation(
     ::typeof(gcd),
-    P::Type{<:APL},
-    Q::Type{<:APL},
+    P::Type{<:_APL},
+    Q::Type{<:_APL},
     A::Type = GeneralizedEuclideanAlgorithm,
 )
     return MA.promote_operation(rem_or_pseudo_rem, P, Q, A)
@@ -140,8 +138,8 @@ This is the [`GeneralizedEuclideanAlgorithm`](@ref).
 Addison-Wesley Professional. Third edition.
 """
 function Base.gcd(
-    p1::APL{T},
-    p2::APL{S},
+    p1::_APL{T},
+    p2::_APL{S},
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
     m1::MA.MutableTrait = MA.IsNotMutable(),
     m2::MA.MutableTrait = MA.IsNotMutable(),
@@ -289,8 +287,8 @@ function MA.operate(
 end
 
 function deflated_gcd(
-    p1::APL{T},
-    p2::APL{S},
+    p1::_APL{T},
+    p2::_APL{S},
     algo,
     m1::MA.MutableTrait,
     m2::MA.MutableTrait,
@@ -336,8 +334,8 @@ function deflated_gcd(
 end
 
 function Base.gcdx(
-    p1::APL{T},
-    p2::APL{S},
+    p1::_APL{T},
+    p2::_APL{S},
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
 ) where {T,S}
     i1, i2, num_common = _extracted_variable(p1, p2)
@@ -426,8 +424,8 @@ function _extracted_variable(p1, p2)
 end
 
 function multivariate_gcd(
-    p1::APL,
-    p2::APL,
+    p1::_APL,
+    p2::_APL,
     var,
     algo,
     m1::MA.MutableTrait,
@@ -444,7 +442,7 @@ _vector(t::AbstractVector) = collect(t)
 _vector(t::Vector) = t
 
 """
-    isolate_variable(poly::APL, var::AbstractVariable, mutability::MA.MutableTrait)
+    isolate_variable(poly::_APL, var::AbstractVariable, mutability::MA.MutableTrait)
 
 Returns a polynomial with variable `var`. The other variables of `poly` are moved as coefficients.
 
@@ -452,7 +450,7 @@ The output can be mutated without affecting `poly` if `mutability` is
 `MA.IsNotMutable`.
 """
 function isolate_variable(
-    poly::APL,
+    poly::_APL,
     var::AbstractVariable,
     mutability::MA.MutableTrait,
 )
@@ -489,7 +487,7 @@ function isolate_variable(
     return polynomial!(new_terms, SortedUniqState())
 end
 
-function flatten_variable!(::Type{TT}, poly::APL) where {TT<:AbstractTerm}
+function flatten_variable!(::Type{TT}, poly::_APL) where {TT<:AbstractTerm}
     ts = TT[]
     for t in terms(poly)
         m = monomial(t)
@@ -504,7 +502,7 @@ _polynomial(ts, state, ::MA.IsNotMutable) = polynomial(ts, state)
 _polynomial(ts, state, ::MA.IsMutable) = polynomial!(ts, state)
 
 """
-    primitive_univariate_gcd!(p::APL, q::APL, algo::AbstractUnivariateGCDAlgorithm)
+    primitive_univariate_gcd!(p::_APL, q::_APL, algo::AbstractUnivariateGCDAlgorithm)
 
 Returns the `gcd` of primitive polynomials `p` and `q` using algorithm `algo`
 which is a subtype of [`AbstractUnivariateGCDAlgorithm`](@ref).
@@ -527,8 +525,8 @@ end
 # If `p` and `q` do not have the same type then the local variables `p` and `q`
 # won't be type stable so we create `u` and `v`.
 function primitive_univariate_gcd!(
-    p::APL,
-    q::APL,
+    p::_APL,
+    q::_APL,
     algo::GeneralizedEuclideanAlgorithm,
 )
     if maxdegree(p) < maxdegree(q)
@@ -561,8 +559,8 @@ function primitive_univariate_gcd!(
 end
 
 function primitive_univariate_gcdx(
-    u0::APL,
-    v0::APL,
+    u0::_APL,
+    v0::_APL,
     algo::GeneralizedEuclideanAlgorithm,
 )
     if maxdegree(u0) < maxdegree(v0)
@@ -599,7 +597,7 @@ function primitive_univariate_gcdx(
     return p * b, (a - b * q), g
 end
 
-function primitive_univariate_gcd!(p::APL, q::APL, ::SubresultantAlgorithm)
+function primitive_univariate_gcd!(p::_APL, q::_APL, ::SubresultantAlgorithm)
     return error("Not implemented yet")
 end
 
@@ -627,8 +625,8 @@ If the coefficients are not `AbstractFloat`, this
 Addison-Wesley Professional. Third edition.
 """
 function univariate_gcd(
-    p1::APL{S},
-    p2::APL{T},
+    p1::_APL{S},
+    p2::_APL{T},
     algo::AbstractUnivariateGCDAlgorithm,
     m1::MA.MutableTrait,
     m2::MA.MutableTrait,
@@ -644,8 +642,8 @@ function univariate_gcd(
 end
 function univariate_gcd(
     ::UFD,
-    p1::APL,
-    p2::APL,
+    p1::_APL,
+    p2::_APL,
     algo::AbstractUnivariateGCDAlgorithm,
     m1::MA.MutableTrait,
     m2::MA.MutableTrait,
@@ -663,8 +661,8 @@ end
 
 function univariate_gcd(
     ::Field,
-    p1::APL,
-    p2::APL,
+    p1::_APL,
+    p2::_APL,
     algo::AbstractUnivariateGCDAlgorithm,
     m1::MA.MutableTrait,
     m2::MA.MutableTrait,
@@ -673,8 +671,8 @@ function univariate_gcd(
 end
 
 function univariate_gcdx(
-    p1::APL{S},
-    p2::APL{T},
+    p1::_APL{S},
+    p2::_APL{T},
     algo::AbstractUnivariateGCDAlgorithm,
 ) where {S,T}
     return univariate_gcdx(
@@ -686,8 +684,8 @@ function univariate_gcdx(
 end
 function univariate_gcdx(
     ::UFD,
-    p1::APL,
-    p2::APL,
+    p1::_APL,
+    p2::_APL,
     algo::AbstractUnivariateGCDAlgorithm,
 )
     f1, g1 = primitive_part_content(p1, algo, MA.IsNotMutable())
@@ -701,19 +699,19 @@ function univariate_gcdx(
 end
 function univariate_gcdx(
     ::Field,
-    p1::APL,
-    p2::APL,
+    p1::_APL,
+    p2::_APL,
     algo::AbstractUnivariateGCDAlgorithm,
 )
     return primitive_univariate_gcdx(p1, p2, algo)
 end
 
-_gcd(a::APL, b::APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
-_gcd(a, b::APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
-_gcd(a::APL, b, algo, ma, mb) = gcd(a, b, algo, ma, mb)
+_gcd(a::_APL, b::_APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
+_gcd(a, b::_APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
+_gcd(a::_APL, b, algo, ma, mb) = gcd(a, b, algo, ma, mb)
 _gcd(a, b, algo, ma, mb) = gcd(a, b)
 
-_simplifier(a::APL, b::APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
+_simplifier(a::_APL, b::_APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
 _simplifier(a, b, algo, ma, mb) = _gcd(a, b, algo, ma, mb)
 # Before Julia v1.4, it is not defined.
 # After Julia v1.4, it is defined as `gcd of num / lcm of den`.
@@ -727,7 +725,7 @@ function _simplifier(a::Rational, b::Rational, algo, ma, mb)
 end
 
 # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
-function termwise_content(p::APL, algo, mutability::MA.MutableTrait)
+function termwise_content(p::_APL, algo, mutability::MA.MutableTrait)
     ts = terms(p)
     length(ts) == 1 && return _copy(first(ts), mutability)
     g = gcd(ts[1], ts[2], algo, mutability, mutability)
@@ -754,7 +752,7 @@ The output can be mutated without affecting `poly` if `mutability` is
 Addison-Wesley Professional. Third edition.
 """
 function content(
-    poly::APL{T},
+    poly::_APL{T},
     algo::AbstractUnivariateGCDAlgorithm,
     mutability::MA.MutableTrait,
 ) where {T}
@@ -767,7 +765,7 @@ function content(
         return convert(P, _copy(first(coefs), mutability))
     end
     # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
-    if T <: APL
+    if T <: _APL
         for i in eachindex(coefs)
             if nterms(coefs[i]) == 1
                 g = _gcd(
@@ -801,7 +799,7 @@ function content(
     return g::P
 end
 function content(
-    ::APL{T},
+    ::_APL{T},
     ::AbstractUnivariateGCDAlgorithm,
     ::MA.MutableTrait,
 ) where {T<:AbstractFloat}
@@ -822,14 +820,14 @@ instead.
 Addison-Wesley Professional. Third edition.
 """
 function primitive_part(
-    p::APL,
+    p::_APL,
     algo::AbstractUnivariateGCDAlgorithm,
     mutability::MA.MutableTrait,
 )
     return primitive_part_content(p, algo, mutability)[1]
 end
 function primitive_part(
-    p::APL{<:AbstractFloat},
+    p::_APL{<:AbstractFloat},
     ::AbstractUnivariateGCDAlgorithm,
     ::MA.MutableTrait,
 )

@@ -6,8 +6,6 @@ import DataStructures
 
 import MutableArithmetics as MA
 
-export AbstractPolynomialLike, AbstractTermLike, AbstractMonomialLike
-
 """
     AbstractPolynomialLike{T}
 
@@ -31,7 +29,6 @@ Abstract type for a value that can act like a monomial. For instance, an `Abstra
 """
 abstract type AbstractMonomialLike <: AbstractTermLike{Int} end
 
-export AbstractVariable, AbstractMonomial, AbstractTerm, AbstractPolynomial
 """
     AbstractVariable <: AbstractMonomialLike
 
@@ -60,7 +57,7 @@ Abstract type for a polynomial of coefficient type `T`, i.e. a sum of `AbstractT
 """
 abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 
-const APL{T} = AbstractPolynomialLike{T}
+const _APL{T} = AbstractPolynomialLike{T}
 
 include("zip.jl")
 include("lazy_iterators.jl")
@@ -96,5 +93,23 @@ include("sequences.jl")
 include("default_polynomial.jl")
 
 include("deprecate.jl")
+
+const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
+
+for sym in names(@__MODULE__; all = true)
+    sym_string = string(sym)
+    if sym in _EXCLUDE_SYMBOLS ||
+       startswith(sym_string, "_") ||
+       startswith(sym_string, "@_")
+        continue
+    end
+    if !(
+        Base.isidentifier(sym) ||
+        (startswith(sym_string, "@") && Base.isidentifier(sym_string[2:end]))
+    )
+        continue
+    end
+    @eval export $sym
+end
 
 end # module

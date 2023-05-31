@@ -1,6 +1,3 @@
-export name,
-    name_base_indices, similar_variable, @similar_variable, variable_union_type
-
 Base.copy(x::AbstractVariable) = x
 
 """
@@ -21,10 +18,10 @@ function variable_union_type end
 function variable_union_type(::Type{MT}) where {MT<:AbstractMonomialLike}
     return error("`variable_union_type` not implemented for $MT.")
 end
-function variable_union_type(::Type{PT}) where {PT<:APL}
+function variable_union_type(::Type{PT}) where {PT<:_APL}
     return variable_union_type(monomial_type(PT))
 end
-variable_union_type(p::APL) = variable_union_type(typeof(p))
+variable_union_type(p::_APL) = variable_union_type(typeof(p))
 
 """
     variable(p::AbstractPolynomialLike)
@@ -41,7 +38,7 @@ calling `variable(1.0y)` should return the variable `y` however calling
 
 This operation is not type stable for the TypedPolynomials implementation if `nvariables(p) > 1` but is type stable for DynamicPolynomials.
 """
-variable(t::APL) = convert(variable_union_type(t), t)
+variable(t::_APL) = convert(variable_union_type(t), t)
 
 """
     name(v::AbstractVariable)::AbstractString

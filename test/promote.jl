@@ -51,7 +51,7 @@
 
     function _test(a, af, TT)
         __test(a, apl, TT, TT)
-        # `x isa APL{Int}` so here we don't have `Float64`:
+        # `x isa _APL{Int}` so here we don't have `Float64`:
         pt() = apl()
         pt(T) = apl()
         tt() = TT()
@@ -61,8 +61,8 @@
         return _t(af, a, TT())
     end
 
-    apl() = MP.APL
-    apl(T::Type) = MP.APL{T}
+    apl() = MP._APL
+    apl(T::Type) = MP._APL{T}
     p = [i == 1 ? x + y : x for i in 1:2]
     pf = [i == 1 ? 1.0x + y : x for i in 1:2]
     _test(p, pf, apl)

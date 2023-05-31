@@ -1,5 +1,3 @@
-export antidifferentiate
-
 """
     antidifferentiate(p::AbstractPolynomialLike, v::AbstractVariable, deg::Union{Int, Val}=1)
 
@@ -34,16 +32,16 @@ end
 function antidifferentiate(t::AbstractTermLike, v::AbstractVariable)
     return coefficient(t) * antidifferentiate(monomial(t), v)
 end
-function antidifferentiate(p::APL, v::AbstractVariable)
+function antidifferentiate(p::_APL, v::AbstractVariable)
     return polynomial!(antidifferentiate.(terms(p), v), SortedState())
 end
 
 # TODO: this signature is probably too wide and creates the potential
 # for stack overflows
-antidifferentiate(p::APL, xs) = [antidifferentiate(p, x) for x in xs]
+antidifferentiate(p::_APL, xs) = [antidifferentiate(p, x) for x in xs]
 
 # antidifferentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
-function antidifferentiate(p::APL, m::AbstractMonomial)
+function antidifferentiate(p::_APL, m::AbstractMonomial)
     return antidifferentiate(p, variable(m))
 end
 

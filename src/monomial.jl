@@ -1,12 +1,3 @@
-export variables,
-    nvariables,
-    exponents,
-    degree,
-    isconstant,
-    powers,
-    constant_monomial,
-    map_exponents
-
 """
     monomial_type(p::AbstractPolynomialLike)
 
@@ -17,12 +8,12 @@ Return the type of the monomials of `p`.
 Returns the type of the monomials of a polynomial of type `PT`.
 """
 monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
-function monomial_type(::Union{PT,Type{PT}}) where {PT<:APL}
+function monomial_type(::Union{PT,Type{PT}}) where {PT<:_APL}
     return monomial_type(term_type(PT))
 end
 function monomial_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {PT<:APL}
+) where {PT<:_APL}
     return monomial_type(PT)
 end
 
@@ -57,7 +48,7 @@ Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)`
 nvariables(::Union{AbstractVariable,Type{<:AbstractVariable}}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
-nvariables(p::APL) = length(variables(p))
+nvariables(p::_APL) = length(variables(p))
 
 """
     exponents(t::AbstractTermLike)
@@ -137,7 +128,7 @@ function constant_monomial end
 function constant_monomial(::Type{MT}) where {MT<:AbstractMonomial}
     return error("`constant_monomial` not implemented for $MT.")
 end
-function constant_monomial(::Type{PT}) where {PT<:APL}
+function constant_monomial(::Type{PT}) where {PT<:_APL}
     return constant_monomial(monomial_type(PT))
 end
 constant_monomial(t::AbstractTerm) = constant_monomial(monomial(t))

@@ -1,7 +1,3 @@
-export MonomialOrdering
-export GradedLex
-export ordering
-
 """
     AbstractOrdering
 
