@@ -322,5 +322,8 @@ function MA.promote_operation(
     ::Type{RationalPoly{NS,DS}},
     ::Type{RationalPoly{NT,DT}},
 ) where {NS,DS,NT,DT}
-    return RationalPoly{MA.promote_operation(*, NS, NT),MA.promote_operation(*, DS, DT)}
+    return RationalPoly{
+        MA.promote_operation(*, NS, NT),
+        MA.promote_operation(*, DS, DT),
+    }
 end
