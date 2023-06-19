@@ -101,7 +101,8 @@ end
 
 Returns whether the monomial of `t` is constant.
 """
-isconstant(t::AbstractTermLike) = all(iszero, exponents(t))
+isconstant(t::AbstractTerm) = isconstant(monomial(t))
+isconstant(t::AbstractMonomialLike) = all(iszero, exponents(t))
 isconstant(v::AbstractVariable) = false
 
 """

@@ -179,9 +179,9 @@ end
 function Base.gcd(
     t1::AbstractTermLike{T},
     t2::AbstractTermLike{S},
-    algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
-    m1::MA.MutableTrait = MA.IsNotMutable(),
-    m2::MA.MutableTrait = MA.IsNotMutable(),
+    ::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
+    ::MA.MutableTrait = MA.IsNotMutable(),
+    ::MA.MutableTrait = MA.IsNotMutable(),
 ) where {T,S}
     return term(
         _coefficient_gcd(coefficient(t1), coefficient(t2)),
