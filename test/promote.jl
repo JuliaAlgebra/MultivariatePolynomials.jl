@@ -149,3 +149,18 @@ end
         _promote_prod(U, P, P)
     end
 end
+
+@testset "promote_operation with polynomial coefficient" begin
+    Mod.@polyvar x
+    Mod.@polyvar y
+    X = typeof(x)
+    MX = monomial_type(X)
+    TX = term_type(X, Int)
+    PX = polynomial_type(X, Int)
+    TY = term_type(Y, PX)
+    PY = polynomial_type(Y, PX)
+    for T in [X, MX, TX, PX]
+        __promote_prod(T, TY, TY)
+        __promote_prod(T, PY, PY)
+    end
+end
