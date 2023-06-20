@@ -157,6 +157,7 @@ end
     MX = monomial_type(X)
     TX = term_type(X, Int)
     PX = polynomial_type(X, Int)
+    Y = typeof(y)
     TY = term_type(Y, PX)
     PY = polynomial_type(Y, PX)
     for T in [X, MX, TX, PX]
