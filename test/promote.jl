@@ -61,8 +61,8 @@
         return _t(af, a, TT())
     end
 
-    apl() = MP._APL
-    apl(T::Type) = MP._APL{T}
+    apl() = _APL
+    apl(T::Type) = _APL{T}
     p = [i == 1 ? x + y : x for i in 1:2]
     pf = [i == 1 ? 1.0x + y : x for i in 1:2]
     _test(p, pf, apl)
