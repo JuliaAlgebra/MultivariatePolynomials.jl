@@ -158,10 +158,16 @@ end
     TX = term_type(X, Int)
     PX = polynomial_type(X, Int)
     Y = typeof(y)
-    TY = term_type(Y, PX)
-    PY = polynomial_type(Y, PX)
+    TXY = term_type(Y, PX)
+    PXY = polynomial_type(Y, PX)
+    TY = term_type(Y, Int)
+    PY = polynomial_type(Y, Int)
     for T in [X, MX, TX, PX]
-        __promote_prod(T, TY, TY)
-        __promote_prod(T, PY, PY)
+        __promote_prod(TY, TY, TY)
+        __promote_prod(TXY, TY, TXY)
+        __promote_prod(TXY, TXY, TXY)
+        __promote_prod(PY, PY, PY)
+        __promote_prod(PXY, PY, PXY)
+        __promote_prod(PXY, PXY, PXY)
     end
 end
