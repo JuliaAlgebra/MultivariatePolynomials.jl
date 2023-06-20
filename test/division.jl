@@ -136,7 +136,7 @@ function _test_gcdx_unit(expected, p1, p2, algo)
     return test_gcdx_unit(expected, p2, p1, algo)
 end
 
-function univariate_gcd_test(algo = GeneralizedEuclideanAlgorithm())
+function univariate_gcd_test(algo = SubresultantAlgorithm())
     Mod.@polyvar x
     test_gcdx_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
     test_gcdx_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
@@ -214,7 +214,7 @@ end
 
 function multivariate_gcd_test(
     ::Type{T},
-    algo = GeneralizedEuclideanAlgorithm(),
+    algo = SubresultantAlgorithm(),
 ) where {T}
     Mod.@polyvar x y z
     o = one(T)
@@ -411,6 +411,7 @@ end
     @testset "Division by multiple polynomials examples" begin
         multi_div_test()
     end
+    univariate_gcd_test(SubresultantAlgorithm())
     @testset "Univariate gcd primitive_rem=$primitive_rem" for primitive_rem in
                                                                [false, true]
         @testset "skip_last=$skip_last" for skip_last in [false, true]
@@ -422,6 +423,7 @@ end
     @testset "Multivariate gcd $T" for T in
                                        [Int, BigInt, Rational{BigInt}, Float64]
         if T != Rational{BigInt} || VERSION >= v"1.6"
+            multivariate_gcd_test(T, SubresultantAlgorithm())
             # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
             @testset "primitive_rem=$primitive_rem" for primitive_rem in
                                                         [false, true]

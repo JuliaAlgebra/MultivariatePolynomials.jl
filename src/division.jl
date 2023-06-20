@@ -231,6 +231,13 @@ function MA.operate!(
     return MA.buffered_operate!(nothing, op, f, g, algo)
 end
 
+# TODO As suggested in [Knu14, Algorithm R, p. 426] (univariate case only), if
+#      `deg(f) = n` and `deg(g) = m`, during the first `n - m - t` steps, the
+#      coefficient of the `t`th power will simply be multiplied by the leading
+#      coefficient of `g` so we could speed up by multiplying this coefficient
+#      to the power `n - m - t` using `Base.power_by_squaring`.
+#      However, since there might be missing terms, so we don't know in advance
+#      the needed power but we could keep track of it.
 function MA.buffered_operate!(
     buffer,
     op::Union{typeof(rem),typeof(pseudo_rem)},
@@ -240,8 +247,9 @@ function MA.buffered_operate!(
 )
     ltg = leading_term(g)
     ltf = leading_term(f)
+    # This only makes sense in the univariate case but it's only used for univariate gcd anyway
+    skipped_divisions = maxdegree(f) - maxdegree(g) + 1
     MA.operate!(remove_leading_term, g)
-    not_divided_terms = nothing
     while !iszero(f)
         if isapproxzero(ltf) # TODO `, kwargs...)`
             MA.operate!(remove_leading_term, f)
@@ -253,26 +261,24 @@ function MA.buffered_operate!(
             if monomial(ltg) > monomial(ltf)
                 break
             end
-            if isnothing(not_divided_terms)
-                not_divided_terms = term_type(f)
-            end
-            push!(not_divided_terms, ltf)
             MA.operate!(remove_leading_term, f)
         else
             MA.operate!(remove_leading_term, f)
             t = _prepare_s_poly!(op, f, ltf, ltg)
+            skipped_divisions -= 1
             MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
         end
-        if op === pseudo_rem && algo.primitive_rem
+        if op === pseudo_rem && _primitive_rem(algo)
             f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
-        if algo.skip_last && maxdegree(f) == maxdegree(g)
+        if _skip_last(algo) && maxdegree(f) == maxdegree(g)
             break
         end
         ltf = leading_term(f)
     end
     # Add it back as we cannot modify `g`
     MA.operate!(unsafe_restore_leading_term, g, ltg)
+    _set_skipped_divisions!(algo, skipped_divisions)
     return f
 end
 
