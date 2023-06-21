@@ -645,7 +645,14 @@ function primitive_univariate_gcd!(
                 #      we just know it divides the content of `r`, it is not guaranteed to be equal to the content of `r`
                 #      We could maybe do better than multiply `r` here though but let's start with this approach as a baseline
                 #ghδ = div_multiple(ghδ, _pow_no_copy(leading_coefficient(v), algo.skipped_divisions), MA.IsMutable())
-                r = MA.operate!(right_constant_mult, r, _pow_no_copy(leading_coefficient(v), algo.skipped_divisions))
+                r = MA.operate!(
+                    right_constant_mult,
+                    r,
+                    _pow_no_copy(
+                        leading_coefficient(v),
+                        algo.skipped_divisions,
+                    ),
+                )
             end
             r = right_constant_div_multiple(r, ghδ, MA.IsMutable())::R
         end
