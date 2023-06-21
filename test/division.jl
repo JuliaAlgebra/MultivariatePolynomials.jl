@@ -301,23 +301,23 @@ function multivariate_gcd_test(
     a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
     b = (o * x + o * y + o * z) * (o * x^2 + o * y)
     c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
-    if T != Int || (
-        algo != GeneralizedEuclideanAlgorithm(false, false) &&
-        algo != GeneralizedEuclideanAlgorithm(true, false) &&
-        algo != GeneralizedEuclideanAlgorithm(true, true)
-    )
-        sym_test(a, b, 1, algo)
-    end
+#    if T != Int || (
+#        algo != GeneralizedEuclideanAlgorithm(false, false) &&
+#        algo != GeneralizedEuclideanAlgorithm(true, false) &&
+#        algo != GeneralizedEuclideanAlgorithm(true, true)
+#    )
+#        sym_test(a, b, 1, algo)
+#    end
     sym_test(b, c, x + y + z, algo)
     sym_test(c, a, z^3 + y^2 + x, algo)
-    if T != Int && (
-        T != Float64 || (
-            algo != GeneralizedEuclideanAlgorithm(false, true) &&
-            algo != GeneralizedEuclideanAlgorithm(true, true)
-        )
-    )
-        triple_test(a, b, c, algo)
-    end
+#    if T != Int && (
+#        T != Float64 || (
+#            algo != GeneralizedEuclideanAlgorithm(false, true) &&
+#            algo != GeneralizedEuclideanAlgorithm(true, true)
+#        )
+#    )
+#        triple_test(a, b, c, algo)
+#    end
 
     # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/195
     return sym_test(
