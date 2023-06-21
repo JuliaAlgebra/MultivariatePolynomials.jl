@@ -1,8 +1,7 @@
 using LinearAlgebra, Test
 using Combinatorics
 
-import MutableArithmetics
-const MA = MutableArithmetics
+import MutableArithmetics as MA
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
@@ -123,13 +122,15 @@ end
 
 function test_gcdx_unit(expected, p1, p2, algo)
     test_gcd_unit(expected, p1, p2, algo)
-    a, b, g = @inferred gcdx(p1, p2, algo)
-    # it does not make sense, in general, to speak of "the" greatest common
-    # divisor of u and v; there is a set of greatest common divisors, each
-    # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
-    # `-expected` are both accepted.
-    @test iszero(MP.pseudo_rem(g, expected, algo))
-    @test a * p1 + b * p2 == g
+    if !(algo isa SubresultantAlgorithm) # FIXME not implemented yet
+        a, b, g = @inferred gcdx(p1, p2, algo)
+        # it does not make sense, in general, to speak of "the" greatest common
+        # divisor of u and v; there is a set of greatest common divisors, each
+        # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+        # `-expected` are both accepted.
+        @test iszero(MP.pseudo_rem(g, expected, algo))
+        @test a * p1 + b * p2 == g
+    end
 end
 function _test_gcdx_unit(expected, p1, p2, algo)
     test_gcdx_unit(expected, p1, p2, algo)
@@ -214,7 +215,7 @@ end
 
 function multivariate_gcd_test(
     ::Type{T},
-    algo = GeneralizedEuclideanAlgorithm(),
+    algo = SubresultantAlgorithm(),
 ) where {T}
     Mod.@polyvar x y z
     o = one(T)
@@ -411,6 +412,7 @@ end
     @testset "Division by multiple polynomials examples" begin
         multi_div_test()
     end
+    univariate_gcd_test(SubresultantAlgorithm())
     @testset "Univariate gcd primitive_rem=$primitive_rem" for primitive_rem in
                                                                [false, true]
         @testset "skip_last=$skip_last" for skip_last in [false, true]
@@ -422,6 +424,7 @@ end
     @testset "Multivariate gcd $T" for T in
                                        [Int, BigInt, Rational{BigInt}, Float64]
         if T != Rational{BigInt} || VERSION >= v"1.6"
+            multivariate_gcd_test(T, SubresultantAlgorithm())
             # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
             @testset "primitive_rem=$primitive_rem" for primitive_rem in
                                                         [false, true]
