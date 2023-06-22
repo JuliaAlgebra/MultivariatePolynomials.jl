@@ -92,13 +92,21 @@ function _promote_subs(S, T::Type{<:Union{RationalPoly,_APL}}, s::Substitution)
 end
 
 function _promote_subs(S, T, s::AbstractMultiSubstitution)
-    return _promote_subs(S, T, pair_zip(_monomial_vector_to_variable_tuple(s))...)
+    return _promote_subs(
+        S,
+        T,
+        pair_zip(_monomial_vector_to_variable_tuple(s))...,
+    )
 end
 
-function _promote_subs(S, T, head::AbstractSubstitution, tail::Vararg{AbstractSubstitution,N}) where {N}
+function _promote_subs(
+    S,
+    T,
+    head::AbstractSubstitution,
+    tail::Vararg{AbstractSubstitution,N},
+) where {N}
     return _promote_subs(S, _promote_subs(S, T, head), tail...)
 end
-
 
 function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
     if isconstant(m)

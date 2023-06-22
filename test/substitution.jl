@@ -84,6 +84,7 @@ import MutableArithmetics as MA
     end
 
     for (p, s) in [(x^1, x => 2x)]
-        @test MA.promote_operation(substitute, Subs, typeof(p), typeof(s)) == typeof(subs(p, s))
+        @test MA.promote_operation(substitute, Subs, typeof(p), typeof(s)) ==
+              typeof(subs(p, s))
     end
 end
