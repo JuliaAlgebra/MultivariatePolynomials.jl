@@ -1,4 +1,7 @@
+using Test
 import Test: @inferred
+
+import MutableArithmetics as MA
 
 @testset "Substitution" begin
     Mod.@polyvar x[1:3]
@@ -28,6 +31,8 @@ import Test: @inferred
     p = x[1] + x[2] + 2 * x[1]^2 + 3 * x[1] * x[2]^2
     #@inferred p((x[1], x[2]) => (1.0, 2.0))
 
+    m = x[1] * x[2]
+    @inferred subs(m, x[2] => 2.0)
     @inferred subs(p, x[2] => 2.0)
     @test subs(p, x[2] => 2.0) == 13x[1] + 2 + 2x[1]^2
     @inferred subs(p, x[2] => x[1])
@@ -76,5 +81,9 @@ import Test: @inferred
         @test t == @inferred subs(t, x => 1x)
         @test t == @inferred subs(t, x => 1.0x)
         @test t == @inferred subs(t, x => 1.0)
+    end
+
+    for (p, s) in [(x^1, x => 2x)]
+        @test MA.promote_operation(substitute, Subs, typeof(p), typeof(s)) == typeof(subs(p, s))
     end
 end

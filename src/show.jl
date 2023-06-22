@@ -34,10 +34,10 @@ function _show(io::IO, mime::MIME, var::AbstractVariable)
         print_subscript(io, mime, indices)
     end
 end
-function _show(io::IO, mime::MIME"text/print", var::AbstractVariable)
-    return print(io, name(var))
-end
 
+function print_subscript(io::IO, ::MIME"text/print", index)
+    return print(io, "[", join(index, ","), "]")
+end
 function print_subscript(io::IO, ::MIME"text/latex", index)
     return print(io, "_{", join(index, ","), "}")
 end

@@ -81,8 +81,31 @@ function powersubstitute(
 )
     return powersubstitute(st, s, p) * powersubstitute(st, s, p2...)
 end
+
+function _promote_subs(S, T, s::Substitution)
+    # `T` is a constant
+    return T
+end
+
+function _promote_subs(S, T::Type{<:Union{RationalPoly,_APL}}, s::Substitution)
+    return MA.promote_operation(substitute, S, T, typeof(s))
+end
+
+function _promote_subs(S, T, s::AbstractMultiSubstitution)
+    return _promote_subs(S, T, pair_zip(_monomial_vector_to_variable_tuple(s))...)
+end
+
+function _promote_subs(S, T, head::AbstractSubstitution, tail::Vararg{AbstractSubstitution,N}) where {N}
+    return _promote_subs(S, _promote_subs(S, T, head), tail...)
+end
+
+
 function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
-    return powersubstitute(st, s, powers(m)...)
+    if isconstant(m)
+        return one(_promote_subs(typeof(st), typeof(m), s...))
+    else
+        return powersubstitute(st, s, powers(m)...)
+    end
 end
 
 ## Terms
@@ -92,11 +115,20 @@ end
 
 function MA.promote_operation(
     ::typeof(substitute),
-    ::Type{Subs},
+    ::Type{Eval},
+    ::Type{M},
+    ::Type{Pair{V,T}},
+) where {M<:AbstractMonomial,V<:AbstractVariable,T}
+    return MA.promote_operation(*, T, T)
+end
+
+function MA.promote_operation(
+    ::typeof(substitute),
+    ::Type{S},
     ::Type{T},
     args::Vararg{Type,N},
-) where {T<:AbstractTerm,N}
-    M = MA.promote_operation(substitute, Subs, monomial_type(T), args...)
+) where {S<:AbstractSubstitutionType,T<:AbstractTerm,N}
+    M = MA.promote_operation(substitute, S, monomial_type(T), args...)
     U = coefficient_type(T)
     return MA.promote_operation(*, U, M)
 end
@@ -121,11 +153,11 @@ end
 
 function MA.promote_operation(
     ::typeof(substitute),
-    ::Type{Subs},
+    ::Type{S},
     ::Type{P},
     args::Vararg{Type,N},
-) where {P<:AbstractPolynomial,N}
-    T = MA.promote_operation(substitute, Subs, term_type(P), args...)
+) where {S<:AbstractSubstitutionType,P<:AbstractPolynomial,N}
+    T = MA.promote_operation(substitute, S, term_type(P), args...)
     return MA.promote_operation(+, T, T)
 end
 
