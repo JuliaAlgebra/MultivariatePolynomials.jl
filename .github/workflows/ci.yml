@@ -14,21 +14,18 @@ jobs:
         # Since MultivariatePolynomials doesn't have binary dependencies,
         # only test on a subset of possible platforms.
         include:
+          - version: '1'
+            os: ubuntu-latest
+            arch: x64
           - version: '1.6'
             os: ubuntu-latest
-            arch: x86
-          - version: '1.7'
-            os: ubuntu-latest
-            arch: x86
-          - version: '1.8'
-            os: ubuntu-latest
-            arch: x86
+            arch: x64
           - version: '1'
             os: ubuntu-latest
             arch: x86
           - version: 'nightly'
             os: ubuntu-latest
-            arch: x86
+            arch: x64
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
