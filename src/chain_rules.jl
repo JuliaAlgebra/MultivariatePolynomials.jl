@@ -1,15 +1,15 @@
 import ChainRulesCore
 
-ChainRulesCore.@scalar_rule +(x::APL) true
-ChainRulesCore.@scalar_rule -(x::APL) -1
+ChainRulesCore.@scalar_rule +(x::_APL) true
+ChainRulesCore.@scalar_rule -(x::_APL) -1
 
-ChainRulesCore.@scalar_rule +(x::APL, y::APL) (true, true)
-ChainRulesCore.@scalar_rule -(x::APL, y::APL) (true, -1)
+ChainRulesCore.@scalar_rule +(x::_APL, y::_APL) (true, true)
+ChainRulesCore.@scalar_rule -(x::_APL, y::_APL) (true, -1)
 
-function ChainRulesCore.frule((_, Δp, Δq), ::typeof(*), p::APL, q::APL)
+function ChainRulesCore.frule((_, Δp, Δq), ::typeof(*), p::_APL, q::_APL)
     return p * q, MA.add_mul!!(p * Δq, q, Δp)
 end
-function ChainRulesCore.rrule(::typeof(*), p::APL, q::APL)
+function ChainRulesCore.rrule(::typeof(*), p::_APL, q::_APL)
     function times_pullback2(ΔΩ̇)
         #ΔΩ = ChainRulesCore.unthunk(Ω̇)
         #return (ChainRulesCore.NoTangent(), ChainRulesCore.ProjectTo(p)(ΔΩ * q'), ChainRulesCore.ProjectTo(q)(p' * ΔΩ))

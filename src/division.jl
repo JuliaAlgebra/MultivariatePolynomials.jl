@@ -1,13 +1,11 @@
-export divides, div_multiple, pseudo_rem, rem_or_pseudo_rem
-
-function Base.round(p::APL; args...)
+function Base.round(p::_APL; args...)
     # round(0.1) is zero so we cannot use `nonzero=true`
     return map_coefficients(p) do term
         return round(term; args...)
     end
 end
 
-function Base.div(p::APL, α::Number, args...)
+function Base.div(p::_APL, α::Number, args...)
     return map_coefficients(p) do term
         return div(term, α, args...)
     end
@@ -90,7 +88,7 @@ function div_multiple(
     )
 end
 function right_constant_div_multiple(
-    f::APL,
+    f::_APL,
     g,
     mf::MA.MutableTrait = MA.IsNotMutable(),
 )
@@ -105,7 +103,7 @@ function right_constant_div_multiple(
     )
 end
 function div_multiple(
-    f::APL,
+    f::_APL,
     g::AbstractMonomialLike,
     mf::MA.MutableTrait = MA.IsNotMutable(),
 )
@@ -115,14 +113,14 @@ function div_multiple(
     return map_exponents(-, f, g, mf)
 end
 function div_multiple(
-    f::APL,
+    f::_APL,
     g::AbstractTermLike,
     mf::MA.MutableTrait = MA.IsNotMutable(),
 )
     f = right_constant_div_multiple(f, coefficient(g), mf)
     return div_multiple(f, monomial(g), MA.IsMutable())
 end
-function div_multiple(f::APL, g::APL, mf::MA.MutableTrait = MA.IsNotMutable())
+function div_multiple(f::_APL, g::_APL, mf::MA.MutableTrait = MA.IsNotMutable())
     lt = leading_term(g)
     if nterms(g) == 1
         return div_multiple(f, lt, mf)
@@ -147,14 +145,14 @@ function div_multiple(f::APL, g::APL, mf::MA.MutableTrait = MA.IsNotMutable())
     return q
 end
 
-function Base.div(f::APL, g::Union{APL,AbstractVector{<:APL}}; kwargs...)
+function Base.div(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
     return divrem(f, g; kwargs...)[1]
 end
-function Base.rem(f::APL, g::Union{APL,AbstractVector{<:APL}}; kwargs...)
+function Base.rem(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
     return divrem(f, g; kwargs...)[2]
 end
 
-function pseudo_divrem(f::APL{S}, g::APL{T}, algo) where {S,T}
+function pseudo_divrem(f::_APL{S}, g::_APL{T}, algo) where {S,T}
     return _pseudo_divrem(
         algebraic_structure(MA.promote_operation(-, S, T)),
         f,
@@ -163,12 +161,12 @@ function pseudo_divrem(f::APL{S}, g::APL{T}, algo) where {S,T}
     )
 end
 
-function _pseudo_divrem(::Field, f::APL, g::APL, algo)
+function _pseudo_divrem(::Field, f::_APL, g::_APL, algo)
     q, r = divrem(f, g)
     return one(q), q, r
 end
 
-function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
+function _pseudo_divrem(::UFD, f::_APL, g::_APL, algo)
     ltg = leading_term(g)
     rg = remove_leading_term(g)
     ltf = leading_term(f)
@@ -187,7 +185,7 @@ function _pseudo_divrem(::UFD, f::APL, g::APL, algo)
 end
 
 """
-    pseudo_rem(f::APL, g::APL, algo)
+    pseudo_rem(f::_APL, g::_APL, algo)
 
 Return the pseudo remainder of `f` modulo `g` as defined in [Knu14, Algorithm R, p. 425].
 
@@ -195,7 +193,7 @@ Return the pseudo remainder of `f` modulo `g` as defined in [Knu14, Algorithm R,
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function pseudo_rem(f::APL, g::APL, algo)
+function pseudo_rem(f::_APL, g::_APL, algo)
     return MA.operate!!(pseudo_rem, MA.mutable_copy(f), g, algo)
 end
 
@@ -204,7 +202,7 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {T,S,P<:APL{T},Q<:APL{S},A}
+) where {T,S,P<:_APL{T},Q<:_APL{S},A}
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
@@ -220,30 +218,38 @@ function _prepare_s_poly!(::typeof(pseudo_rem), f, ltf, ltg)
     return term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
 end
 
-function _prepare_s_poly!(::typeof(rem), ::APL, ltf, ltg)
+function _prepare_s_poly!(::typeof(rem), ::_APL, ltf, ltg)
     return div_multiple(ltf, ltg)
 end
 
 function MA.operate!(
     op::Union{typeof(rem),typeof(pseudo_rem)},
-    f::APL,
-    g::APL,
+    f::_APL,
+    g::_APL,
     algo,
 )
     return MA.buffered_operate!(nothing, op, f, g, algo)
 end
 
+# TODO As suggested in [Knu14, Algorithm R, p. 426] (univariate case only), if
+#      `deg(f) = n` and `deg(g) = m`, during the first `n - m - t` steps, the
+#      coefficient of the `t`th power will simply be multiplied by the leading
+#      coefficient of `g` so we could speed up by multiplying this coefficient
+#      to the power `n - m - t` using `Base.power_by_squaring`.
+#      However, since there might be missing terms, so we don't know in advance
+#      the needed power but we could keep track of it.
 function MA.buffered_operate!(
     buffer,
     op::Union{typeof(rem),typeof(pseudo_rem)},
-    f::APL,
-    g::APL,
+    f::_APL,
+    g::_APL,
     algo,
 )
     ltg = leading_term(g)
     ltf = leading_term(f)
+    # This only makes sense in the univariate case but it's only used for univariate gcd anyway
+    skipped_divisions = maxdegree(f) - maxdegree(g) + 1
     MA.operate!(remove_leading_term, g)
-    not_divided_terms = nothing
     while !iszero(f)
         if isapproxzero(ltf) # TODO `, kwargs...)`
             MA.operate!(remove_leading_term, f)
@@ -255,35 +261,33 @@ function MA.buffered_operate!(
             if monomial(ltg) > monomial(ltf)
                 break
             end
-            if isnothing(not_divided_terms)
-                not_divided_terms = term_type(f)
-            end
-            push!(not_divided_terms, ltf)
             MA.operate!(remove_leading_term, f)
         else
             MA.operate!(remove_leading_term, f)
             t = _prepare_s_poly!(op, f, ltf, ltg)
+            skipped_divisions -= 1
             MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
         end
-        if op === pseudo_rem && algo.primitive_rem
+        if op === pseudo_rem && _primitive_rem(algo)
             f = primitive_part(f, algo, MA.IsMutable())::typeof(f)
         end
-        if algo.skip_last && maxdegree(f) == maxdegree(g)
+        if _skip_last(algo) && maxdegree(f) == maxdegree(g)
             break
         end
         ltf = leading_term(f)
     end
     # Add it back as we cannot modify `g`
     MA.operate!(unsafe_restore_leading_term, g, ltg)
+    _set_skipped_divisions!(algo, skipped_divisions)
     return f
 end
 
 """
-    rem_or_pseudo_rem(f::APL, g::APL, algo)
+    rem_or_pseudo_rem(f::_APL, g::_APL, algo)
 
 If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](ref).
 """
-function rem_or_pseudo_rem(f::APL, g::APL, algo)
+function rem_or_pseudo_rem(f::_APL, g::_APL, algo)
     return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
 end
 
@@ -292,8 +296,8 @@ _op(::UFD) = pseudo_rem
 
 function MA.operate!(
     ::typeof(rem_or_pseudo_rem),
-    f::APL{S},
-    g::APL{T},
+    f::_APL{S},
+    g::_APL{T},
     algo,
 ) where {S,T}
     return MA.operate!(
@@ -307,8 +311,8 @@ end
 function MA.buffered_operate!(
     buffer,
     ::typeof(rem_or_pseudo_rem),
-    f::APL{S},
-    g::APL{T},
+    f::_APL{S},
+    g::_APL{T},
     algo,
 ) where {S,T}
     return MA.buffered_operate!(
@@ -322,8 +326,8 @@ end
 
 function MA.buffer_for(
     ::typeof(rem_or_pseudo_rem),
-    F::Type{<:APL{S}},
-    G::Type{<:APL{T}},
+    F::Type{<:_APL{S}},
+    G::Type{<:_APL{T}},
     A::Type,
 ) where {S,T}
     return MA.buffer_for(
@@ -339,7 +343,7 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {T,S,P<:APL{T},Q<:APL{S},A}
+) where {T,S,P<:_APL{T},Q<:_APL{S},A}
     return _promote_operation_rem_or_pseudo_rem(
         algebraic_structure(MA.promote_operation(-, S, T)),
         P,
@@ -352,7 +356,7 @@ function _promote_operation_rem_or_pseudo_rem(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {P<:APL,Q<:APL,A}
+) where {P<:_APL,Q<:_APL,A}
     return MA.promote_operation(rem, P, Q)
 end
 function _promote_operation_rem_or_pseudo_rem(
@@ -360,7 +364,7 @@ function _promote_operation_rem_or_pseudo_rem(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {P<:APL,Q<:APL,A}
+) where {P<:_APL,Q<:_APL,A}
     return MA.promote_operation(pseudo_rem, P, Q, A)
 end
 
@@ -369,19 +373,19 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {P<:APL,Q<:APL,A}
+) where {P<:_APL,Q<:_APL,A}
     return MA.promote_operation(rem, P, Q)
 end
 function MA.promote_operation(
     ::Union{typeof(div),typeof(rem)},
     ::Type{P},
     ::Type{Q},
-) where {T,S,P<:APL{T},Q<:APL{S}}
+) where {T,S,P<:_APL{T},Q<:_APL{S}}
     U = MA.promote_operation(/, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
-function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T,S}
+function Base.divrem(f::_APL{T}, g::_APL{S}; kwargs...) where {T,S}
     rf = convert(
         MA.promote_operation(div, typeof(f), typeof(g)),
         MA.copy_if_mutable(f),
@@ -413,8 +417,8 @@ function Base.divrem(f::APL{T}, g::APL{S}; kwargs...) where {T,S}
     return q, r
 end
 function Base.divrem(
-    f::APL{T},
-    g::AbstractVector{<:APL{S}};
+    f::_APL{T},
+    g::AbstractVector{<:_APL{S}};
     kwargs...,
 ) where {T,S}
     rf = convert(

@@ -22,7 +22,7 @@ By default, all variables are real-valued.
 iscomplex(::AbstractVariable) = false
 
 function Base.isreal(
-    v::Union{<:AbstractPolynomialLike,<:AbstractVector{<:AbstractMonomial}},
+    v::Union{<:_APL,<:AbstractVector{<:AbstractMonomial}},
 )
     return !iscomplex(v)
 end
@@ -118,7 +118,7 @@ Base.imag(::AbstractVariable) = MA.Zero()
 
 # extend to higher-level elements. We make all those type-stable (but we need convert, as the construction method may
 # deliver simpler types than the inputs if they were deliberately casted, e.g., term to monomial)
-function iscomplex(p::AbstractPolynomialLike)
+function iscomplex(p::_APL)
     for v in variables(p)
         if !iszero(maxdegree(p, v)) && iscomplex(v)
             return true
@@ -155,7 +155,7 @@ end
 for fun in [:real, :imag]
     eval(
         quote
-            function Base.$fun(x::APL)
+            function Base.$fun(x::_APL)
                 # Note: x may also be a polynomial; we could handle this case separately by performing the replacement in each
                 # individual term, then adding them all up. This could potentially lower the overall memory requirement (in case
                 # the expansions of the individual terms simplify) at the expense of not being able to exploit optimizations that
@@ -266,7 +266,7 @@ function mindegree_complex(X::AbstractVector{<:AbstractTermLike}, args...)
     return isempty(X) ? 0 :
            minimum(t -> degree_complex(t, args...), X, init = 0)
 end
-function mindegree_complex(p::AbstractPolynomialLike, args...)
+function mindegree_complex(p::_APL, args...)
     return mindegree_complex(terms(p), args...)
 end
 
@@ -278,7 +278,7 @@ Return the minmal half degree of the monomials of `p`, i.e., `minimum(halfdegree
 function minhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...)
     return isempty(X) ? 0 : minimum(halfdegree, X, init = 0)
 end
-minhalfdegree(p::AbstractPolynomialLike) = minhalfdegree(terms(p))
+minhalfdegree(p::_APL) = minhalfdegree(terms(p))
 
 """
     maxdegree_complex(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
@@ -292,7 +292,7 @@ Return the maximal complex degree of the monomials of `p` in the variable `v`, i
 function maxdegree_complex(X::AbstractVector{<:AbstractTermLike}, args...)
     return mapreduce(t -> degree_complex(t, args...), max, X, init = 0)
 end
-function maxdegree_complex(p::AbstractPolynomialLike, args...)
+function maxdegree_complex(p::_APL, args...)
     return maxdegree_complex(terms(p), args...)
 end
 
@@ -304,7 +304,7 @@ Return the maximal half degree of the monomials of `p`, i.e., `maximum(halfdegre
 function maxhalfdegree(X::AbstractVector{<:AbstractTermLike}, args...)
     return isempty(X) ? 0 : maximum(halfdegree, X, init = 0)
 end
-maxhalfdegree(p::AbstractPolynomialLike) = maxhalfdegree(terms(p))
+maxhalfdegree(p::_APL) = maxhalfdegree(terms(p))
 
 """
     extdegree(p::Union{AbstractPolynomialLike, AbstractVector{<:AbstractTermLike}})
@@ -317,7 +317,7 @@ Returns the extremal complex degrees of the monomials of `p` in the variable `v`
 `(mindegree_complex(p, v), maxdegree_complex(p, v))`.
 """
 function extdegree_complex(
-    p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermLike}},
+    p::Union{_APL,AbstractVector{<:AbstractTermLike}},
     args...,
 )
     return (mindegree_complex(p, args...), maxdegree_complex(p, args...))
@@ -329,7 +329,7 @@ end
 Return the extremal half degree of the monomials of `p`, i.e., `(minhalfdegree(p), maxhalfdegree(p))`
 """
 function exthalfdegree(
-    p::Union{AbstractPolynomialLike,AbstractVector{<:AbstractTermLike}},
+    p::Union{_APL,AbstractVector{<:AbstractTermLike}},
 )
     return (minhalfdegree(p), maxhalfdegree(p))
 end

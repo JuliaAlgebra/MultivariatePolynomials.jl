@@ -42,12 +42,7 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - name: TP#master
-        shell: julia --project=@. {0}
-        run: |
-          using Pkg
-          Pkg.add(PackageSpec(name="TypedPolynomials", rev="master"))
-      - name: DP#master
+      - name: DP#complex
         shell: julia --project=@. {0}
         run: |
           using Pkg

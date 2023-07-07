@@ -1,5 +1,4 @@
 # Base on the TypedPolynomials/abstract/substition.jl written by Robin Deits
-export subs
 
 # TODO Vararg{<:...} -> Vararg{...}
 const Substitution = Pair{<:AbstractVariable}
@@ -32,7 +31,7 @@ const Substitutions = Tuple{Vararg{AbstractSubstitution}}
 abstract type AbstractSubstitutionType end
 struct Subs <: AbstractSubstitutionType end
 struct Eval <: AbstractSubstitutionType end
-const AST = AbstractSubstitutionType
+const _AST = AbstractSubstitutionType
 
 """
     subs(polynomial, (x, y)=>(1, 2))
@@ -41,7 +40,7 @@ is equivalent to:
 
     subs(polynomial, (x=>1, y=>2))
 """
-function substitute(st::AST, p::APL, s::AbstractMultiSubstitution)
+function substitute(st::_AST, p::_APL, s::AbstractMultiSubstitution)
     return substitute(st, p, pair_zip(_monomial_vector_to_variable_tuple(s)))
 end
 
@@ -50,11 +49,11 @@ end
 # subs(x, x=>x+y, y=>2) would call substitute(Subs(), x+y, y=>2)
 # subs(x, x=>1, y=>2) would call substitute(Subs(), 1, y=>2)
 # so it would force use to also define
-# sustitute(::AST, ..., ::AbstractSubstitution...) for Any, APL and RationalPoly.
-#substitute(st::AST, p::APL, s1::AbstractSubstitution, s2::AbstractSubstitution...) = substitute(st, substitute(st, p, s1), s2...)
+# sustitute(::_AST, ..., ::AbstractSubstitution...) for Any, _APL and RationalPoly.
+#substitute(st::_AST, p::_APL, s1::AbstractSubstitution, s2::AbstractSubstitution...) = substitute(st, substitute(st, p, s1), s2...)
 function substitute(
-    st::AST,
-    p::APL,
+    st::_AST,
+    p::_APL,
     s1::AbstractSubstitution,
     s2::AbstractSubstitution...,
 )
@@ -62,50 +61,90 @@ function substitute(
 end
 
 ## Variables
-function substitute(st::AST, v::AbstractVariable, s::Substitutions)
+function substitute(st::_AST, v::AbstractVariable, s::Substitutions)
     return substitute(st, v, s...)
 end
 
 ## Monomials
 function powersubstitute(
-    st::AST,
+    st::_AST,
     s::Substitutions,
     p::Tuple{AbstractVariable,Integer},
 )
     return substitute(st, p[1], s...)^p[2]
 end
 function powersubstitute(
-    st::AST,
+    st::_AST,
     s::Substitutions,
     p::Tuple{AbstractVariable,Integer},
     p2...,
 )
     return powersubstitute(st, s, p) * powersubstitute(st, s, p2...)
 end
-function substitute(st::AST, m::AbstractMonomial, s::Substitutions)
-    return powersubstitute(st, s, powers(m)...)
+
+function _promote_subs(S, T, s::Substitution)
+    # `T` is a constant
+    return T
+end
+
+function _promote_subs(S, T::Type{<:Union{RationalPoly,_APL}}, s::Substitution)
+    return MA.promote_operation(substitute, S, T, typeof(s))
+end
+
+function _promote_subs(S, T, s::AbstractMultiSubstitution)
+    return _promote_subs(
+        S,
+        T,
+        pair_zip(_monomial_vector_to_variable_tuple(s))...,
+    )
+end
+
+function _promote_subs(
+    S,
+    T,
+    head::AbstractSubstitution,
+    tail::Vararg{AbstractSubstitution,N},
+) where {N}
+    return _promote_subs(S, _promote_subs(S, T, head), tail...)
+end
+
+function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
+    if isconstant(m)
+        return one(_promote_subs(typeof(st), typeof(m), s...))
+    else
+        return powersubstitute(st, s, powers(m)...)
+    end
 end
 
 ## Terms
-function substitute(st::AST, t::AbstractTerm, s::Substitutions)
+function substitute(st::_AST, t::AbstractTerm, s::Substitutions)
     return coefficient(t) * substitute(st, monomial(t), s)
 end
 
 function MA.promote_operation(
     ::typeof(substitute),
-    ::Type{Subs},
+    ::Type{Eval},
+    ::Type{M},
+    ::Type{Pair{V,T}},
+) where {M<:AbstractMonomial,V<:AbstractVariable,T}
+    return MA.promote_operation(*, T, T)
+end
+
+function MA.promote_operation(
+    ::typeof(substitute),
+    ::Type{S},
     ::Type{T},
     args::Vararg{Type,N},
-) where {T<:AbstractTerm,N}
-    M = MA.promote_operation(substitute, Subs, monomial_type(T), args...)
+) where {S<:AbstractSubstitutionType,T<:AbstractTerm,N}
+    M = MA.promote_operation(substitute, S, monomial_type(T), args...)
     U = coefficient_type(T)
     return MA.promote_operation(*, U, M)
 end
 
 ## Polynomials
 _polynomial(α) = α
-_polynomial(p::APL) = polynomial(p)
-function substitute(st::AST, p::AbstractPolynomial, s::Substitutions)
+_polynomial(p::_APL) = polynomial(p)
+function substitute(st::_AST, p::AbstractPolynomial, s::Substitutions)
     if iszero(p)
         _polynomial(substitute(st, zero_term(p), s))
     else
@@ -122,31 +161,33 @@ end
 
 function MA.promote_operation(
     ::typeof(substitute),
-    ::Type{Subs},
+    ::Type{S},
     ::Type{P},
     args::Vararg{Type,N},
-) where {P<:AbstractPolynomial,N}
-    T = MA.promote_operation(substitute, Subs, term_type(P), args...)
+) where {S<:AbstractSubstitutionType,P<:AbstractPolynomial,N}
+    T = MA.promote_operation(substitute, S, term_type(P), args...)
     return MA.promote_operation(+, T, T)
 end
 
 ## Fallbacks
-substitute(st::AST, p::APL, s::Substitutions) = substitute(st, polynomial(p), s)
-function substitute(st::AST, q::RationalPoly, s::Substitutions)
+function substitute(st::_AST, p::_APL, s::Substitutions)
+    return substitute(st, polynomial(p), s)
+end
+function substitute(st::_AST, q::RationalPoly, s::Substitutions)
     return substitute(st, q.num, s) / substitute(st, q.den, s)
 end
 
 # subs(x, x=>x+y, y=>2) would call substitute(Subs(), x+y, y=>2)
-#substitute(st::AST, p::Union{APL, RationalPoly}, s::AbstractSubstitution...) = substitute(st, p, s)
+#substitute(st::_AST, p::Union{_APL, RationalPoly}, s::AbstractSubstitution...) = substitute(st, p, s)
 
 # Substitute Arrays
-function substitute(st::AST, A::AbstractArray{<:APL}, s::Substitutions)
+function substitute(st::_AST, A::AbstractArray{<:_APL}, s::Substitutions)
     return map(p -> substitute(st, p, s), A)
 end
 ## Everything else
-substitute(::AST, x, s::Substitutions) = x
+substitute(::_AST, x, s::Substitutions) = x
 # subs(x, x=>1, y=>2) would call substitute(Subs(), 1, y=>2)
-#substitute(::AST, x, s::AbstractSubstitution...) = x
+#substitute(::_AST, x, s::AbstractSubstitution...) = x
 
 """
     subs(p, s::AbstractSubstitution...)

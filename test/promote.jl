@@ -51,7 +51,7 @@
 
     function _test(a, af, TT)
         __test(a, apl, TT, TT)
-        # `x isa APL{Int}` so here we don't have `Float64`:
+        # `x isa _APL{Int}` so here we don't have `Float64`:
         pt() = apl()
         pt(T) = apl()
         tt() = TT()
@@ -61,8 +61,8 @@
         return _t(af, a, TT())
     end
 
-    apl() = MP.APL
-    apl(T::Type) = MP.APL{T}
+    apl() = MP._APL
+    apl(T::Type) = MP._APL{T}
     p = [i == 1 ? x + y : x for i in 1:2]
     pf = [i == 1 ? 1.0x + y : x for i in 1:2]
     _test(p, pf, apl)
@@ -117,4 +117,57 @@ Base.:+(::C, ::C) = C()
           polynomial_type(x, B)
     @test MA.promote_operation(*, A, polynomial_type(x, A)) ==
           polynomial_type(x, B)
+end
+
+function __promote_prod(::Type{A}, ::Type{B}, ::Type{C}) where {A,B,C}
+    @test MA.promote_operation(*, A, B) == C
+    @test MA.promote_operation(*, B, A) == C
+end
+
+@testset "promote_operation with Rational" begin
+    Mod.@polyvar x
+    V = typeof(x)
+    M = monomial_type(V)
+    T = term_type(V, Int)
+    P = polynomial_type(V, Float64)
+    function _promote_prod(::Type{A}, ::Type{B}, ::Type{C}) where {A,B,C}
+        __promote_prod(A, B, C)
+        __promote_prod(RationalPoly{A,B}, RationalPoly{B,A}, RationalPoly{C,C})
+        __promote_prod(RationalPoly{A,A}, RationalPoly{B,B}, RationalPoly{C,C})
+        for U in [V, M, T, P]
+            __promote_prod(A, RationalPoly{B,U}, RationalPoly{C,U})
+        end
+    end
+    _promote_prod(V, V, M)
+    for U in [V, M]
+        _promote_prod(U, M, M)
+    end
+    for U in [V, M, T]
+        _promote_prod(U, T, T)
+    end
+    for U in [V, M, T, P]
+        _promote_prod(U, P, P)
+    end
+end
+
+@testset "promote_operation with polynomial coefficient" begin
+    Mod.@polyvar x
+    Mod.@polyvar y
+    X = typeof(x)
+    MX = monomial_type(X)
+    TX = term_type(X, Int)
+    PX = polynomial_type(X, Int)
+    Y = typeof(y)
+    TXY = term_type(Y, PX)
+    PXY = polynomial_type(Y, PX)
+    TY = term_type(Y, Int)
+    PY = polynomial_type(Y, Int)
+    for T in [X, MX, TX, PX]
+        __promote_prod(TY, TY, TY)
+        __promote_prod(TXY, TY, TXY)
+        __promote_prod(TXY, TXY, TXY)
+        __promote_prod(PY, PY, PY)
+        __promote_prod(PXY, PY, PXY)
+        __promote_prod(PXY, PXY, PXY)
+    end
 end

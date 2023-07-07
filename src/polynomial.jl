@@ -1,11 +1,3 @@
-export polynomial,
-    polynomial!, polynomial_type, terms, nterms, coefficients, monomials
-export coefficient_type, monomial_type
-export mindegree, maxdegree, extdegree, effective_variables
-export leading_term, leading_coefficient, leading_monomial
-export remove_leading_term, remove_monomials, monic
-export map_coefficients, map_coefficients!, map_coefficients_to!
-
 function LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int = 2)
     return LinearAlgebra.norm(coefficients(p), r)
 end
@@ -17,7 +9,7 @@ function similar_type(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial,T}
     return polynomial_type(PT, T)
 end
 
-function Base.similar(p::PT, ::Type{T}) where {PT<:APL,T}
+function Base.similar(p::PT, ::Type{T}) where {PT<:_APL,T}
     return convert(similar_type(PT, T), p)
 end
 
@@ -57,7 +49,7 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
 function polynomial end
-function polynomial(p::APL, args::Vararg{Type,N}) where {N}
+function polynomial(p::_APL, args::Vararg{Type,N}) where {N}
     return polynomial!(copy(p), args...)
 end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
@@ -88,7 +80,7 @@ end
 
 polynomial(ts::AbstractVector, s::ListState = MessyState()) = sum(ts)
 
-function polynomial!(p::APL, args::Vararg{Any,N}) where {N}
+function polynomial!(p::_APL, args::Vararg{Any,N}) where {N}
     return convert(polynomial_type(p, args...), p)
 end
 
@@ -141,7 +133,7 @@ function polynomial_type end
 function polynomial_type(::Type{T}) where {T<:AbstractTerm}
     return error("`polynomial_type` not implemented for $T")
 end
-function polynomial_type(::Union{P,Type{P}}) where {P<:APL}
+function polynomial_type(::Union{P,Type{P}}) where {P<:_APL}
     return polynomial_type(term_type(P))
 end
 polynomial_type(::Union{P,Type{P}}) where {P<:AbstractPolynomial} = P
@@ -154,18 +146,18 @@ function polynomial_type(
 ) where {M<:AbstractMonomialLike,T}
     return polynomial_type(term_type(M, T))
 end
-function polynomial_type(::Union{P,Type{P}}, ::Type{T}) where {P<:APL,T}
+function polynomial_type(::Union{P,Type{P}}, ::Type{T}) where {P<:_APL,T}
     return polynomial_type(polynomial_type(P), T)
 end
 function polynomial_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {PT<:APL}
+) where {PT<:_APL}
     return polynomial_type(PT)
 end
 function polynomial_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
     ::Type{T},
-) where {PT<:APL,T}
+) where {PT<:_APL,T}
     return polynomial_type(PT, T)
 end
 
@@ -235,8 +227,8 @@ Returns an iterator over the coefficients of the monomials of `X` in `p` where `
 Calling `coefficients` on ``4x^2y + xy + 2x`` should return an iterator of ``[4, 1, 2]``.
 Calling `coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])` should return an iterator of ``[2, 3, 1, 0]``.
 """
-coefficients(p::APL{T}) where {T} = LazyMap{T}(coefficient, terms(p))
-function coefficients(p::APL{T}, X::AbstractVector) where {T}
+coefficients(p::_APL{T}) where {T} = LazyMap{T}(coefficient, terms(p))
+function coefficients(p::_APL{T}, X::AbstractVector) where {T}
     σ, mv = sort_monomial_vector(X)
     @assert length(mv) == length(X) # no duplicate in X
     c = zeros(T, length(mv))
@@ -270,10 +262,10 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 
 Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
-monomials(p::APL) = monomial_vector(monomial.(terms(p)))
+monomials(p::_APL) = monomial_vector(monomial.(terms(p)))
 monomials(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), monomial(t))
 
-function isconstant(p::APL)
+function isconstant(p::_APL)
     n = nterms(p)
     return iszero(n) || (isone(n) && isconstant(first(terms(p))))
 end
@@ -478,7 +470,7 @@ end
 
 Returns `p / leading_coefficient(p)` where the leading coefficient of the returned polynomials is made sure to be exactly one to avoid rounding error.
 """
-function monic(p::APL)
+function monic(p::_APL)
     α = leading_coefficient(p)
     return polynomial!(_div_to_one.(terms(p), α))
 end
@@ -551,7 +543,7 @@ function map_coefficients! end
 
 function map_coefficients(
     f::F,
-    p::APL,
+    p::_APL,
     ::MA.IsNotMutable;
     nonzero = false,
 ) where {F<:Function}
@@ -559,7 +551,7 @@ function map_coefficients(
 end
 function map_coefficients(
     f::F,
-    p::APL,
+    p::_APL,
     ::MA.IsMutable;
     nonzero = false,
 ) where {F<:Function}

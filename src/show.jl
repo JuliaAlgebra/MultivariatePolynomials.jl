@@ -41,18 +41,9 @@ function _show(io::IO, mime::MIME, var::AbstractVariable)
     return isimagpart(var) && print(io, "ᵢ")
 end
 
-function _show(io::IO, mime::MIME"text/print", var::AbstractVariable)
-    if isconj(var)
-        for c in name(var)
-            print(io, c, '\u0305')
-        end
-    else
-        print(io, name(var))
-    end
-    isrealpart(var) && print(io, "ᵣ")
-    return isimagpart(var) && print(io, "ᵢ")
+function print_subscript(io::IO, ::MIME"text/print", index)
+    return print(io, "[", join(index, ","), "]")
 end
-
 function print_subscript(io::IO, ::MIME"text/latex", index)
     return print(io, "_{", join(index, ","), "}")
 end
