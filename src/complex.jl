@@ -21,9 +21,7 @@ By default, all variables are real-valued.
 """
 iscomplex(::AbstractVariable) = false
 
-function Base.isreal(
-    v::Union{<:_APL,<:AbstractVector{<:AbstractMonomial}},
-)
+function Base.isreal(v::Union{<:_APL,<:AbstractVector{<:AbstractMonomial}})
     return !iscomplex(v)
 end
 
@@ -328,9 +326,7 @@ end
 
 Return the extremal half degree of the monomials of `p`, i.e., `(minhalfdegree(p), maxhalfdegree(p))`
 """
-function exthalfdegree(
-    p::Union{_APL,AbstractVector{<:AbstractTermLike}},
-)
+function exthalfdegree(p::Union{_APL,AbstractVector{<:AbstractTermLike}})
     return (minhalfdegree(p), maxhalfdegree(p))
 end
 
