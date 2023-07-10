@@ -6,7 +6,7 @@
     @test !isconj(a)
     @test ordinary_variable(a) == a
     @test conj(a) == real(a) == a
-    @test iszero(imag(a)) broken = true # no iszero for MA.Zero
+    @test_broken iszero(imag(a)) # no iszero for MA.Zero
     @test !iscomplex(a^3 + 5a^2 + 4a)
     @test iscomplex(a^3 + 5im * a^2 + 4a)
 
@@ -61,7 +61,7 @@
           (1176 - 32im) * x^0
     @test subs(4x + 8y^2 - 6x^3, [x, conj(y)] => [2 + 4im, 9 - im]) ==
           (1176 + 256im) * x^0
-    @test subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9]) broken = true
+    @test_broken subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9])
     @test subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9 + 0 * x^0]) ==
           1184 + 112im + 144im * imag(y) - 8imag(y)^2
 end
