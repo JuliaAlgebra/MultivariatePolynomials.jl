@@ -449,13 +449,10 @@ end
 LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
 LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 function LinearAlgebra.adjoint(t::AbstractTerm)
-    return _term(
-        LinearAlgebra.adjoint(coefficient(t)),
-        LinearAlgebra.adjoint(monomial(t)),
-    )
+    return _term(adjoint(coefficient(t)), adjoint(monomial(t)))
 end
 function LinearAlgebra.adjoint(p::AbstractPolynomialLike)
-    return polynomial(map(LinearAlgebra.adjoint, terms(p)))
+    return polynomial!(adjoint.(terms(p)))
 end
 function LinearAlgebra.adjoint(r::RationalPoly)
     return adjoint(numerator(r)) / adjoint(denominator(r))

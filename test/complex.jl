@@ -49,6 +49,8 @@
         imag(x) * real(y)^2 + real(x) * 2 * real(y) * imag(y) -
         imag(x) * imag(y)^2
     ) * a
+    herm = [a x+y^2; conj(x)+conj(y)^2 x^2+conj(x)^2]
+    @test herm == herm'
 
     @test degree_complex(x * y^2 * conj(y)^3) == 3
     @test degree_complex(x * y^2 * conj(y)^3, x) == 1

@@ -213,8 +213,6 @@ function Base.:(-)(
     return map_coefficients(J -> J.λ, p1, nonzero = true) - p2
 end
 
-LinearAlgebra.adjoint(x::Polynomial) = polynomial!(adjoint.(terms(x)))
-
 function map_coefficients(
     f::F,
     p::Polynomial;

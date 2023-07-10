@@ -31,8 +31,6 @@ end
 
 (t::Term)(s...) = substitute(Eval(), t, s)
 
-LinearAlgebra.adjoint(t::Term) = Term(adjoint(coefficient(t)), monomial(t))
-
 function Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T,M}
     return Term(one(T), convert(M, m))
 end
