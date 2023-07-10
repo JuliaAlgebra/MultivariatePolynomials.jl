@@ -12,7 +12,7 @@ empty_monomial_vector(p) = monomial_type(p)[]
 """
     monomial_vector(X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
-Returns the vector of monomials `X` in decreasing order and without any duplicates.
+Returns the vector of monomials `X` in increasing order and without any duplicates.
 
 ### Examples
 
@@ -31,7 +31,7 @@ end
 """
     monomial_vector(a, X::AbstractVector{MT}) where {MT<:AbstractMonomialLike}
 
-Returns `b, Y` where `Y` is the vector of monomials of `X` in decreasing order
+Returns `b, Y` where `Y` is the vector of monomials of `X` in increasing order
 and without any duplicates and `b` is the vector of corresponding coefficients
 in `a`, where coefficients of duplicate entries are summed together.
 
@@ -102,7 +102,7 @@ sort_monomial_vector(X::Tuple) = sort_monomial_vector(vec(X))
 """
     merge_monomial_vectors{MT<:AbstractMonomialLike, MVT<:AbstractVector{MT}}(X::AbstractVector{MVT}}
 
-Returns the vector of monomials in the entries of `X` in decreasing order and without any duplicates, i.e. `monomial_vector(vcat(X...))`
+Returns the vector of monomials in the entries of `X` in increasing order and without any duplicates, i.e. `monomial_vector(vcat(X...))`
 
 ### Examples
 
