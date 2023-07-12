@@ -90,12 +90,20 @@ function _flatten_subs(
     return (_flatten_subs(s)..., _flatten_subs(tail...)...)
 end
 
-function power_promote(S, ::Type{V}, s::Substitutions) where {V<:AbstractVariable}
+function power_promote(
+    S,
+    ::Type{V},
+    s::Substitutions,
+) where {V<:AbstractVariable}
     T = MA.promote_operation(substitute, S, V, typeof.(_flatten_subs(s...))...)
     return MA.promote_operation(*, T, T)
 end
 
-function power_promote(S, ::Vector{V}, s::Substitutions) where {V<:AbstractVariable}
+function power_promote(
+    S,
+    ::Vector{V},
+    s::Substitutions,
+) where {V<:AbstractVariable}
     return _promote_subs_power(S, V, s)
 end
 
