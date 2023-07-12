@@ -104,7 +104,7 @@ function power_promote(
     ::Vector{V},
     s::Substitutions,
 ) where {V<:AbstractVariable}
-    return _promote_subs_power(S, V, s)
+    return power_promote(S, V, s)
 end
 
 function power_promote(
@@ -112,7 +112,7 @@ function power_promote(
     ::Tuple{V},
     s::Substitutions,
 ) where {V<:AbstractVariable}
-    return _promote_subs_power(S, V, s)
+    return power_promote(S, V, s)
 end
 
 function power_promote(
@@ -122,8 +122,8 @@ function power_promote(
 ) where {V<:AbstractVariable,N}
     return MA.promote_operation(
         *,
-        _promote_subs_power(S, V, s),
-        _promote_subs_mono(S, Base.tail(vars), s),
+        power_promote(S, V, s),
+        power_promote(S, Base.tail(vars), s),
     )
 end
 
