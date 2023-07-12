@@ -37,7 +37,10 @@
     end
 end
 @testset "Non-commutative MonomialVector" begin
-    Mod.@ncpolyvar x y
+    v = Mod.@ncpolyvar x y
+    @test_throws ArgumentError monomials(v, -1)
+    @test_throws ArgumentError monomials(v, -1:1)
+    @test_throws ArgumentError monomials(v, [1, -1])
     X = empty_monomial_vector(typeof(x))
     @test iszero(nvariables(X))
     @test isempty(variables(X))

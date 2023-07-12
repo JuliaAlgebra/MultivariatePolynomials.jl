@@ -66,7 +66,7 @@ end
 Returns the return type of `monomial_vector`.
 """
 function monomial_vector_type(
-    X::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
+    ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
 ) where {PT<:_APL}
     return monomial_vector_type(PT)
 end
@@ -109,3 +109,13 @@ Returns the vector of monomials in the entries of `X` in increasing order and wi
 Calling `merge_monomial_vectors` on ``[[xy, x, xy], [x^2y, x]]`` should return ``[x^2y, xy, x]``.
 """
 merge_monomial_vectors(X) = monomial_vector(reduce(vcat, X))
+
+function error_for_negative_degree(deg)
+    if deg < 0
+        throw(
+            ArgumentError(
+                "The degree should be a nonnegative number but the provided degree `$deg` is negative.",
+            ),
+        )
+    end
+end
