@@ -112,6 +112,10 @@ merge_monomial_vectors(X) = monomial_vector(reduce(vcat, X))
 
 function error_for_negative_degree(deg)
     if deg < 0
-        throw(ArgumentError("The degree should be a nonnegative number but the provided degree `$deg` is negative."))
+        throw(
+            ArgumentError(
+                "The degree should be a nonnegative number but the provided degree `$deg` is negative.",
+            ),
+        )
     end
 end
