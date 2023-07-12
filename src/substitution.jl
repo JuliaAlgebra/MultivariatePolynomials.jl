@@ -90,16 +90,16 @@ function _flatten_subs(
     return (_flatten_subs(s)..., _flatten_subs(tail...)...)
 end
 
-function _promote_subs_power(S, ::Type{V}, s) where {V}
+function power_promote(S, ::Type{V}, s::Substitutions) where {V<:AbstractVariable}
     T = MA.promote_operation(substitute, S, V, typeof.(_flatten_subs(s...))...)
     return MA.promote_operation(*, T, T)
 end
 
-function _promote_subs_mono(S, ::Vector{V}, s::Substitutions) where {V}
+function power_promote(S, ::Vector{V}, s::Substitutions) where {V<:AbstractVariable}
     return _promote_subs_power(S, V, s)
 end
 
-function _promote_subs_mono(
+function power_promote(
     S,
     ::Tuple{V},
     s::Substitutions,
@@ -107,7 +107,7 @@ function _promote_subs_mono(
     return _promote_subs_power(S, V, s)
 end
 
-function _promote_subs_mono(
+function power_promote(
     S,
     vars::Tuple{V,Vararg{AbstractVariable,N}},
     s::Substitutions,
@@ -121,7 +121,7 @@ end
 
 function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
     if isconstant(m)
-        return one(_promote_subs_mono(typeof(st), variables(m), s))
+        return one(power_promote(typeof(st), variables(m), s))
     else
         return powersubstitute(st, s, powers(m)...)
     end
