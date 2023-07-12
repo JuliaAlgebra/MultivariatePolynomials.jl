@@ -42,12 +42,12 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - name: DP#bl/eval
+      - name: TP#bl/ssubs
         shell: julia --project=@. {0}
         run: |
           using Pkg
           Pkg.add([
-              PackageSpec(name="DynamicPolynomials", rev="bl/eval"),
+              PackageSpec(name="TypedPolynomials", rev="bl/ssubs"),
           ])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1

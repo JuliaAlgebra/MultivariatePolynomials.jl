@@ -41,23 +41,7 @@ is equivalent to:
     subs(polynomial, (x=>1, y=>2))
 """
 function substitute(st::_AST, p::_APL, s::AbstractMultiSubstitution)
-    return substitute(st, p, pair_zip(_monomial_vector_to_variable_tuple(s)))
-end
-
-# Evaluate the stream
-# If I do s2..., then
-# subs(x, x=>x+y, y=>2) would call substitute(Subs(), x+y, y=>2)
-# subs(x, x=>1, y=>2) would call substitute(Subs(), 1, y=>2)
-# so it would force use to also define
-# sustitute(::_AST, ..., ::AbstractSubstitution...) for Any, _APL and RationalPoly.
-#substitute(st::_AST, p::_APL, s1::AbstractSubstitution, s2::AbstractSubstitution...) = substitute(st, substitute(st, p, s1), s2...)
-function substitute(
-    st::_AST,
-    p::_APL,
-    s1::AbstractSubstitution,
-    s2::AbstractSubstitution...,
-)
-    return substitute(st, substitute(st, p, s1), s2)
+    return substitute(st, p, _flatten_subs(s))
 end
 
 ## Variables
@@ -82,35 +66,59 @@ function powersubstitute(
     return powersubstitute(st, s, p) * powersubstitute(st, s, p2...)
 end
 
-function _promote_subs(S, T, s::Substitution)
-    # `T` is a constant
-    return T
+function _promote_subs(S, ::Type{V}, s::Substitution) where {V<:AbstractVariable}
+    return MA.promote_operation(substitute, S, V, typeof(s))
 end
 
-function _promote_subs(S, T::Type{<:Union{RationalPoly,_APL}}, s::Substitution)
-    return MA.promote_operation(substitute, S, T, typeof(s))
+function _flatten_subs(s::AbstractMultiSubstitution)
+    return pair_zip(_monomial_vector_to_variable_tuple(s))
 end
 
-function _promote_subs(S, T, s::AbstractMultiSubstitution)
-    return _promote_subs(
-        S,
-        T,
-        pair_zip(_monomial_vector_to_variable_tuple(s))...,
-    )
+function _flatten_subs(s::Substitution)
+    return (s,)
 end
 
-function _promote_subs(
+# Turn a tuple of `AbstractSubstitution` into a `Tuple` if `Substitution`
+function _flatten_subs(s::AbstractSubstitution, tail::Vararg{AbstractSubstitution,N}) where {N}
+    return (_flatten_subs(s)..., _flatten_subs(tail...)...)
+end
+
+function _promote_subs_power(S, ::Type{V}, s) where {V}
+    T = MA.promote_operation(substitute, S, V, typeof.(_flatten_subs(s...))...)
+    return MA.promote_operation(*, T, T)
+end
+
+function _promote_subs_mono(
     S,
-    T,
-    head::AbstractSubstitution,
-    tail::Vararg{AbstractSubstitution,N},
-) where {N}
-    return _promote_subs(S, _promote_subs(S, T, head), tail...)
+    ::Vector{V},
+    s::Substitutions,
+) where {V}
+    return _promote_subs_power(S, V, s)
+end
+
+function _promote_subs_mono(
+    S,
+    ::Tuple{V},
+    s::Substitutions,
+) where {V<:AbstractVariable}
+    return _promote_subs_power(S, V, s)
+end
+
+function _promote_subs_mono(
+    S,
+    vars::Tuple{V,Vararg{AbstractVariable,N}},
+    s::Substitutions,
+) where {V<:AbstractVariable,N}
+    return MA.promote_operation(
+        *,
+        _promote_subs_power(S, V, s),
+        _promote_subs_mono(S, Base.tail(vars), s),
+    )
 end
 
 function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
     if isconstant(m)
-        return one(_promote_subs(typeof(st), typeof(m), s...))
+        return one(_promote_subs_mono(typeof(st), variables(m), s))
     else
         return powersubstitute(st, s, powers(m)...)
     end
