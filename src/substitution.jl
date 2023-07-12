@@ -66,7 +66,11 @@ function powersubstitute(
     return powersubstitute(st, s, p) * powersubstitute(st, s, p2...)
 end
 
-function _promote_subs(S, ::Type{V}, s::Substitution) where {V<:AbstractVariable}
+function _promote_subs(
+    S,
+    ::Type{V},
+    s::Substitution,
+) where {V<:AbstractVariable}
     return MA.promote_operation(substitute, S, V, typeof(s))
 end
 
@@ -79,7 +83,10 @@ function _flatten_subs(s::Substitution)
 end
 
 # Turn a tuple of `AbstractSubstitution` into a `Tuple` if `Substitution`
-function _flatten_subs(s::AbstractSubstitution, tail::Vararg{AbstractSubstitution,N}) where {N}
+function _flatten_subs(
+    s::AbstractSubstitution,
+    tail::Vararg{AbstractSubstitution,N},
+) where {N}
     return (_flatten_subs(s)..., _flatten_subs(tail...)...)
 end
 
@@ -88,11 +95,7 @@ function _promote_subs_power(S, ::Type{V}, s) where {V}
     return MA.promote_operation(*, T, T)
 end
 
-function _promote_subs_mono(
-    S,
-    ::Vector{V},
-    s::Substitutions,
-) where {V}
+function _promote_subs_mono(S, ::Vector{V}, s::Substitutions) where {V}
     return _promote_subs_power(S, V, s)
 end
 
