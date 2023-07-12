@@ -100,4 +100,11 @@
             v[1]^3,
         ]
     end
+
+    @testset "Negative degree" begin
+        Mod.@polyvar x[1:3]
+        @test_throws ArgumentError monomials(x, -1)
+        @test_throws ArgumentError monomials(x, -1:1)
+        @test_throws ArgumentError monomials(x, [1, -1])
+    end
 end
