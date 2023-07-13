@@ -70,6 +70,13 @@ import MutableArithmetics as MA
     @test p(varst => valst) == 13
     @test p(varsv => valsv) == 13
 
+    @testset "Eval on constant monomial" begin
+        m = constant_monomial(prod(x))
+        mr = m(x => reverse(x))
+        @test isconstant(mr)
+        @test variables(mr) == x
+    end
+
     Mod.@polyvar x y
     @test subs([x^2 + y, x + y], x => y) == [y^2 + y, 2y]
 
