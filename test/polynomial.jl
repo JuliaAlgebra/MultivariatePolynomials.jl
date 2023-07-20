@@ -1,7 +1,6 @@
 using Test
 using LinearAlgebra
-import MutableArithmetics
-const MA = MutableArithmetics
+import MutableArithmetics as MA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 @testset "Polynomial" begin
