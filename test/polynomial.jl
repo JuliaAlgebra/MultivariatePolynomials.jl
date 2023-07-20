@@ -107,7 +107,8 @@ const MP = MultivariatePolynomials
     # Doc examples
     @test collect(coefficients(4x^2 * y + x * y + 2x)) == [2, 1, 4]
     @test collect(coefficients(4x^2 * y + x * y + 2x + 3, [x, 1, x * y, y])) ==
-    @test monomials(4x^2 * y + x * y + 2x + 3)[1:1] == [constant_monomial(x*y)]
+          @test monomials(4x^2 * y + x * y + 2x + 3)[1:1] ==
+                [constant_monomial(x * y)]
 
     for p in [polynomial([4, 9], [x, x * x]), polynomial([9, 4], [x * x, x])]
         @test collect(coefficients(p)) == [4, 9]
