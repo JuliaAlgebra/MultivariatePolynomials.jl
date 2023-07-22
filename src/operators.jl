@@ -452,7 +452,7 @@ function LinearAlgebra.adjoint(t::AbstractTerm)
     return _term(adjoint(coefficient(t)), adjoint(monomial(t)))
 end
 function LinearAlgebra.adjoint(p::AbstractPolynomialLike)
-    return polynomial!(adjoint.(terms(p)))
+    return polynomial(map(LinearAlgebra.adjoint, terms(p)))
 end
 function LinearAlgebra.adjoint(r::RationalPoly)
     return adjoint(numerator(r)) / adjoint(denominator(r))
