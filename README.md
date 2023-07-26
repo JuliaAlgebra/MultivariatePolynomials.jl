@@ -17,6 +17,11 @@ The interface contains functions for accessing the coefficients, monomials, term
 - [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
 - [**LATEST**][docs-latest-url] &mdash; *in-development version of the documentation.*
 
+## Citing
+
+Please cite the [JuliaCon 2022 presentation](https://pretalx.com/juliacon-2022/talk/TRFSJY/) [[Slides](https://drive.google.com/file/d/1q9UT5rpcmm0GdRmWm7llhVpbOx7OxGnZ/view)].
+See [CITATION.bib](https://github.com/JuliaPolyhedra/MultivariatePolynomials.jl/blob/master/CITATION.bib) for the BibTeX.
+
 ## Examples
 
 Below is a simple usage example
