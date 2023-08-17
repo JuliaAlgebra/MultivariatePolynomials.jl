@@ -42,11 +42,6 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - name: DP#complex
-        shell: julia --project=@. {0}
-        run: |
-          using Pkg
-          Pkg.add(PackageSpec(url="https://github.com/projekter/DynamicPolynomials.jl.git", rev="master"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
