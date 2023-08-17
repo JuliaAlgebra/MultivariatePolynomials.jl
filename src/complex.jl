@@ -60,7 +60,7 @@ imaginary part, return the original variable as it was defined by the user.
 
 See also `conj`, `real`, `imag`.
 """
-ordinary_variable(x::AbstractVariable) = x
+ordinary_variable(x::AbstractVariable) = MA.copy_if_mutable(x)
 
 """
     conj(x::AbstractVariable)
@@ -77,7 +77,7 @@ Return the complex conjugate of `x` by applying conjugation to all coefficients 
 
 See also [`iscomplex`](@ref), [`isconj`](@ref).
 """
-Base.conj(x::AbstractVariable) = x
+Base.conj(x::AbstractVariable) = MA.copy_if_mutable(x)
 
 """
     real(x::AbstractVariable)
@@ -95,7 +95,7 @@ variable is decomposed into its real- and imaginary parts.
 
 See also [`iscomplex`](@ref), [`isrealpart`](@ref), `imag`.
 """
-Base.real(x::AbstractVariable) = x
+Base.real(x::AbstractVariable) = MA.copy_if_mutable(x)
 
 """
     imag(x::AbstractVariable)
@@ -139,13 +139,14 @@ function Base.conj(x::M) where {M<:AbstractMonomial}
     )
 end
 function Base.conj(x::V) where {V<:AbstractVector{<:AbstractMonomial}}
-    return isreal(x) ? x : monomial_vector(conj.(x))
+    return isreal(x) ? MA.copy_if_mutable(x) : monomial_vector(conj.(x))
 end
 function Base.conj(x::T) where {T<:AbstractTerm}
-    return isreal(x) ? x : convert(T, conj(coefficient(x)) * conj(monomial(x)))
+    return isreal(x) ? MA.copy_if_mutable(x) :
+           convert(T, conj(coefficient(x)) * conj(monomial(x)))
 end
 function Base.conj(x::P) where {P<:AbstractPolynomial}
-    return iszero(nterms(x)) || isreal(x) ? x :
+    return iszero(nterms(x)) || isreal(x) ? MA.copy_if_mutable(x) :
            convert(P, sum(conj(t) for t in x))
 end
 
