@@ -146,7 +146,7 @@ function Base.conj(x::T) where {T<:AbstractTerm}
            convert(T, conj(coefficient(x)) * conj(monomial(x)))
 end
 function Base.conj(x::P) where {P<:AbstractPolynomial}
-    return iszero(nterms(x)) || isreal(x) ? MA.copy_if_mutable(x) :
+    return iszero(x) || isreal(x) ? MA.copy_if_mutable(x) :
            convert(P, sum(conj(t) for t in x))
 end
 
