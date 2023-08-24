@@ -159,7 +159,7 @@ for fun in [:real, :imag]
                 # individual term, then adding them all up. This could potentially lower the overall memory requirement (in case
                 # the expansions of the individual terms simplify) at the expense of not being able to exploit optimizations that
                 # subst can do by knowing the full polynomial.
-                iszero(nterms(x)) &&
+                iszero(x) &&
                     return zero(polynomial_type(x, real(coefficient_type(x))))
                 # We replace every complex variable by its decomposition into real and imaginary part
                 substs = [
