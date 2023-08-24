@@ -162,13 +162,15 @@ for fun in [:real, :imag]
                 iszero(x) &&
                     return zero(polynomial_type(x, real(coefficient_type(x))))
                 # We replace every complex variable by its decomposition into real and imaginary part
-                substs = [
-                    var => real(var) + 1im * imag(var) for
-                    var in variables(x) if iscomplex(var)
-                ]
-                # subs throws an error if it doesn't receive at least one substitution
+                subst_vars = filter(iscomplex, variables(x))
+                # To avoid a stack overflow on promote_type, we'll handle the empty case separately
                 full_version =
-                    isempty(substs) ? polynomial(x) : subs(x, substs...)
+                    isempty(subst_vars) ? polynomial(x) :
+                    subs(
+                        x,
+                        subst_vars =>
+                            [real(var) + 1im * imag(var) for var in subst_vars],
+                    )
                 # Now everything that is imaginary can be recognized by its coefficient
                 return convert(
                     polynomial_type(
