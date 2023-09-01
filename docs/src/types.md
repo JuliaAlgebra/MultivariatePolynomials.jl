@@ -81,7 +81,7 @@ monic
 map_coefficients
 map_coefficients!
 map_coefficients_to!
-iscomplex
+Base.isreal(::AbstractVariable)
 mindegree_complex
 minhalfdegree
 maxdegree_complex

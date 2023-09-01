@@ -1,17 +1,17 @@
 @testset "ComplexPoly" begin
     Mod.@polyvar a
-    @test !iscomplex(a) && isreal(a)
+    @test isreal(a)
     @test !isrealpart(a)
     @test !isimagpart(a)
     @test !isconj(a)
     @test ordinary_variable(a) == a
     @test conj(a) == real(a) == a
     @test_broken iszero(imag(a)) # no iszero for MA.Zero
-    @test !iscomplex(a^3 + 5a^2 + 4a)
-    @test iscomplex(a^3 + 5im * a^2 + 4a)
+    @test isreal(a^3 + 5a^2 + 4a)
+    @test !isreal(a^3 + 5im * a^2 + 4a)
 
     Mod.@polycvar x y
-    @test iscomplex(x) && !isreal(x)
+    @test !isreal(x)
     @test !isrealpart(x) &&
           !isrealpart(conj(x)) &&
           isrealpart(real(x)) &&
@@ -33,8 +33,8 @@
     @test iszero(imag(x + conj(x)))
     @test iszero(real(x - conj(x)))
     @test imag(x - conj(x)) == 2imag(x)
-    @test iscomplex(x^3 + 5x^2 + 4x)
-    @test !iscomplex(a^3 + 5a^2 + 4a + x^0)
+    @test !isreal(x^3 + 5x^2 + 4x)
+    @test isreal(a^3 + 5a^2 + 4a + x^0)
     @test conj(7x^3 + 6y^2 - (3 + im)x + 8a) ==
           7conj(x)^3 + 6conj(y)^2 - (3 - im) * conj(x) + 8a
     @test conj(monomial_vector([x, y, x * y^3, y * x^4])) ==

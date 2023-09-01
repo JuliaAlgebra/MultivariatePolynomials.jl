@@ -1,5 +1,4 @@
-export iscomplex,
-    isrealpart,
+export isrealpart,
     isimagpart,
     isconj,
     ordinary_variable,
@@ -13,24 +12,20 @@ export iscomplex,
     exthalfdegree
 
 """
-    iscomplex(x::AbstractVariable)
+    isreal(x::AbstractVariable)
 
-Return whether a given variable was declared as a complex-valued variable (also their conjugates are complex, but their real
-and imaginary parts are not).
+Return whether a given variable was declared as a real-valued or complex-valued variable (also their conjugates are complex,
+but their real and imaginary parts are not).
 By default, all variables are real-valued.
 """
-iscomplex(::AbstractVariable) = false
-
-function Base.isreal(v::Union{<:_APL,<:AbstractVector{<:AbstractMonomial}})
-    return !iscomplex(v)
-end
+Base.isreal(::AbstractVariable) = true
 
 """
     isrealpart(x::AbstractVariable)
 
 Return whether the given variable is the real part of a complex-valued variable.
 
-See also [`iscomplex`](@ref), [`isimagpart`](@ref), [`isconj`](@ref).
+See also [`isreal`](@ref), [`isimagpart`](@ref), [`isconj`](@ref).
 """
 isrealpart(::AbstractVariable) = false
 
@@ -39,7 +34,7 @@ isrealpart(::AbstractVariable) = false
 
 Return whether the given variable is the imaginary part of a complex-valued variable.
 
-See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`isconj`](@ref).
+See also [`isreal`](@ref), [`isrealpart`](@ref), [`isconj`](@ref).
 """
 isimagpart(::AbstractVariable) = false
 
@@ -48,7 +43,7 @@ isimagpart(::AbstractVariable) = false
 
 Return whether the given variable is obtained by conjugating a user-defined complex-valued variable.
 
-See also [`iscomplex`](@ref), [`isrealpart`](@ref), [`isimagpart`](@ref).
+See also [`isreal`](@ref), [`isrealpart`](@ref), [`isimagpart`](@ref).
 """
 isconj(::AbstractVariable) = false
 
@@ -75,7 +70,7 @@ variable unchanged.
 
 Return the complex conjugate of `x` by applying conjugation to all coefficients and variables.
 
-See also [`iscomplex`](@ref), [`isconj`](@ref).
+See also [`isreal`](@ref), [`isconj`](@ref).
 """
 Base.conj(x::AbstractVariable) = MA.copy_if_mutable(x)
 
@@ -93,7 +88,7 @@ unchanged.
 Return the real part of `x` by applying `real` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref), [`isrealpart`](@ref), `imag`.
+See also [`isreal`](@ref), [`isrealpart`](@ref), `imag`.
 """
 Base.real(x::AbstractVariable) = MA.copy_if_mutable(x)
 
@@ -110,22 +105,21 @@ Return the imaginary part of a given variable if it was declared as a complex va
 Return the imaginary part of `x` by applying `imag` to all coefficients and variables; for this purpose, every complex-valued
 variable is decomposed into its real- and imaginary parts.
 
-See also [`iscomplex`](@ref), [`isimagpart`](@ref), `real`.
+See also [`isreal`](@ref), [`isimagpart`](@ref), `real`.
 """
 Base.imag(::AbstractVariable) = MA.Zero()
 
 # extend to higher-level elements. We make all those type-stable (but we need convert, as the construction method may
 # deliver simpler types than the inputs if they were deliberately casted, e.g., term to monomial)
-function iscomplex(p::_APL)
+function Base.isreal(p::_APL)
     for v in variables(p)
-        if !iszero(maxdegree(p, v)) && iscomplex(v)
-            return true
+        if !isreal(v) && !iszero(maxdegree(p, v))
+            return false
         end
     end
-    all(isreal, coefficients(p)) || return true
-    return false
+    return all(isreal, coefficients(p))
 end
-iscomplex(p::AbstractVector{<:AbstractMonomial}) = any(iscomplex, p)
+Base.isreal(p::AbstractVector{<:AbstractMonomial}) = all(isreal, p)
 
 function Base.conj(x::M) where {M<:AbstractMonomial}
     return isreal(x) ? x :
@@ -162,7 +156,7 @@ for fun in [:real, :imag]
                 iszero(x) &&
                     return zero(polynomial_type(x, real(coefficient_type(x))))
                 # We replace every complex variable by its decomposition into real and imaginary part
-                subst_vars = filter(iscomplex, variables(x))
+                subst_vars = filter(Base.:! ∘ isreal, variables(x))
                 # To avoid a stack overflow on promote_type, we'll handle the empty case separately
                 full_version =
                     isempty(subst_vars) ? polynomial(x) :
@@ -240,15 +234,15 @@ function halfdegree(t::AbstractTermLike)
     cpdeg = 0
     conjdeg = 0
     for (var, exp) in powers(t)
-        if iscomplex(var)
+        if isreal(var)
+            realdeg += exp
+        else
             if isconj(var)
                 conjdeg += exp
             else
                 @assert(!isrealpart(var) && !isimagpart(var))
                 cpdeg += exp
             end
-        else
-            realdeg += exp
         end
     end
     return ((realdeg + 1) >> 1) + max(cpdeg, conjdeg)

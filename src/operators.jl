@@ -459,7 +459,7 @@ function LinearAlgebra.adjoint(r::RationalPoly)
 end
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractPolynomialLike} = T
 function LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol)
-    iscomplex(v) && error(
+    isreal(v) || error(
         "Complex-valued polynomials cannot be interpreted as hermitian scalars",
     )
     return v
