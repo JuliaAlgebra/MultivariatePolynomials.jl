@@ -45,6 +45,9 @@ import MutableArithmetics as MA
     @inferred subs(p, x[1] => 1)
     @test iszero(subs(p, x[1] => 1))
 
+    # https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/141
+    @test subs(x[1]^2 + x[2]^2, x[1] => x[3]^2) == x[2]^2 + x[3]^4
+
     q = (x[1] + 1) / (x[1] + 2)
     @test isapproxzero(q(x[1] => -1))
     @test !isapproxzero(q(x[1] => 1))
