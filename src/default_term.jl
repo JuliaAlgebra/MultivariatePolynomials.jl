@@ -110,6 +110,14 @@ function MA.operate!(::typeof(*), t1::Term, t2::AbstractTermLike)
     return t1
 end
 
+# Needed to resolve ambiguity with
+# MA.operate!(::typeof(*), ::AbstractMonomial, ::AbstractMonomialLike)
+function MA.operate!(::typeof(*), t1::Term, t2::AbstractMonomialLike)
+    MA.operate!(*, t1.coefficient, coefficient(t2))
+    MA.operate!(*, t1.monomial, monomial(t2))
+    return t1
+end
+
 function MA.operate!(::typeof(one), t::Term)
     MA.operate!(one, t.coefficient)
     MA.operate!(constant_monomial, t.monomial)

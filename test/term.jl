@@ -1,5 +1,15 @@
+import MutableArithmetics as MA
+import MultivariatePolynomials as MP
+
 struct CoefNotComparable end
 Base.iszero(::CoefNotComparable) = false
+
+struct Term2{T,M} <: MP.AbstractTermLike{T}
+    monomial::M
+end
+MP.coefficient(t::Term2{T}) where {T} = 2one(T)
+MP.monomial(t) = t.monomial
+MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
 
 @testset "Term" begin
     Mod.@polyvar x
@@ -94,5 +104,22 @@ Base.iszero(::CoefNotComparable) = false
         @test t1 >= t2
         @test !(t1 < t2)
         @test t1 <= t2
+    end
+
+    @testset "MA $T" for T in [Int, BigInt]
+        M = typeof(x^2)
+        t = one(T) * x
+        s = MA.operate!!(*, t, x)
+        @test monomial(s) == x^2
+        if T == BigInt && MA.mutability(M) isa MA.IsMutable
+            @test monomial(t) == x^2
+        end
+        u = MA.operate!!(*, s, Term2{T,M}(x^3))
+        @test monomial(u) == x^5
+        @test coefficient(u) == 2
+        if T == BigInt && MA.mutability(M) isa MA.IsMutable
+            @test monomial(t) == x^5
+            @test coefficient(t) == 2
+        end
     end
 end

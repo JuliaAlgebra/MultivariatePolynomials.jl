@@ -1,5 +1,5 @@
-import MutableArithmetics
-const MA = MutableArithmetics
+using Test
+import MutableArithmetics as MA
 
 function all_tests(a, b, c, d, e, f, g)
     a_copy = deepcopy(a)
