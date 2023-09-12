@@ -53,7 +53,7 @@ isconj(::AbstractVariable) = false
 Given some (complex-valued) variable that was transformed by conjugation, taking its real part, or taking its
 imaginary part, return the original variable as it was defined by the user.
 
-See also `conj`, `real`, `imag`.
+See also [`conj`](@ref), [`real`](@ref), [`imag`](@ref).
 """
 ordinary_variable(x::AbstractVariable) = MA.copy_if_mutable(x)
 
@@ -63,16 +63,19 @@ ordinary_variable(x::AbstractVariable) = MA.copy_if_mutable(x)
 Return the complex conjugate of a given variable if it was declared as a complex variable; else return the
 variable unchanged.
 
-    conj(x::AbstractMonomial)
-    conj(x::AbstractVector{<:AbstractMonomial})
-    conj(x::AbstractTerm)
-    conj(x::AbstractPolynomial)
-
-Return the complex conjugate of `x` by applying conjugation to all coefficients and variables.
-
 See also [`isreal`](@ref), [`isconj`](@ref).
 """
 Base.conj(x::AbstractVariable) = MA.copy_if_mutable(x)
+@doc """
+    conj(x::AbstractPolynomialLike)
+
+Return the complex conjugate of `x` by applying conjugation to all coefficients and variables.
+""" conj(::_APL)
+@doc """
+    conj(x::AbstractVector{<:AbstractMonomial})
+
+Return the complex conjugate of `x` by applying conjugation to monomials.
+""" conj(::AbstractVector{<:AbstractMonomial})
 
 """
     real(x::AbstractVariable)
@@ -80,37 +83,59 @@ Base.conj(x::AbstractVariable) = MA.copy_if_mutable(x)
 Return the real part of a given variable if it was declared as a complex variable; else return the variable
 unchanged.
 
-    real(x::AbstractMonomial)
-    real(x::AbstractVector{<:AbstractMonomial})
-    real(x::AbstractTerm)
-    real(x::AbstractPolynomial)
-
-Return the real part of `x` by applying `real` to all coefficients and variables; for this purpose, every complex-valued
-variable is decomposed into its real- and imaginary parts.
-
-See also [`isreal`](@ref), [`isrealpart`](@ref), `imag`.
+See also [`imag`](@ref).
 """
 Base.real(x::AbstractVariable) = MA.copy_if_mutable(x)
+@doc """
+    real(x::AbstractPolynomialLike)
+
+Return the real part of `x` by applying [`real`](@ref) to all coefficients and variables; for this purpose, every
+complex-valued variable is decomposed into its real- and imaginary parts.
+
+See also [`imag`](@ref).
+""" real(::_APL)
+@doc """
+    real(x::AbstractVector{<:AbstractMonomial})
+
+Return the real part of `x` by applying [`real`](@ref) to all monomials; for this purpose, every complex-valued variable is
+decomposed into its real- and imaginary parts. Note that the result will no longer be a monomial vector.
+
+See also [`imag`](@ref).
+""" real(::AbstractVector{<:AbstractMonomial})
 
 """
     imag(x::AbstractVariable)
 
 Return the imaginary part of a given variable if it was declared as a complex variable; else return zero.
 
-    imag(x::AbstractMonomial)
-    imag(x::AbstractVector{<:AbstractMonomial})
-    imag(x::AbstractTerm)
-    imag(x::AbstractPolynomial)
-
-Return the imaginary part of `x` by applying `imag` to all coefficients and variables; for this purpose, every complex-valued
-variable is decomposed into its real- and imaginary parts.
-
-See also [`isreal`](@ref), [`isimagpart`](@ref), `real`.
+See also [`isreal`](@ref), [`isimagpart`](@ref), [`real`](@ref).
 """
 Base.imag(::AbstractVariable) = MA.Zero()
+@doc """
+    imag(x::AbstractPolynomialLike)
+
+Return the imaginary part of `x` by applying [`imag`](@ref) to all coefficients and variables; for this purpose, every
+complex-valued variable is decomposed into its real- and imaginary parts.
+
+See also [`real`](@ref).
+""" imag(::_APL)
+@doc """
+    imag(x::AbstractVector{<:AbstractMonomial})
+
+Return the imaginary part of `x` by applying [`imag`](@ref) to all monomials; for this purpose, every complex-valued variable
+is decomposed into its real- and imaginary parts. Note that the result will no longer be a monomial vector.
+
+See also [`real`](@ref).
+""" imag(::AbstractVector{<:AbstractMonomial})
 
 # extend to higher-level elements. We make all those type-stable (but we need convert, as the construction method may
 # deliver simpler types than the inputs if they were deliberately casted, e.g., term to monomial)
+"""
+    isreal(p::AbstractPolynomialLike)
+
+Returns `true` if and only if no single variable in `p` was declared as a complex variable (in the sense that [`isreal`](@ref)
+applied on them would be `true`) and no coefficient is complex-valued.
+"""
 function Base.isreal(p::_APL)
     for v in variables(p)
         if !isreal(v) && !iszero(maxdegree(p, v))
@@ -119,6 +144,11 @@ function Base.isreal(p::_APL)
     end
     return all(isreal, coefficients(p))
 end
+"""
+    isreal(p::AbstractVector{<:AbstractMonomial})
+
+Returns `true` if and only if every single monomial in `p` would is real-valued.
+"""
 Base.isreal(p::AbstractVector{<:AbstractMonomial}) = all(isreal, p)
 
 function Base.conj(x::M) where {M<:AbstractMonomial}

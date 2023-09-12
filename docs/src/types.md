@@ -14,6 +14,10 @@ name_base_indices
 variable_union_type
 similar_variable
 @similar_variable
+conj(::AbstractVariable)
+real(::AbstractVariable)
+imag(::AbstractVariable)
+isreal(::AbstractVariable)
 isrealpart
 isimagpart
 isconj
@@ -81,7 +85,10 @@ monic
 map_coefficients
 map_coefficients!
 map_coefficients_to!
-Base.isreal(::AbstractVariable)
+conj(::_APL)
+real(::_APL)
+imag(::_APL)
+isreal(::_APL)
 mindegree_complex
 minhalfdegree
 maxdegree_complex
@@ -103,4 +110,8 @@ monomial_vector_type
 empty_monomial_vector
 sort_monomial_vector
 merge_monomial_vectors
+conj(::AbstractVector{<:AbstractMonomial})
+real(::AbstractVector{<:AbstractMonomial})
+imag(::AbstractVector{<:AbstractMonomial})
+isreal(::AbstractVector{<:AbstractMonomial})
 ```
