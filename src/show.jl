@@ -27,12 +27,18 @@ Base.show(io::IO, p::TypesWithShow) = show(io, MIME"text/plain"(), p)
 # VARIABLES
 function _show(io::IO, mime::MIME, var::AbstractVariable)
     base, indices = name_base_indices(var)
-    if isempty(indices)
-        print(io, base)
+    if isconj(var)
+        for c in base
+            print(io, c, '\u0305') # displays as overbar (̄z)
+        end
     else
         print(io, base)
+    end
+    if !isempty(indices)
         print_subscript(io, mime, indices)
     end
+    isrealpart(var) && print(io, "ᵣ") # suffixes for real and imaginary part: zᵣ, zᵢ
+    return isimagpart(var) && print(io, "ᵢ")
 end
 
 function print_subscript(io::IO, ::MIME"text/print", index)

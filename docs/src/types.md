@@ -14,6 +14,14 @@ name_base_indices
 variable_union_type
 similar_variable
 @similar_variable
+conj(::AbstractVariable)
+real(::AbstractVariable)
+imag(::AbstractVariable)
+isreal(::AbstractVariable)
+isrealpart
+isimagpart
+isconj
+ordinary_variable
 ```
 
 ## Monomials
@@ -47,6 +55,8 @@ coefficient_type
 monomial
 constant_term
 zero_term
+degree_complex
+halfdegree
 ```
 
 ## Polynomials
@@ -75,6 +85,16 @@ monic
 map_coefficients
 map_coefficients!
 map_coefficients_to!
+conj(::_APL)
+real(::_APL)
+imag(::_APL)
+isreal(::_APL)
+mindegree_complex
+minhalfdegree
+maxdegree_complex
+maxhalfdegree
+extdegree_complex
+exthalfdegree
 ```
 
 ## Rational Polynomial Function
@@ -90,4 +110,8 @@ monomial_vector_type
 empty_monomial_vector
 sort_monomial_vector
 merge_monomial_vectors
+conj(::AbstractVector{<:AbstractMonomial})
+real(::AbstractVector{<:AbstractMonomial})
+imag(::AbstractVector{<:AbstractMonomial})
+isreal(::AbstractVector{<:AbstractMonomial})
 ```

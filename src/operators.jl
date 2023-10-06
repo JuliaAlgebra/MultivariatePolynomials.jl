@@ -446,16 +446,23 @@ function _promote_terms(
     return promote(t1, t2)
 end
 
-LinearAlgebra.adjoint(v::AbstractVariable) = v
-LinearAlgebra.adjoint(m::AbstractMonomial) = m
+LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
+LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 function LinearAlgebra.adjoint(t::AbstractTerm)
-    return _term(LinearAlgebra.adjoint(coefficient(t)), monomial(t))
+    return _term(adjoint(coefficient(t)), adjoint(monomial(t)))
 end
 function LinearAlgebra.adjoint(p::AbstractPolynomialLike)
     return polynomial(map(LinearAlgebra.adjoint, terms(p)))
 end
 function LinearAlgebra.adjoint(r::RationalPoly)
     return adjoint(numerator(r)) / adjoint(denominator(r))
+end
+LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractPolynomialLike} = T
+function LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol)
+    isreal(v) || error(
+        "Complex-valued polynomials cannot be interpreted as hermitian scalars",
+    )
+    return v
 end
 
 LinearAlgebra.transpose(v::AbstractVariable) = v

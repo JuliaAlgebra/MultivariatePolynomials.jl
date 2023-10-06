@@ -77,6 +77,7 @@ include("hash.jl")
 include("promote.jl")
 include("conversion.jl")
 
+include("complex.jl")
 include("operators.jl")
 include("comparison.jl")
 
