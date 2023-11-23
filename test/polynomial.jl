@@ -72,29 +72,44 @@ const MP = MultivariatePolynomials
     @test Tuple(variables([x + 1, y^2])) == (x, y)
     @test Tuple(variables([y^2, x + 1])) == (x, y)
 
-    @test maxdegree(x^2 - x^2) == 0
-    @test maxdegree(x^2 - x^2, x) == 0
-    @test maxdegree(x^2 - x^2, y) == 0
-    @test mindegree(x^2 - x^2) == 0
-    @test mindegree(x^2 - x^2, x) == 0
-    @test mindegree(x^2 - x^2, y) == 0
-    @test extdegree(x^2 - x^2) == (0, 0)
-    @test extdegree(x^2 - x^2, x) == (0, 0)
-    @test extdegree(x^2 - x^2, y) == (0, 0)
-    @test maxdegree(x * y + 2 + x^2 * y + x + y) == 3
-    @test maxdegree(x * y + 2 + x^2 * y + x + y, x) == 2
-    @test maxdegree(x * y + 2 + x^2 * y + x + y, y) == 1
-    @test mindegree(x * y + 2 + x^2 * y + x + y) == 0
-    @test mindegree(x * y + 2 + x^2 * y + x + y, x) == 0
-    @test mindegree(x * y + 2 + x^2 * y + x + y, y) == 0
-    @test extdegree(x * y + 2 + x^2 * y + x + y) == (0, 3)
-    @test extdegree(x * y + 2 + x^2 * y + x + y, x) == (0, 2)
-    @test extdegree(x * y + 2 + x^2 * y + x + y, y) == (0, 1)
-    @test extdegree(x * y + x^2 * y, x) == (1, 2)
-    @test extdegree(x * y + x^2 * y, y) == (1, 1)
-    @test leading_term(x * y + 2 + x^2 * y + x + y) == x^2 * y
+    p = x^2 - x^2
+    @test maxdegree(p) == 0
+    @test maxdegree(p, x) == 0
+    @test maxdegree(p, y) == 0
+    @test mindegree(p) == 0
+    @test mindegree(p, x) == 0
+    @test mindegree(p, y) == 0
+    @test extdegree(p) == (0, 0)
+    @test extdegree(p, x) == (0, 0)
+    @test extdegree(p, y) == (0, 0)
+    q = x * y + 2 + x^2 * y + x + y
+    @test maxdegree(q) == 3
+    @test maxdegree(q, x) == 2
+    @test maxdegree(q, y) == 1
+    @test mindegree(q) == 0
+    @test mindegree(q, x) == 0
+    @test mindegree(q, y) == 0
+    @test extdegree(q) == (0, 3)
+    @test extdegree(q, x) == (0, 2)
+    @test extdegree(q, y) == (0, 1)
+    r = x * y + x^2 * y
+    @test extdegree(r, x) == (1, 2)
+    @test extdegree(r, y) == (1, 1)
+    @test leading_term(q) == x^2 * y
     @test nvariables(x + y - x) == 2
     @test nvariables(x + x^2) == 1
+    @test mindegree([p, q, r]) == 0
+    @test mindegree([p, q, r], x) == 0
+    @test mindegree([p, q, r], y) == 0
+    @test mindegree([p, q], y) == 0
+    @test mindegree([q], y) == 0
+    @test mindegree([r], y) == 1
+    @test maxdegree([p, q, r]) == 3
+    @test maxdegree([p, q, r], x) == 2
+    @test maxdegree([p, q, r], y) == 1
+    @test extdegree([p, q, r]) == (0, 3)
+    @test extdegree([p, q, r], x) == (0, 2)
+    @test extdegree([p, q, r], y) == (0, 1)
 
     @test collect(
         coefficients(
