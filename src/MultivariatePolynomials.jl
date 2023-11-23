@@ -18,7 +18,7 @@ abstract type AbstractPolynomialLike{T} <: MA.AbstractMutable end
 """
     AbstractTermLike{T}
 
-Abstract type for a value that can act like a term. For instance, an `AbstractMonomial` is an `AbstractTermLike{Int}` since it can act as a term with coefficient `1`.
+Abstract type for a value that can act like a term. For instance, an `AbstractMonomial` is an `AbstractTermLike{Bool}` since it can act as a term with coefficient `1`.
 """
 abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
 
@@ -27,7 +27,7 @@ abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
 
 Abstract type for a value that can act like a monomial. For instance, an `AbstractVariable` is an `AbstractMonomialLike` since it can act as a monomial of one variable with degree `1`.
 """
-abstract type AbstractMonomialLike <: AbstractTermLike{Int} end
+abstract type AbstractMonomialLike <: AbstractTermLike{Bool} end
 
 """
     AbstractVariable <: AbstractMonomialLike
