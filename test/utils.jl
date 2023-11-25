@@ -19,7 +19,6 @@ end
 struct CustomPoly{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
-CustomPoly(p::AbstractPolynomial{T}) where {T} = CustomPoly{T,typeof(p)}(p)
 function MultivariatePolynomials.term_type(::Type{CustomPoly{T,P}}) where {T,P}
     return MultivariatePolynomials.term_type(P)
 end
@@ -39,7 +38,6 @@ Base.copy(p::CustomPoly) = CustomPoly(copy(p.p))
 struct CustomTerms{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
     p::P
 end
-CustomTerms(p::AbstractPolynomial{T}) where {T} = CustomTerms{T,typeof(p)}(p)
 function MultivariatePolynomials.term_type(::Type{CustomTerms{T,P}}) where {T,P}
     return MultivariatePolynomials.term_type(P)
 end
@@ -49,9 +47,6 @@ function MultivariatePolynomials.monomial_type(
     ::Type{<:CustomTerms{T,P}},
 ) where {T,P}
     return monomial_type(P)
-end
-function MultivariatePolynomials.constant_monomial(p::CustomPoly)
-    return constant_monomial(p.p)
 end
 Base.copy(p::CustomTerms) = CustomTerms(copy(p.p))
 
