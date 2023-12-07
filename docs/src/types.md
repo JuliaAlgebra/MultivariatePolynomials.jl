@@ -81,6 +81,8 @@ leading_coefficient
 leading_monomial
 remove_leading_term
 remove_monomials
+filter_terms
+OfDegree
 monic
 map_coefficients
 map_coefficients!

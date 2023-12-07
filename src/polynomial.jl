@@ -475,6 +475,52 @@ function remove_monomials(
 end
 
 """
+    function filter_terms(f::Function, p::AbstractPolynomialLike)
+
+Filter the polynomial `p` by only keep the terms `t` such that `f(p)` is
+`true`.
+
+See also [`OfDegree`](@ref).
+
+### Examples
+
+```julia
+julia> p = 1 - 2x + x * y - 3y^2 + x^2 * y
+1 - 2x - 3y² + xy + x²y
+
+julia> filter_terms(OfDegree(2), p)
+-3y² + xy
+
+julia> filter_terms(!OfDegree(2), p)
+1 - 2x + x²y
+
+julia> filter_terms(!OfDegree(0:2), p)
+x²y
+
+julia> filter_terms(iseven ∘ coefficient, p)
+-2x
+```
+"""
+function filter_terms(f::F, p::AbstractPolynomialLike) where {F<:Function}
+    return polynomial(filter(f, terms(p)), SortedUniqState())
+end
+
+"""
+    struct OfDegree{D} <: Function
+        degree::D
+    end
+
+A function `d::OfDegree` is such that `d(t)` returns
+`degree(t) == d.degree`. Note that `!d` creates the negation.
+See also [`filter_terms`](@ref).
+"""
+struct OfDegree{D} <: Function
+    degree::D
+end
+
+(d::OfDegree)(mono::AbstractTermLike) = in(degree(mono), d.degree)
+
+"""
     monic(p::AbstractPolynomialLike)
 
 Returns `p / leading_coefficient(p)` where the leading coefficient of the returned polynomials is made sure to be exactly one to avoid rounding error.
