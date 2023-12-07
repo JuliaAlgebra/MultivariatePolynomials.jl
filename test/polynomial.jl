@@ -149,7 +149,11 @@ const MP = MultivariatePolynomials
     @test transpose(x + y) == x + y
     @test transpose([1 2; 3 4] * x) == [1 3; 2 4] * x
 
-    @test remove_monomials(4x^2 * y + x * y + 2x, [x * y]) == 4x^2 * y + 2x
+    p = 4x^2 * y + x * y + 2x
+    @test remove_monomials(p, [x * y]) == 4x^2 * y + 2x
+    @test filter_terms(OfDegree(2), 4x^2 * y + x * y + 2x) == x * y
+    @test filter_terms(!OfDegree(2), 4x^2 * y + x * y + 2x) == 4x^2 * y + 2x
+    @test filter_terms(iseven ∘ MP.coefficient, 4x^2 * y + x * y + 2x) == 4x^2 * y + 2x
 
     @test_throws InexactError push!([1], x + 1)
 
