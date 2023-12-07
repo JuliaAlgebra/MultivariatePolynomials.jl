@@ -501,10 +501,7 @@ julia> filter_terms(iseven ∘ coefficient, p)
 -2x
 ```
 """
-function filter_terms(
-    f::F,
-    p::AbstractPolynomialLike,
-) where {F<:Function}
+function filter_terms(f::F, p::AbstractPolynomialLike) where {F<:Function}
     return polynomial(filter(f, terms(p)), SortedUniqState())
 end
 
