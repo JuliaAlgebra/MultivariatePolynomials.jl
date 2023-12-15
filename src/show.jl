@@ -28,7 +28,7 @@ Base.show(io::IO, p::TypesWithShow) = show(io, MIME"text/plain"(), p)
 function _show(io::IO, mime::MIME, var::AbstractVariable)
     base, indices = name_base_indices(var)
     if isconj(var)
-        for c in base
+        for c in String(base)
             print(io, c, '\u0305') # displays as overbar (̄z)
         end
     else
