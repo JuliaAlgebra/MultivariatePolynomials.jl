@@ -25,6 +25,15 @@
           ordinary_variable(real(x)) ==
           ordinary_variable(imag(x)) ==
           ordinary_variable(x)
+    @testset "show" begin
+        struct SymbolVar <: MP.AbstractVariable end
+        struct SymbolConjVar <: MP.AbstractVariable end
+        Base.isreal(::Union{SymbolVar,SymbolConjVar}) = false
+        MP.name_base_indices(::Union{SymbolVar,SymbolConjVar}) = (:xy, (1, 2))
+        MP.isconj(::SymbolConjVar) = true
+        @test sprint(show, SymbolVar()) == "xy₁₋₂"
+        @test sprint(show, SymbolConjVar()) == "x̅y̅₁₋₂"
+    end
     @test conj(x) != x && conj(conj(x)) == x
     @test real(x) == real(conj(x))
     @test imag(conj(x)) == -imag(x)
