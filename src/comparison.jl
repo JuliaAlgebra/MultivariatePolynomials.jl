@@ -309,3 +309,10 @@ struct Reverse{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
 end
 
 compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
+
+"""
+    ordering(p::AbstractPolynomialLike)
+
+Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
+"""
+function ordering end

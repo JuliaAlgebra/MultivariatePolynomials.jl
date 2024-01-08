@@ -42,6 +42,18 @@ map_exponents
 multiplication_preserves_monomial_order
 ```
 
+### Ordering
+
+```@docs
+AbstractMonomialOrdering
+ordering
+compare
+LexOrder
+InverseLexOrder
+Graded
+Reverse
+```
+
 ## Terms
 
 ```@docs
@@ -72,7 +84,6 @@ nterms
 coefficients
 coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike, vars)
 monomials
-ordering
 mindegree
 maxdegree
 extdegree

@@ -67,7 +67,6 @@ include("monomial.jl")
 include("term.jl")
 include("polynomial.jl")
 include("monomial_vector.jl")
-include("ordering.jl")
 
 include("rational.jl")
 
