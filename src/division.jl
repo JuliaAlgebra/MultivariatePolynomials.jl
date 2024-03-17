@@ -381,7 +381,7 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
 ) where {T,S,P<:_APL{T},Q<:_APL{S}}
-    U = MA.promote_operation(/, T, S)
+    U = MA.promote_operation(div, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
