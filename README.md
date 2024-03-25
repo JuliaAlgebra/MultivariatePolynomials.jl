@@ -20,7 +20,7 @@ The interface contains functions for accessing the coefficients, monomials, term
 ## Citing
 
 Please cite the [JuliaCon 2022 presentation](https://pretalx.com/juliacon-2022/talk/TRFSJY/) [[Slides](https://drive.google.com/file/d/1q9UT5rpcmm0GdRmWm7llhVpbOx7OxGnZ/view)].
-See [CITATION.bib](https://github.com/JuliaPolyhedra/MultivariatePolynomials.jl/blob/master/CITATION.bib) for the BibTeX.
+See [CITATION.bib](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/blob/master/CITATION.bib) for the BibTeX.
 
 ## Examples
 
