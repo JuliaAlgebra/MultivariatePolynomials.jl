@@ -214,26 +214,64 @@ end
 # Also give complex-valued degree definitions. We choose not to overwrite degree, as this will lead to issues in monovecs
 # and their sorting. So now there are two ways to calculate degrees: strictly by considering all variables independently,
 # and also by looking at their complex structure.
+for fn in (:degree_complex, :halfdegree)
+    @eval function $fn(t::AbstractTermLike)
+        realdeg = 0
+        cpdeg = 0
+        conjdeg = 0
+        for (var, exp) in powers(t)
+            if isreal(var)
+                realdeg += exp
+                (isrealpart(var) || isimagpart(var)) && error(
+                    "Cannot calculate complex degrees when real or imaginary parts are present",
+                )
+            else
+                if isconj(var)
+                    conjdeg += exp
+                else
+                    cpdeg += exp
+                end
+            end
+        end
+        return $(
+            fn === :degree_complex ? :(realdeg) : :(div(realdeg, 2, RoundUp))
+        ) + max(cpdeg, conjdeg)
+    end
+end
+
 """
     degree_complex(t::AbstractTermLike)
 
 Return the _total complex degree_ of the monomial of the term `t`, i.e., the maximum of the total degree of the declared
 variables in `t` and the total degree of the conjugate variables in `t`.
 To be well-defined, the monomial must not contain real parts or imaginary parts of variables.
+If `x` is a real-valued variable and `z` is complex-valued,
+- `degree_complex(x^5) = 5`
+- `degree_complex(z^3 * conj(z)^4) = 4` and `degree_complex(z^4 * conj(z)^3) = 4`
+- `degree_complex(x^5 * z^3 * conj(z^4)) = 5 + 4 = 9`
+"""
+degree_complex(t::AbstractTermLike)
 
+"""
+    halfdegree(t::AbstractTermLike)
+
+Return the equivalent of `ceil(degree(t)/2)`` for real-valued terms or `degree_complex(t)` for terms with only complex
+variables; however, respect any mixing between complex and real-valued variables.
+To be well-defined, the monomial must not contain real parts or imaginary parts of variables.
+If `x` is a real-valued variable and `z` is complex-valued,
+- `halfdegree(x^5) = 3`
+- `halfdegree(z^3 * conj(z)^4) = 4` and `halfdegree(z^4 * conj(z)^3) = 4`
+- `halfdegree(x^5 * z^3 * conj(z^4)) = 3 + 4 = 7`
+"""
+halfdegree(t::AbstractTermLike)
+
+"""
     degree_complex(t::AbstractTermLike, v::AbstractVariable)
 
 Returns the exponent of the variable `v` or its conjugate in the monomial of the term `t`, whatever is larger.
 
 See also [`isconj`](@ref).
 """
-function degree_complex(t::AbstractTermLike)
-    vars = variables(t)
-    @assert(!any(isrealpart, vars) && !any(isimagpart, vars))
-    grouping = isconj.(vars)
-    exps = exponents(t)
-    return max(sum(exps[grouping]), sum(exps[map(!, grouping)]))
-end
 function degree_complex(t::AbstractTermLike, var::AbstractVariable)
     return degree_complex(monomial(t), var)
 end
@@ -243,7 +281,9 @@ function degree_complex(m::AbstractMonomial, v::AbstractVariable)
     deg_c = 0
     c_v = conj(v)
     for (var, exp) in powers(m)
-        @assert(!isrealpart(var) && !isimagpart(var))
+        (isrealpart(var) || isimagpart(var)) && error(
+            "Cannot calculate complex degrees when real or imaginary parts are present",
+        )
         if var == v
             deg += exp
         elseif var == c_v
@@ -251,31 +291,6 @@ function degree_complex(m::AbstractMonomial, v::AbstractVariable)
         end
     end
     return max(deg, deg_c)
-end
-
-"""
-    halfdegree(t::AbstractTermLike)
-
-Return the equivalent of `ceil(degree(t)/2)`` for real-valued terms or `degree_complex(t)` for terms with only complex
-variables; however, respect any mixing between complex and real-valued variables.
-"""
-function halfdegree(t::AbstractTermLike)
-    realdeg = 0
-    cpdeg = 0
-    conjdeg = 0
-    for (var, exp) in powers(t)
-        if isreal(var)
-            realdeg += exp
-        else
-            if isconj(var)
-                conjdeg += exp
-            else
-                @assert(!isrealpart(var) && !isimagpart(var))
-                cpdeg += exp
-            end
-        end
-    end
-    return ((realdeg + 1) >> 1) + max(cpdeg, conjdeg)
 end
 
 """
