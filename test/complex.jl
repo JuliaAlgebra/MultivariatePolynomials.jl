@@ -64,8 +64,11 @@
     @test degree_complex(x * y^2 * conj(y)^3) == 3
     @test degree_complex(x * y^2 * conj(y)^3, x) == 1
     @test degree_complex(x * y^2 * conj(y)^3, y) == 3
+    @test degree_complex(a^5 * x * y^2 * conj(y)^4) == 9
+    @test degree_complex(a^5 * x * y^2 * conj(y)^2) == 8
     @test halfdegree(x * y^2 * conj(y^3)) == 3
-    @test halfdegree(x * a^5 * conj(y)) == 4
+    @test halfdegree(x * a^5 * conj(y^2)) == 5
+    @test halfdegree(x^2 * a^5 * conj(y^2)) == 5
     @test ordinary_variable([x, y, conj(x), a, real(x), imag(y)]) == [x, y, a]
 
     @test subs(4x + 8y^2 - 6x^3, [x, y] => [2 + 4im, 9 - im]) ==
