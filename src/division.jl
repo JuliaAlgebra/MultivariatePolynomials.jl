@@ -228,7 +228,7 @@ function MA.operate!(
     g::_APL,
     algo,
 )
-    return MA.buffered_operate!(nothing, op, f, g, algo)
+    return MA.buffered_operate!(nothing, op, f, g, algo)::typeof(f)
 end
 
 # TODO As suggested in [Knu14, Algorithm R, p. 426] (univariate case only), if
@@ -305,7 +305,7 @@ function MA.operate!(
         f,
         g,
         algo,
-    )
+    )::typeof(f)
 end
 
 function MA.buffered_operate!(
@@ -321,7 +321,7 @@ function MA.buffered_operate!(
         f,
         g,
         algo,
-    )
+    )::typeof(f)
 end
 
 function MA.buffer_for(
