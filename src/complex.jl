@@ -245,10 +245,12 @@ end
 Return the _total complex degree_ of the monomial of the term `t`, i.e., the maximum of the total degree of the declared
 variables in `t` and the total degree of the conjugate variables in `t`.
 To be well-defined, the monomial must not contain real parts or imaginary parts of variables.
-If `x` is a real-valued variable and `z` is complex-valued,
-- `degree_complex(x^5) = 5`
-- `degree_complex(z^3 * conj(z)^4) = 4` and `degree_complex(z^4 * conj(z)^3) = 4`
-- `degree_complex(x^5 * z^3 * conj(z^4)) = 5 + 4 = 9`
+If `x₁` and `x₂` are real-valued variables and `z₁` and `z₂` are complex-valued,
+- `degree_complex(x₁^2 * x₂^3) = 5`
+- `degree_complex(z₁^3 * conj(z₁)^4) = max(3, 4) = 4` and `degree_complex(z₁^4 * conj(z₁)^3) = max(4, 3) = 4`
+- `degree_complex(z₁^3 * z₂ * conj(z₁)^2 * conj(z₂)^4) = max(4, 6) = 6` and
+  `degree_complex(z₁^4 * z₂ * conj(z₁) * conj(z₂)^3) = max(5, 4) = 5`
+- `degree_complex(x₁^2 * x₂^3 * z₁^3 * z₂ * conj(z₁)^2 * conj(z₂)^4) = 5 + max(4, 6) = 11`
 """
 degree_complex(t::AbstractTermLike)
 
@@ -258,10 +260,12 @@ degree_complex(t::AbstractTermLike)
 Return the equivalent of `ceil(degree(t)/2)`` for real-valued terms or `degree_complex(t)` for terms with only complex
 variables; however, respect any mixing between complex and real-valued variables.
 To be well-defined, the monomial must not contain real parts or imaginary parts of variables.
-If `x` is a real-valued variable and `z` is complex-valued,
-- `halfdegree(x^5) = 3`
-- `halfdegree(z^3 * conj(z)^4) = 4` and `halfdegree(z^4 * conj(z)^3) = 4`
-- `halfdegree(x^5 * z^3 * conj(z^4)) = 3 + 4 = 7`
+If `x₁` and `x₂` are real-valued variables and `z₁` and `z₂` are complex-valued,
+- `halfdegree(x₁^2 * x₂^3) = ⌈5/2⌉ = 3`
+- `halfdegree(z₁^3 * conj(z₁)^4) = max(3, 4) = 4` and `halfdegree(z₁^4 * conj(z₁)^3) = max(4, 3) = 4`
+- `halfdegree(z₁^3 * z₂ * conj(z₁)^2 * conj(z₂)^4) = max(4, 6) = 6` and
+  `halfdegree(z₁^4 * z₂ * conj(z₁) * conj(z₂)^3) = max(5, 4) = 5`
+- `halfdegree(x₁^2 * x₂^3 * z₁^3 * z₂ * conj(z₁)^2 * conj(z₂)^4) = ⌈5/2⌉ + max(4, 6) = 9`
 """
 halfdegree(t::AbstractTermLike)
 
