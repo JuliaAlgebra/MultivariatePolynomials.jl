@@ -295,10 +295,10 @@ Monomial ordering defined by
 `compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)`.
 
 Reverse Lex Order defined in [CLO13, Exercise 2.2.9, p. 61] where it is abbreviated as *rinvlex*.
-can be obtained as `Reverse(InverseLexOrder())`.
+can be obtained as `Reverse{InverseLexOrder}`.
 
 The Graded Reverse Lex Order often abbreviated as *grevlex* order defined in [CLO13, Definition 2.2.6, p. 58]
-can be obtained as `Graded(Reverse(InverseLexOrder()))`.
+can be obtained as `Graded{Reverse{InverseLexOrder}}`.
 
 [CLO13] Cox, D., Little, J., & OShea, D.
 *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
