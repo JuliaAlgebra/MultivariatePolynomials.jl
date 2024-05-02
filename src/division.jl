@@ -26,9 +26,36 @@ function divides(t1::AbstractTermLike, t2::AbstractTermLike)
 end
 divides(t1::AbstractVariable, t2::AbstractVariable) = t1 == t2
 
+"""
+    gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+
+Return the largest monomial `m` such that both `divides(m, m1)`
+and `divides(m, m2)` are `true`.
+
+```@example
+julia> @polyvar x y z;
+
+julia> gcd(x^2*y^7*z^3, x^4*y^5*z^2)
+x²y⁵z²
+```
+"""
 function Base.gcd(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
     return map_exponents(min, m1, m2)
 end
+
+"""
+    lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+
+Return the smallest monomial `m` such that both `divides(m1, m)`
+and `divides(m2, m)` are `true`.
+
+```@example
+julia> @polyvar x y z;
+
+julia> lcm(x^2*y^7*z^3, x^4*y^5*z^2)
+x^4*y^7*z^3
+```
+"""
 function Base.lcm(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
     return map_exponents(max, m1, m2)
 end
@@ -152,6 +179,26 @@ function Base.rem(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
     return divrem(f, g; kwargs...)[2]
 end
 
+"""
+    pseudo_divrem(f::_APL{S}, g::_APL{T}, algo) where {S,T}
+
+Return the pseudo divisor and remainder of `f` modulo `g` as defined in [Knu14, Algorithm R, p. 425].
+
+When the coefficient type is not a field, it is not always possible to carry a
+division. For instance, the division of `f = 3x + 1` by `g = 2x + 1` cannot be done over
+integers. On the other hand, one can write `2f = 3g - 1`.
+In general, the *pseudo* division of `f` by `g` is:
+```math
+l f(x) = q(x) g(x) + r(x)
+```
+where `l` is a power of the leading coefficient of `g` some constant.
+
+See also [`pseudo_rem`](@ref).
+
+[Knu14] Knuth, D.E., 2014.
+*Art of computer programming, volume 2: Seminumerical algorithms.*
+Addison-Wesley Professional. Third edition.
+"""
 function pseudo_divrem(f::_APL{S}, g::_APL{T}, algo) where {S,T}
     return _pseudo_divrem(
         algebraic_structure(MA.promote_operation(-, S, T)),
@@ -188,6 +235,8 @@ end
     pseudo_rem(f::_APL, g::_APL, algo)
 
 Return the pseudo remainder of `f` modulo `g` as defined in [Knu14, Algorithm R, p. 425].
+
+See [`pseudo_divrem`](@ref) for more details.
 
 [Knu14] Knuth, D.E., 2014.
 *Art of computer programming, volume 2: Seminumerical algorithms.*
@@ -285,7 +334,7 @@ end
 """
     rem_or_pseudo_rem(f::_APL, g::_APL, algo)
 
-If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](ref).
+If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](@ref).
 """
 function rem_or_pseudo_rem(f::_APL, g::_APL, algo)
     return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
