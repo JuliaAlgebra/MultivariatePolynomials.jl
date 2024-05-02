@@ -7,8 +7,6 @@ makedocs(
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true"
     ),
-    # See https://github.com/jump-dev/JuMP.jl/issues/1576
-    strict = true,
 
     pages = [
         "Introduction" => "index.md",
