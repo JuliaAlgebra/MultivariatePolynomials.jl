@@ -37,7 +37,6 @@ The same functions can be used with monomials and polynomials:
 ```@docs
 gcd
 lcm
-<<<<<<< HEAD
 AbstractUnivariateGCDAlgorithm
 GeneralizedEuclideanAlgorithm
 SubresultantAlgorithm
@@ -50,6 +49,4 @@ univariate_gcd
 content
 primitive_part
 primitive_part_content
-=======
->>>>>>> 1fe1303 (Promote integer to rational for division)
 ```
