@@ -215,7 +215,6 @@ function multivariate_gcd_test(
     )
 end
 
-
 function deflation_test()
     Mod.@polyvar a b c
     function _test(p, eshift, edefl)
