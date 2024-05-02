@@ -1,0 +1,295 @@
+function test_gcd_unit(expected, p1, p2, algo)
+    g = @inferred gcd(p1, p2, algo)
+    # it does not make sense, in general, to speak of "the" greatest common
+    # divisor of u and v; there is a set of greatest common divisors, each
+    # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+    # `-expected` are both accepted.
+    @test g == expected || g == -expected
+end
+
+function test_gcdx_unit(expected, p1, p2, algo)
+    test_gcd_unit(expected, p1, p2, algo)
+    if !(algo isa SubresultantAlgorithm) # FIXME not implemented yet
+        a, b, g = @inferred gcdx(p1, p2, algo)
+        # it does not make sense, in general, to speak of "the" greatest common
+        # divisor of u and v; there is a set of greatest common divisors, each
+        # one being a unit multiple of the others [Knu14, p. 424] so `expected` and
+        # `-expected` are both accepted.
+        @test iszero(MP.pseudo_rem(g, expected, algo))
+        @test a * p1 + b * p2 == g
+    end
+end
+function _test_gcdx_unit(expected, p1, p2, algo)
+    test_gcdx_unit(expected, p1, p2, algo)
+    return test_gcdx_unit(expected, p2, p1, algo)
+end
+
+function univariate_gcd_test(algo = GeneralizedEuclideanAlgorithm())
+    Mod.@polyvar x
+    test_gcdx_unit(x + 1, x^2 - 1, x^2 + 2x + 1, algo)
+    test_gcdx_unit(x + 1, x^2 + 2x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x^2 - 1, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x^2 - 1, algo)
+    test_gcdx_unit(x + 1, x - x, x + 1, algo)
+    test_gcdx_unit(x + 1, x + 1, x - x, algo)
+    test_gcdx_unit(x - x + 1, x + 1, x + 2, algo)
+    test_gcdx_unit(x - x + 1, x + 1, 2x + 1, algo)
+    test_gcdx_unit(x - x + 1, x - 1, 2x^2 - 2x - 2, algo)
+    @test 0 == @inferred gcd(x - x, x^2 - x^2, algo)
+    @test 0 == @inferred gcd(x^2 - x^2, x - x, algo)
+end
+
+function _mult_test(a::Number, b)
+    @test iszero(maxdegree(b))
+end
+function _mult_test(a::Number, b::Number)
+    @test iszero(rem(a, b))
+    @test iszero(rem(b, a))
+end
+function _mult_test(a, b)
+    @test iszero(rem(a, b))
+    @test iszero(rem(b, a))
+end
+
+include("independent.jl")
+
+function _gcd_test(expected, a, b, algo, expected_type)
+    A = deepcopy(a)
+    B = deepcopy(b)
+    g = @inferred MP._simplifier(
+        a,
+        b,
+        algo,
+        MA.IsNotMutable(),
+        MA.IsNotMutable(),
+    )
+    @test are_independent(g, a)
+    @test are_independent(g, b)
+    @test g isa expected_type
+    return _mult_test(expected, g)
+end
+
+function mult_test(expected, a, b, algo)
+    return _gcd_test(expected, a, b, algo, Base.promote_typeof(a, b))
+end
+function mult_test(expected, a::Number, b, algo)
+    return _gcd_test(
+        expected,
+        a,
+        b,
+        algo,
+        promote_type(typeof(a), MP.coefficient_type(b)),
+    )
+end
+function mult_test(expected, a, b::Number, algo)
+    return _gcd_test(
+        expected,
+        a,
+        b,
+        algo,
+        promote_type(MP.coefficient_type(a), typeof(b)),
+    )
+end
+function sym_test(a, b, g, algo)
+    mult_test(g, a, b, algo)
+    return mult_test(g, b, a, algo)
+end
+function triple_test(a, b, c, algo)
+    sym_test(a * c, b * c, gcd(a, b, algo) * c, algo)
+    sym_test(b * a, c * a, gcd(b, c, algo) * a, algo)
+    return sym_test(c * b, a * b, gcd(c, a, algo) * b, algo)
+end
+
+function multivariate_gcd_test(
+    ::Type{T},
+    algo = SubresultantAlgorithm(),
+) where {T}
+    Mod.@polyvar x y z
+    o = one(T)
+    zr = zero(T)
+    sym_test(o, o * x, o, algo)
+    sym_test(o * x, zr * x, o * x, algo)
+    sym_test(o * x + o, zr * x, o * x + o, algo)
+    # Inspired from https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/160
+    f1 = o * x * y + o * x
+    f2 = o * y^2
+    f3 = o * x
+    sym_test(f1, f2, 1, algo)
+    sym_test(f2, f3, 1, algo)
+    sym_test(f3, f1, x, algo)
+    triple_test(f1, f2, f3, algo)
+
+    @testset "Issue #173" begin
+        p1 = o * x * y + x
+        p2 = x^2
+        sym_test(p1, p2, x, algo)
+    end
+
+    p1 = o * z - z
+    p2 = z
+    @test gcd(p1, p2, algo) == z
+    p1 = o * y - y
+    p2 = z
+    @test gcd(p1, p2, algo) == z
+    test_relatively_prime(p1, p2, algo) = test_gcd_unit(o, p1, p2, algo)
+    test_relatively_prime(2o * y * z - o, y - z, algo)
+    test_relatively_prime(2o * y^2 * z - y, y - z, algo)
+    test_relatively_prime(2o * y^2 * z - y, y^3 * z - y - z, algo)
+    test_relatively_prime(
+        2o * y^3 + 2 * y^2 * z - y,
+        y^3 + y^3 * z - y - z,
+        algo,
+    )
+    test_relatively_prime(
+        z^4 + 2o * y^3 + 2 * y^2 * z - y,
+        y * z^4 + y^3 + y^3 * z - y - z,
+        algo,
+    )
+    test_relatively_prime(
+        y * z^3 + z^4 + 2o * y^3 + 2 * y^2 * z - y,
+        y^2 * z^3 + y * z^4 + y^3 + y^3 * z - y - z,
+        algo,
+    )
+    if T != Int
+        test_relatively_prime(
+            -3o * y^2 * z^3 - 3 * y^4 + y * z^3 + z^4 + 2 * y^3 + 2 * y^2 * z -
+            y,
+            3o * y^3 * z^3 - 2 * y^5 + y^2 * z^3 + y * z^4 + y^3 + y^3 * z - y -
+            z,
+            algo,
+        )
+    end
+    test_relatively_prime(
+        -z^6 - 3o * y^2 * z^3 - 3 * y^4 +
+        y * z^3 +
+        z^4 +
+        2 * y^3 +
+        2 * y^2 * z - y,
+        -y * z^6 - 3o * y^3 * z^3 - 2 * y^5 +
+        y^2 * z^3 +
+        y * z^4 +
+        y^3 +
+        y^3 * z - y - z,
+        algo,
+    )
+    test_relatively_prime(
+        -z^6 - 3o * y^2 * z^3 - 3 * y^4 +
+        y * z^3 +
+        z^4 +
+        2 * y^3 +
+        2 * y^2 * z - y,
+        -y^2 * z^6 - 3o * y^4 * z^3 - 2 * y^6 +
+        y^3 * z^3 +
+        y^2 * z^4 +
+        y^5 +
+        y^4 * z - y^2 - y * z,
+        algo,
+    )
+    a = (o * x + o * y^2) * (o * z^3 + o * y^2 + o * x)
+    b = (o * x + o * y + o * z) * (o * x^2 + o * y)
+    c = (o * x + o * y + o * z) * (o * z^3 + o * y^2 + o * x)
+    #    if T != Int || (
+    #        algo != GeneralizedEuclideanAlgorithm(false, false) &&
+    #        algo != GeneralizedEuclideanAlgorithm(true, false) &&
+    #        algo != GeneralizedEuclideanAlgorithm(true, true)
+    #    )
+    #        sym_test(a, b, 1, algo)
+    #    end
+    sym_test(b, c, x + y + z, algo)
+    sym_test(c, a, z^3 + y^2 + x, algo)
+    #    if T != Int && (
+    #        T != Float64 || (
+    #            algo != GeneralizedEuclideanAlgorithm(false, true) &&
+    #            algo != GeneralizedEuclideanAlgorithm(true, true)
+    #        )
+    #    )
+    #        triple_test(a, b, c, algo)
+    #    end
+
+    # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/195
+    return sym_test(
+        x * (y^2) + 2x * y * z + x * (z^2) + x * y + x * z,
+        y + z,
+        y + z,
+        algo,
+    )
+end
+
+
+function deflation_test()
+    Mod.@polyvar a b c
+    function _test(p, eshift, edefl)
+        shift, defl = MP.deflation(p)
+        @test shift == eshift
+        @test defl == edefl
+        q = MP.deflate(p, shift, defl)
+        @test p == MP.inflate(q, shift, defl)
+    end
+    for (x, y, z) in permutations((a, b, c))
+        _test(x + x^2 + y * x, x, x * y)
+        p = x^2 + x^2 * y^3 + y^6 * x^4
+        _test(p, x^2, x^2 * y^3)
+        @test p == MP.deflate(p, z^0, z^0)
+        _test(p, x^2, x^2 * y^3)
+    end
+end
+
+function extracted_variable_test()
+    Mod.@polyvar x y z
+    function _test(p1, p2, w1, w2)
+        i1, i2, n = MP._extracted_variable(p1, p2)
+        v(p, i) = iszero(i) ? nothing : variables(p)[i]
+        if string(Mod) == "DynamicPolynomials"
+            alloc_test(() -> MP._extracted_variable(p1, p2), 0)
+        end
+        @test v(p1, i1) == w1
+        @test v(p2, i2) == w2
+        i2, i1, n = MP._extracted_variable(p2, p1)
+        if string(Mod) == "DynamicPolynomials"
+            alloc_test(() -> MP._extracted_variable(p2, p1), 0)
+        end
+        @test v(p1, i1) == w1
+        @test v(p2, i2) == w2
+    end
+    _test(x - x, y - y, nothing, nothing)
+    _test(x + y + z, x - z, y, nothing)
+    _test(x + y + z, x - y, z, nothing)
+    _test(x + y + z, y - z, x, nothing)
+    _test(x^4 + y^5 + z^6, x^3 + y^2 + z, z, z)
+    _test(x^6 + y^5 + z^4, x + y^2 + z^3, x, x)
+    _test(x^6 + y + z^4 - y, x + y + z^3 - y, x, x)
+    return _test(
+        x * (y^2) + 2x * y * z + x * (z^2) + x * y + x * z,
+        y + z,
+        y,
+        y,
+    )
+end
+
+@testset "GCD" begin
+    univariate_gcd_test(SubresultantAlgorithm())
+    @testset "Univariate gcd primitive_rem=$primitive_rem" for primitive_rem in
+                                                               [false, true]
+        @testset "skip_last=$skip_last" for skip_last in [false, true]
+            univariate_gcd_test(
+                GeneralizedEuclideanAlgorithm(primitive_rem, skip_last),
+            )
+        end
+    end
+    @testset "Multivariate gcd $T" for T in
+                                       [Int, BigInt, Rational{BigInt}, Float64]
+        if T != Rational{BigInt} || VERSION >= v"1.6"
+            multivariate_gcd_test(T, SubresultantAlgorithm())
+            # `gcd` for `Rational{BigInt}` got defined at some point between v1.0 and v1.6
+            @testset "primitive_rem=$primitive_rem" for primitive_rem in
+                                                        [false, true]
+                @testset "skip_last=$skip_last" for skip_last in [false, true]
+                    multivariate_gcd_test(
+                        T,
+                        GeneralizedEuclideanAlgorithm(primitive_rem, skip_last),
+                    )
+                end
+            end
+        end
+    end
+end
