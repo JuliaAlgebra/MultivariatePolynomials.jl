@@ -8,12 +8,19 @@ Given a polynomial ``p`` and divisors ``d_1, \ldots, d_n``, one can find ``r`` a
 You can obtain the vector ``[q_1, \ldots, q_n]`` using `div(p, d)` where ``d = [d_1, \ldots, d_n]`` and ``r`` using the `rem` function with the same arguments.
 The `divrem` function returns ``(q, r)``.
 ```@docs
+divrem
+div
+rem
 divides
 div_multiple
 ```
 
 Note that the coefficients of the polynomials need to be a field for `div`,
 `rem` and `divrem` to work.
+If the coefficient type is not a field, it is promoted to a field using [`promote_to_field`](@ref).
+```@docs
+promote_to_field
+```
 Alternatively, [`pseudo_rem`](@ref) or [`pseudo_divrem`](@ref) can be used
 instead as they do not require the coefficient type to be a field.
 ```@docs
@@ -30,6 +37,7 @@ The same functions can be used with monomials and polynomials:
 ```@docs
 gcd
 lcm
+<<<<<<< HEAD
 AbstractUnivariateGCDAlgorithm
 GeneralizedEuclideanAlgorithm
 SubresultantAlgorithm
@@ -42,4 +50,6 @@ univariate_gcd
 content
 primitive_part
 primitive_part_content
+=======
+>>>>>>> 1fe1303 (Promote integer to rational for division)
 ```

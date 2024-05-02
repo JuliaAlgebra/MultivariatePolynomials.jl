@@ -64,8 +64,25 @@ struct Field end
 struct UniqueFactorizationDomain end
 const UFD = UniqueFactorizationDomain
 
+"""
+    promote_to_field(::Type{T})
+
+Promote the type `T` to a field. For instance, `promote_to_field(T)` returns
+`Rational{T}` if `T` is an integer and `promote_to_field(T)` returns `RationalPoly{T}`
+if `T` is a polynomial.
+"""
+function promote_to_field end
+
+function promote_to_field(::Type{T}) where {T<:Integer}
+    return Rational{T}
+end
+function promote_to_field(::Type{T}) where {T<:_APL}
+    return RationalPoly{T,T}
+end
+promote_to_field(::Type{T}) where {T} = T
+
 algebraic_structure(::Type{<:Integer}) = UFD()
-algebraic_structure(::Type{<:AbstractPolynomialLike}) = UFD()
+algebraic_structure(::Type{<:_APL}) = UFD()
 # `Rational`, `AbstractFloat`, JuMP expressions, etc... are fields
 algebraic_structure(::Type) = Field()
 _field_absorb(::UFD, ::UFD) = UFD()
@@ -430,7 +447,11 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
 ) where {T,S,P<:_APL{T},Q<:_APL{S}}
-    U = MA.promote_operation(/, T, S)
+    U = MA.promote_operation(
+        /,
+        promote_to_field(T),
+        promote_to_field(S),
+    )
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
