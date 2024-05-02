@@ -8,9 +8,6 @@ Given a polynomial ``p`` and divisors ``d_1, \ldots, d_n``, one can find ``r`` a
 You can obtain the vector ``[q_1, \ldots, q_n]`` using `div(p, d)` where ``d = [d_1, \ldots, d_n]`` and ``r`` using the `rem` function with the same arguments.
 The `divrem` function returns ``(q, r)``.
 ```@docs
-divrem
-div
-rem
 divides
 div_multiple
 ```
@@ -32,6 +29,7 @@ obtained for integers respectively with the `gcd` and `lcm` functions.
 The same functions can be used with monomials and polynomials:
 ```@docs
 gcd
+lcm
 AbstractUnivariateGCDAlgorithm
 GeneralizedEuclideanAlgorithm
 SubresultantAlgorithm

@@ -16,7 +16,12 @@ makedocs(
         "Substitution" => "substitution.md",
         "Differentiation" => "differentiation.md",
         "Division" => "division.md",
-    ]
+        "Internal" => "internal.md",
+    ],
+
+    # The following ensures that we only include the docstrings from
+    # this module for functions define in Base that we overwrite.
+    modules = [MultivariatePolynomials],
 )
 
 deploydocs(

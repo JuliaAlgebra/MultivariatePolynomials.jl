@@ -24,6 +24,6 @@ The following packages extend the interface and/or implement algorithms using th
 
 ## Contents
 ```@contents
-Pages = ["types.md", "substitution.md", "differentiation.md", "division.md"]
+Pages = ["types.md", "substitution.md", "differentiation.md", "division.md", "internal.md"]
 Depth = 3
 ```

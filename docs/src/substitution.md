@@ -12,4 +12,5 @@ However, if some variables only are replaced by `Int` then the return type shoul
 
 ```@docs
 subs
+substitute
 ```

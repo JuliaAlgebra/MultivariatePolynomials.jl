@@ -334,7 +334,7 @@ end
 """
     rem_or_pseudo_rem(f::_APL, g::_APL, algo)
 
-If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](ref).
+If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](@ref).
 """
 function rem_or_pseudo_rem(f::_APL, g::_APL, algo)
     return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
