@@ -14,6 +14,10 @@ div_multiple
 
 Note that the coefficients of the polynomials need to be a field for `div`,
 `rem` and `divrem` to work.
+If the coefficient type is not a field, it is promoted to a field using [`promote_to_field`](@ref).
+```@docs
+promote_to_field
+```
 Alternatively, [`pseudo_rem`](@ref) or [`pseudo_divrem`](@ref) can be used
 instead as they do not require the coefficient type to be a field.
 ```@docs

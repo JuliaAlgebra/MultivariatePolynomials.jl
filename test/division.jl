@@ -54,8 +54,14 @@ end
 
 function divrem_test()
     Mod.@polyvar x y
-    @test (@inferred div(x * y^2 + 1, x * y + 1)) == y
-    @test (@inferred rem(x * y^2 + 1, x * y + 1)) == -y + 1
+    p = x * y^2 + 1
+    q = x * y + 1
+    @test typeof(div(p, q)) == MA.promote_operation(div, typeof(p), typeof(q))
+    @test typeof(rem(p, q)) == MA.promote_operation(rem, typeof(p), typeof(q))
+    @test coefficient_type(div(p, q)) == Rational{Int}
+    @test coefficient_type(rem(p, q)) == Rational{Int}
+    @test (@inferred div(p, q)) == y
+    @test (@inferred rem(p, q)) == -y + 1
     @test (@inferred div(x * y^2 + x, y)) == x * y
     @test (@inferred rem(x * y^2 + x, y)) == x
     @test (@inferred rem(x^4 + x^3 + (1 + 1e-10) * x^2 + 1, x^2 + x + 1)) == 1
