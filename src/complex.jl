@@ -186,7 +186,9 @@ for fun in [:real, :imag]
                 iszero(x) &&
                     return zero(polynomial_type(x, real(coefficient_type(x))))
                 # We replace every complex variable by its decomposition into real and imaginary part
-                subst_vars = filter(Base.:! ∘ isreal, variables(x))
+                subst_vars = unique(
+                    ordinary_variable(v) for v in variables(x) if !isreal(v)
+                )
                 # To avoid a stack overflow on promote_type, we'll handle the empty case separately
                 full_version =
                     isempty(subst_vars) ? polynomial(x) :

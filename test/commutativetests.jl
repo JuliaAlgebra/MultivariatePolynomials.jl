@@ -9,7 +9,7 @@ include("polynomial.jl")
 include("det.jl")
 
 include("rational.jl")
-isdefined(Mod, Symbol("@polycvar")) && include("complex.jl")
+isdefined(Mod, Symbol("@complex_polyvar")) && include("complex.jl")
 
 include("promote.jl")
 include("hash.jl")
