@@ -10,7 +10,7 @@
     @test isreal(a^3 + 5a^2 + 4a)
     @test !isreal(a^3 + 5im * a^2 + 4a)
 
-    Mod.@polycvar x y
+    Mod.@complex_polyvar x y
     @test !isreal(x)
     @test !isrealpart(x) &&
           !isrealpart(conj(x)) &&
@@ -73,9 +73,13 @@
 
     @test subs(4x + 8y^2 - 6x^3, [x, y] => [2 + 4im, 9 - im]) ==
           (1176 - 32im) * x^0
-    @test subs(4x + 8y^2 - 6x^3, [x, conj(y)] => [2 + 4im, 9 - im]) ==
-          (1176 + 256im) * x^0
+    # the following are currently not supported by DP (substitution variables may
+    # only be the ordinary_variable, not a conjugate or real/imaginary part)
+    @test_broken subs(4x + 8y^2 - 6x^3, [x, conj(y)] => [2 + 4im, 9 - im]) ==
+                 (1176 + 256im) * x^0
     @test_broken subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9])
-    @test subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9 + 0 * x^0]) ==
-          1184 + 112im + 144im * imag(y) - 8imag(y)^2
+    @test_broken subs(
+        4x + 8y^2 - 6x^3,
+        [x, real(y)] => [2 + 4im, 9 + 0 * x^0],
+    ) == 1184 + 112im + 144im * imag(y) - 8imag(y)^2
 end
