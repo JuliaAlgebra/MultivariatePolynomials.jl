@@ -38,6 +38,11 @@ function convert_constant(::Type{Term{C,M} where C}, α) where {M}
     return convert(Term{typeof(α),M}, α)
 end
 
+function map_coefficients!(f::F, t::Term; nonzero = false) where {F<:Function}
+    t.coefficient = f(t.coefficient)
+    return t
+end
+
 function Base.promote_rule(
     ::Type{Term{C,M1} where {C}},
     M2::Type{<:AbstractMonomialLike},
