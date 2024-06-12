@@ -171,7 +171,7 @@ function Base.conj(x::T) where {T<:AbstractTerm}
 end
 function Base.conj(x::P) where {P<:AbstractPolynomial}
     return iszero(x) || isreal(x) ? MA.copy_if_mutable(x) :
-           convert(P, polynomial([conj(t) for t in x]))
+           convert(P, polynomial([conj(t) for t in terms(x)]))
 end
 
 # Real and imaginary parts are harder to realize. The real part of a monomial can easily be a polynomial.
