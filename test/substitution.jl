@@ -99,6 +99,7 @@ import MutableArithmetics as MA
     end
 
     @testset "Issue #302 $T" for T in [BigFloat, BigInt]
+        Mod.@polyvar x[1:3]
         t = T(1) * x[1]
         @test copy(t).coefficient !== t.coefficient
         @test mutable_copy(t).coefficient !== t.coefficient
