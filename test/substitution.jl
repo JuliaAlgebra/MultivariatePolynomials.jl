@@ -102,10 +102,10 @@ import MutableArithmetics as MA
         Mod.@polyvar x[1:3]
         t = T(1) * x[1]
         @test copy(t).coefficient !== t.coefficient
-        @test mutable_copy(t).coefficient !== t.coefficient
-        @test copy_if_mutable(t).coefficient !== t.coefficient
+        @test MA.mutable_copy(t).coefficient !== t.coefficient
+        @test MA.copy_if_mutable(t).coefficient !== t.coefficient
         F = T(5) * x[1] * x[2] * x[3] + T(1) * x[1] * x[2]^2
-        @test subs(F, c => T(0)) == a * b^2
-        @test subs(F, c => 0) == a * b^2
+        @test subs(F, x[3] => T(0)) == x[1] * x[2]^2
+        @test subs(F, x[3] => 0) == x[1] * x[2]^2
     end
 end
