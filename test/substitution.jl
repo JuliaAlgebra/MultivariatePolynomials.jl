@@ -97,4 +97,14 @@ import MutableArithmetics as MA
         @test MA.promote_operation(substitute, Subs, typeof(p), typeof(s)) ==
               typeof(subs(p, s))
     end
+
+    @testset "Issue #302 $T" for T in [BigFloat, BigInt]
+        Mod.@polyvar x[1:3]
+        t = T(1) * x[1]
+        @test copy(t).coefficient !== t.coefficient
+        @test MA.mutable_copy(t).coefficient !== t.coefficient
+        F = T(5) * x[1] * x[2] * x[3] + T(1) * x[1] * x[2]^2
+        @test subs(F, x[3] => T(0)) == x[1] * x[2]^2
+        @test subs(F, x[3] => 0) == x[1] * x[2]^2
+    end
 end

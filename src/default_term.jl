@@ -25,9 +25,6 @@ coefficient(t::Term) = t.coefficient
 monomial(t::Term) = t.monomial
 term_type(::Type{<:Term{C,M}}, ::Type{T}) where {C,M,T} = Term{T,M}
 monomial_type(::Type{<:Term{C,M}}) where {C,M} = M
-function Base.copy(t::Term)
-    return Term(copy(t.coefficient), copy(t.monomial))
-end
 
 (t::Term)(s...) = substitute(Eval(), t, s)
 
@@ -84,6 +81,10 @@ function MA.mutability(::Type{Term{C,M}}) where {C,M}
     end
 end
 
+# `Base.power_by_squaring` calls `Base.copy` and we want
+# `t^1` to be a mutable copy of `t` so `copy` needs to be
+# the same as `mutable_copy`.
+Base.copy(t::Term) = MA.mutable_copy(t)
 function MA.mutable_copy(t::Term)
     return Term(
         MA.copy_if_mutable(coefficient(t)),
