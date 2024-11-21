@@ -3,7 +3,9 @@ import Test: @inferred
 
 import MutableArithmetics as MA
 
-@testset "Substitution" begin
+Mod = DynamicPolynomials
+
+#@testset "Substitution" begin
     Mod.@polyvar x[1:3]
 
     @test subs(2, x[1] => 3) == 2
@@ -107,4 +109,17 @@ import MutableArithmetics as MA
         @test subs(F, x[3] => T(0)) == x[1] * x[2]^2
         @test subs(F, x[3] => 0) == x[1] * x[2]^2
     end
-end
+
+    function subs_alloc(x)
+        p = sum(x)
+        v = map(_ -> 1, x)
+        @inferred subs(p, x => v)
+        @time subs(p, x => v)
+        @time subs(p, x => v)
+        @time substitute(Eval(), p, x => v)
+        @time substitute(Eval(), p, x => v)
+        @time substitute(Eval(), p, v)
+        @time p(v)
+    end
+    subs_alloc(x)
+#end
