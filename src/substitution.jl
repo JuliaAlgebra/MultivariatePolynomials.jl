@@ -27,6 +27,7 @@ const AbstractMultiSubstitution = Union{
 }
 const AbstractSubstitution = Union{Substitution,AbstractMultiSubstitution}
 const Substitutions = Tuple{Vararg{AbstractSubstitution}}
+const _Substitutions = Tuple{Vararg{Substitution}}
 
 abstract type AbstractSubstitutionType end
 struct Subs <: AbstractSubstitutionType end
@@ -40,12 +41,20 @@ is equivalent to:
 
     subs(polynomial, (x=>1, y=>2))
 """
-function substitute(st::_AST, p::_APL, s::AbstractMultiSubstitution)
-    return substitute(st, p, _flatten_subs(s))
+function substitute_fallback(st::_AST, p::_APL, s::Substitutions)
+    return substitute_fallback(st, p, _flatten_subs(s...))
+end
+
+function substitute(st::_AST, p::_APL, s::AbstractSubstitution...)
+    return substitute(st, p, s)
+end
+
+function substitute(st::_AST, p::_APL, s::Substitutions)
+    return substitute_fallback(st, p, s)
 end
 
 ## Variables
-function substitute(st::_AST, v::AbstractVariable, s::Substitutions)
+function substitute_fallback(st::_AST, v::AbstractVariable, s::Substitutions)
     return substitute(st, v, s...)
 end
 
@@ -127,7 +136,7 @@ function power_promote(
     )
 end
 
-function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
+function substitute_fallback(st::_AST, m::AbstractMonomial, s::Substitutions)
     if isconstant(m)
         return one(power_promote(typeof(st), variables(m), s))
     else
@@ -136,7 +145,7 @@ function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
 end
 
 ## Terms
-function substitute(st::_AST, t::AbstractTerm, s::Substitutions)
+function substitute_fallback(st::_AST, t::AbstractTerm, s::Substitutions)
     return coefficient(t) * substitute(st, monomial(t), s)
 end
 
@@ -163,7 +172,7 @@ end
 ## Polynomials
 _polynomial(α) = α
 _polynomial(p::_APL) = polynomial(p)
-function substitute(st::_AST, p::AbstractPolynomial, s::Substitutions)
+function substitute_fallback(st::_AST, p::AbstractPolynomial, s::Substitutions)
     if iszero(p)
         _polynomial(substitute(st, zero_term(p), s))
     else
@@ -189,7 +198,7 @@ function MA.promote_operation(
 end
 
 ## Fallbacks
-function substitute(st::_AST, p::_APL, s::Substitutions)
+function substitute_fallback(st::_AST, p::_APL, s::Substitutions)
     return substitute(st, polynomial(p), s)
 end
 function substitute(st::_AST, q::RationalPoly, s::Substitutions)
