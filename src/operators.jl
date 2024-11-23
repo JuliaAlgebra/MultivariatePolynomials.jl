@@ -495,7 +495,7 @@ Convert a tuple of variables into a static vector to allow array-like usage.
 The element type of the vector will be Monomial{vars, length(vars)}.
 """
 Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
-# vec(vars::Tuple{Vararg{<:TypedVariable}}) = SVector(vars)
+# vec(vars::Tuple{Vararg{TypedVariable}}) = SVector(vars)
 
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
