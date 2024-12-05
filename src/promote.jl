@@ -24,6 +24,13 @@ function promote_rule_constant(
     return term_type(TT, promote_type(S, T))
 end
 
+function promote_rule_constant(
+    ::Type{Any},
+    TT::Type{<:AbstractTermLike{T}},
+) where {T}
+    return Any
+end
+
 # PolynomialLike
 Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:_APL} = PT
 function Base.promote_rule(PS::Type{<:_APL}, PT::Type{<:_APL})
