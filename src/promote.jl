@@ -26,7 +26,7 @@ end
 
 function promote_rule_constant(
     ::Type{Any},
-    TT::Type{<:AbstractTermLike{T}},
+    ::Type{<:AbstractTermLike{T}},
 ) where {T}
     return Any
 end
