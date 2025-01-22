@@ -3,7 +3,7 @@
 
 Return the type of the monomials of `p`.
 
-    term_type(::Type{PT}) where PT<:AbstractPolynomialLike
+    monomial_type(::Type{PT}) where PT<:AbstractPolynomialLike
 
 Returns the type of the monomials of a polynomial of type `PT`.
 """
@@ -112,7 +112,7 @@ Returns an iterator over the powers of the monomial of `t`.
 
 ### Examples
 
-Calling `powers(3x^4*y) should return `((x, 4), (y, 1))`.
+Calling `powers(3x^4*y)` should return `((x, 4), (y, 1))`.
 """
 powers(t::AbstractTermLike) = _zip(variables(t), exponents(t))
 
