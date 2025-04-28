@@ -171,3 +171,9 @@ end
         __promote_prod(PXY, PXY, PXY)
     end
 end
+
+@testset "promote_operation with Any" begin
+    Mod.@polyvar x
+    V = typeof(x)
+    @test promote_type(V, Any) == Any
+end
