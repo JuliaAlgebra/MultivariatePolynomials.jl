@@ -316,3 +316,126 @@ compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
 Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
 """
 function ordering end
+
+_last_lex_index(n, ::Type{LexOrder}) = n
+_prev_lex_index(i, ::Type{LexOrder}) = i - 1
+_not_first_indices(n, ::Type{LexOrder}) = n:-1:2
+_last_lex_index(_, ::Type{InverseLexOrder}) = 1
+_prev_lex_index(i, ::Type{InverseLexOrder}) = i + 1
+_not_first_indices(n, ::Type{InverseLexOrder}) = 1:(n-1)
+_last_lex_index(n, ::Type{Graded{M}}) where {M} = _last_lex_index(n, M)
+_prev_lex_index(i, ::Type{Graded{M}}) where {M} = _prev_lex_index(i, M)
+_not_first_indices(n, ::Type{Graded{M}}) where {M} = _not_first_indices(n, M)
+
+"""
+    struct ExponentsIterator{M}(
+        object;
+        min_deg::Int = 0,
+        max_deg::Union{Nothing,Int} = nothing,
+        inline::Bool = false,
+    )
+
+An iterator for generating monomial exponents for monomial
+ordering `M`. The type of the vector of exponents is the type of
+`object` and is length (i.e., the number of variables) is `length(object)`.
+"""
+struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
+    object::O # Used to get number of variables and get new zero elements
+    min_deg::Int
+    max_deg::D
+    inline::Bool
+end
+
+function ExponentsIterator{M}(object; min_deg::Int = 0, max_deg::Union{Nothing,Int} = nothing, inline::Bool = false) where {M}
+    ExponentsIterator{M,typeof(max_deg),typeof(object)}(object, min_deg, max_deg, inline)
+end
+
+function ExponentsIterator(args...; kws...)
+    return ExponentsIterator{Graded{LexOrder}}(args...; kws...)
+end
+
+Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
+Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M} = Base.IsInfinite()
+Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M} = Base.HasLength()
+
+function Base.length(it::ExponentsIterator{M,Int}) where {M}
+    len = binomial(nvariables(it) + it.max_deg, nvariables(it))
+    if it.min_deg > 0
+        len -= binomial(nvariables(it) + it.min_deg, nvariables(it))
+    end
+    return len
+end
+
+nvariables(it::ExponentsIterator) = length(it.object)
+
+_increase_degree(it::ExponentsIterator{<:Graded,Nothing}, _) = false
+_increase_degree(it::ExponentsIterator{<:Graded,Int}, _) = false
+_increase_degree(it::ExponentsIterator{M,Nothing}, _) where {M} = true
+_increase_degree(it::ExponentsIterator{M,Int}, deg) where {M} = deg < it.max_deg
+
+# We just changed the degree by removing `Δ`,
+# In graded ordering, we just add `Δ` to maintain the same degree
+_adjust_degree(::ExponentsIterator{<:Graded}, _, Δ) = Δ
+# Otherwise, we just need the degree to stay above `it.min_deg`,
+# so we need to add `it.min_deg - deg`
+_adjust_degree(it::ExponentsIterator, deg, _) = min(0, it.min_deg - deg)
+
+_setindex!(x, v, i) = Base.setindex!(x, v, i)
+_setindex!(x::Tuple, v, i) = Base.setindex(x, v, i)
+_increment!(x, i) = _setindex!(x, x[i] + 1, i)
+
+_zero(x) = zero(x)
+_zero(x::Tuple) = zero.(x)
+
+_zero!(x) = fill!(x, 0)
+_zero!(x::Tuple) = _zero(x)
+
+_copy(x) = copy(x)
+_copy(x::Tuple) = x
+
+function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
+    if _increase_degree(it, deg)
+        z = _increment!(z, _last_lex_index(nvariables(it), M))
+        return z, deg + 1
+    end
+    I = _not_first_indices(nvariables(it), M)
+    i = findfirst(i -> !iszero(z[i]), I)
+    if isnothing(i)
+        if !isnothing(it.max_deg) && deg == it.max_deg
+            return
+        end
+        z = _zero!(z)
+        z = _setindex!(z, deg + 1, _last_lex_index(nvariables(it), M))
+        return z, deg + 1
+    end
+    j = I[i]
+    Δ = z[j] - 1
+    _setindex!(z, 0, j)
+    deg -= Δ
+    Δ = _adjust_degree(it, deg, Δ)
+    deg += Δ
+    z = _setindex!(z, Δ, _last_lex_index(nvariables(it), M))
+    z = _increment!(z, _prev_lex_index(j, M))
+    return z, deg
+end
+
+function Base.iterate(it::ExponentsIterator{M}) where {M}
+    if nvariables(it) == 0
+        return
+    end
+    z = _zero(it.object)
+    z = _setindex!(z, it.min_deg, _last_lex_index(nvariables(it), M))
+    return z, (z, it.min_deg)
+end
+
+function Base.iterate(it::ExponentsIterator, state)
+    z, deg = state
+    if !it.inline
+        z = _copy(z)
+    end
+    state = _iterate!(it, z, deg)
+    if isnothing(state)
+        return
+    end
+    return state[1], state
+end
