@@ -369,12 +369,15 @@ julia> collect(ExponentsIterator(ntuple(zero, 3), mindegree = 2, maxdegree = 2))
 ```
 You can also change the monomial ordering as follows:
 ```jldoctest
-julia> collect(Iterators.take(ExponentsIterator{LexOrder}(zeros(Int, 2), mindegree = 2, maxdegree = 4), 4))
-4-element Vector{Vector{Int64}}:
+julia> collect(ExponentsIterator{LexOrder}(zeros(Int, 2), mindegree = 2, maxdegree = 3))
+7-element Vector{Vector{Int64}}:
  [0, 2]
  [0, 3]
- [0, 4]
- [1, 0]
+ [1, 1]
+ [1, 2]
+ [2, 0]
+ [2, 1]
+ [3, 0]
 ```
 """
 struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
@@ -416,7 +419,7 @@ _increase_degree(it::ExponentsIterator{M,Int}, deg) where {M} = deg < it.maxdegr
 _adjust_degree(::ExponentsIterator{<:Graded}, _, Δ) = Δ
 # Otherwise, we just need the degree to stay above `it.mindegree`,
 # so we need to add `it.mindegree - deg`
-_adjust_degree(it::ExponentsIterator, deg, _) = min(0, it.mindegree - deg)
+_adjust_degree(it::ExponentsIterator, deg, _) = max(0, it.mindegree - deg)
 
 _setindex!(x, v, i) = Base.setindex!(x, v, i)
 _setindex!(x::Tuple, v, i) = Base.setindex(x, v, i)
@@ -449,10 +452,12 @@ function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
     j = I[i]
     Δ = z[j] - 1
     z = _setindex!(z, 0, j)
+    j = I[i]
     deg -= Δ
     Δ = _adjust_degree(it, deg, Δ)
     deg += Δ
     z = _setindex!(z, Δ, _last_lex_index(nvariables(it), M))
+    j = I[i]
     z = _increment!(z, _prev_lex_index(j, M))
     return z, deg
 end

@@ -1,5 +1,8 @@
 ```@meta
 CurrentModule = MultivariatePolynomials
+DocTestSetup = quote
+    using MultivariatePolynomials
+end
 ```
 
 # Types
@@ -52,6 +55,7 @@ LexOrder
 InverseLexOrder
 Graded
 Reverse
+ExponentsIterator
 ```
 
 ## Terms
