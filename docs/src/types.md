@@ -1,8 +1,5 @@
 ```@meta
 CurrentModule = MultivariatePolynomials
-DocTestSetup = quote
-    using MultivariatePolynomials
-end
 ```
 
 # Types
