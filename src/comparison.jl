@@ -457,7 +457,8 @@ end
 function Base.iterate(it::ExponentsIterator{M}) where {M}
     z = _zero(it.object)
     if it.mindegree > 0
-        if nvariables(it) == 0 || (!isnothing(it.maxdegree) && it.maxdegree < it.mindegree)
+        if nvariables(it) == 0 ||
+           (!isnothing(it.maxdegree) && it.maxdegree < it.mindegree)
             return
         end
         z = _setindex!(z, it.mindegree, _last_lex_index(nvariables(it), M))

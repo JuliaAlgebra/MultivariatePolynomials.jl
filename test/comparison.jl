@@ -19,7 +19,8 @@ end
 function test_exponents_iterator()
     @testset "nvariables = $nvars" for nvars in 0:3
         @testset "mindegree = $mindegree" for mindegree in 0:3
-            @testset "maxdegree = $maxdegree" for maxdegree in vcat(nothing, 0:3)
+            @testset "maxdegree = $maxdegree" for maxdegree in
+                                                  vcat(nothing, 0:3)
                 for L in [LexOrder, InverseLexOrder]
                     @testset "M = $M" for M in [L, Graded{L}]
                         _test(nvars, M; mindegree, maxdegree)
