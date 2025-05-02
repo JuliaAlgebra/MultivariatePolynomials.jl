@@ -200,9 +200,11 @@ Springer Science & Business Media, **2013**.
 """
 struct LexOrder <: AbstractMonomialOrdering end
 
-const _TupleOrVector = Union{Tuple, AbstractVector}
+const _TupleOrVector = Union{Tuple,AbstractVector}
 
-compare(exp1::_TupleOrVector, exp2::_TupleOrVector, ::Type{LexOrder}) = Base.cmp(exp1, exp2)
+function compare(exp1::_TupleOrVector, exp2::_TupleOrVector, ::Type{LexOrder})
+    return Base.cmp(exp1, exp2)
+end
 
 """
     struct InverseLexOrder <: AbstractMonomialOrdering end
@@ -226,7 +228,11 @@ struct InverseLexOrder <: AbstractMonomialOrdering end
 # so not `cmp` methods is defined for it.
 _rev(v::AbstractVector) = view(v, lastindex(v):-1:firstindex(v))
 _rev(t::Tuple) = reverse(t)
-function compare(exp1::_TupleOrVector, exp2::_TupleOrVector, ::Type{InverseLexOrder})
+function compare(
+    exp1::_TupleOrVector,
+    exp2::_TupleOrVector,
+    ::Type{InverseLexOrder},
+)
     return compare(_rev(exp1), _rev(exp2), LexOrder)
 end
 
