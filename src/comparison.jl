@@ -382,10 +382,6 @@ function ExponentsIterator{M}(
     )
 end
 
-function ExponentsIterator(args...; kws...)
-    return ExponentsIterator{Graded{LexOrder}}(args...; kws...)
-end
-
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
 function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
     return Base.IsInfinite()
