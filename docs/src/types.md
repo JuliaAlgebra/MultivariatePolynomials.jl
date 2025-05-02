@@ -52,6 +52,7 @@ LexOrder
 InverseLexOrder
 Graded
 Reverse
+ExponentsIterator
 ```
 
 ## Terms

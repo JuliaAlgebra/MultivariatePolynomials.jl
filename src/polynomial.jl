@@ -252,9 +252,11 @@ end
 
 Returns an iterator over the monomials of `p` of the nonzero terms of the polynomial sorted in the decreasing order.
 
-    monomials(vars::Tuple, degs::AbstractVector{Int}, filter::Function = m -> true)
+    monomials(vars::Union{Vector{<:AbstractVariable},Tuple}, degs::AbstractVector{Int}, filter::Function = m -> true)
 
 Builds the vector of all the monomial_vector `m` with variables `vars` such that the degree `degree(m)` is in `degs` and `filter(m)` is `true`.
+
+See also [`ExponentsIterator`](@ref).
 
 ### Examples
 

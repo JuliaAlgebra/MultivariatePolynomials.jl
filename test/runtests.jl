@@ -4,6 +4,9 @@ using LinearAlgebra
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+# Tests that do not need any specific polynomial implementation
+include("comparison.jl")
+
 include("utils.jl")
 
 # Taken from JuMP/test/solvers.jl

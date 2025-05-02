@@ -200,25 +200,10 @@ Springer Science & Business Media, **2013**.
 """
 struct LexOrder <: AbstractMonomialOrdering end
 
-function compare(
-    exp1::AbstractVector{T},
-    exp2::AbstractVector{T},
-    ::Type{LexOrder},
-) where {T}
-    if eachindex(exp1) != eachindex(exp2)
-        throw(
-            ArgumentError(
-                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
-            ),
-        )
-    end
-    @inbounds for i in eachindex(exp1)
-        Δ = exp1[i] - exp2[i]
-        if !iszero(Δ)
-            return Δ
-        end
-    end
-    return zero(T)
+const _TupleOrVector = Union{Tuple,AbstractVector}
+
+function compare(exp1::_TupleOrVector, exp2::_TupleOrVector, ::Type{LexOrder})
+    return Base.cmp(exp1, exp2)
 end
 
 """
@@ -239,25 +224,16 @@ SIAM Journal on Matrix Analysis and Applications, 34(1), 102-125, *2013*.
 """
 struct InverseLexOrder <: AbstractMonomialOrdering end
 
+# We can't use `Iterators.Reverse` because it's not an `AbstractVector`
+# so not `cmp` methods is defined for it.
+_rev(v::AbstractVector) = view(v, lastindex(v):-1:firstindex(v))
+_rev(t::Tuple) = reverse(t)
 function compare(
-    exp1::AbstractVector{T},
-    exp2::AbstractVector{T},
+    exp1::_TupleOrVector,
+    exp2::_TupleOrVector,
     ::Type{InverseLexOrder},
-) where {T}
-    if eachindex(exp1) != eachindex(exp2)
-        throw(
-            ArgumentError(
-                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
-            ),
-        )
-    end
-    @inbounds for i in Iterators.Reverse(eachindex(exp1))
-        Δ = exp1[i] - exp2[i]
-        if !iszero(Δ)
-            return Δ
-        end
-    end
-    return zero(T)
+)
+    return compare(_rev(exp1), _rev(exp2), LexOrder)
 end
 
 """
@@ -316,3 +292,199 @@ compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
 Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
 """
 function ordering end
+
+_last_lex_index(n, ::Type{LexOrder}) = n
+_prev_lex_index(i, ::Type{LexOrder}) = i - 1
+_not_first_indices(n, ::Type{LexOrder}) = n:-1:2
+_last_lex_index(_, ::Type{InverseLexOrder}) = 1
+_prev_lex_index(i, ::Type{InverseLexOrder}) = i + 1
+_not_first_indices(n, ::Type{InverseLexOrder}) = 1:(n-1)
+_last_lex_index(n, ::Type{Graded{M}}) where {M} = _last_lex_index(n, M)
+_prev_lex_index(i, ::Type{Graded{M}}) where {M} = _prev_lex_index(i, M)
+_not_first_indices(n, ::Type{Graded{M}}) where {M} = _not_first_indices(n, M)
+
+"""
+    struct ExponentsIterator{M}(
+        object;
+        mindegree::Int = 0,
+        maxdegree::Union{Nothing,Int} = nothing,
+        inline::Bool = false,
+    )
+
+An iterator for generating monomial exponents for monomial
+ordering `M`. The type of the vector of exponents is the type of
+`object` and is length (i.e., the number of variables) is `length(object)`.
+
+Note that `object` does not have to be zero, it just needs to implement
+`copy` and `setindex!` methods (except for `Tuple` which we handle with a
+special case).
+
+See also [`monomials`](@ref).
+
+### Examples
+
+The following example shows how to generate all exponents of
+monomials of 2 variables up to degree 2.
+```jldoctest
+julia> collect(ExponentsIterator{Graded{LexOrder}}((0, 0), maxdegree = 2))
+6-element Vector{Tuple{Int64, Int64}}:
+ (0, 0)
+ (0, 1)
+ (1, 0)
+ (0, 2)
+ (1, 1)
+ (2, 0)
+```
+Note that you can easily generate the tuple of exponents
+of arbitrary length using `ntuple` as follows:
+```jldoctest
+julia> collect(ExponentsIterator{Graded{LexOrder}}(ntuple(zero, 3), mindegree = 2, maxdegree = 2))
+6-element Vector{Tuple{Int64, Int64, Int64}}:
+ (0, 0, 2)
+ (0, 1, 1)
+ (0, 2, 0)
+ (1, 0, 1)
+ (1, 1, 0)
+ (2, 0, 0)
+```
+You can also change the monomial ordering and use `Vector` instead of `Tuple` as follows:
+```jldoctest
+julia> collect(ExponentsIterator{LexOrder}(zeros(Int, 2), mindegree = 2, maxdegree = 3))
+7-element Vector{Vector{Int64}}:
+ [0, 2]
+ [0, 3]
+ [1, 1]
+ [1, 2]
+ [2, 0]
+ [2, 1]
+ [3, 0]
+```
+"""
+struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
+    object::O # Used to get number of variables and get new zero elements
+    mindegree::Int
+    maxdegree::D
+    inline::Bool
+end
+
+function ExponentsIterator{M}(
+    object;
+    mindegree::Int = 0,
+    maxdegree::Union{Nothing,Int} = nothing,
+    inline::Bool = false,
+) where {M}
+    if length(object) == 0 && isnothing(maxdegree)
+        # Otherwise, it will incorrectly think that the iterator is infinite
+        # while it actually has zero elements
+        maxdegree = mindegree
+    end
+    return ExponentsIterator{M,typeof(maxdegree),typeof(object)}(
+        object,
+        mindegree,
+        maxdegree,
+        inline,
+    )
+end
+
+Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
+function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
+    return Base.IsInfinite()
+end
+function Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M}
+    return Base.HasLength()
+end
+
+function Base.length(it::ExponentsIterator{M,Int}) where {M}
+    len = binomial(nvariables(it) + it.maxdegree, nvariables(it))
+    if it.mindegree > 0
+        if it.maxdegree < it.mindegree
+            return 0
+        end
+        len -= binomial(nvariables(it) + it.mindegree - 1, nvariables(it))
+    end
+    return len
+end
+
+nvariables(it::ExponentsIterator) = length(it.object)
+
+_increase_degree(it::ExponentsIterator{<:Graded,Nothing}, _) = false
+_increase_degree(it::ExponentsIterator{<:Graded,Int}, _) = false
+_increase_degree(it::ExponentsIterator{M,Nothing}, _) where {M} = true
+function _increase_degree(it::ExponentsIterator{M,Int}, deg) where {M}
+    return deg < it.maxdegree
+end
+
+# We just changed the degree by removing `Δ`,
+# In graded ordering, we just add `Δ` to maintain the same degree
+_adjust_degree(::ExponentsIterator{<:Graded}, _, Δ) = Δ
+# Otherwise, we just need the degree to stay above `it.mindegree`,
+# so we need to add `it.mindegree - deg`
+_adjust_degree(it::ExponentsIterator, deg, _) = max(0, it.mindegree - deg)
+
+_setindex!(x, v, i) = Base.setindex!(x, v, i)
+_setindex!(x::Tuple, v, i) = Base.setindex(x, v, i)
+_increment!(x, i) = _setindex!(x, x[i] + 1, i)
+
+_zero(x) = zero(x)
+_zero(x::Tuple) = zero.(x)
+
+_zero!(x) = fill!(x, 0)
+_zero!(x::Tuple) = _zero(x)
+
+_copy(x) = copy(x)
+_copy(x::Tuple) = x
+
+function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
+    if _increase_degree(it, deg)
+        z = _increment!(z, _last_lex_index(nvariables(it), M))
+        return z, deg + 1
+    end
+    I = _not_first_indices(nvariables(it), M)
+    i = findfirst(i -> !iszero(z[i]), I)
+    if isnothing(i)
+        if !isnothing(it.maxdegree) && deg == it.maxdegree
+            return
+        end
+        z = _zero!(z)
+        z = _setindex!(z, deg + 1, _last_lex_index(nvariables(it), M))
+        return z, deg + 1
+    end
+    j = I[i]
+    Δ = z[j] - 1
+    z = _setindex!(z, 0, j)
+    j = I[i]
+    deg -= Δ
+    Δ = _adjust_degree(it, deg, Δ)
+    deg += Δ
+    z = _setindex!(z, Δ, _last_lex_index(nvariables(it), M))
+    j = I[i]
+    z = _increment!(z, _prev_lex_index(j, M))
+    return z, deg
+end
+
+function Base.iterate(it::ExponentsIterator{M}) where {M}
+    z = _zero(it.object)
+    if it.mindegree > 0
+        if nvariables(it) == 0 ||
+           (!isnothing(it.maxdegree) && it.maxdegree < it.mindegree)
+            return
+        end
+        z = _setindex!(z, it.mindegree, _last_lex_index(nvariables(it), M))
+    end
+    return z, (z, it.mindegree)
+end
+
+function Base.iterate(it::ExponentsIterator, state)
+    if nvariables(it) == 0
+        return # There cannot be more than 1 element
+    end
+    z, deg = state
+    if !it.inline
+        z = _copy(z)
+    end
+    state = _iterate!(it, z, deg)
+    if isnothing(state)
+        return
+    end
+    return state[1], state
+end

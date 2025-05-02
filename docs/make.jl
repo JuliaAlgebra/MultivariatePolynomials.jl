@@ -1,5 +1,12 @@
 using Documenter, MultivariatePolynomials
 
+DocMeta.setdocmeta!(
+    MultivariatePolynomials,
+    :DocTestSetup,
+    :(using MultivariatePolynomials);
+    recursive=true,
+)
+
 makedocs(
     sitename = "MultivariatePolynomials",
 
