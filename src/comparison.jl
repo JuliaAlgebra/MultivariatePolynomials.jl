@@ -200,26 +200,7 @@ Springer Science & Business Media, **2013**.
 """
 struct LexOrder <: AbstractMonomialOrdering end
 
-function compare(
-    exp1::AbstractVector{T},
-    exp2::AbstractVector{T},
-    ::Type{LexOrder},
-) where {T}
-    if eachindex(exp1) != eachindex(exp2)
-        throw(
-            ArgumentError(
-                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
-            ),
-        )
-    end
-    @inbounds for i in eachindex(exp1)
-        Δ = exp1[i] - exp2[i]
-        if !iszero(Δ)
-            return Δ
-        end
-    end
-    return zero(T)
-end
+compare(exp1, exp2, ::Type{LexOrder}) = Base.cmp(exp1, exp2)
 
 """
     struct InverseLexOrder <: AbstractMonomialOrdering end
@@ -239,25 +220,12 @@ SIAM Journal on Matrix Analysis and Applications, 34(1), 102-125, *2013*.
 """
 struct InverseLexOrder <: AbstractMonomialOrdering end
 
-function compare(
-    exp1::AbstractVector{T},
-    exp2::AbstractVector{T},
-    ::Type{InverseLexOrder},
-) where {T}
-    if eachindex(exp1) != eachindex(exp2)
-        throw(
-            ArgumentError(
-                "Cannot compare exponent vectors `$exp1` and `$exp2` of different indices.",
-            ),
-        )
-    end
-    @inbounds for i in Iterators.Reverse(eachindex(exp1))
-        Δ = exp1[i] - exp2[i]
-        if !iszero(Δ)
-            return Δ
-        end
-    end
-    return zero(T)
+# We can't use `Iterators.Reverse` because it's not an `AbstractVector`
+# so not `cmp` methods is defined for it.
+_rev(v::AbstractArray) = view(v, lastindex(v):-1:firstindex(v))
+_rev(t::Tuple) = reverse(t)
+function compare(exp1, exp2, ::Type{InverseLexOrder})
+    return compare(_rev(exp1), _rev(exp2), LexOrder)
 end
 
 """
@@ -393,6 +361,11 @@ function ExponentsIterator{M}(
     maxdegree::Union{Nothing,Int} = nothing,
     inline::Bool = false,
 ) where {M}
+    if length(object) == 0 && isnothing(maxdegree)
+        # Otherwise, it will incorrectly think that the iterator is infinite
+        # while it actually has zero elements
+        maxdegree = mindegree
+    end
     return ExponentsIterator{M,typeof(maxdegree),typeof(object)}(
         object,
         mindegree,
@@ -416,6 +389,9 @@ end
 function Base.length(it::ExponentsIterator{M,Int}) where {M}
     len = binomial(nvariables(it) + it.maxdegree, nvariables(it))
     if it.mindegree > 0
+        if it.maxdegree < it.mindegree
+            return 0
+        end
         len -= binomial(nvariables(it) + it.mindegree - 1, nvariables(it))
     end
     return len
@@ -479,15 +455,20 @@ function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
 end
 
 function Base.iterate(it::ExponentsIterator{M}) where {M}
-    if nvariables(it) == 0
-        return
-    end
     z = _zero(it.object)
-    z = _setindex!(z, it.mindegree, _last_lex_index(nvariables(it), M))
+    if it.mindegree > 0
+        if nvariables(it) == 0 || (!isnothing(it.maxdegree) && it.maxdegree < it.mindegree)
+            return
+        end
+        z = _setindex!(z, it.mindegree, _last_lex_index(nvariables(it), M))
+    end
     return z, (z, it.mindegree)
 end
 
 function Base.iterate(it::ExponentsIterator, state)
+    if nvariables(it) == 0
+        return # There cannot be more than 1 element
+    end
     z, deg = state
     if !it.inline
         z = _copy(z)
