@@ -1,3 +1,10 @@
+"""
+    promote_variables(p::AbstractPolynomialLike, q::AbstractPolynomialLike)
+
+Return two polynomials over the same variables.
+"""
+function promote_variables end
+
 # MonomialLike
 Base.promote_rule(::Type{M}, ::Type{M}) where {M<:AbstractMonomialLike} = M
 function Base.promote_rule(
