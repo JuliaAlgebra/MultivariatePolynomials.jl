@@ -5,7 +5,7 @@ using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
 # Tests that do not need any specific polynomial implementation
-include("exponents_iterator.jl")
+include("comparison.jl")
 
 include("utils.jl")
 
