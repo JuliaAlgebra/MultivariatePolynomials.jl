@@ -387,8 +387,18 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
     inline::Bool
 end
 
-function ExponentsIterator{M}(object; mindegree::Int = 0, maxdegree::Union{Nothing,Int} = nothing, inline::Bool = false) where {M}
-    ExponentsIterator{M,typeof(maxdegree),typeof(object)}(object, mindegree, maxdegree, inline)
+function ExponentsIterator{M}(
+    object;
+    mindegree::Int = 0,
+    maxdegree::Union{Nothing,Int} = nothing,
+    inline::Bool = false,
+) where {M}
+    return ExponentsIterator{M,typeof(maxdegree),typeof(object)}(
+        object,
+        mindegree,
+        maxdegree,
+        inline,
+    )
 end
 
 function ExponentsIterator(args...; kws...)
@@ -396,8 +406,12 @@ function ExponentsIterator(args...; kws...)
 end
 
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
-Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M} = Base.IsInfinite()
-Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M} = Base.HasLength()
+function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
+    return Base.IsInfinite()
+end
+function Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M}
+    return Base.HasLength()
+end
 
 function Base.length(it::ExponentsIterator{M,Int}) where {M}
     len = binomial(nvariables(it) + it.maxdegree, nvariables(it))
@@ -412,7 +426,9 @@ nvariables(it::ExponentsIterator) = length(it.object)
 _increase_degree(it::ExponentsIterator{<:Graded,Nothing}, _) = false
 _increase_degree(it::ExponentsIterator{<:Graded,Int}, _) = false
 _increase_degree(it::ExponentsIterator{M,Nothing}, _) where {M} = true
-_increase_degree(it::ExponentsIterator{M,Int}, deg) where {M} = deg < it.maxdegree
+function _increase_degree(it::ExponentsIterator{M,Int}, deg) where {M}
+    return deg < it.maxdegree
+end
 
 # We just changed the degree by removing `Δ`,
 # In graded ordering, we just add `Δ` to maintain the same degree
