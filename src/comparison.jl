@@ -258,7 +258,7 @@ function compare(a::_TupleOrVector, b::_TupleOrVector, ::Type{Graded{O}}) where 
         return deg_a - deg_b
     end
 end
-
+# TODO Backward compat, remove
 function compare(a::AbstractMonomial, b::AbstractMonomial, ::Type{Graded{O}}) where {O}
     deg_a = degree(a)
     deg_b = degree(b)
@@ -291,7 +291,9 @@ struct Reverse{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     reverse_ordering::O
 end
 
-compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
+compare(a::_TupleOrVector, b::_TupleOrVector, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
+# TODO Backward compat, remove
+compare(a::AbstractMonomial, b::AbstractMonomial, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
 
 """
     ordering(p::AbstractPolynomialLike)
@@ -325,7 +327,7 @@ end
 # less than `b`, they are considered sort of equal.
 _cmp_coefficient(a, b) = 0
 
-function compare(t1::AbstractTerm, t2::AbstractTerm, ::Type{O}) where {O<:AbstractMonomialOrdering}
+function compare(t1::AbstractTermLike, t2::AbstractTermLike, ::Type{O}) where {O<:AbstractMonomialOrdering}
     Δ = compare(monomial(t1), monomial(t2), O)
     if iszero(Δ)
         return _cmp_coefficient(coefficient(t1), coefficient(t2))
@@ -334,6 +336,8 @@ function compare(t1::AbstractTerm, t2::AbstractTerm, ::Type{O}) where {O<:Abstra
 end
 
 Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2, ordering(t1))
+# TODO for backward compat, remove in next breaking release
+compare(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2)
 
 Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
 
