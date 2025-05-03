@@ -188,6 +188,10 @@ Springer Science & Business Media, **2013**.
 """
 abstract type AbstractMonomialOrdering end
 
+# We can't write this with a type instead of an instance so this motivates
+# why we work with instances and not types even if they don't have any data
+# that's not already in the type.
+# This is also to be consistent with `StarAlgebras.MultiplicativeStructure`
 (ordering::AbstractMonomialOrdering)(i, j) = cmp(ordering, i, j) < 0
 
 """
@@ -286,6 +290,7 @@ function Base.cmp(ordering::Reverse, a::_TupleOrVector, b::_TupleOrVector)
     return cmp(ordering.reverse_ordering, b, a)
 end
 
+#TODO(breaking) Return an instance, not a type
 """
     ordering(p::AbstractPolynomialLike)::Type{<:AbstractMonomialOrdering}
 
@@ -310,13 +315,13 @@ Base.@pure function Base.cmp(
     return -cmp(name(v1), name(v2))
 end
 
-function Base.cmp(
-    ::Type{O},
+function compare(
     m1::AbstractMonomial,
     m2::AbstractMonomial,
+    ::Type{O},
 ) where {O<:AbstractMonomialOrdering}
     s1, s2 = promote_variables(m1, m2)
-    return compare(exponents(s1), exponents(s2), O)
+    return cmp(O(), exponents(s1), exponents(s2))
 end
 
 # Implement this to make coefficients be compared with terms.
