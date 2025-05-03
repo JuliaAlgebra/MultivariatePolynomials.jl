@@ -322,6 +322,7 @@ Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
 """
 function ordering end
 
+ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
 ordering(::Type{P}) where {P} = ordering(monomial_type(P))
 ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
 
