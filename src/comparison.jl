@@ -249,12 +249,27 @@ struct Graded{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     same_degree_ordering::O
 end
 
-_deg(exponents) = sum(exponents)
-_deg(mono::AbstractMonomial) = degree(mono)
-
-function compare(a, b, ::Type{Graded{O}}) where {O}
-    deg_a = _deg(a)
-    deg_b = _deg(b)
+function compare(
+    a::_TupleOrVector,
+    b::_TupleOrVector,
+    ::Type{Graded{O}},
+) where {O}
+    deg_a = sum(a)
+    deg_b = sum(b)
+    if deg_a == deg_b
+        return compare(a, b, O)
+    else
+        return deg_a - deg_b
+    end
+end
+# TODO Backward compat, remove
+function compare(
+    a::AbstractMonomial,
+    b::AbstractMonomial,
+    ::Type{Graded{O}},
+) where {O}
+    deg_a = degree(a)
+    deg_b = degree(b)
     if deg_a == deg_b
         return compare(a, b, O)
     else
@@ -284,7 +299,21 @@ struct Reverse{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     reverse_ordering::O
 end
 
-compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
+function compare(
+    a::_TupleOrVector,
+    b::_TupleOrVector,
+    ::Type{Reverse{O}},
+) where {O}
+    return compare(b, a, O)
+end
+# TODO Backward compat, remove
+function compare(
+    a::AbstractMonomial,
+    b::AbstractMonomial,
+    ::Type{Reverse{O}},
+) where {O}
+    return compare(b, a, O)
+end
 
 """
     ordering(p::AbstractPolynomialLike)
@@ -292,6 +321,62 @@ compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)
 Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
 """
 function ordering end
+
+ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
+ordering(::Type{P}) where {P} = ordering(monomial_type(P))
+ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
+
+# We reverse the order of comparisons here so that the result
+# of x < y is equal to the result of Monomial(x) < Monomial(y)
+# Without `Base.@pure`, TypedPolynomials allocates on Julia v1.6
+# with `promote(x * y, x)`
+Base.@pure function compare(
+    v1::AbstractVariable,
+    v2::AbstractVariable,
+    ::Type{<:AbstractMonomialOrdering},
+)
+    return -cmp(name(v1), name(v2))
+end
+
+function compare(
+    m1::AbstractMonomial,
+    m2::AbstractMonomial,
+    ::Type{O},
+) where {O<:AbstractMonomialOrdering}
+    s1, s2 = promote_variables(m1, m2)
+    return compare(exponents(s1), exponents(s2), O)
+end
+
+# Implement this to make coefficients be compared with terms.
+function _cmp_coefficient(a::Real, b::Real)
+    return cmp(a, b)
+end
+function _cmp_coefficient(a::Number, b::Number)
+    return cmp(abs(a), abs(b))
+end
+# By default, coefficients are not comparable so `a` is not strictly
+# less than `b`, they are considered sort of equal.
+_cmp_coefficient(a, b) = 0
+
+function compare(
+    t1::AbstractTermLike,
+    t2::AbstractTermLike,
+    ::Type{O},
+) where {O<:AbstractMonomialOrdering}
+    Δ = compare(monomial(t1), monomial(t2), O)
+    if iszero(Δ)
+        return _cmp_coefficient(coefficient(t1), coefficient(t2))
+    end
+    return Δ
+end
+
+function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
+    return compare(t1, t2, ordering(t1))
+end
+# TODO for backward compat, remove in next breaking release
+compare(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2)
+
+Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
 
 _last_lex_index(n, ::Type{LexOrder}) = n
 _prev_lex_index(i, ::Type{LexOrder}) = i - 1

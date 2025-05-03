@@ -93,7 +93,7 @@ Base.one(p::Polynomial) = one(typeof(p))
 Base.zero(::Type{Polynomial{C,T,A}}) where {C,T,A} = Polynomial{C,T,A}(A())
 Base.zero(t::Polynomial) = zero(typeof(t))
 
-compare_monomials(a, b) = compare(monomial(a), monomial(b))
+compare_monomials(a, b) = cmp(monomial(a), monomial(b))
 
 function join_terms(
     terms1::AbstractArray{<:Term},

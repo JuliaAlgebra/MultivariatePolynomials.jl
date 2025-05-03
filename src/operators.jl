@@ -1,33 +1,3 @@
-# We reverse the order of comparisons here so that the result
-# of x < y is equal to the result of Monomial(x) < Monomial(y)
-Base.@pure function Base.isless(v1::AbstractVariable, v2::AbstractVariable)
-    return name(v1) > name(v2)
-end
-function Base.isless(m1::AbstractTermLike, m2::AbstractTermLike)
-    return isless(promote(m1, m2)...)
-end
-
-# Implement this to make coefficients be compared with terms.
-function isless_coefficient(a::Real, b::Real)
-    return a < b
-end
-function isless_coefficient(a::Number, b::Number)
-    return abs(a) < abs(b)
-end
-# By default, coefficients are not comparable so `a` is not strictly
-# less than `b`, they are considered sort of equal.
-isless_coefficient(a, b) = false
-
-function Base.isless(t1::AbstractTerm, t2::AbstractTerm)
-    if monomial(t1) < monomial(t2)
-        return true
-    elseif monomial(t1) == monomial(t2)
-        return isless_coefficient(coefficient(t1), coefficient(t2))
-    else
-        return false
-    end
-end
-
 # promoting multiplication is not a good idea
 # For example a polynomial of Float64 * a polynomial of JuMP affine expression
 # is a polynomial of JuMP affine expression but if we promote it would be a
