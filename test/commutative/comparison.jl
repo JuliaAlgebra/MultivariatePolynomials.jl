@@ -150,10 +150,10 @@
             Mod.@polyvar x y z monomial_order = M
             # [CLO13, p. 58]
             sgn = (M == lex || M == rinvlex) ? -1 : 1
-            @test sgn * cmp(x * y^2 * z^3, x^3 * y^2) > 0
-            @test cmp(x * y^2 * z^4, x * y * z^5) > 0
+            @test sgn * compare(x * y^2 * z^3, x^3 * y^2) > 0
+            @test compare(x * y^2 * z^4, x * y * z^5) > 0
             # [CLO13, p. 59]
-            @test cmp(x^5 * y * z, x^4 * y * z^2) > 0
+            @test compare(x^5 * y * z, x^4 * y * z^2) > 0
             # [CLO13] Cox, D., Little, J., & OShea, D.
             # *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
             # Springer Science & Business Media, **2013**.
