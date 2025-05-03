@@ -168,10 +168,19 @@ function Base.isapprox(α, q::RationalPoly{C}; kwargs...) where {C}
     return isapprox(constant_term(α, q.den), q; kwargs...)
 end
 
+# TODO refer to the parallel with `mstructure(p)(e1, e2)` which gives the result
+#      of multiplying the monomials corresponding to the exponent vectors `e1`
+#      and `e2`.
 """
     abstract type AbstractMonomialOrdering end
 
 Abstract type for monomial ordering as defined in [CLO13, Definition 2.2.1, p. 55]
+
+Given an ordering `ordering::AbstractMonomialOrdering` and vector of exponents `e1`
+and `e2`, `cmp(ordering, e1, e2)` returns a negative number if `e1` is before `e2`
+in the ordering, a positive number if `e2` is before `e1` and 0 if they are equal.
+For convenience, `ordering(e1, e2)` returns a `Bool` indicating whether
+`cmp(ordering, e1, e2)` is negative.
 
 [CLO13] Cox, D., Little, J., & OShea, D.
 *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
@@ -179,13 +188,7 @@ Springer Science & Business Media, **2013**.
 """
 abstract type AbstractMonomialOrdering end
 
-"""
-    compare(a, b, order::Type{<:AbstractMonomialOrdering})
-
-Returns a negative number if `a < b`, a positive number if `a > b` and zero if `a == b`.
-The comparison is done according to `order`.
-"""
-function compare end
+(ordering::AbstractMonomialOrdering)(i, j) = cmp(ordering, i, j) < 0
 
 """
     struct LexOrder <: AbstractMonomialOrdering end
@@ -202,8 +205,8 @@ struct LexOrder <: AbstractMonomialOrdering end
 
 const _TupleOrVector = Union{Tuple,AbstractVector}
 
-function compare(exp1::_TupleOrVector, exp2::_TupleOrVector, ::Type{LexOrder})
-    return Base.cmp(exp1, exp2)
+function Base.cmp(::LexOrder, exp1::_TupleOrVector, exp2::_TupleOrVector)
+    return cmp(exp1, exp2)
 end
 
 """
@@ -228,12 +231,8 @@ struct InverseLexOrder <: AbstractMonomialOrdering end
 # so not `cmp` methods is defined for it.
 _rev(v::AbstractVector) = view(v, lastindex(v):-1:firstindex(v))
 _rev(t::Tuple) = reverse(t)
-function compare(
-    exp1::_TupleOrVector,
-    exp2::_TupleOrVector,
-    ::Type{InverseLexOrder},
-)
-    return compare(_rev(exp1), _rev(exp2), LexOrder)
+function Base.cmp(::InverseLexOrder, exp1::_TupleOrVector, exp2::_TupleOrVector)
+    return cmp(_rev(exp1), _rev(exp2))
 end
 
 """
@@ -248,30 +247,13 @@ Monomial ordering defined by:
 struct Graded{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     same_degree_ordering::O
 end
+Graded{O}() where {O<:AbstractMonomialOrdering} = Graded{O}(O())
 
-function compare(
-    a::_TupleOrVector,
-    b::_TupleOrVector,
-    ::Type{Graded{O}},
-) where {O}
+function Base.cmp(ordering::Graded, a::_TupleOrVector, b::_TupleOrVector)
     deg_a = sum(a)
     deg_b = sum(b)
     if deg_a == deg_b
-        return compare(a, b, O)
-    else
-        return deg_a - deg_b
-    end
-end
-# TODO Backward compat, remove
-function compare(
-    a::AbstractMonomial,
-    b::AbstractMonomial,
-    ::Type{Graded{O}},
-) where {O}
-    deg_a = degree(a)
-    deg_b = degree(b)
-    if deg_a == deg_b
-        return compare(a, b, O)
+        return cmp(ordering.same_degree_ordering, a, b)
     else
         return deg_a - deg_b
     end
@@ -283,7 +265,7 @@ end
     end
 
 Monomial ordering defined by
-`compare(a, b, ::Type{Reverse{O}}) where {O} = compare(b, a, O)`.
+`cmp(o::Reverse, a, b) where {O} = cmp(o.reverse_order, b, a)`.
 
 Reverse Lex Order defined in [CLO13, Exercise 2.2.9, p. 61] where it is abbreviated as *rinvlex*.
 can be obtained as `Reverse{InverseLexOrder}`.
@@ -298,27 +280,17 @@ Springer Science & Business Media, **2013**.
 struct Reverse{O<:AbstractMonomialOrdering} <: AbstractMonomialOrdering
     reverse_ordering::O
 end
+Reverse{O}() where {O<:AbstractMonomialOrdering} = Reverse{O}(O())
 
-function compare(
-    a::_TupleOrVector,
-    b::_TupleOrVector,
-    ::Type{Reverse{O}},
-) where {O}
-    return compare(b, a, O)
-end
-# TODO Backward compat, remove
-function compare(
-    a::AbstractMonomial,
-    b::AbstractMonomial,
-    ::Type{Reverse{O}},
-) where {O}
-    return compare(b, a, O)
+function Base.cmp(ordering::Reverse, a::_TupleOrVector, b::_TupleOrVector)
+    return cmp(ordering.reverse_ordering, b, a)
 end
 
 """
-    ordering(p::AbstractPolynomialLike)
+    ordering(p::AbstractPolynomialLike)::Type{<:AbstractMonomialOrdering}
 
-Returns the [`AbstractMonomialOrdering`](@ref) used for the monomials of `p`.
+Returns the [`AbstractMonomialOrdering`](@ref) type to be used to compare
+exponent vectors for the monomials of `p`.
 """
 function ordering end
 
@@ -330,18 +302,18 @@ ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
 # of x < y is equal to the result of Monomial(x) < Monomial(y)
 # Without `Base.@pure`, TypedPolynomials allocates on Julia v1.6
 # with `promote(x * y, x)`
-Base.@pure function compare(
+Base.@pure function Base.cmp(
+    ::AbstractMonomialOrdering,
     v1::AbstractVariable,
     v2::AbstractVariable,
-    ::Type{<:AbstractMonomialOrdering},
 )
     return -cmp(name(v1), name(v2))
 end
 
-function compare(
+function Base.cmp(
+    ::Type{O},
     m1::AbstractMonomial,
     m2::AbstractMonomial,
-    ::Type{O},
 ) where {O<:AbstractMonomialOrdering}
     s1, s2 = promote_variables(m1, m2)
     return compare(exponents(s1), exponents(s2), O)
@@ -358,12 +330,12 @@ end
 # less than `b`, they are considered sort of equal.
 _cmp_coefficient(a, b) = 0
 
-function compare(
+function Base.cmp(
+    ordering::O,
     t1::AbstractTermLike,
     t2::AbstractTermLike,
-    ::Type{O},
 ) where {O<:AbstractMonomialOrdering}
-    Δ = compare(monomial(t1), monomial(t2), O)
+    Δ = cmp(ordering, monomial(t1), monomial(t2))
     if iszero(Δ)
         return _cmp_coefficient(coefficient(t1), coefficient(t2))
     end
@@ -371,12 +343,10 @@ function compare(
 end
 
 function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
-    return compare(t1, t2, ordering(t1))
+    return cmp(ordering(t1)(), t1, t2)
 end
-# TODO for backward compat, remove in next breaking release
-compare(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2)
 
-Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
+Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0
 
 _last_lex_index(n, ::Type{LexOrder}) = n
 _prev_lex_index(i, ::Type{LexOrder}) = i - 1
@@ -573,3 +543,62 @@ function Base.iterate(it::ExponentsIterator, state)
     end
     return state[1], state
 end
+
+# TODO Backward compat, remove the following in next breaking release
+"""
+    compare(a, b, order::Type{<:AbstractMonomialOrdering})
+
+Returns a negative number if `a < b`, a positive number if `a > b` and zero if `a == b`.
+The comparison is done according to `order`.
+
+**Warning** This is deprecated, use `cmp(order(), a, b)` instead.
+"""
+function compare end
+
+function compare(t1::AbstractTermLike, t2::AbstractTermLike)
+    return compare(t1, t2, ordering(t1))
+end
+
+function compare(
+    e1::_TupleOrVector,
+    e2::_TupleOrVector,
+    ::Type{O},
+) where {O<:AbstractMonomialOrdering}
+    return cmp(O(), e1, e2)
+end
+
+function compare(
+    t1::AbstractTermLike,
+    t2::AbstractTermLike,
+    ::Type{O},
+) where {O<:AbstractMonomialOrdering}
+    Δ = compare(monomial(t1), monomial(t2), O)
+    if iszero(Δ)
+        return _cmp_coefficient(coefficient(t1), coefficient(t2))
+    end
+    return Δ
+end
+
+function compare(
+    a::AbstractMonomial,
+    b::AbstractMonomial,
+    ::Type{Graded{O}},
+) where {O}
+    deg_a = degree(a)
+    deg_b = degree(b)
+    if deg_a == deg_b
+        return compare(a, b, O)
+    else
+        return deg_a - deg_b
+    end
+end
+
+function compare(
+    a::AbstractMonomial,
+    b::AbstractMonomial,
+    ::Type{Reverse{O}},
+) where {O}
+    return compare(b, a, O)
+end
+
+Base.isless(v1::AbstractVariable, v2::AbstractVariable) = cmp(v1, v2) < 0
