@@ -321,7 +321,8 @@ function compare(
     m2::AbstractMonomial,
     ::Type{O},
 ) where {O<:AbstractMonomialOrdering}
-    return cmp(m1, m2)
+    s1, s2 = promote_variables(m1, m2)
+    return cmp(O(), exponents(s1), exponents(s2))
 end
 
 # Implement this to make coefficients be compared with terms.
