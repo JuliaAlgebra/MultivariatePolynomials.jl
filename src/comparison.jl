@@ -326,6 +326,14 @@ function Base.cmp(
     return cmp(ordering(m1)(), exponents(s1), exponents(s2))
 end
 
+function compare(
+    m1::AbstractMonomial,
+    m2::AbstractMonomial,
+    ::Type{O},
+) where {O<:AbstractMonomialOrdering}
+    return cmp(m1, m2)
+end
+
 # Implement this to make coefficients be compared with terms.
 function _cmp_coefficient(a::Real, b::Real)
     return cmp(a, b)
