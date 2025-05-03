@@ -146,12 +146,7 @@
     rinvlex = Reverse{InverseLexOrder}
     grevlex = Graded{rinvlex}
     @static if Symbol(Mod) == :DynamicPolynomials
-        @testset "compare $M" for M in [
-            lex,
-            grlex,
-            rinvlex,
-            grevlex,
-        ]
+        @testset "compare $M" for M in [lex, grlex, rinvlex, grevlex]
             Mod.@polyvar x y z monomial_order = M
             # [CLO13, p. 58]
             sgn = (M == lex || M == rinvlex) ? -1 : 1
