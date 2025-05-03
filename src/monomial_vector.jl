@@ -1,5 +1,9 @@
+function monomials(v::_TupleOrVector, degree, args...)
+    return monomials(variables(v), degree, args...)
+end
+
 function monomials(v::AbstractVariable, degree, args...)
-    return monomials((v,), degree, args...)
+    return monomials(variables(v), degree, args...)
 end
 
 """
