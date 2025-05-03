@@ -145,7 +145,7 @@
     grlex = Graded{lex}
     rinvlex = Reverse{InverseLexOrder}
     grevlex = Graded{rinvlex}
-    if Mod == DynamicPolynomials
+    @static if Symbol(Mod) == :DynamicPolynomials
         @testset "compare $M" for M in [
             lex,
             grlex,
