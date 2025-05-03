@@ -311,10 +311,6 @@ Base.@pure function Base.cmp(v1::AbstractVariable, v2::AbstractVariable)
     return -cmp(name(v1), name(v2))
 end
 
-function Base.:(==)(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
-    return iszero(cmp(m1, m2))
-end
-
 function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
     s1, s2 = promote_variables(m1, m2)
     return cmp(ordering(m1)(), exponents(s1), exponents(s2))
