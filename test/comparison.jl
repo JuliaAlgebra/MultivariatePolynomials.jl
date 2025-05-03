@@ -6,7 +6,7 @@ using MultivariatePolynomials
 function _test(object, M; kws...)
     it = ExponentsIterator{M}(object; kws...)
     v = collect(Iterators.take(it, 20))
-    @test issorted(v, lt = (a, b) -> compare(a, b, M) < 0)
+    @test issorted(v, lt = (a, b) -> cmp(M(), a, b) < 0)
 end
 
 function _test(nvars::Int, M; kws...)
@@ -32,30 +32,29 @@ function test_exponents_iterator()
 end
 
 function test_compare()
-    lex = LexOrder
-    grlex = Graded{lex}
-    rinvlex = Reverse{InverseLexOrder}
-    grevlex = Graded{rinvlex}
-    @test compare([1, 0, 1], [1, 1, 0], grlex) == -1
-    @test compare([1, 1, 0], [1, 0, 1], grlex) == 1
+    lex = LexOrder()
+    grlex = Graded{LexOrder}()
+    rinvlex = Reverse{InverseLexOrder}()
+    grevlex = Graded{Reverse{InverseLexOrder}}()
+    @test cmp(grlex, [1, 0, 1], [1, 1, 0]) == -1
+    @test cmp(grlex, [1, 1, 0], [1, 0, 1]) == 1
     # [CLO13, p. 58]
-    @test compare(1:3, [3, 2, 0], lex) < 0
-    @test compare(1:3, [3, 2, 0], grlex) > 0
-    @test compare(1:3, [3, 2, 0], rinvlex) < 0
-    @test compare(1:3, [3, 2, 0], grevlex) > 0
-    @test compare([1, 2, 4], [1, 1, 5], lex) > 0
-    @test compare([1, 2, 4], [1, 1, 5], grlex) > 0
-    @test compare([1, 2, 4], [1, 1, 5], rinvlex) > 0
-    @test compare([1, 2, 4], [1, 1, 5], grevlex) > 0
+    @test cmp(lex, 1:3, [3, 2, 0]) < 0
+    @test cmp(grlex, 1:3, [3, 2, 0]) > 0
+    @test cmp(rinvlex, 1:3, [3, 2, 0]) < 0
+    @test cmp(grevlex, 1:3, [3, 2, 0]) > 0
+    @test cmp(lex, [1, 2, 4], [1, 1, 5]) > 0
+    @test cmp(grlex, [1, 2, 4], [1, 1, 5]) > 0
+    @test cmp(rinvlex, [1, 2, 4], [1, 1, 5]) > 0
+    @test cmp(grevlex, [1, 2, 4], [1, 1, 5]) > 0
     # [CLO13, p. 59]
-    @test compare((5, 1, 1), (4, 1, 2), lex) > 0
-    @test compare((5, 1, 1), (4, 1, 2), grlex) > 0
-    @test compare((5, 1, 1), (4, 1, 2), rinvlex) > 0
-    @test compare((5, 1, 1), (4, 1, 2), grevlex) > 0
+    @test cmp(lex, (5, 1, 1), (4, 1, 2)) > 0
+    @test cmp(grlex, (5, 1, 1), (4, 1, 2)) > 0
+    @test cmp(rinvlex, (5, 1, 1), (4, 1, 2)) > 0
+    @test cmp(grevlex, (5, 1, 1), (4, 1, 2)) > 0
     # [CLO13] Cox, D., Little, J., & OShea, D.
     # *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
     # Springer Science & Business Media, **2013**.
-
 end
 
 function runtests()
