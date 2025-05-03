@@ -311,18 +311,16 @@ Base.@pure function Base.cmp(v1::AbstractVariable, v2::AbstractVariable)
     return -cmp(name(v1), name(v2))
 end
 
-function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
-    s1, s2 = promote_variables(m1, m2)
-    return cmp(ordering(m1)(), exponents(s1), exponents(s2))
+function Base.:(==)(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
+    return iszero(cmp(m1, m2))
 end
 
-function compare(
+function Base.cmp(
     m1::AbstractMonomial,
     m2::AbstractMonomial,
-    ::Type{O},
-) where {O<:AbstractMonomialOrdering}
+)
     s1, s2 = promote_variables(m1, m2)
-    return cmp(O(), exponents(s1), exponents(s2))
+    return cmp(ordering(m1)(), exponents(s1), exponents(s2))
 end
 
 # Implement this to make coefficients be compared with terms.
@@ -336,7 +334,14 @@ end
 # less than `b`, they are considered sort of equal.
 _cmp_coefficient(a, b) = 0
 
+<<<<<<< HEAD
 function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
+=======
+function Base.cmp(
+    t1::AbstractTermLike,
+    t2::AbstractTermLike,
+)
+>>>>>>> e84a75b (Remove unnecessary compare implementations)
     Δ = cmp(monomial(t1), monomial(t2))
     if iszero(Δ)
         return _cmp_coefficient(coefficient(t1), coefficient(t2))
@@ -344,7 +349,11 @@ function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
     return Δ
 end
 
+<<<<<<< HEAD
 Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0
+=======
+Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
+>>>>>>> e84a75b (Remove unnecessary compare implementations)
 
 """
     struct ExponentsIterator{M}(
