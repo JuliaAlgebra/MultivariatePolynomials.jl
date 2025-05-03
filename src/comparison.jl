@@ -387,7 +387,7 @@ function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
     return Δ
 end
 
-Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0
+Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
 
 """
     struct ExponentsIterator{M}(
