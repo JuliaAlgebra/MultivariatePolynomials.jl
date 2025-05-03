@@ -328,7 +328,9 @@ ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
 
 # We reverse the order of comparisons here so that the result
 # of x < y is equal to the result of Monomial(x) < Monomial(y)
-function compare(
+# Without `Base.@pure`, TypedPolynomials allocates on Julia v1.6
+# with `promote(x * y, x)`
+Base.@pure function compare(
     v1::AbstractVariable,
     v2::AbstractVariable,
     ::Type{<:AbstractMonomialOrdering},
