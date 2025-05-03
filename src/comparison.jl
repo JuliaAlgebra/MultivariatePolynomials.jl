@@ -307,12 +307,13 @@ ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
 # of x < y is equal to the result of Monomial(x) < Monomial(y)
 # Without `Base.@pure`, TypedPolynomials allocates on Julia v1.6
 # with `promote(x * y, x)`
-Base.@pure function Base.cmp(
-    ::AbstractMonomialOrdering,
-    v1::AbstractVariable,
-    v2::AbstractVariable,
-)
+Base.@pure function Base.cmp(v1::AbstractVariable, v2::AbstractVariable)
     return -cmp(name(v1), name(v2))
+end
+
+function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
+    s1, s2 = promote_variables(m1, m2)
+    return cmp(ordering(m1)(), exponents(s1), exponents(s2))
 end
 
 function compare(
@@ -335,20 +336,12 @@ end
 # less than `b`, they are considered sort of equal.
 _cmp_coefficient(a, b) = 0
 
-function Base.cmp(
-    ordering::O,
-    t1::AbstractTermLike,
-    t2::AbstractTermLike,
-) where {O<:AbstractMonomialOrdering}
-    Δ = cmp(ordering, monomial(t1), monomial(t2))
+function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
+    Δ = cmp(monomial(t1), monomial(t2))
     if iszero(Δ)
         return _cmp_coefficient(coefficient(t1), coefficient(t2))
     end
     return Δ
-end
-
-function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
-    return cmp(ordering(t1)(), t1, t2)
 end
 
 Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0

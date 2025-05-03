@@ -141,28 +141,22 @@
         @test p !== nothing
         @test p !== Dict{Int,Int}()
     end
-    @testset "compare" begin
-        lex = LexOrder
-        grlex = Graded{lex}
-        rinvlex = Reverse{InverseLexOrder}
-        grevlex = Graded{rinvlex}
-        Mod.@polyvar x y z
-        # [CLO13, p. 58]
-        @test compare(x * y^2 * z^3, x^3 * y^2, lex) < 0
-        @test compare(x * y^2 * z^3, x^3 * y^2, grlex) > 0
-        @test compare(x * y^2 * z^3, x^3 * y^2, rinvlex) < 0
-        @test compare(x * y^2 * z^3, x^3 * y^2, grevlex) > 0
-        @test compare(x * y^2 * z^4, x * y * z^5, lex) > 0
-        @test compare(x * y^2 * z^4, x * y * z^5, grlex) > 0
-        @test compare(x * y^2 * z^4, x * y * z^5, rinvlex) > 0
-        @test compare(x * y^2 * z^4, x * y * z^5, grevlex) > 0
-        # [CLO13, p. 59]
-        @test compare(x^5 * y * z, x^4 * y * z^2, lex) > 0
-        @test compare(x^5 * y * z, x^4 * y * z^2, grlex) > 0
-        @test compare(x^5 * y * z, x^4 * y * z^2, rinvlex) > 0
-        @test compare(x^5 * y * z, x^4 * y * z^2, grevlex) > 0
-        # [CLO13] Cox, D., Little, J., & OShea, D.
-        # *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
-        # Springer Science & Business Media, **2013**.
+    lex = LexOrder
+    grlex = Graded{lex}
+    rinvlex = Reverse{InverseLexOrder}
+    grevlex = Graded{rinvlex}
+    @static if Symbol(Mod) == :DynamicPolynomials
+        @testset "compare $M" for M in [lex, grlex, rinvlex, grevlex]
+            Mod.@polyvar x y z monomial_order = M
+            # [CLO13, p. 58]
+            sgn = (M == lex || M == rinvlex) ? -1 : 1
+            @test sgn * compare(x * y^2 * z^3, x^3 * y^2) > 0
+            @test compare(x * y^2 * z^4, x * y * z^5) > 0
+            # [CLO13, p. 59]
+            @test compare(x^5 * y * z, x^4 * y * z^2) > 0
+            # [CLO13] Cox, D., Little, J., & OShea, D.
+            # *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
+            # Springer Science & Business Media, **2013**.
+        end
     end
 end
