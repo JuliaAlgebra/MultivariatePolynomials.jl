@@ -346,16 +346,6 @@ end
 
 Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0
 
-_last_lex_index(n, ::Type{LexOrder}) = n
-_prev_lex_index(i, ::Type{LexOrder}) = i - 1
-_not_first_indices(n, ::Type{LexOrder}) = n:-1:2
-_last_lex_index(_, ::Type{InverseLexOrder}) = 1
-_prev_lex_index(i, ::Type{InverseLexOrder}) = i + 1
-_not_first_indices(n, ::Type{InverseLexOrder}) = 1:(n-1)
-_last_lex_index(n, ::Type{Graded{M}}) where {M} = _last_lex_index(n, M)
-_prev_lex_index(i, ::Type{Graded{M}}) where {M} = _prev_lex_index(i, M)
-_not_first_indices(n, ::Type{Graded{M}}) where {M} = _not_first_indices(n, M)
-
 """
     struct ExponentsIterator{M}(
         object;
@@ -418,25 +408,28 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
     mindegree::Int
     maxdegree::D
     inline::Bool
-end
 
-function ExponentsIterator{M}(
-    object;
-    mindegree::Int = 0,
-    maxdegree::Union{Nothing,Int} = nothing,
-    inline::Bool = false,
-) where {M}
-    if length(object) == 0 && isnothing(maxdegree)
-        # Otherwise, it will incorrectly think that the iterator is infinite
-        # while it actually has zero elements
-        maxdegree = mindegree
+    function ExponentsIterator{M}(
+        object;
+        mindegree::Int = 0,
+        maxdegree::Union{Nothing,Int} = nothing,
+        inline::Bool = false,
+    ) where {M}
+        if mindegree < 0
+            throw(ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative."))
+        end
+        if length(object) == 0 && isnothing(maxdegree)
+            # Otherwise, it will incorrectly think that the iterator is infinite
+            # while it actually has zero elements
+            maxdegree = mindegree
+        end
+        return new{M,typeof(maxdegree),typeof(object)}(
+            object,
+            mindegree,
+            maxdegree,
+            inline,
+        )
     end
-    return ExponentsIterator{M,typeof(maxdegree),typeof(object)}(
-        object,
-        mindegree,
-        maxdegree,
-        inline,
-    )
 end
 
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
@@ -460,6 +453,22 @@ end
 
 nvariables(it::ExponentsIterator) = length(it.object)
 
+_last_lex_index(n, ::Type{LexOrder}) = n
+_prev_lex_index(i, ::Type{LexOrder}) = i - 1
+_not_first_indices(n, ::Type{LexOrder}) = n:-1:2
+_last_lex_index(_, ::Type{InverseLexOrder}) = 1
+_prev_lex_index(i, ::Type{InverseLexOrder}) = i + 1
+_not_first_indices(n, ::Type{InverseLexOrder}) = 1:(n-1)
+_last_lex_index(n, ::Type{Reverse{LexOrder}}) = 1
+_prev_lex_index(i, ::Type{Reverse{LexOrder}}) = i + 1
+_not_first_indices(n, ::Type{Reverse{LexOrder}}) = (n-1):-1:1
+_last_lex_index(n, ::Type{Reverse{InverseLexOrder}}) = n
+_prev_lex_index(i, ::Type{Reverse{InverseLexOrder}}) = i - 1
+_not_first_indices(n, ::Type{Reverse{InverseLexOrder}}) = 2:n
+_last_lex_index(n, ::Type{Graded{M}}) where {M} = _last_lex_index(n, M)
+_prev_lex_index(i, ::Type{Graded{M}}) where {M} = _prev_lex_index(i, M)
+_not_first_indices(n, ::Type{Graded{M}}) where {M} = _not_first_indices(n, M)
+
 _increase_degree(it::ExponentsIterator{<:Graded,Nothing}, _) = false
 _increase_degree(it::ExponentsIterator{<:Graded,Int}, _) = false
 _increase_degree(it::ExponentsIterator{M,Nothing}, _) where {M} = true
@@ -474,9 +483,10 @@ _adjust_degree(::ExponentsIterator{<:Graded}, _, Δ) = Δ
 # so we need to add `it.mindegree - deg`
 _adjust_degree(it::ExponentsIterator, deg, _) = max(0, it.mindegree - deg)
 
+# Same as `BangBang.setindex!!`
 _setindex!(x, v, i) = Base.setindex!(x, v, i)
 _setindex!(x::Tuple, v, i) = Base.setindex(x, v, i)
-_increment!(x, i) = _setindex!(x, x[i] + 1, i)
+_increment!(x, Δ, i) = _setindex!(x, x[i] + Δ, i)
 
 _zero(x) = zero(x)
 _zero(x::Tuple) = zero.(x)
@@ -487,9 +497,34 @@ _zero!(x::Tuple) = _zero(x)
 _copy(x) = copy(x)
 _copy(x::Tuple) = x
 
+function __iterate!(it::ExponentsIterator{Graded{Reverse{M}}}, z, i, deg) where {M}
+    z = _increment!(z, -1, i)
+    k = _last_lex_index(nvariables(it), M)
+    Δ = z[k] + 1
+    z = _setindex!(z, 0, k)
+    z = _setindex!(z, Δ, _prev_lex_index(i, Reverse{M}))
+    return z, deg
+end
+
+function __iterate!(::ExponentsIterator{<:Reverse{M}}, z, i, deg) where {M}
+    throw(ArgumentError("Ordering `Reverse{$M}` is not a valid ordering, use `Graded{Reverse{$M}}` instead."))
+end
+
+
+function __iterate!(it::ExponentsIterator{M}, z, i, deg) where {M}
+    Δ = z[i] - 1
+    z = _setindex!(z, 0, i)
+    deg -= Δ
+    Δ = _adjust_degree(it, deg, Δ)
+    deg += Δ
+    z = _setindex!(z, Δ, _last_lex_index(nvariables(it), M))
+    z = _increment!(z, 1, _prev_lex_index(i, M))
+    return z, deg
+end
+
 function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
     if _increase_degree(it, deg)
-        z = _increment!(z, _last_lex_index(nvariables(it), M))
+        z = _increment!(z, 1, _last_lex_index(nvariables(it), M))
         return z, deg + 1
     end
     I = _not_first_indices(nvariables(it), M)
@@ -502,17 +537,7 @@ function _iterate!(it::ExponentsIterator{M}, z, deg) where {M}
         z = _setindex!(z, deg + 1, _last_lex_index(nvariables(it), M))
         return z, deg + 1
     end
-    j = I[i]
-    Δ = z[j] - 1
-    z = _setindex!(z, 0, j)
-    j = I[i]
-    deg -= Δ
-    Δ = _adjust_degree(it, deg, Δ)
-    deg += Δ
-    z = _setindex!(z, Δ, _last_lex_index(nvariables(it), M))
-    j = I[i]
-    z = _increment!(z, _prev_lex_index(j, M))
-    return z, deg
+    return __iterate!(it, z, I[i], deg)
 end
 
 function Base.iterate(it::ExponentsIterator{M}) where {M}

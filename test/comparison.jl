@@ -16,13 +16,20 @@ function _test(nvars::Int, M; kws...)
     return
 end
 
+function test_errors()
+    err = ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative.")
+    @test_throws err ExponentsIterator{LexOrder}([0], mindegree = -1)
+    err = ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative.")
+    @show collect(ExponentsIterator{Reverse{LexOrder}}([0], maxdegree = 2))
+end
+
 function test_exponents_iterator()
     @testset "nvariables = $nvars" for nvars in 0:3
         @testset "mindegree = $mindegree" for mindegree in 0:3
             @testset "maxdegree = $maxdegree" for maxdegree in
                                                   vcat(nothing, 0:3)
                 for L in [LexOrder, InverseLexOrder]
-                    @testset "M = $M" for M in [L, Graded{L}]
+                    @testset "M = $M" for M in [L, Graded{L}, Graded{Reverse{L}}]
                         _test(nvars, M; mindegree, maxdegree)
                     end
                 end
