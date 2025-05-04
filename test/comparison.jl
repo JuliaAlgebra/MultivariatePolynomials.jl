@@ -17,10 +17,14 @@ function _test(nvars::Int, M; kws...)
 end
 
 function test_errors()
-    err = ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative.")
+    err = ArgumentError(
+        "The `mindegree` of `ExponentsIterator` cannot be negative.",
+    )
     @test_throws err ExponentsIterator{LexOrder}([0], mindegree = -1)
     M = Reverse{LexOrder}
-    err = ArgumentError("Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.")
+    err = ArgumentError(
+        "Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.",
+    )
     @test_throws err ExponentsIterator{M}([0], maxdegree = 2)
 end
 
@@ -30,7 +34,8 @@ function test_exponents_iterator()
             @testset "maxdegree = $maxdegree" for maxdegree in
                                                   vcat(nothing, 0:3)
                 for L in [LexOrder, InverseLexOrder]
-                    @testset "M = $M" for M in [L, Graded{L}, Graded{Reverse{L}}]
+                    @testset "M = $M" for M in
+                                          [L, Graded{L}, Graded{Reverse{L}}]
                         _test(nvars, M; mindegree, maxdegree)
                     end
                 end

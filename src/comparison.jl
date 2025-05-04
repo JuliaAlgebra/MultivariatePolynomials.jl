@@ -416,10 +416,18 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
         inline::Bool = false,
     ) where {M}
         if mindegree < 0
-            throw(ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative."))
+            throw(
+                ArgumentError(
+                    "The `mindegree` of `ExponentsIterator` cannot be negative.",
+                ),
+            )
         end
         if M <: Reverse
-            throw(ArgumentError("Ordering `$M` is not a valid ordering, use `Graded{$M}` instead."))
+            throw(
+                ArgumentError(
+                    "Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.",
+                ),
+            )
         end
         if length(object) == 0 && isnothing(maxdegree)
             # Otherwise, it will incorrectly think that the iterator is infinite
@@ -500,7 +508,12 @@ _zero!(x::Tuple) = _zero(x)
 _copy(x) = copy(x)
 _copy(x::Tuple) = x
 
-function __iterate!(it::ExponentsIterator{Graded{Reverse{M}}}, z, i, deg) where {M}
+function __iterate!(
+    it::ExponentsIterator{Graded{Reverse{M}}},
+    z,
+    i,
+    deg,
+) where {M}
     z = _increment!(z, -1, i)
     k = _last_lex_index(nvariables(it), M)
     Δ = z[k] + 1
