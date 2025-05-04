@@ -19,8 +19,9 @@ end
 function test_errors()
     err = ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative.")
     @test_throws err ExponentsIterator{LexOrder}([0], mindegree = -1)
-    err = ArgumentError("The `mindegree` of `ExponentsIterator` cannot be negative.")
-    @show collect(ExponentsIterator{Reverse{LexOrder}}([0], maxdegree = 2))
+    M = Reverse{LexOrder}
+    err = ArgumentError("Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.")
+    @test_throws err ExponentsIterator{M}([0], maxdegree = 2)
 end
 
 function test_exponents_iterator()
