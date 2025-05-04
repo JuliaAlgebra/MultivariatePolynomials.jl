@@ -452,11 +452,11 @@ function Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M}
 end
 
 function Base.length(it::ExponentsIterator{M,Int}) where {M}
+    if it.maxdegree < it.mindegree
+        return 0
+    end
     len = binomial(nvariables(it) + it.maxdegree, nvariables(it))
     if it.mindegree > 0
-        if it.maxdegree < it.mindegree
-            return 0
-        end
         len -= binomial(nvariables(it) + it.mindegree - 1, nvariables(it))
     end
     return len
@@ -553,9 +553,11 @@ end
 
 function Base.iterate(it::ExponentsIterator{M}) where {M}
     z = _zero(it.object)
+    if !isnothing(it.maxdegree) && it.maxdegree < it.mindegree
+        return
+    end
     if it.mindegree > 0
-        if nvariables(it) == 0 ||
-           (!isnothing(it.maxdegree) && it.maxdegree < it.mindegree)
+        if nvariables(it) == 0
             return
         end
         z = _setindex!(z, it.mindegree, _last_lex_index(nvariables(it), M))
