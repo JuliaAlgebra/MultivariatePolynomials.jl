@@ -18,7 +18,7 @@ function merge_sorted!(
     while i1 <= lastindex(v1) && i2 <= lastindex(v2)
         x1 = v1[i1]
         x2 = v2[i2]
-        Δ = compare(x1, x2)
+        Δ = cmp(x1, x2)
         if Δ < 0
             if filter(x1)
                 result[i] = x1
