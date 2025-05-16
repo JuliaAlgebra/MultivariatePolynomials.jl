@@ -434,6 +434,7 @@ function LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol)
     )
     return v
 end
+# This is the same implementation as `LinearAlgebra.ishermitian(::Number)`
 LinearAlgebra.ishermitian(p::AbstractPolynomialLike) = p == conj(p)
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
