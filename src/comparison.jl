@@ -334,14 +334,7 @@ end
 # less than `b`, they are considered sort of equal.
 _cmp_coefficient(a, b) = 0
 
-<<<<<<< HEAD
 function Base.cmp(t1::AbstractTermLike, t2::AbstractTermLike)
-=======
-function Base.cmp(
-    t1::AbstractTermLike,
-    t2::AbstractTermLike,
-)
->>>>>>> e84a75b (Remove unnecessary compare implementations)
     Δ = cmp(monomial(t1), monomial(t2))
     if iszero(Δ)
         return _cmp_coefficient(coefficient(t1), coefficient(t2))
@@ -349,11 +342,7 @@ function Base.cmp(
     return Δ
 end
 
-<<<<<<< HEAD
-Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = compare(t1, t2) < 0
-=======
 Base.isless(t1::AbstractTermLike, t2::AbstractTermLike) = cmp(t1, t2) < 0
->>>>>>> e84a75b (Remove unnecessary compare implementations)
 
 """
     struct ExponentsIterator{M}(
