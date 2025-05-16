@@ -97,7 +97,9 @@
         @test !LinearAlgebra.ishermitian(a + im)
         q = x + 1
         @test !LinearAlgebra.ishermitian(q)
-        err = ErrorException("Complex-valued polynomials cannot be interpreted as hermitian scalars")
+        err = ErrorException(
+            "Complex-valued polynomials cannot be interpreted as hermitian scalars",
+        )
         @test_throws err LinearAlgebra.hermitian(q, :U)
         @test_throws err LinearAlgebra.hermitian(q, :L)
     end
