@@ -434,6 +434,8 @@ function LinearAlgebra.hermitian(v::AbstractPolynomialLike, ::Symbol)
     )
     return v
 end
+# This is the same implementation as `LinearAlgebra.ishermitian(::Number)`
+LinearAlgebra.ishermitian(p::AbstractPolynomialLike) = p == conj(p)
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
 LinearAlgebra.transpose(m::AbstractMonomial) = m
@@ -458,6 +460,7 @@ LinearAlgebra.dot(p::AbstractPolynomialLike, x) = p' * x
 
 LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT
 LinearAlgebra.symmetric(p::_APL, ::Symbol) = p
+LinearAlgebra.issymmetric(::_APL) = true
 
 # Amazingly, this works! Thanks, StaticArrays.jl!
 """

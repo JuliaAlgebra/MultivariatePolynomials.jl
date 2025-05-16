@@ -82,4 +82,25 @@
         4x + 8y^2 - 6x^3,
         [x, real(y)] => [2 + 4im, 9 + 0 * x^0],
     ) == 1184 + 112im + 144im * imag(y) - 8imag(y)^2
+
+    @testset "Symmetric and Hermitian" begin
+        p = a + 1
+        P = typeof(p)
+        @test LinearAlgebra.symmetric_type(P) == P
+        @test LinearAlgebra.issymmetric(p)
+        @test LinearAlgebra.symmetric(p, :U) === p
+        @test LinearAlgebra.symmetric(p, :L) === p
+        @test LinearAlgebra.hermitian_type(P) == P
+        @test LinearAlgebra.ishermitian(p)
+        @test LinearAlgebra.hermitian(p, :U) === p
+        @test LinearAlgebra.hermitian(p, :L) === p
+        @test !LinearAlgebra.ishermitian(a + im)
+        q = x + 1
+        @test !LinearAlgebra.ishermitian(q)
+        err = ErrorException(
+            "Complex-valued polynomials cannot be interpreted as hermitian scalars",
+        )
+        @test_throws err LinearAlgebra.hermitian(q, :U)
+        @test_throws err LinearAlgebra.hermitian(q, :L)
+    end
 end
