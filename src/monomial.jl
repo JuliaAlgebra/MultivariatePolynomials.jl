@@ -60,7 +60,7 @@ Returns the exponent of the variables in the monomial of the term `t`.
 Calling `exponents(x^2*y)` should return `(2, 1)`.
 """
 exponents(t::AbstractTerm) = exponents(monomial(t))
-exponents(v::AbstractVariable) = (1,)
+exponents(::AbstractVariable) = (1,)
 
 """
     degree(t::AbstractTermLike)
