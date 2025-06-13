@@ -328,6 +328,10 @@ function ordering end
 ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
 ordering(::Type{P}) where {P} = ordering(monomial_type(P))
 ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
+# Useful for instance to ask ordering given the list
+# of variables
+ordering(::AbstractVector{T}) where {T} = ordering(T)
+ordering(t::Tuple) = ordering(first(t))
 
 # We reverse the order of comparisons here so that the result
 # of x < y is equal to the result of Monomial(x) < Monomial(y)
