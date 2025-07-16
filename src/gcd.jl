@@ -910,7 +910,7 @@ function content(
             end
         end
     end
-    # This is tricky to infer a `content` calls `gcd` which calls `content`, etc...
+    # This is tricky to infer as `content` calls `gcd` which calls `content`, etc...
     # To help Julia break the loop, we annotate the result here.
     g = _gcd(coefs[1], coefs[2], algo, mutability, mutability)::P
     isone(g) || for i in 3:length(coefs)
