@@ -159,4 +159,14 @@
             # Springer Science & Business Media, **2013**.
         end
     end
+
+    @testset "Comparison with NaN" begin
+        Mod.@polyvar x
+        @test isequal(NaN * x, NaN * x)
+        @test isequal(NaN * x + 0, NaN * x + 0)
+        @test isequal(NaN * x, NaN * x + 0)
+        @test !=(NaN * x, NaN * x)
+        @test !=(NaN * x + 0, NaN * x + 0)
+        @test !=(NaN * x, NaN * x + 0)
+    end
 end
