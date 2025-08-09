@@ -34,6 +34,9 @@ end
 function Base.convert(::Type{Term{T,M}}, t::AbstractTerm) where {T,M}
     return Term{T,M}(convert(T, coefficient(t)), convert(M, monomial(t)))
 end
+function Base.convert(::Type{Term{T,M}}, t::Term{T,M}) where {T,M}
+    return t
+end
 
 function convert_constant(::Type{Term{C,M} where C}, α) where {M}
     return convert(Term{typeof(α),M}, α)
