@@ -162,11 +162,19 @@
 
     @testset "Comparison with NaN" begin
         Mod.@polyvar x
-        @test isequal(NaN * x, NaN * x)
-        @test isequal(NaN * x + 0, NaN * x + 0)
-        @test isequal(NaN * x, NaN * x + 0)
-        @test !=(NaN * x, NaN * x)
-        @test !=(NaN * x + 0, NaN * x + 0)
-        @test !=(NaN * x, NaN * x + 0)
+        @testset "$poly1 and $poly2" for (poly1, poly2) in [
+            (NaN * x, NaN * x),
+            (NaN * x + 0, NaN * x + 0),
+            (NaN * x, NaN * x + 0),
+        ]
+            @test poly1 != poly2
+            @test (@allocated poly1 != poly2) == 0
+            @test poly1 != poly1
+            @test (@allocated poly1 != poly1) == 0
+            @test isequal(poly1, poly2)
+            @test (@allocated isequal(poly1, poly2)) == 0
+            @test isequal(poly1, poly1)
+            @test (@allocated isequal(poly1, poly1)) == 0
+        end
     end
 end
