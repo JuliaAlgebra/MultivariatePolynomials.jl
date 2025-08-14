@@ -111,7 +111,7 @@ function polynomial_merge!(
                 if buffer === nothing
                     buffer = DataStructures.Queue{typeof(t0)}()
                 end
-                DataStructures.enqueue!(buffer, t0)
+                push!(buffer, t0)
                 i += 1
             end
             set(k, get2(j))
@@ -148,7 +148,7 @@ function polynomial_merge!(
                 j += 1
             end
             if comp >= 0
-                DataStructures.dequeue!(buffer)
+                popfirst!(buffer)
             end
             # if `comp` is zero, we called `combine` so `t`
             # might not be kept. If `comp` is not zero, we
@@ -157,7 +157,7 @@ function polynomial_merge!(
                 continue
             end
             if k <= n1
-                DataStructures.enqueue!(buffer, get1(i))
+                push!(buffer, get1(i))
                 set(k, t)
             else
                 push(t)
@@ -176,7 +176,7 @@ function polynomial_merge!(
             set(k + n, get1(k))
         end
         for k in i:(i+n-1)
-            set(k, DataStructures.dequeue!(buffer))
+            set(k, popfirst!(buffer))
         end
         n1 += n
     else
