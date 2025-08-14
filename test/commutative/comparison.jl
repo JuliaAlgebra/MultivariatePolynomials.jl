@@ -159,4 +159,29 @@
             # Springer Science & Business Media, **2013**.
         end
     end
+
+    @testset "Comparison with NaN" begin
+        Mod.@polyvar x y
+        @testset "$poly1 and $poly2" for (poly1, poly2) in [
+            (NaN * x, NaN * x),
+            (NaN * x + 0, NaN * x + 0),
+            (NaN * x, NaN * x + 0),
+            (NaN * x / y, NaN * x / y),
+            (x / (NaN * y), x / (NaN * y)),
+            ((NaN * x) / (NaN * y), (NaN * x) / (NaN * y)),
+            ((NaN * x + 0) / (NaN * y + 0), (NaN * x + 0) / (NaN * y + 0)),
+        ]
+            @test poly1 != poly2
+            @test poly1 != poly1
+            @test isequal(poly1, poly2)
+            @test isequal(poly1, poly1)
+            # RationalPoly equality multiplies and thus allocates
+            if !(poly1 isa RationalPoly)
+                @test (@allocated poly1 != poly2) == 0
+                @test (@allocated poly1 != poly1) == 0
+                @test (@allocated isequal(poly1, poly2)) == 0
+                @test (@allocated isequal(poly1, poly1)) == 0
+            end
+        end
+    end
 end
