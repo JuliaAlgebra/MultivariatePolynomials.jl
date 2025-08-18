@@ -306,11 +306,9 @@ function MA.operate(
     defl,
 )
     return polynomial(
-        map(terms(p)) do t
-            return term(
-                coefficient(t),
-                MA.operate(op, monomial(t), shift, defl),
-            )
+        coefficients(p),
+        map(monomials(p)) do m
+            return MA.operate(op, m, shift, defl)
         end,
     )
 end

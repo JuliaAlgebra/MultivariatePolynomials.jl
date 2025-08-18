@@ -291,4 +291,11 @@ end
             end
         end
     end
+    @testset "Non-concrete polynomial GCD" begin
+        Mod.@polyvar p q
+        p1 = MP.polynomial(p^2 + q^2, Number)
+        p2 = MP.polynomial(p * q, Number)
+        g = @inferred gcd(p1, p2)
+        @test isone(g)
+    end
 end
