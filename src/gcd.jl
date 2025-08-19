@@ -79,7 +79,14 @@ end
 _coefficient_gcd(α, β) = gcd(α, β)
 _coefficient_gcd(α::AbstractFloat, β) = one(Base.promote_typeof(α, β))
 _coefficient_gcd(α, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::Complex, β) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α, β::Complex) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::Complex, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::AbstractFloat, β::Complex) = one(Base.promote_typeof(α, β))
 function _coefficient_gcd(α::AbstractFloat, β::AbstractFloat)
+    return one(Base.promote_typeof(α, β))
+end
+function _coefficient_gcd(α::Complex, β::Complex)
     return one(Base.promote_typeof(α, β))
 end
 
@@ -306,11 +313,9 @@ function MA.operate(
     defl,
 )
     return polynomial(
-        map(terms(p)) do t
-            return term(
-                coefficient(t),
-                MA.operate(op, monomial(t), shift, defl),
-            )
+        coefficients(p),
+        map(monomials(p)) do m
+            return MA.operate(op, m, shift, defl)
         end,
     )
 end
