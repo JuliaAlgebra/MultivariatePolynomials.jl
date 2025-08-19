@@ -445,7 +445,7 @@ function MA.operate!(
     t::AbstractTermLike,
 )
     # `MA.add!` will copy the coefficient of `t` so `Polynomial` redefines this
-    return MA.add!!(p, t)
+    return MA.add!!(p, t)::typeof(p)
 end
 
 #$(SIGNATURES)

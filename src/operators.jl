@@ -64,12 +64,12 @@ right_constant_function(::typeof(+)) = right_constant_plus
 right_constant_function(::typeof(-)) = right_constant_minus
 right_constant_function(::typeof(*)) = right_constant_mult
 function MA.operate!(op::Union{typeof(+),typeof(-),typeof(*)}, p::_APL, α)
-    return MA.operate!(right_constant_function(op), p, α)
+    return MA.operate!(right_constant_function(op), p, α)::typeof(p)
 end
 
-MA.operate!(op::typeof(*), α, p::_APL) = MA.operate!(left_constant_mult, α, p)
-MA.operate!(op::typeof(*), p::_APL, α) = MA.operate!(right_constant_mult, p, α)
-MA.operate!(op::typeof(/), p::_APL, α) = map_coefficients!(Base.Fix2(op, α), p)
+MA.operate!(op::typeof(*), α, p::_APL) = MA.operate!(left_constant_mult, α, p)::typeof(α)
+MA.operate!(op::typeof(*), p::_APL, α) = MA.operate!(right_constant_mult, p, α)::typeof(p)
+MA.operate!(op::typeof(/), p::_APL, α) = map_coefficients!(Base.Fix2(op, α), p)::typeof(p)
 function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::_APL)
     return MA.operate_to!(output, left_constant_mult, α, p)
 end
@@ -210,7 +210,7 @@ function MA.operate!(
     p::AbstractPolynomial,
     q::AbstractPolynomialLike,
 )
-    return MA.operate!(op, p, polynomial(q))
+    return MA.operate!(op, p, polynomial(q))::typeof(p)
 end
 
 function mul_to_terms!(ts::Vector{<:AbstractTerm}, p1::_APL, p2::_APL)
@@ -297,7 +297,7 @@ function MA.operate!(::typeof(left_constant_mult), α, p::_APL)
     return map_coefficients!(Base.Fix1(*, α), p)
 end
 function MA.operate!(::typeof(right_constant_mult), p::_APL, α)
-    return map_coefficients!(Base.Fix2(MA.mul!!, α), p)
+    return map_coefficients!(Base.Fix2(MA.mul!!, α), p)::typeof(p)
 end
 
 function MA.operate_to!(
@@ -313,7 +313,7 @@ function MA.operate!(
     m1::AbstractMonomial,
     m2::AbstractMonomialLike,
 )
-    return map_exponents!(+, m1, m2)
+    return map_exponents!(+, m1, m2)::typeof(m1)
 end
 function Base.:*(m1::AbstractMonomialLike, m2::AbstractMonomialLike)
     return map_exponents(+, m1, m2)
@@ -334,7 +334,7 @@ function Base.:*(t1::AbstractTermLike, t2::AbstractTermLike)
 end
 
 function MA.operate!(::typeof(*), p::_APL, t::AbstractMonomialLike)
-    return map_exponents!(+, p, t)
+    return map_exponents!(+, p, t)::typeof(p)
 end
 Base.:*(p::_APL, t::AbstractMonomialLike) = map_exponents(+, p, t)
 Base.:*(t::AbstractTermLike, p::_APL) = polynomial!(map(te -> t * te, terms(p)))
@@ -488,7 +488,7 @@ function MA.operate!(
     z,
     args::Vararg{Any,N},
 ) where {N}
-    return MA.operate!(MA.add_sub_op(op), x, *(y, z, args...))
+    return MA.operate!(MA.add_sub_op(op), x, *(y, z, args...))::typeof(x)
 end
 function MA.buffer_for(
     ::MA.AddSubMul,
@@ -518,5 +518,5 @@ function MA.buffered_operate!(
     args::Vararg{Any,N},
 ) where {N}
     product = MA.operate_to!!(buffer, *, y, z, args...)
-    return MA.operate!(MA.add_sub_op(op), x, product)
+    return MA.operate!(MA.add_sub_op(op), x, product)::typeof(x)
 end
