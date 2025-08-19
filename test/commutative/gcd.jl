@@ -298,4 +298,12 @@ end
         g = @inferred gcd(p1, p2)
         @test isone(g)
     end
+
+    @testset "Complex coefficient GCD" begin
+        Mod.@polyvar p q
+        p1 = MP.polynomial(p^2 + q^2, ComplexF64)
+        p2 = MP.polynomial(p * q, ComplexF64)
+        g = @inferred gcd(p1, p2)
+        @test isone(g)
+    end
 end
