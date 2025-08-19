@@ -234,6 +234,19 @@ end
 Base.isapprox(p::_APL, α; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 Base.isapprox(α, p::_APL; kwargs...) = isapprox(promote(p, α)...; kwargs...)
 
+MA.operate!(::typeof(-), ::AbstractTermLike) = error("not implemented yet")
+
+MA.operate_to!(::AbstractTermLike, ::typeof(-), ::_APL) = error("not implemented yet")
+
+function MA.operate!(::typeof(-), p::_APL)
+    negate!! = x -> MA.operate!!(-, x)
+    return map_coefficients!(negate!!, p, nonzero = true)
+end
+
+function MA.operate_to!(o::P, ::typeof(-), p::P) where {P<:_APL}
+    return map_coefficients_to!(o, -, p, nonzero = true)
+end
+
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy the monomial
 # here or implement a `MA.operate(-, p)` that copies it. We choose the first
