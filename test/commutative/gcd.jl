@@ -305,5 +305,10 @@ end
         p2 = MP.polynomial(p * q, ComplexF64)
         g = @inferred gcd(p1, p2)
         @test isone(g)
+
+        p1 = p - 2.5im
+        p2 = 2.0p - 5.0im
+        g = @inferred gcd(p1, p2)
+        @test isequal(p1, g) || isequal(p2, g)
     end
 end
