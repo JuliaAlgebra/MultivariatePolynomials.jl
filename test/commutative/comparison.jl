@@ -1,6 +1,10 @@
 @testset "Comparison" begin
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
+        O = Graded{LexOrder}
+        @test ordering(x) == O
+        @test ordering(x * y) == O
+        @test ordering(variables(x * y)) == O
         @test x > y > z
         @test x^2 * y > y^3 > z
         @test y^2 >= x
