@@ -29,9 +29,9 @@ jobs:
           - version: 'pre'
             os: ubuntu-latest
             arch: x64
-          - version: 'nightly'
-            os: ubuntu-latest
-            arch: x64
+#          - version: 'nightly'
+#            os: ubuntu-latest
+#            arch: x64
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
