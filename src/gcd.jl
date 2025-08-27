@@ -959,6 +959,13 @@ function primitive_part(
 )
     return p
 end
+function primitive_part(
+    p::_APL{<:Complex{<:AbstractFloat}},
+    ::AbstractUnivariateGCDAlgorithm,
+    ::MA.MutableTrait,
+)
+    return p
+end
 
 """
     primitive_part_content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
