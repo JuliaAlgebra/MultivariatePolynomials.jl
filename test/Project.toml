@@ -11,4 +11,4 @@ TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"
 
 [compat]
 DynamicPolynomials = "0.6"
-TypedPolynomials = "0.4"
+TypedPolynomials = "0.4.2"
