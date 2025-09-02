@@ -151,6 +151,17 @@ Returns the monomial of the term `t`.
 ### Examples
 
 Calling `monomial` on ``4x^2y`` should return ``x^2y``.
+
+    monomial(variables, exponents)
+
+Returns the monomial corresponding to `prod(variables .^ exponents)`
+
+### Examples
+
+In order to create `x^2 * y`,
+
+* with DynamicPolynomials, use `monomial([x, y], [2, 1])`,
+* with TypedPolynomials, use `monomial((x, y), (2, 1))`.
 """
 function monomial end
 monomial(t::AbstractTerm) = t.monomial # by convention, the field should be `monomial`.

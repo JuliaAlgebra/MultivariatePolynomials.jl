@@ -261,14 +261,8 @@ function deflation(p::AbstractPolynomialLike)
     shift_defl = shift_deflation.(p, variables(p))
     shift = getindex.(shift_defl, 1)
     defl = getindex.(shift_defl, 2)
-    s = prod(
-        variables(p) .^ shift;
-        init = constant_monomial(p),
-    )::monomial_type(p)
-    d = prod(
-        variables(p) .^ defl;
-        init = constant_monomial(p),
-    )::monomial_type(p)
+    s = monomial(variables(p), shift)
+    d = monomial(variables(p), defl)
     return s, d
 end
 
