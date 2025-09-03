@@ -26,6 +26,9 @@ function test_errors()
         "Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.",
     )
     @test_throws err ExponentsIterator{M}([0], maxdegree = 2)
+    exps = ExponentsIterator{LexOrder}([0])
+    err = ErrorException("The iterator is infinity because `maxdegree` is `nothing`.")
+    @test_throws err length(exps)
 end
 
 function test_exponents_iterator()
