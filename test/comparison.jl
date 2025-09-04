@@ -27,7 +27,9 @@ function test_errors()
     )
     @test_throws err ExponentsIterator{M}([0], maxdegree = 2)
     exps = ExponentsIterator{LexOrder}([0])
-    err = ErrorException("The iterator is infinity because `maxdegree` is `nothing`.")
+    err = ErrorException(
+        "The iterator is infinity because `maxdegree` is `nothing`.",
+    )
     @test_throws err length(exps)
 end
 
