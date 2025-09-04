@@ -469,11 +469,14 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
 end
 
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
+# `IteratorSize` returns something different depending on whether it is called
+# in an instance or on the type. `Iterators.Cycle` has the same behavior,
+# see https://github.com/JuliaLang/julia/pull/54187
 function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
     # It could be `HasLength` is `IsInfinite` depending on whether `it.object`
     # is empty so the size is unknown when we only have access to the type of
     # the iterator. The method below gives the correct size when we have access
-    # to the instance
+    # to the instance.
     return Base.SizeUnknown()
 end
 function Base.IteratorSize(it::ExponentsIterator{M,Nothing}) where {M}
