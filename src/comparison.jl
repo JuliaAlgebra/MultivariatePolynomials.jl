@@ -470,7 +470,11 @@ end
 
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
 function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
-    return Base.IsInfinite()
+    # It could be `HasLength` is `IsInfinite` depending on whether `it.object`
+    # is empty so the size is unknown when we only have access to the type of
+    # the iterator. The method below gives the correct size when we have access
+    # to the instance
+    return Base.SizeUnknown()
 end
 function Base.IteratorSize(it::ExponentsIterator{M,Nothing}) where {M}
     if isempty(it.object)
