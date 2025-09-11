@@ -7,6 +7,7 @@ function _test(object, M; kws...)
     it = ExponentsIterator{M}(object; kws...)
     v = collect(Iterators.take(it, 20))
     @test issorted(v, lt = (a, b) -> cmp(M(), a, b) < 0)
+    @test issorted(v, lt = M())
 end
 
 function _test(nvars::Int, M; kws...)
