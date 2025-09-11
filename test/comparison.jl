@@ -16,6 +16,15 @@ function _test(nvars::Int, M; kws...)
     return
 end
 
+function test_equal()
+    exp = ExponentsIterator{LexOrder}([0])
+    @test exp == ExponentsIterator{LexOrder}([0])
+    @test exp != ExponentsIterator{LexOrder}((0,))
+    @test exp != ExponentsIterator{LexOrder}([0, 0])
+    @test exp != ExponentsIterator{LexOrder}([0], mindegree = 1)
+    @test exp != ExponentsIterator{LexOrder}([0], maxdegree = 2)
+end
+
 function test_errors()
     err = ArgumentError(
         "The `mindegree` of `ExponentsIterator` cannot be negative.",

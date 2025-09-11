@@ -481,6 +481,13 @@ function Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M}
     return Base.HasLength()
 end
 
+function Base.:(==)(a::ExponentsIterator, b::ExponentsIterator)
+    return typeof(a.object) == typeof(b.object) &&
+           length(a.object) == length(b.object) &&
+           a.mindegree == b.mindegree &&
+           a.maxdegree == b.maxdegree
+end
+
 function Base.length(it::ExponentsIterator{M,Int}) where {M}
     if it.maxdegree < it.mindegree
         return 0
