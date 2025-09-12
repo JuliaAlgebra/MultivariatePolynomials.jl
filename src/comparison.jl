@@ -459,11 +459,6 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
                 ),
             )
         end
-        if length(object) == 0 && isnothing(maxdegree)
-            # Otherwise, it will incorrectly think that the iterator is infinite
-            # while it actually has zero elements
-            maxdegree = mindegree
-        end
         return new{M,typeof(maxdegree),typeof(object)}(
             object,
             mindegree,
@@ -474,8 +469,13 @@ struct ExponentsIterator{M,D<:Union{Nothing,Int},O}
 end
 
 Base.eltype(::Type{ExponentsIterator{M,D,O}}) where {M,D,O} = O
+# `IteratorSize` may actually be finite if the list of variables is empty.
+# The same issue happens for `Iterators.Cycle`:
+# https://github.com/JuliaLang/julia/pull/54187
+# With `Base.IsInfinite`, some tests fail but with `Base.SizeUnknown`, all
+# tests pass.
 function Base.IteratorSize(::Type{<:ExponentsIterator{M,Nothing}}) where {M}
-    return Base.IsInfinite()
+    return Base.SizeUnknown()
 end
 function Base.IteratorSize(::Type{<:ExponentsIterator{M,Int}}) where {M}
     return Base.HasLength()
@@ -488,15 +488,27 @@ function Base.:(==)(a::ExponentsIterator, b::ExponentsIterator)
            a.maxdegree == b.maxdegree
 end
 
-function Base.length(it::ExponentsIterator{M,Int}) where {M}
-    if it.maxdegree < it.mindegree
+function _length(it::ExponentsIterator, maxdegree)
+    if maxdegree < it.mindegree
         return 0
     end
-    len = binomial(nvariables(it) + it.maxdegree, nvariables(it))
+    len = binomial(nvariables(it) + maxdegree, nvariables(it))
     if it.mindegree > 0
         len -= binomial(nvariables(it) + it.mindegree - 1, nvariables(it))
     end
     return len
+end
+
+function Base.length(it::ExponentsIterator{M,Int}) where {M}
+    return _length(it, it.maxdegree)
+end
+
+function Base.length(it::ExponentsIterator{M,Nothing}) where {M}
+    if isempty(it.object)
+        return _length(it, it.mindegree)
+    else
+        error("The iterator is infinity because `maxdegree` is `nothing`.")
+    end
 end
 
 nvariables(it::ExponentsIterator) = length(it.object)
