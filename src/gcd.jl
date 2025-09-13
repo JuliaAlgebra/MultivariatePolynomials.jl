@@ -841,7 +841,7 @@ _simplifier(a, b, algo, ma, mb) = _gcd(a, b, algo, ma, mb)
 # `a1*a2*...*an + a0*a2*...*an x + ...`
 # which makes the size of the `BigInt`s grow significantly which slows things down.
 function _simplifier(a::Rational, b::Rational, algo, ma, mb)
-    return gcd(a.num, b.num) // gcd(a.den, b.den)
+    return gcd(a.num, b.num) // lcm(a.den, b.den)
 end
 
 # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
