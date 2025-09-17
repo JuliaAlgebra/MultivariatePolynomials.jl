@@ -91,7 +91,9 @@ function polynomial_merge!(
     combine::F6,
     keep::F7,
     resize::F8,
-) where {F1,F2,F3,F4,F5,F6,F7,F8}
+    ::Type{term_type} = n1 > 0 ? typeof(get1(1)) :
+                        n2 > 0 ? typeof(get2(1)) : Nothing,
+) where {F1,F2,F3,F4,F5,F6,F7,F8,term_type}
     buffer = nothing
     i = j = k = 1
     # Invariant:
@@ -109,7 +111,7 @@ function polynomial_merge!(
             if k == i
                 t0 = get1(i)
                 if buffer === nothing
-                    buffer = DataStructures.Queue{typeof(t0)}()
+                    buffer = DataStructures.Queue{term_type}()
                 end
                 push!(buffer, t0)
                 i += 1

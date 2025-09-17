@@ -6,7 +6,7 @@
     @test !isconj(a)
     @test ordinary_variable(a) == a
     @test conj(a) == real(a) == a
-    @test_broken iszero(imag(a)) # no iszero for MA.Zero
+    @test iszero(imag(a))
     @test isreal(a^3 + 5a^2 + 4a)
     @test !isreal(a^3 + 5im * a^2 + 4a)
 
