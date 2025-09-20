@@ -38,3 +38,4 @@ const AbstractTermLike{T} = Union{AbstractMonomialLike,AbstractTerm{T}}
 const AbstractPolynomialLike{T} =
     Union{AbstractTermLike{T},AbstractPolynomial{T}}
 const _APL = AbstractPolynomialLike
+const _Constant = Union{Number,MA.AbstractMutable,AbstractArray}
