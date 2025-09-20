@@ -30,18 +30,20 @@ for (op, fun) in [
     (:+, :right_constant_plus),
     (:-, :right_constant_minus),
     (:*, :right_constant_mult),
-    (:(==), :right_constant_eq),
 ]
     @eval Base.$op(p::_APL, α) = $fun(p, α)
 end
+Base.:(==)(p::_APL, α::_Constant) = right_constant_eq(p, α)
+
 for (op, fun) in [
     (:+, :left_constant_plus),
     (:-, :left_constant_minus),
     (:*, :left_constant_mult),
-    (:(==), :left_constant_eq),
 ]
     @eval Base.$op(α, p::_APL) = $fun(α, p)
 end
+Base.:(==)(α::_Constant, p::_APL) = left_constant_eq(α, p)
+
 ## Fix ambiguity between above methods and methods in MA
 Base.:+(::MA.Zero, p::_APL) = MA.copy_if_mutable(p)
 Base.:+(p::_APL, ::MA.Zero) = MA.copy_if_mutable(p)
