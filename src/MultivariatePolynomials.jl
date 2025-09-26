@@ -58,6 +58,7 @@ Abstract type for a polynomial of coefficient type `T`, i.e. a sum of `AbstractT
 abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 
 const _APL{T} = AbstractPolynomialLike{T}
+const _Constant = Union{Number,MA.AbstractMutable,AbstractArray}
 
 include("zip.jl")
 include("lazy_iterators.jl")
