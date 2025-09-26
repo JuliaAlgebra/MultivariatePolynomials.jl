@@ -109,16 +109,27 @@
         @testset "RationalPoly equality" begin
             Mod.@polyvar x y
             @test (x^2 - x - 6) / (x + 2) != x + 3
+            @test !isequal((x^2 - x - 6) / (x + 2), x + 3)
             @test x - 3 == (x^2 - x - 6) / (x + 2)
+            @test isequal(x - 3, (x^2 - x - 6) / (x + 2))
             @test (x^2 - x - 6) / (x - 3) == x + 2
+            @test isequal((x^2 - x - 6) / (x - 3), x + 2)
             @test 3 != 4x / 2x
+            @test !isequal(3, 4x / 2x)
             @test 4x / 2x == 2
+            @test isequal(4x / 2x, 2)
             @test 3 != 4x / 2x
+            @test !isequal(3, 4x / 2x)
             @test 1 - 1 / x == (x - 1) / x
+            @test isequal(1 - 1 / x, (x - 1) / x)
             @test 1 - 1 / x != (1 - x) / x
+            @test !isequal(1 - 1 / x, (1 - x) / x)
             @test x + x / x == 1 + x^2 / x
+            @test isequal(x + x / x, 1 + x^2 / x)
             @test x - x / x == -(1 - x^2 / x)
+            @test isequal(x - x / x, -(1 - x^2 / x))
             @test (1 + x) / x - 1 == 1 / x
+            @test isequal((1 + x) / x - 1, 1 / x)
             @test isapprox((1 + 1e-8)x, (x * y) / y, rtol = 1e-7)
             @test isapproxzero(((1 + 1e-8)x - x) / y, ztol = 1e-7)
             @test !isapproxzero(((1 + 1e-8)x - y) / y, ztol = 1e-9)
