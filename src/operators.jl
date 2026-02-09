@@ -24,7 +24,7 @@ end
 
 function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
     return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
-        monomial(t1) == monomial(t2)
+           monomial(t1) == monomial(t2)
 end
 
 function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
