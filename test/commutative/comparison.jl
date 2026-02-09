@@ -24,16 +24,27 @@
         @testset "Monomial equality" begin
             Mod.@polyvar x y
             @test 1 == constant_monomial(x)
+            @test 1 ≈ constant_monomial(x)
             @test 2 != constant_monomial(x)
+            @test !(2 ≈ constant_monomial(x))
             @test 2 != x
+            @test !(2 ≈ x)
             @test 2 != x * y
+            @test !(2 ≈ x * y)
             @test x * y != x
+            @test !(x * y ≈ x)
             @test 1x * y == x * y
+            @test 1x * y ≈ x * y
             @test 2x * y != x * y
+            @test !(2x * y ≈ x * y)
             @test x == monomial(x)
+            @test x ≈ monomial(x)
             @test x * y^0 == x
+            @test x * y^0 ≈ x
             @test x != x^0 * y
+            @test !(x ≈ x^0 * y)
             @test x^2 != x * y
+            @test !(x^2 ≈ x * y)
         end
         @testset "Polynomial equality" begin
             Mod.@polyvar x y
