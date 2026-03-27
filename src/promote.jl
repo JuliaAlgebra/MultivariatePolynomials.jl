@@ -334,3 +334,61 @@ function MA.promote_operation(
         MA.promote_operation(*, DS, DT),
     }
 end
+
+_idx(needle, haystack) = search_sorted_first(haystack, needle, rev = true)
+
+struct ExponentMap{I,L} <: Function
+    indices::I
+    length::L
+end
+
+function (map::ExponentMap{Vector{Int}})(exp::Vector{Int})
+    new_exp = zeros(Int, map.length)
+    for (i, e) in zip(map.indices, exp)
+        new_exp[i] = e
+    end
+    return new_exp
+end
+
+function (map::ExponentMap{NTuple{N,Int}})(exp::NTuple{N,Int}) where {N}
+    return ntuple(map.length::Val) do i
+        # This does not have the best complexity since `findfirst`
+        # search through the whole list each time but since we're using
+        # tuples, we're probably not having a large list if indices anyway
+        j = findfirst(isequal(i), map.indices)
+        if isnothing(j)
+            return 0
+        else
+            return exp[j]
+        end
+    end
+end
+
+_length(x::AbstractVector) = length(x)
+_length(::NTuple{N,Any}) where {N} = Val(N)
+
+function _map(needles, haystack)
+    if length(needles) == length(haystack)
+        return
+    end
+    return ExponentMap(
+        map(Base.Fix2(_idx, haystack), needles),
+        _length(haystack),
+    )
+end
+
+_vars(a, ::Nothing) = a, nothing
+_vars(a, all_vars) = all_vars, _map(a, all_vars)
+
+function promote_variables_with_maps(a, b)
+    if a == b
+        return (a, nothing), (b, nothing)
+    end
+    all_vars = merge_sorted(a.variables, b.variables; rev = true)
+    return _vars(a, all_vars), _vars(b, all_vars)
+end
+
+function SA.promote_basis_with_maps(p::_APL, q::_APL)
+    _p, _q = promote_variables_with_maps(variables(p), variables(q))
+    return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
+end
