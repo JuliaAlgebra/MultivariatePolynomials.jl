@@ -171,3 +171,13 @@ end
         __promote_prod(PXY, PXY, PXY)
     end
 end
+
+import StarAlgebras as SA
+
+#@testset "promote_basis" begin
+    Mod.@polyvar x
+    Mod.@polyvar y
+
+    SA.promote_basis(x^2, y^2)
+
+#end
