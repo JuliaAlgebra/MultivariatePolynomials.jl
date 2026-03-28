@@ -69,14 +69,14 @@ The following packages extend/use the interface:
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
 [docs-latest-url]: https://juliaalgebra.github.io/MultivariatePolynomials.jl/dev
 
-[build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/workflows/CI/badge.svg?branch=master
+[build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/workflows/CI.yml/badge.svg?branch=master
 [build-url]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions?query=workflow%3ACI
-[codecov-img]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
+[codecov-img]: http://codecov.io/gh/JuliaAlgebra/MultivariatePolynomials.jl/branch/main/graph/badge.svg
+[codecov-url]: http://codecov.io/gh/JuliaAlgebra/MultivariatePolynomials.jl
 
 [gitter-url]: https://gitter.im/JuliaAlgebra/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link
 [gitter-img]: https://badges.gitter.im/JuliaAlgebra/Lobby.svg
