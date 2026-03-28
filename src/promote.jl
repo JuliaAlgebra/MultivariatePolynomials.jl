@@ -335,7 +335,14 @@ function MA.promote_operation(
     }
 end
 
-_idx(needle, haystack) = search_sorted_first(haystack, needle, rev = true)
+function _search_sorted_first(haystack::AbstractVector, needle; kws...)
+    return searchsortedfirst(haystack, needle; kws...)
+end
+function _search_sorted_first(haystack::Tuple, needle; kws...)
+    return findfirst(isequal(needle), haystack)
+end
+
+_idx(needle, haystack) = _search_sorted_first(haystack, needle, rev = true)
 
 struct ExponentMap{I,L} <: Function
     indices::I
@@ -369,7 +376,7 @@ _length(::NTuple{N,Any}) where {N} = Val(N)
 
 function _map(needles, haystack)
     if length(needles) == length(haystack)
-        return
+        return nothing
     end
     return ExponentMap(
         map(Base.Fix2(_idx, haystack), needles),
@@ -377,18 +384,44 @@ function _map(needles, haystack)
     )
 end
 
-_vars(a, ::Nothing) = a, nothing
-_vars(a, all_vars) = all_vars, _map(a, all_vars)
+"""
+    promote_variables_with_maps(a, b)
 
+Given two sorted variable collections `a` and `b`, return
+`((all_vars, map_a), (all_vars, map_b))` where `all_vars` is the merged
+sorted variable set and `map_a` (resp. `map_b`) is an [`ExponentMap`](@ref)
+that maps exponents from `a` (resp. `b`) to exponents in `all_vars`,
+or `nothing` if no mapping is needed.
+"""
 function promote_variables_with_maps(a, b)
     if a == b
         return (a, nothing), (b, nothing)
     end
-    all_vars = merge_sorted(a.variables, b.variables; rev = true)
-    return _vars(a, all_vars), _vars(b, all_vars)
+    all_vars = SA.merge_sorted(
+        a,
+        b;
+        lt = isless,
+        combine = SA.first_of,
+        filter = _ -> true,
+        rev = true,
+    )
+    return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
 end
 
-function SA.promote_basis_with_maps(p::_APL, q::_APL)
-    _p, _q = promote_variables_with_maps(variables(p), variables(q))
-    return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
+function SA.promote_bases_with_maps(p::_APL, q::_APL)
+    vp, vq = variables(p), variables(q)
+    if vp == vq
+        return (p, nothing), (q, nothing)
+    end
+    all_vars = SA.merge_sorted(
+        vp,
+        vq;
+        lt = isless,
+        combine = SA.first_of,
+        filter = _ -> true,
+        rev = true,
+    )
+    map_p = _map(vp, all_vars)
+    map_q = _map(vq, all_vars)
+    return (p, map_p), (q, map_q)
 end

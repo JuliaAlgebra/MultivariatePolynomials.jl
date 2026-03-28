@@ -174,10 +174,82 @@ end
 
 import StarAlgebras as SA
 
-#@testset "promote_basis" begin
+@testset "ExponentMap" begin
+    # Vector exponent map
+    map_v = MP.ExponentMap([2, 3], 4)
+    @test map_v([5, 7]) == [0, 5, 7, 0]
+
+    # Tuple exponent map
+    map_t = MP.ExponentMap((2, 3), Val(4))
+    @test map_t((5, 7)) == (0, 5, 7, 0)
+
+    # Identity-like map (all slots filled)
+    map_id = MP.ExponentMap([1, 2], 2)
+    @test map_id([3, 4]) == [3, 4]
+end
+
+@testset "promote_variables_with_maps" begin
+    # Same variables: no maps needed
+    Mod.@polyvar a b
+    vars_ab = MP.variables(a + b)
+    (va, ma), (vb, mb) = MP.promote_variables_with_maps(vars_ab, vars_ab)
+    @test va == vars_ab
+    @test vb == vars_ab
+    @test ma === nothing
+    @test mb === nothing
+
+    # Different variables from separate @polyvar calls: maps should be created
     Mod.@polyvar x
     Mod.@polyvar y
+    vars_x = MP.variables(x^2)
+    vars_y = MP.variables(y^2)
+    @test vars_x != vars_y
+    (vx, mx), (vy, my) = MP.promote_variables_with_maps(vars_x, vars_y)
+    @test length(vx) == 2
+    @test vx == vy  # both should be the same merged variable set
+    @test mx isa MP.ExponentMap
+    @test my isa MP.ExponentMap
 
-    SA.promote_basis(x^2, y^2)
+    # Verify the maps correctly expand exponents
+    exp_x = MP.exponents(x^3)
+    new_exp_x = mx(collect(exp_x))
+    @test sum(new_exp_x) == sum(exp_x)
+    @test length(new_exp_x) == length(vx)
 
-#end
+    exp_y = MP.exponents(y^2)
+    new_exp_y = my(collect(exp_y))
+    @test sum(new_exp_y) == sum(exp_y)
+    @test length(new_exp_y) == length(vy)
+
+    # The expanded exponents should not overlap (different slots)
+    @test all(new_exp_x .* new_exp_y .== 0)
+end
+
+@testset "promote_bases_with_maps" begin
+    # Same variables: no promotion needed
+    Mod.@polyvar a b
+    p = a^2 + a
+    q = a^2 + 2a
+    (pp, mp), (qq, mq) = SA.promote_bases_with_maps(p, q)
+    @test pp === p
+    @test qq === q
+    @test mp === nothing
+    @test mq === nothing
+
+    # Same variables via promote_bases
+    pp2, qq2 = SA.promote_bases(p, q)
+    @test pp2 === p
+    @test qq2 === q
+
+    # Different variables: maps returned
+    Mod.@polyvar u
+    Mod.@polyvar v
+    s = u^2 + u
+    t = v^2
+    (ps, ms), (pt, mt) = SA.promote_bases_with_maps(s, t)
+    @test ps === s
+    @test pt === t
+    # Both should get maps since they each have 1 variable out of 2
+    @test ms isa MP.ExponentMap
+    @test mt isa MP.ExponentMap
+end
