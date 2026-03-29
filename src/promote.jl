@@ -423,5 +423,5 @@ function SA.promote_bases_with_maps(p::_APL, q::_APL)
     )
     map_p = _map(vp, all_vars)
     map_q = _map(vq, all_vars)
-    return (p, map_p), (q, map_q)
+    return SA.maybe_promote(p, map_p...), SA.maybe_promote(q, map_q...)
 end
