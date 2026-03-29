@@ -226,7 +226,7 @@ end
 end
 
 @testset "promote_bases_with_maps" begin
-    # Same variables: no promotion needed
+    # Same variables: no promotion needed (maybe_promote is a no-op)
     Mod.@polyvar a b
     p = a^2 + a
     q = a^2 + 2a
@@ -241,15 +241,7 @@ end
     @test pp2 === p
     @test qq2 === q
 
-    # Different variables: maps returned
-    Mod.@polyvar u
-    Mod.@polyvar v
-    s = u^2 + u
-    t = v^2
-    (ps, ms), (pt, mt) = SA.promote_bases_with_maps(s, t)
-    @test ps === s
-    @test pt === t
-    # Both should get maps since they each have 1 variable out of 2
-    @test ms isa MP.ExponentMap
-    @test mt isa MP.ExponentMap
+    # Different variables requires SA.promote_with_map to be implemented
+    # by the concrete polynomial package (DynamicPolynomials, TypedPolynomials).
+    # See promote_variables_with_maps tests above for the variable-level logic.
 end

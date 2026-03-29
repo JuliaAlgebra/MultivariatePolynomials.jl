@@ -409,19 +409,6 @@ function promote_variables_with_maps(a, b)
 end
 
 function SA.promote_bases_with_maps(p::_APL, q::_APL)
-    vp, vq = variables(p), variables(q)
-    if vp == vq
-        return (p, nothing), (q, nothing)
-    end
-    all_vars = SA.merge_sorted(
-        vp,
-        vq;
-        lt = isless,
-        combine = SA.first_of,
-        filter = _ -> true,
-        rev = true,
-    )
-    map_p = _map(vp, all_vars)
-    map_q = _map(vq, all_vars)
-    return SA.maybe_promote(p, map_p...), SA.maybe_promote(q, map_q...)
+    _p, _q = promote_variables_with_maps(variables(p), variables(q))
+    return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
 end
