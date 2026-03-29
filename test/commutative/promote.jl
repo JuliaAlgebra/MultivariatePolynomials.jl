@@ -240,8 +240,33 @@ end
     pp2, qq2 = SA.promote_bases(p, q)
     @test pp2 === p
     @test qq2 === q
+end
 
-    # Different variables requires SA.promote_with_map to be implemented
-    # by the concrete polynomial package (DynamicPolynomials, TypedPolynomials).
-    # See promote_variables_with_maps tests above for the variable-level logic.
+@testset "promote_bases end-to-end" begin
+    # Monomials with different variables
+    Mod.@polyvar x
+    Mod.@polyvar y
+    px, py = SA.promote_bases(x^2, y^2)
+    @test MP.variables(px) == MP.variables(py)
+    @test length(MP.variables(px)) == 2
+    @test MP.degree(px) == 2
+    @test MP.degree(py) == 2
+    # The original exponent structure is preserved
+    @test MP.degree(px, x) == 2
+    @test MP.degree(px, y) == 0
+    @test MP.degree(py, x) == 0
+    @test MP.degree(py, y) == 2
+
+    # Variables with different variables
+    px2, py2 = SA.promote_bases(x, y^3)
+    @test MP.variables(px2) == MP.variables(py2)
+    @test length(MP.variables(px2)) == 2
+    @test MP.degree(px2) == 1
+    @test MP.degree(py2) == 3
+
+    # promote_bases_with_maps returns maps for different variables
+    (rx, mx), (ry, my) = SA.promote_bases_with_maps(x^2, y^2)
+    @test MP.variables(rx) == MP.variables(ry)
+    @test mx isa MP.ExponentMap
+    @test my isa MP.ExponentMap
 end
