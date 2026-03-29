@@ -37,14 +37,15 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-      - name: Dev unreleased test dependencies
-        shell: julia --color=yes {0}
+      - name: Run tests with unreleased deps
         run: |
-          using Pkg
-          Pkg.develop(PackageSpec(path=pwd()))
-          Pkg.develop(url="https://github.com/JuliaAlgebra/DynamicPolynomials.jl")
-          Pkg.develop(url="https://github.com/JuliaAlgebra/TypedPolynomials.jl")
-          Pkg.test()
+          julia --color=yes --code-coverage=user --project=test -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.develop(url="https://github.com/JuliaAlgebra/DynamicPolynomials.jl")
+            Pkg.develop(url="https://github.com/JuliaAlgebra/TypedPolynomials.jl")
+            include(joinpath(pwd(), "test", "runtests.jl"))
+          '
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
