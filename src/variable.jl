@@ -41,6 +41,15 @@ This operation is not type stable for the TypedPolynomials implementation if `nv
 variable(t::_APL) = convert(variable_union_type(t), t)
 
 """
+    is_commutative(::Type{<:AbstractVariable})::Bool
+
+Returns whether variables of the given type are commutative, i.e., whether
+`x * y == y * x`.
+"""
+function is_commutative end
+is_commutative(::Union{AbstractPolynomialLike,AbstractVector{<:AbstractPolynomialLike}}) = error("`is_commutative` should be implemented for types, not instances. Use `is_commutative(typeof(x))` instead.")
+
+"""
     name(v::AbstractVariable)::AbstractString
 
 Returns the name of a variable.
