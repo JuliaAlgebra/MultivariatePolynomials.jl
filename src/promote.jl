@@ -389,7 +389,7 @@ end
 
 Given two sorted variable collections `a` and `b`, return
 `((all_vars, map_a), (all_vars, map_b))` where `all_vars` is the merged
-sorted variable set and `map_a` (resp. `map_b`) is an [`ExponentMap`](@ref)
+sorted variable set and `map_a` (resp. `map_b`) is an `ExponentMap`
 that maps exponents from `a` (resp. `b`) to exponents in `all_vars`,
 or `nothing` if no mapping is needed.
 """
