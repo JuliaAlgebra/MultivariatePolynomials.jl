@@ -47,7 +47,9 @@ Returns whether variables of the given type are commutative, i.e., whether
 `x * y == y * x`.
 """
 function is_commutative end
-is_commutative(::Union{AbstractPolynomialLike,AbstractVector{<:AbstractPolynomialLike}}) = error("`is_commutative` should be implemented for types, not instances. Use `is_commutative(typeof(x))` instead.")
+is_commutative(p::_APL) = is_commutative(typeof(p))
+is_commutative(v::AbstractVector) = is_commutative(eltype(v))
+is_commutative(v::Tuple) = all(is_commutative, v)
 
 """
     name(v::AbstractVariable)::AbstractString
