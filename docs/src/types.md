@@ -22,6 +22,7 @@ isrealpart
 isimagpart
 isconj
 ordinary_variable
+is_commutative
 ```
 
 ## Monomials
