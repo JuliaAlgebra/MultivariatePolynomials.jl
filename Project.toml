@@ -28,7 +28,3 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [targets]
 test = ["ChainRulesCore"]
-
-[sources]
-DynamicPolynomials = {url = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl.git", rev = "master"}
-TypedPolynomials = {url = "https://github.com/JuliaAlgebra/TypedPolynomials.jl.git", rev = "master"}
