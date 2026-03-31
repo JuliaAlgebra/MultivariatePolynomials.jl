@@ -14,7 +14,3 @@ TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"
 DynamicPolynomials = "0.6"
 StarAlgebras = "0.3"
 TypedPolynomials = "0.4.2"
-
-[sources]
-DynamicPolynomials = {url = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl.git", rev = "master"}
-TypedPolynomials = {url = "https://github.com/JuliaAlgebra/TypedPolynomials.jl.git", rev = "master"}
