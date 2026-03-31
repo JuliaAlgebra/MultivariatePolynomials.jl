@@ -117,5 +117,3 @@ end
 function _assign_new_variable(f, name::Symbol)
     return :($(esc(name)) = $(_new_variable(:($(esc(f))), name)))
 end
-
-is_commutative(p::AbstractPolynomialLike) = is_commutative(typeof(p))
