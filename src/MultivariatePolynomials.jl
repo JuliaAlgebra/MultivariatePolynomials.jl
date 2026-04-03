@@ -6,6 +6,8 @@ import DataStructures
 
 import MutableArithmetics as MA
 
+import StarAlgebras as SA
+
 """
     AbstractPolynomialLike{T}
 

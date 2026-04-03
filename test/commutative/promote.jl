@@ -1,3 +1,9 @@
+using Test
+import MutableArithmetics as MA
+using MultivariatePolynomials
+import MultivariatePolynomials as MP
+using LinearAlgebra
+
 @testset "Promotion" begin
     Mod.@polyvar x y
     @inferred x * y + x
@@ -170,4 +176,102 @@ end
         __promote_prod(PXY, PY, PXY)
         __promote_prod(PXY, PXY, PXY)
     end
+end
+
+import StarAlgebras as SA
+
+@testset "ExponentMap" begin
+    # Vector exponent map
+    map_v = MP.ExponentMap([2, 3], 4)
+    @test map_v([5, 7]) == [0, 5, 7, 0]
+
+    # Tuple exponent map
+    map_t = MP.ExponentMap((2, 3), Val(4))
+    @test map_t((5, 7)) == (0, 5, 7, 0)
+
+    # Identity-like map (all slots filled)
+    map_id = MP.ExponentMap([1, 2], 2)
+    @test map_id([3, 4]) == [3, 4]
+end
+
+@testset "promote_variables_with_maps" begin
+    # Same variables: no maps needed
+    Mod.@polyvar a b
+    vars_ab = MP.variables(a + b)
+    (va, ma), (vb, mb) = MP.promote_variables_with_maps(vars_ab, vars_ab)
+    @test va == vars_ab
+    @test vb == vars_ab
+    @test ma === nothing
+    @test mb === nothing
+
+    # Different variables from separate @polyvar calls: maps should be created
+    Mod.@polyvar x
+    Mod.@polyvar y
+    vars_x = MP.variables(x^2)
+    vars_y = MP.variables(y^2)
+    @test vars_x != vars_y
+    (vx, mx), (vy, my) = MP.promote_variables_with_maps(vars_x, vars_y)
+    @test length(vx) == 2
+    @test vx == vy  # both should be the same merged variable set
+    @test mx isa MP.ExponentMap
+    @test my isa MP.ExponentMap
+
+    exp_x = MP.exponents(x^3)
+    new_exp_x = mx(exp_x)
+    @test sum(new_exp_x) == sum(exp_x)
+    @test length(new_exp_x) == length(vx)
+
+    exp_y = MP.exponents(y^2)
+    new_exp_y = my(exp_y)
+    @test sum(new_exp_y) == sum(exp_y)
+    @test length(new_exp_y) == length(vy)
+
+    # The expanded exponents should not overlap (different slots)
+    @test all(new_exp_x .* new_exp_y .== 0)
+end
+
+@testset "promote_bases_with_maps" begin
+    # Same variables: no promotion needed (maybe_promote is a no-op)
+    Mod.@polyvar a b
+    p = a^2 + a
+    q = a^2 + 2a
+    (pp, mp), (qq, mq) = SA.promote_bases_with_maps(p, q)
+    @test pp === p
+    @test qq === q
+    @test mp === nothing
+    @test mq === nothing
+
+    # Same variables via promote_bases
+    pp2, qq2 = SA.promote_bases(p, q)
+    @test pp2 === p
+    @test qq2 === q
+end
+
+@testset "promote_bases end-to-end" begin
+    # Monomials with different variables
+    Mod.@polyvar x
+    Mod.@polyvar y
+    px, py = SA.promote_bases(x^2, y^2)
+    @test MP.variables(px) == MP.variables(py)
+    @test length(MP.variables(px)) == 2
+    @test MP.degree(px) == 2
+    @test MP.degree(py) == 2
+    # The original exponent structure is preserved
+    @test MP.degree(px, x) == 2
+    @test MP.degree(px, y) == 0
+    @test MP.degree(py, x) == 0
+    @test MP.degree(py, y) == 2
+
+    # Variables with different variables
+    px2, py2 = SA.promote_bases(x, y^3)
+    @test MP.variables(px2) == MP.variables(py2)
+    @test length(MP.variables(px2)) == 2
+    @test MP.degree(px2) == 1
+    @test MP.degree(py2) == 3
+
+    # promote_bases_with_maps returns maps for different variables
+    (rx, mx), (ry, my) = SA.promote_bases_with_maps(x^2, y^2)
+    @test MP.variables(rx) == MP.variables(ry)
+    @test mx isa MP.ExponentMap
+    @test my isa MP.ExponentMap
 end
