@@ -92,3 +92,15 @@ end
         @test collect(exponents(X1[i])) == collect(exponents(X2[i])) == Z[i]
     end
 end
+@testset "is_commutative" begin
+    function _is_comm_test(p)
+        @test !MP.is_commutative(p)
+        @test !MP.is_commutative(typeof(p))
+    end
+    Mod.@polyvar x y[1:2]
+    @test _is_comm_test(x)
+    @test _is_comm_test(y)
+    @test _is_comm_test(x^2)
+    @test _is_comm_test(2x^2)
+    @test _is_comm_test(sum(y))
+end
