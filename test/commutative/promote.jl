@@ -210,14 +210,13 @@ end
     @test mx isa MP.ExponentMap
     @test my isa MP.ExponentMap
 
-    # Verify the maps correctly expand exponents
     exp_x = MP.exponents(x^3)
-    new_exp_x = mx(collect(exp_x))
+    new_exp_x = mx(exp_x)
     @test sum(new_exp_x) == sum(exp_x)
     @test length(new_exp_x) == length(vx)
 
     exp_y = MP.exponents(y^2)
-    new_exp_y = my(collect(exp_y))
+    new_exp_y = my(exp_y)
     @test sum(new_exp_y) == sum(exp_y)
     @test length(new_exp_y) == length(vy)
 
