@@ -1,3 +1,9 @@
+using Test
+import MutableArithmetics as MA
+using MultivariatePolynomials
+import MultivariatePolynomials as MP
+using LinearAlgebra
+
 @testset "Promotion" begin
     Mod.@polyvar x y
     @inferred x * y + x
