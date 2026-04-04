@@ -2,6 +2,18 @@ import MultivariatePolynomials:
     AbstractVariable, similar_variable, @similar_variable
 
 @testset "Variable" begin
+    @testset "is_commutative" begin
+        function _is_comm_test(p)
+            @test MP.is_commutative(p)
+            @test MP.is_commutative(typeof(p))
+        end
+        Mod.@polyvar x y[1:2]
+        _is_comm_test(x)
+        _is_comm_test(y)
+        _is_comm_test(x^2)
+        _is_comm_test(2x^2)
+        _is_comm_test(sum(y))
+    end
     @testset "polyvar macro index set" begin
         Mod.@polyvar x y z
         Mod.@polyvar x[1:3] y z[1:2]
