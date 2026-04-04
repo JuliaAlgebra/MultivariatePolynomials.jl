@@ -47,6 +47,9 @@ Returns whether variables of the given type are commutative, i.e., whether
 `x * y == y * x`.
 """
 function is_commutative end
+function is_commutative(::Type{P}) where {P<:Union{AbstractTerm,AbstractPolynomial}
+    return is_commutative(monomial_type(P))
+end
 is_commutative(p::_APL) = is_commutative(typeof(p))
 is_commutative(v::AbstractVector) = is_commutative(eltype(v))
 is_commutative(v::Tuple) = all(is_commutative, v)
