@@ -10,14 +10,8 @@ function Base.isone(p::AbstractPolynomial)
     return isone(nterms(p)) && isone(first(terms(p)))
 end
 
-# See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-# avoids the call to be transfered to left_constant_eq
-Base.:(==)(α::Nothing, x::_APL) = false
-Base.:(==)(x::_APL, α::Nothing) = false
 Base.:(==)(α::Dict, x::_APL) = false
 Base.:(==)(x::_APL, α::Dict) = false
-Base.:(==)(α::Nothing, x::RationalPoly) = false
-Base.:(==)(x::RationalPoly, α::Nothing) = false
 Base.:(==)(α::Dict, x::RationalPoly) = false
 Base.:(==)(x::RationalPoly, α::Dict) = false
 
@@ -133,16 +127,16 @@ Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num * q.den == q.num * p.den
 # Solve ambiguity with (::PolyType, ::Any)
 Base.:(==)(p::_APL, q::RationalPoly) = p * q.den == q.num
 Base.:(==)(q::RationalPoly, p::_APL) = p == q
-Base.:(==)(α, q::RationalPoly) = α * q.den == q.num
-Base.:(==)(q::RationalPoly, α) = α == q
+Base.:(==)(α::_Constant, q::RationalPoly) = α * q.den == q.num
+Base.:(==)(q::RationalPoly, α::_Constant) = α == q
 function Base.isequal(p::RationalPoly, q::RationalPoly)
     return isequal(p.num * q.den, q.num * p.den)
 end
 # Solve ambiguity with (::PolyType, ::Any)
 Base.isequal(p::_APL, q::RationalPoly) = isequal(p * q.den, q.num)
 Base.isequal(q::RationalPoly, p::_APL) = isequal(p, q)
-Base.isequal(α, q::RationalPoly) = isequal(α * q.den, q.num)
-Base.isequal(q::RationalPoly, α) = isequal(α, q)
+Base.isequal(α::_Constant, q::RationalPoly) = isequal(α * q.den, q.num)
+Base.isequal(q::RationalPoly, α::_Constant) = isequal(α, q)
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real = 0.0) = false
