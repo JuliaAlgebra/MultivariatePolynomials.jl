@@ -97,10 +97,10 @@ end
         @test !MP.is_commutative(p)
         @test !MP.is_commutative(typeof(p))
     end
-    Mod.@polyvar x y[1:2]
-    @test _is_comm_test(x)
-    @test _is_comm_test(y)
-    @test _is_comm_test(x^2)
-    @test _is_comm_test(2x^2)
-    @test _is_comm_test(sum(y))
+    Mod.@ncpolyvar x y[1:2]
+    _is_comm_test(x)
+    _is_comm_test(y)
+    _is_comm_test(x^2)
+    _is_comm_test(2x^2)
+    _is_comm_test(sum(y))
 end
