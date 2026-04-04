@@ -93,7 +93,7 @@ Base.one(p::Polynomial) = one(typeof(p))
 Base.zero(::Type{Polynomial{C,T,A}}) where {C,T,A} = Polynomial{C,T,A}(A())
 Base.zero(t::Polynomial) = zero(typeof(t))
 
-compare_monomials(a, b) = compare(monomial(a), monomial(b))
+compare_monomials(a, b) = cmp(monomial(a), monomial(b))
 
 function join_terms(
     terms1::AbstractArray{<:Term},
@@ -294,7 +294,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            compare(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
+            cmp(monomial(*(monomials(q)[j], monomial.(t)...)), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -385,7 +385,7 @@ function __polynomial_merge!(
             if tp isa Int && j isa Int
                 tp = get1(tp)
             end
-            compare(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
+            cmp(monomial(monomial(t) * monomials(q)[j]), monomial(tp))
         end
     end
     get2 = let t = t, q = q
@@ -460,7 +460,7 @@ function __polynomial_merge!(
             if t isa Int && j isa Int
                 t = get1(t)
             end
-            compare(monomials(q)[j], monomial(t))
+            cmp(monomials(q)[j], monomial(t))
         end
     end
     get2 = let q = q
