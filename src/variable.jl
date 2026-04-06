@@ -60,7 +60,8 @@ is_commutative(v::Tuple) = all(is_commutative, v)
 # enabling type-stable branches on `is_commutative(V)` in downstream packages.
 is_commutative(::Type{Tuple{}}) = true
 function is_commutative(::Type{T}) where {T<:Tuple}
-    return is_commutative(Base.tuple_type_head(T)) && is_commutative(Base.tuple_type_tail(T))
+    return is_commutative(Base.tuple_type_head(T)) &&
+           is_commutative(Base.tuple_type_tail(T))
 end
 
 """

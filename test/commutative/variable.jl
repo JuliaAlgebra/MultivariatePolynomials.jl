@@ -15,8 +15,7 @@ import MultivariatePolynomials:
         _is_comm_test(sum(y))
         # Test that `is_commutative` is constant-folded for variable types,
         # so that branches on it are eliminated at compile time.
-        _comm_branch(::Type{V}) where {V} =
-            MP.is_commutative(V) ? Int : String
+        _comm_branch(::Type{V}) where {V} = MP.is_commutative(V) ? Int : String
         @test @inferred(_comm_branch(typeof(variables(x * y[1])))) === Int
     end
     @testset "polyvar macro index set" begin
