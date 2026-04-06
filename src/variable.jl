@@ -56,6 +56,8 @@ is_commutative(p::_APL) = is_commutative(typeof(p))
 is_commutative(v::AbstractVector) = is_commutative(eltype(v))
 is_commutative(::Type{V}) where {V<:AbstractVector} = is_commutative(eltype(V))
 is_commutative(v::Tuple) = all(is_commutative, v)
+# Recursive dispatch allows the compiler to constant-fold for concrete Tuple types,
+# enabling type-stable branches on `is_commutative(V)` in downstream packages.
 is_commutative(::Type{Tuple{}}) = true
 function is_commutative(::Type{T}) where {T<:Tuple}
     return is_commutative(Base.tuple_type_head(T)) && is_commutative(Base.tuple_type_tail(T))
