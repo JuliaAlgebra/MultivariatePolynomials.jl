@@ -56,7 +56,8 @@ is_commutative(p::_APL) = is_commutative(typeof(p))
 is_commutative(v::AbstractVector) = is_commutative(eltype(v))
 is_commutative(::Type{V}) where {V<:AbstractVector} = is_commutative(eltype(V))
 is_commutative(v::Tuple) = all(is_commutative, v)
-is_commutative(::Type{T}) where {T<:Tuple} = all(is_commutative, fieldtypes(T))
+# Without '::Bool`, it is inferred as `Union{Missing,Bool}` and that can cause issues.
+is_commutative(::Type{T}) where {T<:Tuple} = all(is_commutative, fieldtypes(T))::Bool
 
 """
     name(v::AbstractVariable)::AbstractString
