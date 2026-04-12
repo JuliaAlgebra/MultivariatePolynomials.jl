@@ -20,22 +20,15 @@ monomial_type(::Type{<:SA.Term{<:Any,M}}) where {M} = M
 
 (t::SA.Term)(s...) = substitute(Eval(), t, s)
 
+# convert from AbstractMonomialLike (MP type in signature, not piracy)
 function Base.convert(::Type{SA.Term{T,M}}, m::AbstractMonomialLike) where {T,M}
     return SA.Term(one(T), convert(M, m))
 end
-function Base.convert(::Type{SA.Term{T,M}}, t::SA.Term) where {T,M}
-    return SA.Term{T,M}(convert(T, coefficient(t)), convert(M, monomial(t)))
-end
-function Base.convert(::Type{SA.Term{T,M}}, t::SA.Term{T,M}) where {T,M}
-    return t
-end
-# Copy constructor needed for array operations (e.g., det)
-SA.Term{T,M}(t::SA.Term{T,M}) where {T,M} = t
 
-function convert_constant(::Type{SA.Term{C,M} where C}, α) where {M}
-    return convert(SA.Term{typeof(α),M}, α)
-end
+# convert, promote_rule, ==, isequal, hash, copy, ^, ndims, broadcastable
+# for SA.Term × SA.Term are defined in StarAlgebras (not here, to avoid piracy)
 
+# promote_rule involving MP's AbstractMonomialLike (not piracy)
 function Base.promote_rule(
     ::Type{SA.Term{C,M1} where {C}},
     M2::Type{<:AbstractMonomialLike},
@@ -48,6 +41,7 @@ function Base.promote_rule(
 ) where {M2}
     return (SA.Term{C,promote_type(M1, M2)} where {C})
 end
+# promote_rule with UnionAll Term type (involves `where C` which is MP convention)
 function Base.promote_rule(
     ::Type{SA.Term{C,M1} where {C}},
     ::Type{SA.Term{T,M2}},
@@ -61,6 +55,10 @@ function Base.promote_rule(
     return (SA.Term{C,promote_type(M1, M2)} where {C})
 end
 promote_rule_constant(::Type{T}, TT::Type{SA.Term{C,M} where C}) where {T,M} = Any
+
+function convert_constant(::Type{SA.Term{C,M} where C}, α) where {M}
+    return convert(SA.Term{typeof(α),M}, α)
+end
 
 combine(t1::SA.Term, t2::SA.Term) = combine(promote(t1, t2)...)
 function combine(t1::T, t2::T) where {T<:SA.Term}
@@ -76,6 +74,7 @@ end
 
 # MA.mutability, Base.copy, and MA.mutable_copy for SA.Term are defined in StarAlgebras
 
+# MA operations involving MP's AbstractTermLike (not piracy)
 function MA.operate_to!(
     t::SA.Term,
     ::typeof(*),
