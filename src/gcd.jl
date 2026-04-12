@@ -129,7 +129,7 @@ function MA.promote_operation(
 end
 
 """
-    function gcd(p1::AbstractPolynomialLike{T}, p2::AbstractPolynomialLike{S}) where {T, S}
+    function gcd(p1::_APL{T}, p2::_APL{S}) where {T, S}
 
 Returns a greatest common divisor of `p1` and `p2`. Note that it does not make
 sense, in general, to speak of "the" greatest common divisor of u and v; there
@@ -225,7 +225,7 @@ function Base.gcd(
     )
 end
 
-function shift_deflation(p::AbstractPolynomialLike, v::AbstractVariable)
+function shift_deflation(p::_APL, v::AbstractVariable)
     shift = -1
     defl = 0
     for mono in monomials(p)
@@ -254,7 +254,7 @@ function shift_deflation(p::AbstractPolynomialLike, v::AbstractVariable)
 end
 
 # Inspired from to `AbstractAlgebra.deflation`
-function deflation(p::AbstractPolynomialLike)
+function deflation(p::_APL)
     if iszero(p)
         return constant_monomial(p), constant_monomial(p)
     end
@@ -272,7 +272,7 @@ function _zero_to_one_exp(defl::AbstractMonomial)
         variables(defl) .^ map(d -> iszero(d) ? one(d) : d, exponents(defl)),
     )
 end
-function deflate(p::AbstractPolynomialLike, shift, defl)
+function deflate(p::_APL, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
@@ -282,7 +282,7 @@ end
 function inflate(α, shift, defl)
     return inflate(convert(polynomial_type(shift, typeof(α)), α), shift, defl)
 end
-function inflate(p::AbstractPolynomialLike, shift, defl)
+function inflate(p::_APL, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
@@ -302,7 +302,15 @@ end
 # Inspired from to `AbstractAlgebra.deflate`
 function MA.operate(
     op::Union{typeof(deflate),typeof(inflate)},
-    p::AbstractPolynomialLike,
+    t::SA.Term,
+    shift,
+    defl,
+)
+    return term(coefficient(t), MA.operate(op, monomial(t), shift, defl))
+end
+function MA.operate(
+    op::Union{typeof(deflate),typeof(inflate)},
+    p::_APL,
     shift,
     defl,
 )
@@ -722,7 +730,7 @@ function primitive_univariate_gcdx(p::_APL, q::_APL, ::SubresultantAlgorithm)
 end
 
 """
-    univariate_gcd(p1::AbstractPolynomialLike, p2::AbstractPolynomialLike, algo::AbstractUnivariateGCDAlgorithm)
+    univariate_gcd(p1::_APL, p2::_APL, algo::AbstractUnivariateGCDAlgorithm)
 
 Return the *greatest common divisor* of the polynomials `p1` and `p2` that have
 at most one variable in common and for which the coefficients are either
@@ -857,7 +865,7 @@ function termwise_content(p::_APL, algo, mutability::MA.MutableTrait)
 end
 
 """
-    content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm, mutability::MA.MutableTrait) where {T}
+    content(poly::_APL{T}, algo::AbstractUnivariateGCDAlgorithm, mutability::MA.MutableTrait) where {T}
 
 Return the *content* of the polynomial `poly` over a unique factorization
 domain `S` as defined in [Knu14, (3) p. 423].
@@ -927,7 +935,7 @@ function content(
 end
 
 """
-    primitive_part(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
+    primitive_part(poly::_APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
 Return the *primitive part* of the polynomial `poly` over a unique
 factorization domain `S` as defined in [Knu14, (3) p. 423].
@@ -962,7 +970,7 @@ function primitive_part(
 end
 
 """
-    primitive_part_content(poly::AbstractPolynomialLike{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
+    primitive_part_content(poly::_APL{T}, algo::AbstractUnivariateGCDAlgorithm) where {T}
 
 Return the *primitive part* and *content* of the polynomial `poly` over a unique
 factorization domain `S` as defined in [Knu14, (3) p. 423]. This is more
