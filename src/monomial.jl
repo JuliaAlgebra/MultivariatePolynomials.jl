@@ -158,6 +158,11 @@ Base.one(t::AbstractMonomialLike) = constant_monomial(t)
 function MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike})
     return monomial_type(MT)
 end
+# Bridge MA.operate!(one, ...) to constant_monomial for monomials
+# so that SA.Term's generic operate!(one, t) works via operate!(one, t.basis_element)
+function MA.operate!(::typeof(one), m::AbstractMonomial)
+    return MA.operate!(constant_monomial, m)
+end
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).
 # This tries to convert a monomial to a variable which does not work.
