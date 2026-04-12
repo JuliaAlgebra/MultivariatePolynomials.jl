@@ -82,30 +82,7 @@ function Base.promote_rule(
 )
     return AbstractMonomialLike
 end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{<:AbstractTermLike{T}},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{<:AbstractTermLike{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{AbstractTermLike{T}},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _atl(Int, T)
-end
+# AbstractMonomialLike-SA.Term promote rules are defined above (lines 28-48)
 function Base.promote_rule(
     ::Type{AbstractMonomialLike},
     ::Type{<:_APL{T}},
@@ -131,59 +108,9 @@ function Base.promote_rule(
     return _apl(Int, T)
 end
 
-# AbstractTermLike{T}
-_atl(::Type{T}, ::Type{T}) where {T} = AbstractTermLike{T}
-_atl(::Type, ::Type) = AbstractTermLike
-__atl(::Type{T}, ::Type{<:AbstractTermLike{S}}) where {S,T} = _atl(T, S)
-__atl(::Type{T}, ::Type{<:_APL{S}}) where {S,T} = _apl(T, S)
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{<:AbstractTermLike{S}},
-) where {S,T}
-    return _atl(T, S)
-end
-function Base.promote_rule(
-    P::Type{<:AbstractTermLike{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _atl(T, S)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{<:_APL{S}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    P::Type{<:_APL{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{_APL{S}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    P::Type{_APL{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _apl(T, S)
-end
-
-# AbstractTermLike
-function Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:AbstractTermLike})
-    return AbstractTermLike
-end
-function Base.promote_rule(::Type{<:AbstractTermLike}, ::Type{AbstractTermLike})
-    return AbstractTermLike
-end
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:_APL}) = _APL
-Base.promote_rule(::Type{<:_APL}, ::Type{AbstractTermLike}) = _APL
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{_APL}) = _APL
-Base.promote_rule(::Type{_APL}, ::Type{AbstractTermLike}) = _APL
+# AbstractTermLike is now a union type, so promote rules with it as a
+# Type{} argument are no longer meaningful. Concrete promote rules for
+# AbstractMonomialLike and SA.Term are defined above.
 
 # _APL{T}
 _apl(::Type{T}, ::Type{T}) where {T} = _APL{T}

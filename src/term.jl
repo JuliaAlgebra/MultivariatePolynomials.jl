@@ -211,8 +211,8 @@ end
 function MA.promote_operation(::typeof(zero), PT::Type{<:AbstractMonomialLike})
     return polynomial_type(PT)
 end
-# SA.Term already defines `zero(t::Term)` returning Term with zero coefficient.
-# For polynomial compatibility, zero of a term type should be a polynomial:
+# SA.Term already defines `zero(t::Term)` and `one(t::Term)` in StarAlgebras.
+# For type-level zero, return a polynomial (for summation efficiency):
 function Base.zero(::Type{SA.Term{T,M}}) where {T,M}
     return zero(polynomial_type(SA.Term{T,M}))
 end
@@ -220,12 +220,7 @@ function MA.promote_operation(::typeof(zero), PT::Type{<:SA.Term})
     return polynomial_type(PT)
 end
 # `one` and `MA.promote_operation(one, ...)` for monomials is defined in monomial.jl
-function Base.one(t::SA.Term)
-    return term(one(coefficient_type(t)), constant_monomial(t))
-end
-function Base.one(::Type{SA.Term{T,M}}) where {T,M}
-    return term(one(T), constant_monomial(SA.Term{T,M}))
-end
+# `one(t::SA.Term)` and `one(::Type{SA.Term{T,M}})` are defined in StarAlgebras
 function MA.promote_operation(::typeof(one), ::Type{SA.Term{T,M}}) where {T,M}
     return SA.Term{T,M}
 end

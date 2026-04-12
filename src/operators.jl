@@ -26,16 +26,7 @@ function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
     return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
            monomial(t1) == monomial(t2)
 end
-# dot for SA.Term to avoid recursive fallback in LinearAlgebra.dot
-function LinearAlgebra.dot(t1::SA.Term, t2::SA.Term)
-    return coefficient(t1) * coefficient(t2) * (monomial(t1) * monomial(t2))
-end
-function LinearAlgebra.dot(x, t::SA.Term)
-    return x * t
-end
-function LinearAlgebra.dot(t::SA.Term, x)
-    return conj(t) * x
-end
+# dot for SA.Term is defined in StarAlgebras
 
 function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
     return isapprox(promote(p1, p2)...; kwargs...)
@@ -501,7 +492,7 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
-Base.:^(x::SA.Term, p::Integer) = Base.power_by_squaring(x, p)
+# ^(::SA.Term, ::Integer) is defined in StarAlgebras
 
 function MA.operate_to!(
     output::AbstractPolynomial,
