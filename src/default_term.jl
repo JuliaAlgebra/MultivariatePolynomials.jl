@@ -72,24 +72,39 @@ function MA.promote_operation(
     return SA.Term{MA.promote_operation(+, S, T),promote_type(M1, M2)}
 end
 
-# MA.mutability, Base.copy, and MA.mutable_copy for SA.Term are defined in StarAlgebras
+# MA.mutability, Base.copy, MA.mutable_copy, MA.operate_to!(*, Term, Term, Term),
+# MA.operate!(*, Term, Term), and MA.operate!(one, Term) are defined in StarAlgebras.
 
-# MA operations involving MP's AbstractTermLike (not piracy)
+# Broader MA operations involving MP's AbstractTermLike (not piracy)
 function MA.operate_to!(
     t::SA.Term,
     ::typeof(*),
-    t1::AbstractTermLike,
+    t1::AbstractMonomialLike,
     t2::AbstractTermLike,
 )
     MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
     MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
     return t
 end
-
-function MA.operate!(::typeof(*), t1::SA.Term, t2::AbstractTermLike)
-    MA.operate!(*, t1.coefficient, coefficient(t2))
-    MA.operate!(*, t1.basis_element, monomial(t2))
-    return t1
+function MA.operate_to!(
+    t::SA.Term,
+    ::typeof(*),
+    t1::AbstractTermLike,
+    t2::AbstractMonomialLike,
+)
+    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
+    MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
+    return t
+end
+function MA.operate_to!(
+    t::SA.Term,
+    ::typeof(*),
+    t1::AbstractMonomialLike,
+    t2::AbstractMonomialLike,
+)
+    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
+    MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
+    return t
 end
 
 # Needed to resolve ambiguity with
@@ -98,10 +113,4 @@ function MA.operate!(::typeof(*), t1::SA.Term, t2::AbstractMonomialLike)
     MA.operate!(*, t1.coefficient, coefficient(t2))
     MA.operate!(*, t1.basis_element, monomial(t2))
     return t1
-end
-
-function MA.operate!(::typeof(one), t::SA.Term)
-    MA.operate!(one, t.coefficient)
-    MA.operate!(constant_monomial, t.basis_element)
-    return t
 end
