@@ -14,19 +14,36 @@ function Base.promote_rule(
     return promote_type(monomial_type(M1), monomial_type(M2))
 end
 
-# TermLike
-Base.promote_rule(::Type{T}, ::Type{T}) where {T<:AbstractTermLike} = T
+# SA.Term
+Base.promote_rule(::Type{T}, ::Type{T}) where {T<:SA.Term} = T
 function Base.promote_rule(
-    TS::Type{<:AbstractTermLike{S}},
-    TT::Type{<:AbstractTermLike{T}},
+    TS::Type{<:SA.Term{S}},
+    TT::Type{<:SA.Term{T}},
 ) where {S,T}
     U = promote_type(S, T)
     M = promote_type(monomial_type(TS), monomial_type(TT))
     return term_type(M, U)
 end
+# MonomialLike-Term promote
+function Base.promote_rule(
+    TS::Type{<:AbstractMonomialLike},
+    TT::Type{<:SA.Term{T}},
+) where {T}
+    U = promote_type(Int, T)
+    M = promote_type(monomial_type(TS), monomial_type(TT))
+    return term_type(M, U)
+end
+function Base.promote_rule(
+    TT::Type{<:SA.Term{T}},
+    TS::Type{<:AbstractMonomialLike},
+) where {T}
+    U = promote_type(T, Int)
+    M = promote_type(monomial_type(TT), monomial_type(TS))
+    return term_type(M, U)
+end
 function promote_rule_constant(
     ::Type{S},
-    TT::Type{<:AbstractTermLike{T}},
+    TT::Type{<:SA.Term{T}},
 ) where {S,T}
     return term_type(TT, promote_type(S, T))
 end
@@ -243,11 +260,29 @@ function MA.promote_operation(
 end
 function MA.promote_operation(
     ::typeof(*),
-    TT::Type{<:AbstractTermLike{S}},
-    ST::Type{<:AbstractTermLike{T}},
+    TT::Type{<:SA.Term{S}},
+    ST::Type{<:SA.Term{T}},
 ) where {S,T}
     UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
     U = MA.promote_operation(*, S, T)
+    return promote_operation_left_constant(*, U, UT)
+end
+function MA.promote_operation(
+    ::typeof(*),
+    TT::Type{<:AbstractMonomialLike},
+    ST::Type{<:SA.Term{T}},
+) where {T}
+    UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
+    U = MA.promote_operation(*, Int, T)
+    return promote_operation_left_constant(*, U, UT)
+end
+function MA.promote_operation(
+    ::typeof(*),
+    TT::Type{<:SA.Term{S}},
+    ST::Type{<:AbstractMonomialLike},
+) where {S}
+    UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
+    U = MA.promote_operation(*, S, Int)
     return promote_operation_left_constant(*, U, UT)
 end
 function MA.promote_operation(
