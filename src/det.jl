@@ -1,4 +1,4 @@
-function LinearAlgebra.det(M::Matrix{<:AbstractPolynomialLike})
+function LinearAlgebra.det(M::Matrix{<:_APL})
     m = size(M)[1]
     if m > 2
         return sum(
