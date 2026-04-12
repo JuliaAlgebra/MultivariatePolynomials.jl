@@ -1,7 +1,10 @@
 function convert_constant end
-Base.convert(::Type{P}, α) where {P<:_APL} = convert_constant(P, α)
-function convert_constant(::Type{TT}, α) where {T,TT<:AbstractTerm{T}}
-    return term(convert(T, α), constant_monomial(TT))
+Base.convert(::Type{P}, α) where {P<:AbstractPolynomialLike} = convert_constant(P, α)
+function Base.convert(::Type{SA.Term{T,M}}, α) where {T,M}
+    return convert_constant(SA.Term{T,M}, α)
+end
+function convert_constant(::Type{SA.Term{T,M}}, α) where {T,M}
+    return term(convert(T, α), constant_monomial(SA.Term{T,M}))
 end
 function convert_constant(::Type{PT}, α) where {PT<:AbstractPolynomial}
     return convert(PT, convert(term_type(PT), α))
@@ -35,7 +38,7 @@ end
 
 function Base.convert(
     ::Type{M},
-    t::AbstractTerm,
+    t::SA.Term,
 ) where {M<:AbstractMonomialLike}
     if isone(coefficient(t))
         return convert(M, monomial(t))
@@ -43,38 +46,29 @@ function Base.convert(
         throw(InexactError(:convert, M, t))
     end
 end
-function Base.convert(
-    TT::Type{<:AbstractTerm{T}},
-    m::AbstractMonomialLike,
-) where {T}
-    return convert(TT, term(one(T), convert(monomial_type(TT), m)))
-end
-function Base.convert(TT::Type{<:AbstractTerm{T}}, t::AbstractTerm) where {T}
-    return convert(
-        TT,
-        term(
-            convert(T, coefficient(t)),
-            convert(monomial_type(TT), monomial(t)),
-        ),
-    )
-end
-
-# Base.convert(::Type{T}, t::T) where {T <: AbstractTerm} is ambiguous with above method.
-# we need the following:
-function Base.convert(::Type{TT}, t::TT) where {T,TT<:AbstractTerm{T}}
-    return t
-end
 
 function Base.convert(
     ::Type{T},
     p::AbstractPolynomial,
-) where {T<:AbstractTermLike}
+) where {T<:AbstractMonomialLike}
     if iszero(nterms(p))
         convert(T, zero_term(p))
     elseif isone(nterms(p))
         convert(T, leading_term(p))
     else
         throw(InexactError(:convert, T, p))
+    end
+end
+function Base.convert(
+    ::Type{TT},
+    p::AbstractPolynomial,
+) where {TT<:SA.Term}
+    if iszero(nterms(p))
+        convert(TT, zero_term(p))
+    elseif isone(nterms(p))
+        convert(TT, leading_term(p))
+    else
+        throw(InexactError(:convert, TT, p))
     end
 end
 
@@ -100,3 +94,5 @@ end
 
 # Also covers, e.g., `convert(_APL, ::P)` where `P<:_APL`
 Base.convert(::Type{PT}, p::PT) where {PT<:_APL} = p
+# Disambiguation: identity conversion for AbstractPolynomialLike
+Base.convert(::Type{PT}, p::PT) where {PT<:AbstractPolynomialLike} = p
