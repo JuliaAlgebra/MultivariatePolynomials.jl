@@ -673,6 +673,5 @@ function multiplication_preserves_monomial_order(
 end
 
 Base.ndims(::Union{Type{<:AbstractPolynomialLike},AbstractPolynomialLike}) = 0
-Base.ndims(::Union{Type{<:SA.Term},SA.Term}) = 0
+# ndims and broadcastable for SA.Term are defined in StarAlgebras
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)
-Base.broadcastable(t::SA.Term) = Ref(t)
