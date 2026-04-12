@@ -59,16 +59,17 @@ function Base.convert(
         throw(InexactError(:convert, T, p))
     end
 end
+# Disambiguation: SA.Term{T,M} from AbstractPolynomial (more specific than the α catch-all)
 function Base.convert(
-    ::Type{TT},
+    ::Type{SA.Term{T,M}},
     p::AbstractPolynomial,
-) where {TT<:SA.Term}
+) where {T,M}
     if iszero(nterms(p))
-        convert(TT, zero_term(p))
+        convert(SA.Term{T,M}, zero_term(p))
     elseif isone(nterms(p))
-        convert(TT, leading_term(p))
+        convert(SA.Term{T,M}, leading_term(p))
     else
-        throw(InexactError(:convert, TT, p))
+        throw(InexactError(:convert, SA.Term{T,M}, p))
     end
 end
 
