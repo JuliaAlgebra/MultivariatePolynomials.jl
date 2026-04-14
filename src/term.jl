@@ -44,9 +44,17 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
 term_type(::Type{<:SA.Term{T,B}}) where {T,B} = SA.Term{T,B}
+# Handle UnionAll types like SA.Term{T,M} where T (from promote_typejoin)
+term_type(::Type{<:SA.Term{<:Any,B}}) where {B} = SA.Term{<:Any,B}
 term_type(::Type{<:SA.Term{<:Any,B}}, ::Type{T}) where {T,B} = SA.Term{T,B}
 term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
 term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
+# Break the term_type/monomial_type cycle for bare AbstractMonomialLike:
+# term_type(AbstractMonomialLike, T) should return SA.Term{T, AbstractMonomialLike}
+# rather than recursing through the generic _APL 2-arg path.
+function term_type(::Type{AbstractMonomialLike}, ::Type{T}) where {T}
+    return SA.Term{T,AbstractMonomialLike}
+end
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)

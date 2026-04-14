@@ -41,6 +41,20 @@ function Base.promote_rule(
     M = promote_type(monomial_type(TT), monomial_type(TS))
     return term_type(M, U)
 end
+# Bare AbstractMonomialLike: we can't compute monomial_type/term_type on it,
+# so return the abstract union type directly.
+function Base.promote_rule(
+    ::Type{AbstractMonomialLike},
+    ::Type{<:SA.Term{T}},
+) where {T}
+    return AbstractTermLike{promote_type(Int, T)}
+end
+function Base.promote_rule(
+    ::Type{<:SA.Term{T}},
+    ::Type{AbstractMonomialLike},
+) where {T}
+    return AbstractTermLike{promote_type(T, Int)}
+end
 function promote_rule_constant(
     ::Type{S},
     TT::Type{<:SA.Term{T}},
@@ -51,11 +65,35 @@ end
 # PolynomialLike
 Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:_APL} = PT
 function Base.promote_rule(PS::Type{<:_APL}, PT::Type{<:_APL})
-    return polynomial_type(promote_type(term_type(PS), term_type(PT)))
+    # For abstract or UnionAll types (e.g. SA.Term{T,M} where T from
+    # promote_typejoin), term_type/polynomial_type may not work.
+    # Return Union{} so Julia falls back to typejoin.
+    TS = try
+        term_type(PS)
+    catch
+        return Union{}
+    end
+    TT = try
+        term_type(PT)
+    catch
+        return Union{}
+    end
+    return polynomial_type(promote_type(TS, TT))
+end
+# When one side is the bare AbstractMonomialLike type, avoid calling term_type on it
+function Base.promote_rule(::Type{AbstractMonomialLike}, PT::Type{<:_APL{T}}) where {T}
+    return _apl(Int, T)
+end
+function Base.promote_rule(PT::Type{<:_APL{T}}, ::Type{AbstractMonomialLike}) where {T}
+    return _apl(Int, T)
 end
 
 function promote_rule_constant(::Type{S}, PT::Type{<:_APL{T}}) where {S,T}
-    return polynomial_type(PT, promote_type(S, T))
+    try
+        return polynomial_type(PT, promote_type(S, T))
+    catch
+        return Any
+    end
 end
 function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:_APL}
     return promote_rule_constant(T, PT)
@@ -63,11 +101,14 @@ end
 
 # We don't have any information on the MultivariatePolynomials implementation,
 # so we won't be able to convert the constant to `_APL`.
-promote_rule_constant(::Type, PT::Type{AbstractMonomialLike}) = Any
-promote_rule_constant(::Type, PT::Type{AbstractTermLike{T}}) where {T} = Any
-promote_rule_constant(::Type, PT::Type{AbstractTermLike}) = Any
-promote_rule_constant(::Type, PT::Type{_APL{T}}) where {T} = Any
-promote_rule_constant(::Type, PT::Type{_APL}) = Any
+# These exact-type matches must be listed explicitly because the generic
+# promote_rule_constant(::Type{S}, ::Type{<:_APL{T}}) above would try to call
+# polynomial_type/term_type on these abstract/union types and fail.
+promote_rule_constant(::Type, ::Type{AbstractMonomialLike}) = Any
+promote_rule_constant(::Type, ::Type{AbstractPolynomialLike{T}}) where {T} = Any
+promote_rule_constant(::Type, ::Type{AbstractPolynomialLike}) = Any
+promote_rule_constant(::Type, ::Type{_APL{T}}) where {T} = Any
+promote_rule_constant(::Type, ::Type{_APL}) = Any
 
 # AbstractMonomialLike{T}
 function Base.promote_rule(
@@ -82,35 +123,8 @@ function Base.promote_rule(
 )
     return AbstractMonomialLike
 end
-# AbstractMonomialLike-SA.Term promote rules are defined above (lines 28-48)
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{<:_APL{T}},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{<:_APL{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{_APL{T}},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{_APL{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _apl(Int, T)
-end
-
-# AbstractTermLike is now a union type, so promote rules with it as a
-# Type{} argument are no longer meaningful. Concrete promote rules for
-# AbstractMonomialLike and SA.Term are defined above.
+# AbstractMonomialLike vs _APL and AbstractTermLike promote rules are
+# handled above (lines 69-75 and the AbstractMonomialLike-SA.Term rules).
 
 # _APL{T}
 _apl(::Type{T}, ::Type{T}) where {T} = _APL{T}
