@@ -1,11 +1,13 @@
 Base.iszero(v::AbstractVariable) = false
 Base.iszero(m::AbstractMonomial) = false
-Base.iszero(t::AbstractTerm) = iszero(coefficient(t))
+# SA.Term already has `iszero` defined in StarAlgebras
 Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 Base.isone(v::AbstractVariable) = false
 Base.isone(m::AbstractMonomial) = isconstant(m)
-Base.isone(t::AbstractTerm) = isone(coefficient(t)) && isconstant(monomial(t))
+# isone for SA.Term is defined in StarAlgebras using `isone(basis_element(t))`.
+# For polynomials, `isone(monomial)` means `isconstant(monomial)` which should
+# be equivalent to `isone(monomial)` as defined by the monomial type.
 function Base.isone(p::AbstractPolynomial)
     return isone(nterms(p)) && isone(first(terms(p)))
 end
@@ -55,33 +57,20 @@ end
 function Base.:(==)(v::AbstractVariable, mono::AbstractMonomial)
     return isone(degree(mono)) && v == variable(mono)
 end
-function Base.:(==)(t::AbstractTerm, mono::AbstractMonomialLike)
+function Base.:(==)(t::SA.Term, mono::AbstractMonomialLike)
     return isone(coefficient(t)) && monomial(t) == mono
 end
-function Base.:(==)(mono::AbstractMonomialLike, t::AbstractTerm)
+function Base.:(==)(mono::AbstractMonomialLike, t::SA.Term)
     return isone(coefficient(t)) && mono == monomial(t)
 end
 
-function _compare_term(t1::AbstractTerm, t2::AbstractTerm, comp)
-    c1 = coefficient(t1)
-    c2 = coefficient(t2)
-    if iszero(c1)
-        iszero(c2)
-    else
-        comp(c1, c2) && comp(monomial(t1), monomial(t2))
-    end
-end
-
-Base.:(==)(t1::AbstractTerm, t2::AbstractTerm) = _compare_term(t1, t2, ==)
-Base.:(==)(p::AbstractPolynomial, t::AbstractTerm) = right_term_eq(p, t)
-Base.:(==)(t::AbstractTerm, p::AbstractPolynomial) = right_term_eq(p, t)
-function Base.isequal(t1::AbstractTerm, t2::AbstractTerm)
-    return _compare_term(t1, t2, isequal)
-end
-function Base.isequal(p::AbstractPolynomial, t::AbstractTerm)
+# ==, isequal for SA.Term × SA.Term are defined in StarAlgebras
+Base.:(==)(p::AbstractPolynomial, t::SA.Term) = right_term_eq(p, t)
+Base.:(==)(t::SA.Term, p::AbstractPolynomial) = right_term_eq(p, t)
+function Base.isequal(p::AbstractPolynomial, t::SA.Term)
     return right_term_eq(p, t; comp = isequal)
 end
-function Base.isequal(t::AbstractTerm, p::AbstractPolynomial)
+function Base.isequal(t::SA.Term, p::AbstractPolynomial)
     return right_term_eq(p, t; comp = isequal)
 end
 
