@@ -408,6 +408,21 @@ function promote_variables_with_maps(a, b)
     return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
 end
 
+function SA.promote_with_map(t::AbstractTerm, all_vars, map::ExponentMap)
+    mono, _ = SA.promote_with_map(monomial(t), all_vars, map)
+    return term(coefficient(t), mono), map
+end
+
+function SA.promote_with_map(p::AbstractPolynomial, all_vars, map::ExponentMap)
+    new_terms = [
+        term(
+            coefficient(t),
+            first(SA.promote_with_map(monomial(t), all_vars, map)),
+        ) for t in terms(p)
+    ]
+    return polynomial(new_terms, SortedUniqState()), map
+end
+
 function SA.promote_bases_with_maps(p::_APL, q::_APL)
     _p, _q = promote_variables_with_maps(variables(p), variables(q))
     return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
