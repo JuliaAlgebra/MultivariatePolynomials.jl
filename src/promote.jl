@@ -414,7 +414,12 @@ function SA.promote_with_map(t::AbstractTerm, all_vars, map::ExponentMap)
 end
 
 function SA.promote_with_map(p::AbstractPolynomial, all_vars, map::ExponentMap)
-    new_terms = [term(coefficient(t), first(SA.promote_with_map(monomial(t), all_vars, map))) for t in terms(p)]
+    new_terms = [
+        term(
+            coefficient(t),
+            first(SA.promote_with_map(monomial(t), all_vars, map)),
+        ) for t in terms(p)
+    ]
     return polynomial(new_terms, SortedUniqState()), map
 end
 
