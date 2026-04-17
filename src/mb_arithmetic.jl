@@ -1,3 +1,10 @@
+# SA.Term constructor for Polynomial{...} basis elements (monomials)
+function SA.Term(coeff, p::Polynomial{<:AbstractMonomialIndexed})
+    alg = algebra(FullBasis{Monomial}(p))
+    idx = exponents(p)
+    return SA.Term(alg, idx, coeff)
+end
+
 # Arithmetic for AlgebraElement polynomials.
 # Since polynomials ARE AlgebraElements now, SA handles most arithmetic.
 
@@ -11,6 +18,11 @@ for op in [:+, :-, :*]
     @eval begin
         Base.$op(p::AbstractTermLike, q::_AE) = $op(algebra_element(p), q)
         Base.$op(p::_AE, q::AbstractTermLike) = $op(p, algebra_element(q))
+        # Polynomial{Monomial,...} basis elements also participate
+        Base.$op(p::Polynomial{<:AbstractMonomialIndexed}, q::_AE) =
+            $op(algebra_element(SA.Term(1, p)), q)
+        Base.$op(p::_AE, q::Polynomial{<:AbstractMonomialIndexed}) =
+            $op(p, algebra_element(SA.Term(1, q)))
     end
 end
 

@@ -289,9 +289,9 @@ function MA.operate!(::typeof(right_constant_minus), p::_APL, α)
 end
 
 # Coefficients and variables commute
-left_constant_mult(α, v::AbstractMonomial) = term_type(v, typeof(α))(α, v)
-left_constant_mult(α, v::AbstractVariable) = left_constant_mult(α, monomial(v)) # TODO linear term
+left_constant_mult(α, v::AbstractMonomialLike) = SA.Term(α, monomial(v))
 right_constant_mult(m::AbstractMonomialLike, α) = left_constant_mult(α, m)
+# Polynomial{Monomial,...} methods added in mb_monomial_basis.jl
 
 function left_constant_mult(α, t::SA.Term)
     return term(α * coefficient(t), monomial(t))
