@@ -40,6 +40,10 @@ end
 function FullBasis{B}(p::_APL) where {B}
     return FullBasis{B}(variables(p))
 end
+# Also accept Polynomial basis elements (monomials in the new world)
+function FullBasis{B}(p::Polynomial) where {B}
+    return FullBasis{B}(variables(p))
+end
 
 function SA.star(b::MonomialIndexedBasis{B,V,E}, exp::E) where {B,V,E}
     return b[SA.star(b[exp])]

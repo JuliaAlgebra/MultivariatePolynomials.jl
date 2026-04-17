@@ -9,8 +9,9 @@ function SA.Term(coeff, mono::AbstractMonomialLike)
     return SA.Term(alg, idx, coeff)
 end
 
-# monomial_type: derive from the algebra
-monomial_type(::Type{<:SA.Term{<:Any,A}}) where {A} = monomial_type(A)
+# SA.Term constructor for Polynomial{Monomial,...} basis elements is in mb_polynomial.jl
+
+# monomial_type for SA.Term is in monomial.jl (must be there to break cycle)
 
 (t::SA.Term)(s...) = substitute(Eval(), t, s)
 
