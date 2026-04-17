@@ -12,8 +12,8 @@ end
 function Base.getindex(p::AbstractPolynomialLike, mono::AbstractMonomial)
     return coefficient(p, mono)
 end
-Base.iterate(t::Term) = iterate(t, 1)
-function Base.iterate(t::Term, state)
+Base.iterate(t::SA.Term) = iterate(t, 1)
+function Base.iterate(t::SA.Term, state)
     if state == 1
         return monomial(t), 2
     elseif state == 2
@@ -85,6 +85,7 @@ function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
 end
 
 Base.isone(p::Polynomial) = all(iszero, p.exponents)
+isconstant(p::Polynomial) = all(iszero, p.exponents)
 
 Base.iterate(p::Polynomial) = p, nothing
 Base.iterate(::Polynomial, ::Nothing) = nothing

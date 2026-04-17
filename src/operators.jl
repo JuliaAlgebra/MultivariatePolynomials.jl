@@ -381,29 +381,13 @@ _term(α, mono) = term(α, MA.copy_if_mutable(mono))
 
 for op in [:+, :-]
     @eval begin
-        function Base.$op(t1::AbstractTermLike, t2::AbstractTermLike)
+        # Monomials/variables → convert to terms, then SA handles Term + Term
+        function Base.$op(t1::AbstractMonomialLike, t2::AbstractMonomialLike)
             return $op(term(t1), term(t2))
-        end
-        function Base.$op(t1::SA.Term, t2::SA.Term)
-            return $op(_promote_terms(t1, t2)...)
-        end
-        function Base.$op(t1::TT, t2::TT) where {T,TT<:SA.Term{T}}
-            S = MA.promote_operation($op, T, T)
-            # t1 > t2 would compare the coefficient in case the monomials are equal
-            # and it will throw a MethodError in case the coefficients are not comparable
-            if monomial(t1) == monomial(t2)
-                return polynomial(
-                    _term($op(coefficient(t1), coefficient(t2)), monomial(t1)),
-                    S,
-                )
-            elseif monomial(t1) < monomial(t2)
-                return _polynomial_2terms(t1, $op(t2), S)
-            else
-                return _polynomial_2terms($op(t2), t1, S)
-            end
         end
     end
 end
+# SA.Term + SA.Term is now handled by StarAlgebras directly (returns AlgebraElement)
 _promote_terms(t1, t2) = promote(t1, t2)
 # Promotion between `I` and `1` is `Any`.
 function _promote_terms(
