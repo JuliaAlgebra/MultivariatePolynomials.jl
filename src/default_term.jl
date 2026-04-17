@@ -1,116 +1,24 @@
-"""
-    Term{CoeffType,M}
+# SA.Term now has 3 type params: Term{T,A,I}
+# T = coefficient type, A = algebra type, I = index type.
+# The monomial is reconstructed via basis(algebra)[index].
 
-Type alias for [`StarAlgebras.Term{CoeffType,M}`](@ref).
-A representation of the multiplication between a `coefficient` and a monomial.
+# Convenience constructor: create a Term from coefficient + monomial
+function SA.Term(coeff, mono::AbstractMonomialLike)
+    alg = algebra(FullBasis{Monomial}(mono))
+    idx = exponents(mono)
+    return SA.Term(alg, idx, coeff)
+end
 
-!!! note
-    The `coefficient` does not need to be a `Number`. It can be for instance a
-    multivariate polynomial. When computing a multivariate `gcd`, it is
-    actually reformulated as a univariate `gcd` in one of the variable with
-    coefficients being multivariate polynomials in the other variables.
-    To create such a term, use [`term`](@ref) instead of `*`.
-    For instance, if `p` is a polynomial and `m` is a monomial, `p * m` will
-    multiply each term of `p` with `m` but `term(p, m)` will create a term
-    with `p` as coefficient and `m` as monomial.
-"""
-const Term{CoeffType,M} = SA.Term{CoeffType,M}
-
-monomial_type(::Type{<:SA.Term{<:Any,M}}) where {M} = M
+# monomial_type: derive from the algebra
+monomial_type(::Type{<:SA.Term{<:Any,A}}) where {A} = monomial_type(A)
 
 (t::SA.Term)(s...) = substitute(Eval(), t, s)
 
-# convert from AbstractMonomialLike (MP type in signature, not piracy)
-function Base.convert(::Type{SA.Term{T,M}}, m::AbstractMonomialLike) where {T,M}
-    return SA.Term(one(T), convert(M, m))
-end
-
-# convert, promote_rule, ==, isequal, hash, copy, ^, ndims, broadcastable
-# for SA.Term × SA.Term are defined in StarAlgebras (not here, to avoid piracy)
-
-# promote_rule involving MP's AbstractMonomialLike (not piracy)
-function Base.promote_rule(
-    ::Type{SA.Term{C,M1} where {C}},
-    M2::Type{<:AbstractMonomialLike},
-) where {M1}
-    return (SA.Term{C,promote_type(M1, M2)} where {C})
-end
-function Base.promote_rule(
-    M1::Type{<:AbstractMonomialLike},
-    ::Type{SA.Term{C,M2} where {C}},
-) where {M2}
-    return (SA.Term{C,promote_type(M1, M2)} where {C})
-end
-# promote_rule with UnionAll Term type (involves `where C` which is MP convention)
-function Base.promote_rule(
-    ::Type{SA.Term{C,M1} where {C}},
-    ::Type{SA.Term{T,M2}},
-) where {T,M1,M2}
-    return (SA.Term{C,promote_type(M1, M2)} where {C})
-end
-function Base.promote_rule(
-    ::Type{SA.Term{T,M2}},
-    ::Type{SA.Term{C,M1} where {C}},
-) where {T,M1,M2}
-    return (SA.Term{C,promote_type(M1, M2)} where {C})
-end
-promote_rule_constant(::Type{T}, TT::Type{SA.Term{C,M} where C}) where {T,M} = Any
-
-function convert_constant(::Type{SA.Term{C,M} where C}, α) where {M}
-    return convert(SA.Term{typeof(α),M}, α)
-end
-
-combine(t1::SA.Term, t2::SA.Term) = combine(promote(t1, t2)...)
+# combine: same monomial (same index), add coefficients
 function combine(t1::T, t2::T) where {T<:SA.Term}
-    return SA.Term(coefficient(t1) + coefficient(t2), monomial(t1))
+    return SA.Term(t1.algebra, t1.index, coefficient(t1) + coefficient(t2))
 end
-function MA.promote_operation(
-    ::typeof(combine),
-    ::Type{SA.Term{S,M1}},
-    ::Type{SA.Term{T,M2}},
-) where {S,T,M1,M2}
-    return SA.Term{MA.promote_operation(+, S, T),promote_type(M1, M2)}
-end
-
-# MA.mutability, Base.copy, MA.mutable_copy, MA.operate_to!(*, Term, Term, Term),
-# MA.operate!(*, Term, Term), and MA.operate!(one, Term) are defined in StarAlgebras.
-
-# Broader MA operations involving MP's AbstractTermLike (not piracy)
-function MA.operate_to!(
-    t::SA.Term,
-    ::typeof(*),
-    t1::AbstractMonomialLike,
-    t2::AbstractTermLike,
-)
-    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
-    MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
-    return t
-end
-function MA.operate_to!(
-    t::SA.Term,
-    ::typeof(*),
-    t1::AbstractTermLike,
-    t2::AbstractMonomialLike,
-)
-    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
-    MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
-    return t
-end
-function MA.operate_to!(
-    t::SA.Term,
-    ::typeof(*),
-    t1::AbstractMonomialLike,
-    t2::AbstractMonomialLike,
-)
-    MA.operate_to!(t.coefficient, *, coefficient(t1), coefficient(t2))
-    MA.operate_to!(t.basis_element, *, monomial(t1), monomial(t2))
-    return t
-end
-
-# Needed to resolve ambiguity with
-# MA.operate!(::typeof(*), ::AbstractMonomial, ::AbstractMonomialLike)
-function MA.operate!(::typeof(*), t1::SA.Term, t2::AbstractMonomialLike)
-    MA.operate!(*, t1.coefficient, coefficient(t2))
-    MA.operate!(*, t1.basis_element, monomial(t2))
-    return t1
+function combine(t1::SA.Term, t2::SA.Term)
+    # Different types: promote via algebra_element and sum
+    return algebra_element(t1) + algebra_element(t2)
 end
