@@ -90,7 +90,19 @@ function polynomial!(
     ts::AbstractVector{TT},
     s::SortedUniqState,
 ) where {TT<:AbstractTerm}
-    return polynomial_type(TT)(ts)
+    if isempty(ts)
+        M = monomial_type(TT)
+        return zero(Polynomial{Monomial,MA.promote_operation(variables, M)})
+    end
+    # Use monomial_vector to merge all monomials into a common variable set
+    # This handles variable alignment for us
+    monos = monomial_vector(monomial.(ts))
+    vars = variables(monos)
+    basis = FullBasis{Monomial}(vars)
+    exps = [collect(exponents(m)) for m in monos]
+    coeffs = [coefficient(ts[i]) for i in eachindex(ts)]
+    sc = SA.SparseCoefficients(exps, coeffs)
+    return algebra_element(sc, basis)
 end
 
 function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)

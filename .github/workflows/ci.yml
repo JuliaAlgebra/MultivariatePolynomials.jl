@@ -41,7 +41,7 @@ jobs:
         run: |
           using Pkg
           Pkg.add([
-              PackageSpec(name="DynamicPolynomials", rev="master"),
+              PackageSpec(name="DynamicPolynomials", rev="release-0.7"),
               PackageSpec(name="TypedPolynomials", rev="master"),
               PackageSpec(name="StarAlgebras", rev="bl/term"),
           ])

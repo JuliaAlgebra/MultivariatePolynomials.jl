@@ -93,7 +93,17 @@ include("det.jl")
 
 include("default_term.jl")
 include("sequences.jl")
-include("default_polynomial.jl")
+# default_polynomial.jl removed — polynomials are now SA.AlgebraElement
+
+# MultivariateBases core (copied from MultivariateBases.jl)
+include("mb_interface.jl")
+include("mb_variables.jl")
+include("mb_polynomial.jl")
+include("mb_bases.jl")
+include("mb_mstructures.jl")
+include("mb_monomial_basis.jl")
+include("mb_algebra.jl")
+include("mb_arithmetic.jl")
 
 include("deprecate.jl")
 
