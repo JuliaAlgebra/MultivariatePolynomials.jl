@@ -7,6 +7,12 @@
 # We use a different name to avoid collision.
 abstract type AbstractMonomialBasis <: AbstractMonomialIndexed end
 
+# Polynomial{Monomial,...} acts as a monomial: support term creation and const mult
+term(coeff, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(coeff, p)
+term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(one(Int), p)
+left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
+right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α) = left_constant_mult(α, p)
+
 function explicit_basis_covering(
     full::FullBasis{B},
     target::SubBasis{<:AbstractMonomialBasis},
@@ -47,10 +53,36 @@ function (m::MStruct{Monomial,V,E})(a::E, b::E, ::Type{E}) where {V,E}
     return SA.SparseCoefficients((a .+ b,), (1,))
 end
 
-# Called by DiracMStructure for noncommutative variables
-function Base.:*(a::Polynomial{Monomial}, b::Polynomial{Monomial})
-    return Polynomial{Monomial}(monomial(a) * monomial(b))
+# Monomial multiplication: align variables via promote_variables_with_maps,
+# then apply f to the aligned exponent vectors.
+function map_exponents(f, a::Polynomial{Monomial}, b::Polynomial{Monomial})
+    if a.variables == b.variables
+        return Polynomial(a.variables, f.(a.exponents, b.exponents))
+    end
+    # Merge variable lists
+    (all_a, map_a), (all_b, map_b) = promote_variables_with_maps(variables(a), variables(b))
+    ea = map_a === nothing ? a.exponents : map_a(a.exponents)
+    eb = map_b === nothing ? b.exponents : map_b(b.exponents)
+    return Polynomial(Variables{Monomial}(all_a), f.(ea, eb))
 end
+
+function Base.:*(a::Polynomial{Monomial}, b::Polynomial{Monomial})
+    return map_exponents(+, a, b)
+end
+
+# Monomial * Variable and Variable * Monomial
+Base.:*(v::AbstractVariable, m::Polynomial{Monomial}) = monomial(v) * m
+Base.:*(m::Polynomial{Monomial}, v::AbstractVariable) = m * monomial(v)
+
+# Monomial + Monomial and Monomial - Monomial go through Term arithmetic
+Base.:+(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) + SA.Term(1, b)
+Base.:-(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) - SA.Term(1, b)
+
+# Monomial + Term, Term + Monomial, etc.
+Base.:+(m::Polynomial{Monomial}, t::SA.Term) = SA.Term(1, m) + t
+Base.:+(t::SA.Term, m::Polynomial{Monomial}) = t + SA.Term(1, m)
+Base.:-(m::Polynomial{Monomial}, t::SA.Term) = SA.Term(1, m) - t
+Base.:-(t::SA.Term, m::Polynomial{Monomial}) = t - SA.Term(1, m)
 
 SA.coeffs(p::Polynomial{Monomial}, ::FullBasis{Monomial}) = p.monomial
 
