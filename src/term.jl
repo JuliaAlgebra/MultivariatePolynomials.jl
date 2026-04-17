@@ -22,9 +22,11 @@ When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
 function term(coef, mono::AbstractMonomialLike)
-    return term_type(mono, typeof(coef))(coef, mono)
+    return SA.Term(coef, mono)
 end
-term(p::_APL) = convert(term_type(typeof(p)), p)
+# Convert any polynomial-like to a term
+term(m::AbstractMonomialLike) = SA.Term(one(Int), m)
+term(t::SA.Term) = t
 
 """
     term_type(p::AbstractPolynomialLike)
@@ -43,17 +45,18 @@ Returns the type of the terms of `p` but with coefficient type `T`.
 
 Returns the type of the terms of a polynomial of type `PT` but with coefficient type `T`.
 """
-term_type(::Type{<:SA.Term{T,B}}) where {T,B} = SA.Term{T,B}
-# Handle UnionAll types like SA.Term{T,M} where T (from promote_typejoin)
-term_type(::Type{<:SA.Term{<:Any,B}}) where {B} = SA.Term{<:Any,B}
-term_type(::Type{<:SA.Term{<:Any,B}}, ::Type{T}) where {T,B} = SA.Term{T,B}
+# SA.Term{T,A,I}: identity for term_type
+term_type(::Type{TT}) where {TT<:SA.Term} = TT
+# With new coefficient type: change T, keep A and I
+function term_type(::Type{<:SA.Term{<:Any,A,I}}, ::Type{T}) where {T,A,I}
+    return SA.Term{T,A,I}
+end
 term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
 term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
 # Break the term_type/monomial_type cycle for bare AbstractMonomialLike:
-# term_type(AbstractMonomialLike, T) should return SA.Term{T, AbstractMonomialLike}
-# rather than recursing through the generic _APL 2-arg path.
+# We can't construct a concrete Term type without an algebra, so return Any
 function term_type(::Type{AbstractMonomialLike}, ::Type{T}) where {T}
-    return SA.Term{T,AbstractMonomialLike}
+    return Any
 end
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
