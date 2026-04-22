@@ -513,6 +513,23 @@ end
 
 nvariables(it::ExponentsIterator) = length(it.object)
 
+function Base.in(x, it::ExponentsIterator)
+    if length(x) != nvariables(it)
+        return false
+    end
+    if any(xi -> xi < 0, x)
+        return false
+    end
+    deg = sum(x)
+    if deg < it.mindegree
+        return false
+    end
+    if it.maxdegree !== nothing && deg > it.maxdegree
+        return false
+    end
+    return true
+end
+
 _last_lex_index(n, ::Type{LexOrder}) = n
 _prev_lex_index(i, ::Type{LexOrder}) = i - 1
 _not_first_indices(n, ::Type{LexOrder}) = n:-1:2
