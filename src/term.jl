@@ -17,7 +17,7 @@ difference between this and `coef * mono`:
 Converts the polynomial `p` to a term.
 When applied on a polynomial, it throws an `InexactError` if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
-When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
+When applied to a monomial, it create a term of type `AbstractTerm{Bool}`.
 """
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
@@ -45,7 +45,7 @@ Returns the type of the terms of a polynomial of type `PT` but with coefficient 
 """
 term_type(::Type{T}) where {T<:AbstractTerm} = T
 term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
-term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
+term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Bool)
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)
@@ -134,7 +134,7 @@ Returns the coefficient type of a polynomial of type `PT`.
 
 Calling `coefficient_type` on ``(4//5)x^2y`` should return `Rational{Int}`,
 calling `coefficient_type` on ``1.0x^2y + 2.0x`` should return `Float64` and
-calling `coefficient_type` on ``xy`` should return `Int`.
+calling `coefficient_type` on ``xy`` should return `Bool`.
 """
 function coefficient_type(
     ::Union{PT,Type{PT},AbstractVector{PT},Type{<:AbstractVector{PT}}},
