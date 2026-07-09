@@ -545,7 +545,7 @@ function MA.operate!(
     p::Polynomial,
     q::Union{AbstractTermLike,Polynomial},
 )
-    return _polynomial_merge!(op, p, q)
+    return _polynomial_merge!(op, p, q)::typeof(p)
 end
 
 function MA.operate!(
@@ -554,7 +554,7 @@ function MA.operate!(
     q::Polynomial,
     args::AbstractTermLike...,
 )
-    return _polynomial_merge!(op, p, q, args...)
+    return _polynomial_merge!(op, p, q, args...)::typeof(p)
 end
 
 function MA.operate!(
@@ -563,7 +563,7 @@ function MA.operate!(
     t::AbstractTermLike,
     q::Polynomial,
 )
-    return _polynomial_merge!(op, p, t, q)
+    return _polynomial_merge!(op, p, t, q)::typeof(p)
 end
 
 function MA.buffer_for(
@@ -581,7 +581,7 @@ function MA.buffered_operate!(
     t::AbstractTermLike,
     q::Polynomial,
 )
-    return _polynomial_merge!(op, p, t, q, buffer)
+    return _polynomial_merge!(op, p, t, q, buffer)::typeof(p)
 end
 
 function MA.operate_to!(
@@ -596,13 +596,13 @@ function MA.operate_to!(
     return output
 end
 function MA.operate!(::typeof(*), p::Polynomial, q::Polynomial)
-    if iszero(q)
-        return MA.operate!(zero, p)
+    return if iszero(q)
+        MA.operate!(zero, p)
     elseif nterms(q) == 1
-        return MA.operate!(*, p, leading_term(q))
+        MA.operate!(*, p, leading_term(q))
     else
-        return MA.operate_to!(p, *, MA.mutable_copy(p), q)
-    end
+        MA.operate_to!(p, *, MA.mutable_copy(p), q)
+    end::typeof(p)
 end
 function MA.operate!(::typeof(*), p::Polynomial, t::AbstractTermLike)
     for i in eachindex(p.terms)
