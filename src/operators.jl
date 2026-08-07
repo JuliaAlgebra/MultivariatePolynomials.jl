@@ -1,10 +1,9 @@
-# promoting multiplication is not a good idea
-# For example a polynomial of Float64 * a polynomial of JuMP affine expression
-# is a polynomial of JuMP affine expression but if we promote it would be a
-# polynomial of quadratic expression
-for op in [:+, :-, :(==)]
-    @eval Base.$op(p1::_APL, p2::_APL) = $op(promote(p1, p2)...)
+# _APL + _APL: convert both to AlgebraElement and use SA's generic arithmetic
+for op in [:+, :-]
+    @eval Base.$op(p1::_APL, p2::_APL) = $op(algebra_element(p1), algebra_element(p2))
 end
+# Equality still uses promote since we want value equality
+Base.:(==)(p1::_APL, p2::_APL) = ==(promote(p1, p2)...)
 # Promotion between `I` and `1` is `Any`.
 # Promotion between `I` and `2I` is `UniformScaling`.
 for op in [:+, :-]
@@ -33,13 +32,15 @@ function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
 end
 
 # @eval $op(p::_APL, α) = $op(promote(p, α)...) would be less efficient
+# Restrict α to Number to avoid complex promote_rule chains with Any.
+# Users wanting polynomial coefficients should use `term(α, mono)` explicitly.
 for (op, fun) in [
     (:+, :right_constant_plus),
     (:-, :right_constant_minus),
     (:*, :right_constant_mult),
     (:(==), :right_constant_eq),
 ]
-    @eval Base.$op(p::_APL, α) = $fun(p, α)
+    @eval Base.$op(p::_APL, α::Number) = $fun(p, α)
 end
 for (op, fun) in [
     (:+, :left_constant_plus),
@@ -47,7 +48,7 @@ for (op, fun) in [
     (:*, :left_constant_mult),
     (:(==), :left_constant_eq),
 ]
-    @eval Base.$op(α, p::_APL) = $fun(α, p)
+    @eval Base.$op(α::Number, p::_APL) = $fun(α, p)
 end
 ## Fix ambiguity between above methods and methods in MA
 Base.:+(::MA.Zero, p::_APL) = MA.copy_if_mutable(p)

@@ -88,6 +88,11 @@ Base.isone(p::Polynomial) = all(iszero, p.exponents)
 isconstant(p::Polynomial) = all(iszero, p.exponents)
 # A monomial basis element is never zero
 Base.iszero(p::Polynomial) = false
+# Polynomial{Monomial,...} is its own monomial type
+monomial_type(::Type{PT}) where {PT<:Polynomial{<:AbstractMonomialIndexed}} = PT
+monomial_type(p::Polynomial{<:AbstractMonomialIndexed}) = typeof(p)
+# Ordering: derive from the variable type
+ordering(::Type{Polynomial{B,V,E}}) where {B,V,E} = ordering(V)
 # constant_monomial: return a monomial with all-zero exponents
 constant_monomial(p::Polynomial) = Polynomial(p.variables, zero(p.exponents))
 

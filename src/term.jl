@@ -54,9 +54,9 @@ end
 term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
 term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
 # Break the term_type/monomial_type cycle for bare AbstractMonomialLike:
-# We can't construct a concrete Term type without an algebra, so return Any
+# Return the UnionAll SA.Term{T} (without algebra/index params)
 function term_type(::Type{AbstractMonomialLike}, ::Type{T}) where {T}
-    return Any
+    return SA.Term{T}
 end
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
