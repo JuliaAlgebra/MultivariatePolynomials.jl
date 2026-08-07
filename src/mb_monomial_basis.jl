@@ -13,6 +13,11 @@ term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(one(Int), p)
 left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
 right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α) = left_constant_mult(α, p)
 
+# term_type for Polynomial{Monomial,...} basis elements
+# Can't return a concrete Term type without the algebra, so return SA.Term{T}
+term_type(::Type{<:Polynomial{<:AbstractMonomialBasis}}, ::Type{T}) where {T} = SA.Term{T}
+term_type(::Type{<:Polynomial{<:AbstractMonomialBasis}}) = SA.Term{Int}
+
 function explicit_basis_covering(
     full::FullBasis{B},
     target::SubBasis{<:AbstractMonomialBasis},
@@ -78,6 +83,11 @@ Base.:*(m::Polynomial{Monomial}, v::AbstractVariable) = m * monomial(v)
 Base.:+(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) + SA.Term(1, b)
 Base.:-(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) - SA.Term(1, b)
 
+# Monomial power: multiply exponents by n
+function Base.:^(m::Polynomial{Monomial}, n::Integer)
+    return Polynomial(m.variables, m.exponents .* n)
+end
+
 # Monomial + Term, Term + Monomial, etc.
 Base.:+(m::Polynomial{Monomial}, t::SA.Term) = SA.Term(1, m) + t
 Base.:+(t::SA.Term, m::Polynomial{Monomial}) = t + SA.Term(1, m)
@@ -93,11 +103,21 @@ function polynomial_type(
     return _polynomial_type(B, V, T)
 end
 
+# polynomial_type for a basis element: return the full AlgebraElement type directly
 function polynomial_type(
     ::Type{Polynomial{B,V,E}},
     ::Type{T},
 ) where {B,V,E,T}
-    return _polynomial_type(B, V, T)
+    BT = SA.MappedBasis{
+        Polynomial{B,V,E},E,
+        ExponentsIterator{ordering(V),Nothing,E},
+        Variables{B,V},
+        typeof(exponents),
+    }
+    A = MA.promote_operation(algebra, BT)
+    I = E
+    CT = SA.SparseCoefficients{I,T,Vector{I},Vector{T},typeof(isless)}
+    return SA.AlgebraElement{T,A,CT}
 end
 
 function keys_as_monomials(keys, mb::FullBasis)

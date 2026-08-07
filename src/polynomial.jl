@@ -142,8 +142,18 @@ Returns the type that `p` would have if it was converted into a polynomial of co
 Returns the same as `polynomial_type(::PT, ::Type{T})`.
 """
 function polynomial_type end
-function polynomial_type(::Type{T}) where {T<:AbstractTerm}
-    return error("`polynomial_type` not implemented for $T")
+# Catch-all for SA.Term: derive AlgebraElement type from A if fully parametrized
+function polynomial_type(::Type{TT}) where {TT<:SA.Term}
+    if TT isa DataType && length(TT.parameters) == 3 && all(p -> p isa Type, TT.parameters)
+        T = TT.parameters[1]
+        A = TT.parameters[2]
+        I = TT.parameters[3]
+        V = SA.SparseCoefficients{I,T,Vector{I},Vector{T},typeof(isless)}
+        return SA.AlgebraElement{T,A,V}
+    end
+    # Not fully parametrized: return UnionAll
+    T = TT isa DataType ? TT.parameters[1] : Any
+    return SA.AlgebraElement{T}
 end
 function polynomial_type(::Union{P,Type{P}}) where {P<:_APL}
     return polynomial_type(term_type(P))

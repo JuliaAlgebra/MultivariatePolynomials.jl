@@ -317,8 +317,9 @@ function ordering end
 ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
 ordering(::Type{P}) where {P} = ordering(monomial_type(P))
 ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
-# Useful for instance to ask ordering given the list
-# of variables
+# For type-level: derive ordering from Vector's element type
+ordering(::Type{<:AbstractVector{T}}) where {T} = ordering(T)
+# Useful for instance to ask ordering given the list of variables
 ordering(::AbstractVector{T}) where {T} = ordering(T)
 ordering(t::Tuple) = ordering(first(t))
 
