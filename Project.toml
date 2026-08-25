@@ -16,7 +16,7 @@ Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 
 [extensions]
 MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
-MultivariatePolynomialsLatexifyExt = "Latexify"
+LatexifyExt = "Latexify"
 
 [compat]
 ChainRulesCore = "1"
