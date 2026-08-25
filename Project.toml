@@ -12,6 +12,7 @@ StarAlgebras = "0c0c59c1-dc5f-42e9-9a8b-b5dc384a6cd1"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 
 [extensions]
 MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
@@ -20,6 +21,7 @@ MultivariatePolynomialsLatexifyExt = "Latexify"
 [compat]
 ChainRulesCore = "1"
 DataStructures = "0.19"
+Latexify = "0.16.12"
 LinearAlgebra = "1.10"
 MutableArithmetics = "0.3, 1"
 StarAlgebras = "0.3"
