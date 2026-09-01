@@ -11,7 +11,14 @@ using Latexify
 end
 
 @latexrecipe function f(t::AbstractTermLike)
-    return Expr(:call, :*, coefficient(t), monomial(t))
+    operation := :*
+    mult_symbol --> ""
+    coeff = coefficient(t)
+    if coeff == one(typeof(coeff))
+        return Expr(:call, :*, monomial(t))
+    else
+        return Expr(:call, :*, coefficient(t), monomial(t))
+    end
 end
 
 @latexrecipe function f(p::AbstractPolynomialLike)
