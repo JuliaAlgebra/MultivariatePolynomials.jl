@@ -4,9 +4,10 @@ using Latexify
 @latexrecipe function f(m::AbstractMonomialLike)
     operation := :*
     mult_symbol --> ""
-    vars = variables(m)
+    index --> :subscript
+    vars = [Meta.parse(string(v)) for v = variables(m)]
     exps = exponents(m)
-    factors = ((e == 1) ? Symbol(var) : :($(Symbol(var)) ^ $e) for (var, e) = zip(vars, exps) if e != 0)
+    factors = ((e == 1) ? var : :($(var) ^ $e) for (var, e) = zip(vars, exps) if e != 0)
     return Expr(:call, :*, factors...)
 end
 
