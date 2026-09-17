@@ -17,7 +17,6 @@
 @deprecate leading_term leadingterm
 @deprecate leading_monomial leading_monomial
 @deprecate leading_coefficient leading_coefficient
-@deprecate removeleadingterm remove_leading_term
 @deprecate removemonomials remove_monomials
 @deprecate coefficienttype coefficient_type
 @deprecate constantterm constant_term
