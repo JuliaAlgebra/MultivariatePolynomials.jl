@@ -148,4 +148,30 @@ end
     @test isempty(Test.detect_unbound_args(MP))
 end
 
+@testset "Polynomial constructors in division and GCD" begin
+    DP.@polyvar x y
+    for p in (x, x^2, 2x, 2x + 1)
+        original = deepcopy(p)
+        q, r = divrem(p, typeof(p)[])
+        @test isempty(q)
+        @test r == p
+        @test r isa DP.Polynomial{Rational{Int}}
+        MP.MA.operate!(zero, r)
+        @test p == original
+    end
+    q, r = divrem(zero(2x), 2x)
+    @test q isa DP.Polynomial{Rational{Int}}
+    @test iszero(q) && iszero(r)
+
+    algo = MP.GeneralizedEuclideanAlgorithm()
+    g = MP.primitive_univariate_gcd!(2x, zero(2x), algo)
+    @test g isa DP.Polynomial{Int}
+    @test g == 2x
+    @test MP.inflate(3, one(x), one(x)) == 3
+    nested = MP.term(2x, MP.monomial(y))
+    c = MP.content(nested, algo, MP.MA.IsNotMutable())
+    @test c isa DP.Polynomial{Int}
+    @test c == 2x
+end
+
 end # module
