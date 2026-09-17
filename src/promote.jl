@@ -41,7 +41,9 @@ function promote_rule_constant(::Type{S}, PT::Type{<:_APL{T}}) where {S,T}
     return polynomial_type(PT, promote_type(S, T))
 end
 function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:_APL}
-    return promote_rule_constant(T, PT)
+    R = promote_rule_constant(T, PT)
+    # Unrelated constants must not be converted to polynomial coefficients.
+    return R <: _APL{Any} ? Any : R
 end
 
 # We don't have any information on the MultivariatePolynomials implementation,
@@ -183,7 +185,8 @@ function promote_rule_constant(
     ::Type{T},
     ::Type{RationalPoly{NT,DT}},
 ) where {T,NT,DT}
-    return RationalPoly{promote_type(T, NT),promote_type(DT, term_type(DT))}
+    U = promote_type(T, NT)
+    return U === Any ? Any : RationalPoly{U,promote_type(DT, term_type(DT))}
 end
 
 function Base.promote_rule(::Type{RT}, ::Type{T}) where {T,RT<:RationalPoly}

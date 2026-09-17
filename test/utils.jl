@@ -71,3 +71,13 @@ function typetests(
     _typetests(x, T)
     return _typetests(typeof(x), T)
 end
+
+# A polynomial-like representation that exposes its polynomial type only.
+struct CustomPolyType{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
+    p::P
+end
+function MultivariatePolynomials.polynomial_type(
+    ::Type{CustomPolyType{T,P}},
+) where {T,P}
+    return P
+end

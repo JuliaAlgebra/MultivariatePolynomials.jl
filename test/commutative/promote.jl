@@ -6,6 +6,29 @@ using LinearAlgebra
 
 @testset "Promotion" begin
     Mod.@polyvar x y
+    @testset "Promotion with unrelated types" begin
+        p = CustomPolyType(x + y)
+        q = CustomPolyType(x + 1.0y)
+        for value in (:(ztol = 1e-7), :symbol, "string")
+            for poly in (x, x^2, 2x, x + y, x / y, (x + y) / y, p)
+                @test promote_type(typeof(value), typeof(poly)) == Any
+                @test promote_type(typeof(poly), typeof(value)) == Any
+                @test [value, poly] isa Vector{Any}
+                @test [poly, value] isa Vector{Any}
+            end
+            # Julia 1.13's `@test isapprox(p, q, ztol = ...)` builds
+            # `[kwargs_expr, p, q]` for diagnostics, even when the test passes.
+            # This promotes the keyword Expr with the polynomial-like arguments
+            # and used to fail for SOSDecomposition. Test could avoid promotion
+            # by using `Any[kwargs_expr, p, q]`, since these are only for display.
+            # We also cover other unrelated types above because our constant
+            # promotion currently accepts arbitrary types. This special handling
+            # may become unnecessary if we restrict interactions with constants
+            # from `::Any` to `::Number`.
+            @test Base.promote_typeof(value, p, q) == Any
+            @test [value, p, q] isa Vector{Any}
+        end
+    end
     @inferred x * y + x
     @test [x, x * y + x, x] isa Vector{<:AbstractPolynomial{Int}}
     @test eltype([1, x / y, x]) <:
