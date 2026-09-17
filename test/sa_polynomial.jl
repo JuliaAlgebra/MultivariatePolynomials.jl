@@ -148,6 +148,41 @@ end
     @test isempty(Test.detect_unbound_args(MP))
 end
 
+@testset "Monomial divisibility" begin
+    DP.@polyvar x y z
+    for (a, b, expected) in (
+        (x, x, true),
+        (x, y, false),
+        (x, x^2, true),
+        (x^2, x, false),
+        (x^2, x^2, true),
+        (x^2, y^2, false),
+        (x * y, x^2 * y^3, true),
+        (x * y^3, x^2 * y, false),
+        (y, x * y * z, true),
+        (x * z, y^2, false),
+        (x * y, x^2, false),
+        (y * z, y^2, false),
+        (one(x), x^2, true),
+        (x^2, one(x), false),
+        (one(x), one(y), true),
+        (MP.monomial([x, y, z], [0, 2, 0]), y^3, true),
+        (y, MP.monomial([x, y, z], [0, 2, 0]), true),
+        (MP.term(3, x * y), MP.term(2, x^2 * y), true),
+        (MP.term(2, x^2 * y), MP.term(3, x * y), false),
+    )
+        originals = deepcopy((a, b))
+        @test MP.divides(a, b) === expected
+        @test (a, b) == originals
+    end
+    @test (@inferred MP.divides(x, x^2))
+    DP.@ncpolyvar u v
+    @test MP.divides(u, u)
+    @test !MP.divides(u, v)
+    @test_throws ErrorException MP.divides(u, u^2)
+    @test_throws ErrorException MP.divides(u^2, v^2)
+end
+
 @testset "Polynomial conversion" begin
     DP.@polyvar x
     R = DP.Polynomial{Rational{Int}}
