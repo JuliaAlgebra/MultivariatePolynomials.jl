@@ -80,3 +80,11 @@ function MultivariatePolynomials.polynomial_type(
 ) where {T,P}
     return P
 end
+
+# Like SOSDecomposition, promote two wrappers without calling term_type.
+function Base.promote_rule(
+    ::Type{CustomPolyType{T,P}},
+    ::Type{CustomPolyType{S,Q}},
+) where {T,P,S,Q}
+    return CustomPolyType{promote_type(T, S),promote_type(P, Q)}
+end

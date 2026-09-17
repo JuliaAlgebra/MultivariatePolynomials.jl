@@ -9,6 +9,7 @@ using LinearAlgebra
     @testset "Promotion with unrelated types" begin
         p = CustomPolyType(x + y)
         q = CustomPolyType(x + 1.0y)
+        @test (@inferred promote_type(typeof(p), typeof(q))) == typeof(q)
         for value in (:(ztol = 1e-7), :symbol, "string")
             for poly in (x, x^2, 2x, x + y, x / y, (x + y) / y, p)
                 @test promote_type(typeof(value), typeof(poly)) == Any
@@ -25,6 +26,8 @@ using LinearAlgebra
             # promotion currently accepts arbitrary types. This special handling
             # may become unnecessary if we restrict interactions with constants
             # from `::Any` to `::Number`.
+            # Julia 1.10 promotes p and q first; newer Julia versions start
+            # with value and p. The wrapper supports promotion in either order.
             @test Base.promote_typeof(value, p, q) == Any
             @test [value, p, q] isa Vector{Any}
         end
