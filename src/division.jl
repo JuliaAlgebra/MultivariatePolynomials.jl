@@ -243,10 +243,11 @@ function _pseudo_divrem(::UFD, f::_APL, g::_APL, algo)
         new_f = st * remove_leading_term(f)
         qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
+        T = coefficient_type(f)
         # Check with `::` that we don't have any type unstability on this variable.
-        return convert(typeof(f), st),
-        convert(typeof(f), qt),
-        (new_f - new_g)::typeof(f)
+        return polynomial(st, T),
+        polynomial(qt, T),
+        (new_f - new_g)::polynomial_type(f)
     end
 end
 
@@ -461,10 +462,8 @@ function MA.promote_operation(
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
 function Base.divrem(f::_APL, g::_APL; kwargs...)
-    rf = convert(
-        MA.promote_operation(div, typeof(f), typeof(g)),
-        MA.copy_if_mutable(f),
-    )
+    R = MA.promote_operation(div, typeof(f), typeof(g))
+    rf = polynomial(MA.copy_if_mutable(f), coefficient_type(R))
     q = zero(rf)
     r = zero(rf)
     lt = leading_term(g)
@@ -492,10 +491,8 @@ function Base.divrem(f::_APL, g::_APL; kwargs...)
     return q, r
 end
 function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
-    rf = convert(
-        MA.promote_operation(div, typeof(f), eltype(g)),
-        MA.copy_if_mutable(f),
-    )
+    R = MA.promote_operation(div, typeof(f), eltype(g))
+    rf = polynomial(MA.copy_if_mutable(f), coefficient_type(R))
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
