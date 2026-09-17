@@ -17,6 +17,7 @@ DP: DynamicPolynomials
 TP: TypedPolynomials
 MP: MultivariatePolynomials
 SA: StarAlgebras
+MB: MultivariateBases
 
 All packages should be in ~/.julia/dev
 
@@ -50,3 +51,7 @@ In the printing of stack-traces, you can see that because we just have generic t
 This gives the user extra flexibility to try new these, and in these cases, it will be nice to have precise stacktraces, but we also want the common cases (like what you get with DP.@polyvar x y; 2 * x + y)
 to have a very small type like DP.Polynomial{Int}
 We can solve it easily by having a "const Polynomial = ..." in DynamicPolynomials, don't hesitate to do this early on, it will help you be more context-efficient.
+
+Note that MB currently already defines a polynomial using SA.AlgebraElement. So we can just basically steal the code he has.
+He also has code that handles the interaction between MP.APL and SA.AlgebraElement, this will go away since everything will be an AlgebraElement now !
+This means that in MB, a lot of code will go away since it will move to MP, what will be left is just defining new bases essentially.
