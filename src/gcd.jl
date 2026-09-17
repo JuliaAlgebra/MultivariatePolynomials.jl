@@ -128,6 +128,37 @@ function MA.promote_operation(
     return MA.promote_operation(rem_or_pseudo_rem, P, Q, A)
 end
 
+function MA.promote_operation(
+    ::typeof(gcd),
+    P::Type{<:AbstractMonomialLike},
+    Q::Type{<:AbstractMonomialLike},
+)
+    return promote_type(monomial_type(P), monomial_type(Q))
+end
+
+function MA.promote_operation(
+    ::typeof(gcd),
+    P::Type{<:AbstractTermLike},
+    Q::Type{<:AbstractTermLike},
+    ::Type{<:AbstractUnivariateGCDAlgorithm} = SubresultantAlgorithm,
+)
+    M = MA.promote_operation(gcd, monomial_type(P), monomial_type(Q))
+    T = MA.promote_operation(
+        _coefficient_gcd,
+        coefficient_type(P),
+        coefficient_type(Q),
+    )
+    return term_type(M, T)
+end
+
+function MA.promote_operation(
+    ::typeof(_coefficient_gcd),
+    P::Type{<:_APL},
+    Q::Type{<:_APL},
+)
+    return MA.promote_operation(gcd, P, Q)
+end
+
 """
     function gcd(p1::_APL, p2::_APL)
 
@@ -183,15 +214,15 @@ function Base.gcd(
     # If one of these is zero, `shift` should be infinite
     # for this method to work so we exclude these cases.
     if isapproxzero(p1)
-        return polynomial(
+        return convert(
+            MA.promote_operation(gcd, typeof(p1), typeof(p2)),
             _copy(p2, m2),
-            coefficient_type(MA.promote_operation(gcd, typeof(p1), typeof(p2))),
         )
     end
     if isapproxzero(p2)
-        return polynomial(
+        return convert(
+            MA.promote_operation(gcd, typeof(p1), typeof(p2)),
             _copy(p1, m1),
-            coefficient_type(MA.promote_operation(gcd, typeof(p1), typeof(p2))),
         )
     end
     shift1, defl1 = deflation(p1)
@@ -280,7 +311,7 @@ function deflate(p::_APL, shift, defl)
     return q
 end
 function inflate(α, shift, defl)
-    return inflate(polynomial(constant_term(α, shift)), shift, defl)
+    return inflate(convert(polynomial_type(shift, typeof(α)), α), shift, defl)
 end
 function inflate(p::_APL, shift, defl)
     if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
@@ -335,11 +366,9 @@ function deflated_gcd(
             return univariate_gcd(p1, p2, algo, m1, m2)
         else
             if isapproxzero(p1)
-                return polynomial(
+                return convert(
+                    MA.promote_operation(gcd, typeof(p1), typeof(p2)),
                     _copy(p2, m2),
-                    coefficient_type(
-                        MA.promote_operation(gcd, typeof(p1), typeof(p2)),
-                    ),
                 )
             end
             v2 = variables(p2)[i2]
@@ -350,11 +379,9 @@ function deflated_gcd(
     else
         if iszero(i2)
             if isapproxzero(p2)
-                return polynomial(
+                return convert(
+                    MA.promote_operation(gcd, typeof(p1), typeof(p2)),
                     _copy(p1, m1),
-                    coefficient_type(
-                        MA.promote_operation(gcd, typeof(p1), typeof(p2)),
-                    ),
                 )
             end
             v1 = variables(p1)[i1]
@@ -379,20 +406,20 @@ function Base.gcdx(
     algo::AbstractUnivariateGCDAlgorithm = GeneralizedEuclideanAlgorithm(),
 )
     i1, i2, num_common = _extracted_variable(p1, p2)
-    R = MA.promote_operation(gcd, typeof(p1), typeof(p2))
+    R = polynomial_type(MA.promote_operation(gcd, typeof(p1), typeof(p2)))
     if iszero(i1)
         if iszero(i2)
             return univariate_gcdx(p1, p2, algo)
         else
             if isapproxzero(p1)
-                return zero(R), one(R), polynomial(p2, coefficient_type(R))
+                return zero(R), one(R), convert(R, p2)
             end
             error("Not implemented yet")
         end
     else
         if iszero(i2)
             if isapproxzero(p2)
-                return one(R), zero(R), polynomial(p1, coefficient_type(R))
+                return one(R), zero(R), convert(R, p1)
             end
             error("Not implemented yet")
         else
@@ -572,10 +599,9 @@ function primitive_univariate_gcd!(
     if maxdegree(p) < maxdegree(q)
         return primitive_univariate_gcd!(q, p, algo)
     end
-    R = MA.promote_operation(gcd, typeof(p), typeof(q))
-    T = coefficient_type(R)
-    u = polynomial(p, T)
-    v = polynomial(q, T)
+    R = polynomial_type(MA.promote_operation(gcd, typeof(p), typeof(q)))
+    u = convert(R, p)
+    v = convert(R, q)
     while true
         if isapproxzero(v)
             return u
@@ -616,10 +642,9 @@ function primitive_univariate_gcd!(
     if maxdegree(p) < maxdegree(q)
         return primitive_univariate_gcd!(q, p, algo)
     end
-    R = MA.promote_operation(gcd, typeof(p), typeof(q))
-    T = coefficient_type(R)
-    u = polynomial(p, T)
-    v = polynomial(q, T)
+    R = polynomial_type(MA.promote_operation(gcd, typeof(p), typeof(q)))
+    u = convert(R, p)
+    v = convert(R, q)
     if isapproxzero(v)
         return primitive_part(u, algo, MA.IsMutable())::R
     elseif isconstant(v)
@@ -701,10 +726,9 @@ function primitive_univariate_gcdx(
         a, b, g = primitive_univariate_gcdx(v0, u0, algo)
         return b, a, g
     end
-    R = MA.promote_operation(gcd, typeof(u0), typeof(v0))
-    T = coefficient_type(R)
-    u = polynomial(u0, T)
-    v = polynomial(v0, T)
+    R = polynomial_type(MA.promote_operation(gcd, typeof(u0), typeof(v0)))
+    u = convert(R, u0)
+    v = convert(R, v0)
     if isapproxzero(v)
         return one(R), zero(R), u
     elseif isconstant(v)
@@ -905,9 +929,7 @@ function content(
         return zero(P)
     end
     if length(coefs) == 1
-        c = _copy(first(coefs), mutability)
-        return P <: AbstractPolynomial ? polynomial(c, coefficient_type(P)) :
-               convert(P, c)
+        return convert(P, _copy(first(coefs), mutability))
     end
     # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
     if T <: _APL
@@ -930,7 +952,7 @@ function content(
                     )
                     isone(g) && break
                 end
-                return polynomial(g, coefficient_type(P))
+                return convert(P, g)
             end
         end
     end
