@@ -106,4 +106,46 @@ end
     @test MP.polynomial(MP.term(a, c)) == a
 end
 
+@testset "Coefficient types in division and GCD" begin
+    DP.@polyvar x y
+    algo = MP.SubresultantAlgorithm()
+    immutable = MP.MA.IsNotMutable()
+    for (p, T, field) in (
+        (x, Int, Rational{Int}),
+        (x^2, Int, Rational{Int}),
+        (2x, Int, Rational{Int}),
+        (2x + 1, Int, Rational{Int}),
+        ((2 // 3) * x, Rational{Int}, Rational{Int}),
+        ((2 // 3) * x + 1, Rational{Int}, Rational{Int}),
+        (2.0x, Float64, Float64),
+        (2.0x + 1, Float64, Float64),
+    )
+        P = typeof(p)
+        for op in (div, rem)
+            @test MP.MA.promote_operation(op, P, P) === DP.Polynomial{field}
+        end
+        for op in (MP.pseudo_rem, MP.rem_or_pseudo_rem)
+            @test MP.MA.promote_operation(op, P, P, typeof(algo)) ===
+                  DP.Polynomial{T}
+        end
+    end
+    for p in (x, x^2)
+        @test (@inferred MP.content(p, algo, immutable)) === 1
+        @test MP.primitive_part(p, algo, immutable) == p
+    end
+    @test MP.content(6x, algo, immutable) == 6
+    @test MP.content(6x + 9, algo, immutable) == 3
+    @test MP.content(zero(x + y), algo, immutable) == 0
+    @test MP.primitive_part(6x + 9, algo, immutable) == 2x + 3
+    for p in (2.5x, 2.5x + 1)
+        @test MP.content(p, algo, immutable) === 1.0
+        @test MP.primitive_part(p, algo, immutable) === p
+    end
+    complex_term = (2.0 + 3.0im) * x
+    @test MP.primitive_part(complex_term, algo, immutable) === complex_term
+    @test gcd(x^2, x^3) == x^2
+    @test gcd(6x, 9x) == 3x
+    @test isempty(Test.detect_unbound_args(MP))
+end
+
 end # module

@@ -197,7 +197,7 @@ function Base.rem(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
 end
 
 """
-    pseudo_divrem(f::_APL{S}, g::_APL{T}, algo) where {S,T}
+    pseudo_divrem(f::_APL, g::_APL, algo)
 
 Return the pseudo divisor and remainder of `f` modulo `g` as defined in [Knu14, Algorithm R, p. 425].
 
@@ -216,7 +216,9 @@ See also [`pseudo_rem`](@ref).
 *Art of computer programming, volume 2: Seminumerical algorithms.*
 Addison-Wesley Professional. Third edition.
 """
-function pseudo_divrem(f::_APL{S}, g::_APL{T}, algo) where {S,T}
+function pseudo_divrem(f::_APL, g::_APL, algo)
+    S = coefficient_type(f)
+    T = coefficient_type(g)
     return _pseudo_divrem(
         algebraic_structure(MA.promote_operation(-, S, T)),
         f,
@@ -268,7 +270,9 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {T,S,P<:_APL{T},Q<:_APL{S},A}
+) where {P<:_APL,Q<:_APL,A}
+    T = coefficient_type(P)
+    S = coefficient_type(Q)
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
@@ -360,12 +364,9 @@ end
 _op(::Field) = rem
 _op(::UFD) = pseudo_rem
 
-function MA.operate!(
-    ::typeof(rem_or_pseudo_rem),
-    f::_APL{S},
-    g::_APL{T},
-    algo,
-) where {S,T}
+function MA.operate!(::typeof(rem_or_pseudo_rem), f::_APL, g::_APL, algo)
+    S = coefficient_type(f)
+    T = coefficient_type(g)
     return MA.operate!(
         _op(algebraic_structure(MA.promote_operation(-, S, T))),
         f,
@@ -377,10 +378,12 @@ end
 function MA.buffered_operate!(
     buffer,
     ::typeof(rem_or_pseudo_rem),
-    f::_APL{S},
-    g::_APL{T},
+    f::_APL,
+    g::_APL,
     algo,
-) where {S,T}
+)
+    S = coefficient_type(f)
+    T = coefficient_type(g)
     return MA.buffered_operate!(
         buffer,
         _op(algebraic_structure(MA.promote_operation(-, S, T))),
@@ -392,10 +395,12 @@ end
 
 function MA.buffer_for(
     ::typeof(rem_or_pseudo_rem),
-    F::Type{<:_APL{S}},
-    G::Type{<:_APL{T}},
+    F::Type{<:_APL},
+    G::Type{<:_APL},
     A::Type,
-) where {S,T}
+)
+    S = coefficient_type(F)
+    T = coefficient_type(G)
     return MA.buffer_for(
         _op(algebraic_structure(MA.promote_operation(-, S, T))),
         F,
@@ -409,7 +414,9 @@ function MA.promote_operation(
     ::Type{P},
     ::Type{Q},
     ::Type{A},
-) where {T,S,P<:_APL{T},Q<:_APL{S},A}
+) where {P<:_APL,Q<:_APL,A}
+    T = coefficient_type(P)
+    S = coefficient_type(Q)
     return _promote_operation_rem_or_pseudo_rem(
         algebraic_structure(MA.promote_operation(-, S, T)),
         P,
@@ -446,12 +453,14 @@ function MA.promote_operation(
     ::Union{typeof(div),typeof(rem)},
     ::Type{P},
     ::Type{Q},
-) where {T,S,P<:_APL{T},Q<:_APL{S}}
+) where {P<:_APL,Q<:_APL}
+    T = coefficient_type(P)
+    S = coefficient_type(Q)
     U = MA.promote_operation(/, promote_to_field(T), promote_to_field(S))
     # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
     return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
 end
-function Base.divrem(f::_APL{T}, g::_APL{S}; kwargs...) where {T,S}
+function Base.divrem(f::_APL, g::_APL; kwargs...)
     rf = convert(
         MA.promote_operation(div, typeof(f), typeof(g)),
         MA.copy_if_mutable(f),
@@ -482,11 +491,7 @@ function Base.divrem(f::_APL{T}, g::_APL{S}; kwargs...) where {T,S}
     end
     return q, r
 end
-function Base.divrem(
-    f::_APL{T},
-    g::AbstractVector{<:_APL{S}};
-    kwargs...,
-) where {T,S}
+function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
     rf = convert(
         MA.promote_operation(div, typeof(f), eltype(g)),
         MA.copy_if_mutable(f),

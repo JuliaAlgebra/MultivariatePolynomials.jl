@@ -203,16 +203,14 @@ constant_term(α, p) = term(α, constant_monomial(p))
 # zero should return a polynomial since it is often used to keep the result of a summation of terms.
 # For example, Base.vecdot(x::Vector{<:AbstractTerm}, y:Vector{Int}) starts with `s = zero(dot(first(x), first(y)))` and then adds terms.
 # We want `s` to start as a polynomial for this operation to be efficient.
-#Base.zero(::Type{TT}) where {T, TT<:AbstractTermLike{T}} = zero(T) * constant_monomial(TT)
-#Base.zero(t::AbstractTermLike{T}) where {T} = zero(T) * constant_monomial(t)
 """
-    zero_term(p::AbstractPolynomialLike{T}) where T
+    zero_term(p::AbstractPolynomialLike)
 
-Equivalent to `constant_term(zero(T), p)`.
+Equivalent to `constant_term(zero(coefficient_type(p)), p)`.
 
-    zero_term(α, ::Type{PT} where {T, PT<:AbstractPolynomialLike{T}}
+    zero_term(::Type{PT}) where {PT<:AbstractPolynomialLike}
 
-Equivalent to `constant_term(zero(T), PT)`.
+Equivalent to `constant_term(zero(coefficient_type(PT)), PT)`.
 """
 function zero_term(
     p::Union{AbstractPolynomialLike,Type{<:AbstractPolynomialLike}},
