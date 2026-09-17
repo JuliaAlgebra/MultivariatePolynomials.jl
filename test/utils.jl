@@ -53,16 +53,15 @@ Base.copy(p::CustomTerms) = CustomTerms(copy(p.p))
 function _typetests(x, ::Type{T}) where {T}
     @test (@inferred coefficient_type(x)) == Int
 
-    @test (@inferred monomial_type(x)) <: AbstractMonomial
+    @test (@inferred monomial_type(x))<:AbstractMonomial
 
-    @test (@inferred term_type(x)) <: AbstractTerm{Int}
-    @test (@inferred term_type(x, Float64)) <: AbstractTerm{Float64}
+    @test (@inferred term_type(x))<:AbstractTerm{Int}
+    @test (@inferred term_type(x, Float64))<:AbstractTerm{Float64}
 
-    @test (@inferred polynomial_type(x)) <: AbstractPolynomial{Int}
-    @test (@inferred polynomial_type(x, Float64)) <: AbstractPolynomial{Float64}
+    @test (@inferred polynomial_type(x))<:AbstractPolynomial{Int}
+    @test (@inferred polynomial_type(x, Float64))<:AbstractPolynomial{Float64}
 
-    @test (@inferred monomial_vector_type(x)) <:
-          AbstractArray{<:AbstractMonomial}
+    @test (@inferred monomial_vector_type(x))<:AbstractArray{<:AbstractMonomial}
 end
 
 function typetests(
