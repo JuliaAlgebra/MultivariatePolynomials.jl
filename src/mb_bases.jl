@@ -115,10 +115,16 @@ function implicit(a::SA.AlgebraElement)
     return algebra_element(SA.coeffs(a, basis), basis)
 end
 
+function _comparable_type(
+    ::Type{<:SA.MappedBasis{T,I,<:ExponentsIterator{M}}},
+) where {T,I,M}
+    return M
+end
 function _coeffs_type(::Type{C}, ::Type{B}) where {C,B<:FullBasis}
-    T = eltype(C)
+    T = eltype(C) # Even works for `NTuple`!
     E = SA.key_type(B)
-    return SA.SparseCoefficients{E,T,_similar_type(C, E),C,typeof(isless)}
+    L = _comparable_type(B)
+    return SA.SparseCoefficients{E,T,_similar_type(C, E),C,L}
 end
 
 function _coeffs_type(::Type{C}, ::Type{B}) where {C,B<:SubBasis}
@@ -191,20 +197,11 @@ _lazy_collect(v::AbstractVector) = collect(v)
 _lazy_collect(v::Tuple) = collect(v)
 _lazy_collect(v::Vector) = v
 
-function sparse_coefficients(p::AbstractPolynomial)
-    return SA.SparseCoefficients(
-        exponents.(monomials(p)),
-        _lazy_collect(coefficients(p)),
-    )
-end
-
-function sparse_coefficients(t::AbstractTermLike)
-    return SA.SparseCoefficients((exponents(t),), (coefficient(t),))
-end
-
-function algebra_element(p::_APL)
-    return algebra_element(sparse_coefficients(p), FullBasis{Monomial}(p))
-end
+sparse_coefficients(p::AbstractPolynomial) = SA.coeffs(p)
+sparse_coefficients(t::AbstractTermLike) = SA.coeffs(algebra_element(t))
+algebra_element(p::AbstractPolynomial) = p
+algebra_element(t::AbstractTerm) = SA.algebra_element(t)
+algebra_element(m::AbstractMonomialLike) = SA.algebra_element(term(m))
 
 function algebra_element(f::Function, basis::SubBasis)
     return algebra_element(map(f, eachindex(basis)), basis)
@@ -215,17 +212,11 @@ function _similar_type(::Type{V}, ::Type{T}) where {V<:AbstractVector,T}
     return SA.similar_type(V, T)
 end
 
-function full_basis_type(
-    ::Type{B},
-    ::Type{P},
-) where {B,P<:AbstractPolynomialLike}
-    V = MA.promote_operation(variables, P)
-    E = _similar_type(V, Int)
-    O = ordering(P)
+function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
     return SA.MappedBasis{
         Polynomial{B,V,E},
         E,
-        ExponentsIterator{O,Nothing,E},
+        ExponentsIterator{ordering(V),Nothing,E},
         Variables{B,V},
         typeof(exponents),
     }
@@ -233,9 +224,9 @@ end
 
 function MA.promote_operation(
     ::typeof(algebra_element),
-    P::Type{<:AbstractPolynomialLike{T}},
-) where {T}
-    return algebra_element_type(Vector{T}, full_basis_type(Monomial, P))
+    P::Type{<:AbstractPolynomialLike},
+)
+    return polynomial_type(P)
 end
 
 _one_if_type(α) = α
@@ -249,12 +240,8 @@ function constant_algebra_element_type(
 end
 
 function constant_algebra_element(b::FullBasis, α)
-    return algebra_element(
-        SA.SparseCoefficients(
-            (constant_monomial_exponents(b),),
-            (_one_if_type(α),),
-        ),
-        b,
+    return SA.algebra_element(
+        SA.Term(algebra(b), constant_monomial_exponents(b), _one_if_type(α)),
     )
 end
 

@@ -25,8 +25,8 @@ function term(coef, mono::AbstractMonomialLike)
     return SA.Term(coef, mono)
 end
 # Convert any polynomial-like to a term
-term(m::AbstractMonomialLike) = SA.Term(one(Int), m)
-term(t::SA.Term) = t
+term(m::AbstractMonomialLike) = term(one(Int), monomial(m))
+term(t::AbstractTerm) = t
 
 """
     term_type(p::AbstractPolynomialLike)
@@ -51,16 +51,18 @@ term_type(::Type{TT}) where {TT<:SA.Term} = TT
 function term_type(::Type{<:SA.Term{<:Any,A,I}}, ::Type{T}) where {T,A,I}
     return SA.Term{T,A,I}
 end
-term_type(p::Type{<:_APL}, ::Type{T}) where {T} = term_type(term_type(p), T)
 term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
-# Break the term_type/monomial_type cycle for bare AbstractMonomialLike:
-# Return the UnionAll SA.Term{T} (without algebra/index params)
-function term_type(::Type{AbstractMonomialLike}, ::Type{T}) where {T}
-    return SA.Term{T}
-end
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)
+end
+function term_type(
+    ::Type{<:SA.AlgebraElement{T,A,C}},
+) where {T,A<:_PolynomialAlgebra,C}
+    return SA.Term{T,A,SA.key_type(C)}
+end
+function term_type(::Type{P}, ::Type{T}) where {P<:AbstractPolynomial,T}
+    return term_type(term_type(P), T)
 end
 term_type(p::_APL, ::Type{T}) where {T} = term_type(typeof(p), T)
 term_type(p::_APL) = term_type(typeof(p))
@@ -94,16 +96,13 @@ Calling `coefficient(2x + 4y^2 + 3, x^2)` should return ``0``.
 function coefficient end
 coefficient(t::SA.Term) = SA.coefficient(t)
 coefficient(m::AbstractMonomialLike) = 1
-function coefficient(
-    p::AbstractPolynomialLike{T},
-    m::AbstractMonomialLike,
-) where {T}
+function coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)
     for t in terms(p)
         if monomial(t) == m
             return coefficient(t)
         end
     end
-    return zero(T)
+    return zero(coefficient_type(p))
 end
 
 """
@@ -149,13 +148,19 @@ calling `coefficient_type` on ``1.0x^2y + 2.0x`` should return `Float64` and
 calling `coefficient_type` on ``xy`` should return `Int`.
 """
 function coefficient_type(
-    ::Union{PT,Type{PT},AbstractVector{PT},Type{<:AbstractVector{PT}}},
-) where {T,PT<:AbstractPolynomialLike{T}}
-    return T
+    ::Union{AbstractVector{P},Type{<:AbstractVector{P}}},
+) where {P<:AbstractPolynomialLike}
+    return coefficient_type(P)
 end
 function coefficient_type(
-    ::Union{SA.Term{T,B},Type{SA.Term{T,B}}},
-) where {T,B}
+    ::Union{AbstractMonomialLike,Type{<:AbstractMonomialLike}},
+)
+    return Int
+end
+coefficient_type(::Union{AbstractTerm{T},Type{<:AbstractTerm{T}}}) where {T} = T
+function coefficient_type(
+    ::Union{AbstractPolynomial{T},Type{<:AbstractPolynomial{T}}},
+) where {T}
     return T
 end
 
@@ -181,7 +186,7 @@ In order to create `x^2 * y`,
 """
 function monomial end
 # basis_element returns Polynomial{Monomial,...}, monomial() converts to actual monomial
-monomial(t::SA.Term) = monomial(SA.basis_element(t))
+monomial(t::AbstractTerm) = SA.basis_element(t)
 monomial(m::AbstractMonomial) = m
 
 """
@@ -209,10 +214,11 @@ Equivalent to `constant_term(zero(T), p)`.
 
 Equivalent to `constant_term(zero(T), PT)`.
 """
-zero_term(::Type{PT}) where {T,PT<:AbstractPolynomialLike{T}} = constant_term(zero(T), PT)
-zero_term(p::AbstractPolynomialLike{T}) where {T} = constant_term(zero(T), p)
-zero_term(::Type{SA.Term{T,B}}) where {T,B} = constant_term(zero(T), SA.Term{T,B})
-zero_term(t::SA.Term) = constant_term(zero(coefficient(t)), t)
+function zero_term(
+    p::Union{AbstractPolynomialLike,Type{<:AbstractPolynomialLike}},
+)
+    return constant_term(zero(coefficient_type(p)), p)
+end
 
 function Base.zero(::Type{TT}) where {TT<:AbstractMonomialLike}
     return zero(polynomial_type(TT))
@@ -223,19 +229,16 @@ end
 function MA.promote_operation(::typeof(zero), PT::Type{<:AbstractMonomialLike})
     return polynomial_type(PT)
 end
-# SA.Term already defines `zero(t::Term)` and `one(t::Term)` in StarAlgebras.
-# For type-level zero, return a polynomial (for summation efficiency):
-function Base.zero(::Type{SA.Term{T,M}}) where {T,M}
-    return zero(polynomial_type(SA.Term{T,M}))
+function Base.zero(::Type{T}) where {T<:AbstractTerm}
+    return zero(polynomial_type(T))
 end
-function MA.promote_operation(::typeof(zero), PT::Type{<:SA.Term})
-    return polynomial_type(PT)
+function MA.promote_operation(::typeof(zero), ::Type{T}) where {T<:AbstractTerm}
+    return polynomial_type(T)
 end
-# `one` and `MA.promote_operation(one, ...)` for monomials is defined in monomial.jl
-# `one(t::SA.Term)` and `one(::Type{SA.Term{T,M}})` are defined in StarAlgebras
-function MA.promote_operation(::typeof(one), ::Type{SA.Term{T,M}}) where {T,M}
-    return SA.Term{T,M}
-end
-function MA.promote_operation(::typeof(one), PT::Type{<:AbstractPolynomialLike})
-    return polynomial_type(PT)
+Base.one(t::AbstractTerm) = one(algebra_element(t))
+function MA.promote_operation(
+    ::typeof(one),
+    ::Type{T},
+) where {T<:Union{AbstractTerm,AbstractPolynomial}}
+    return polynomial_type(T)
 end

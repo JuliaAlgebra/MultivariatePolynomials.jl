@@ -12,8 +12,6 @@ monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
 monomial_type(::Union{AbstractMonomialLike,Type{AbstractMonomialLike}}) = AbstractMonomialLike
 # For SA.Term{T,A,I}: derive monomial type from the algebra type A
 monomial_type(::Type{<:SA.Term{<:Any,A}}) where {A} = monomial_type(A)
-# For bare SA.Term{T} (UnionAll), we can't determine a specific monomial type
-monomial_type(::Type{SA.Term{T}}) where {T} = AbstractMonomialLike
 # Generic fallback for other _APL types (polynomials etc.)
 function monomial_type(::Union{PT,Type{PT}}) where {PT<:AbstractPolynomialLike}
     return monomial_type(term_type(PT))
@@ -140,6 +138,10 @@ function constant_monomial(::Type{PT}) where {PT<:_APL}
     return constant_monomial(monomial_type(PT))
 end
 constant_monomial(t::AbstractTerm) = constant_monomial(monomial(t))
+constant_monomial(v::AbstractVariable) = constant_monomial(monomial(v))
+function constant_monomial(p::AbstractPolynomial)
+    return one(SA.object(parent(p)))
+end
 
 """
     map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
@@ -164,11 +166,6 @@ Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constant_monomial(TT)
 Base.one(t::AbstractMonomialLike) = constant_monomial(t)
 function MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike})
     return monomial_type(MT)
-end
-# Bridge MA.operate!(one, ...) to constant_monomial for monomials
-# so that SA.Term's generic operate!(one, t) works via operate!(one, t.basis_element)
-function MA.operate!(::typeof(one), m::AbstractMonomial)
-    return MA.operate!(constant_monomial, m)
 end
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).

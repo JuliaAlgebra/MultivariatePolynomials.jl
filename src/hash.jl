@@ -15,7 +15,12 @@ function Base.hash(m::AbstractMonomial, u::UInt)
     end
 end
 
-# hash for SA.Term is defined in StarAlgebras
+function Base.hash(t::AbstractTerm, u::UInt)
+    if !iszero(t) && isconstant(t)
+        return hash(coefficient(t), u)
+    end
+    return invoke(hash, Tuple{SA.Term,UInt}, t, u)
+end
 
 function Base.hash(p::AbstractPolynomial, u::UInt)
     if iszero(p)
