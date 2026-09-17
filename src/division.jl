@@ -170,7 +170,7 @@ function div_multiple(f::_APL, g::_APL, mf::MA.MutableTrait = MA.IsNotMutable())
         return div_multiple(f, lt, mf)
     end
     rf = _copy(f, mf)
-    rg = remove_leading_term(g)
+    rg = SA.remove_leading_term(g)
     q = zero(rf)
     while !iszero(rf)
         ltf = leading_term(rf)
@@ -183,7 +183,7 @@ function div_multiple(f::_APL, g::_APL, mf::MA.MutableTrait = MA.IsNotMutable())
         end
         qt = div_multiple(ltf, lt)
         q = MA.add!!(q, qt)
-        rf = MA.operate!!(remove_leading_term, rf)
+        rf = MA.operate!!(SA.remove_leading_term, rf)
         rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
     end
     return q
@@ -234,13 +234,13 @@ end
 
 function _pseudo_divrem(::UFD, f::_APL, g::_APL, algo)
     ltg = leading_term(g)
-    rg = remove_leading_term(g)
+    rg = SA.remove_leading_term(g)
     ltf = leading_term(f)
     if iszero(f) || !divides(monomial(ltg), ltf)
         return one(f), zero(f), zero(f)
     else
         st = constant_term(coefficient(ltg), f)
-        new_f = st * remove_leading_term(f)
+        new_f = st * SA.remove_leading_term(f)
         qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
         R = polynomial_type(f)
@@ -318,10 +318,10 @@ function MA.buffered_operate!(
     ltf = leading_term(f)
     # This only makes sense in the univariate case but it's only used for univariate gcd anyway
     skipped_divisions = maxdegree(f) - maxdegree(g) + 1
-    MA.operate!(remove_leading_term, g)
+    MA.operate!(SA.remove_leading_term, g)
     while !iszero(f)
         if isapproxzero(ltf) # TODO `, kwargs...)`
-            MA.operate!(remove_leading_term, f)
+            MA.operate!(SA.remove_leading_term, f)
         elseif !divides(monomial(ltg), ltf)
             # Since the monomials are sorted in decreasing order,
             # lm is larger than all of them hence it cannot divide any of them
@@ -330,9 +330,9 @@ function MA.buffered_operate!(
             if monomial(ltg) > monomial(ltf)
                 break
             end
-            MA.operate!(remove_leading_term, f)
+            MA.operate!(SA.remove_leading_term, f)
         else
-            MA.operate!(remove_leading_term, f)
+            MA.operate!(SA.remove_leading_term, f)
             t = _prepare_s_poly!(op, f, ltf, ltg)
             skipped_divisions -= 1
             MA.buffered_operate!(buffer, MA.sub_mul, f, t, g)
@@ -465,16 +465,16 @@ function Base.divrem(f::_APL, g::_APL; kwargs...)
     q = zero(rf)
     r = zero(rf)
     lt = leading_term(g)
-    rg = remove_leading_term(g)
+    rg = SA.remove_leading_term(g)
     lm = monomial(lt)
     while !iszero(rf)
         ltf = leading_term(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!!(remove_leading_term, rf)
+            rf = MA.operate!!(SA.remove_leading_term, rf)
         elseif divides(lm, ltf)
             qt = div_multiple(ltf, lt)
             q = MA.add!!(q, qt)
-            rf = MA.operate!!(remove_leading_term, rf)
+            rf = MA.operate!!(SA.remove_leading_term, rf)
             rf = MA.operate!!(MA.sub_mul, rf, qt, rg)
         elseif lm > monomial(ltf)
             # Since the monomials are sorted in decreasing order,
@@ -483,7 +483,7 @@ function Base.divrem(f::_APL, g::_APL; kwargs...)
             break
         else
             r = MA.add!!(r, ltf)
-            rf = MA.operate!!(remove_leading_term, rf)
+            rf = MA.operate!!(SA.remove_leading_term, rf)
         end
     end
     return q, r
@@ -497,13 +497,13 @@ function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
         q[i] = zero(rf)
     end
     lt = leading_term.(g)
-    rg = remove_leading_term.(g)
+    rg = SA.remove_leading_term.(g)
     lm = monomial.(lt)
     useful = BitSet(eachindex(g))
     while !iszero(rf)
         ltf = leading_term(rf)
         if isapproxzero(ltf; kwargs...)
-            rf = MA.operate!!(remove_leading_term, rf)
+            rf = MA.operate!!(SA.remove_leading_term, rf)
             continue
         end
         divisionoccured = false
@@ -511,7 +511,7 @@ function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
             if divides(lm[i], ltf)
                 qt = div_multiple(ltf, lt[i])
                 q[i] = MA.add!!(q[i], qt)
-                rf = MA.operate!!(remove_leading_term, rf)
+                rf = MA.operate!!(SA.remove_leading_term, rf)
                 rf = MA.operate!!(MA.sub_mul, rf, qt, rg[i])
                 divisionoccured = true
                 break
@@ -527,7 +527,7 @@ function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
                 break
             else
                 r = MA.add!!(r, ltf)
-                rf = MA.operate!!(remove_leading_term, rf)
+                rf = MA.operate!!(SA.remove_leading_term, rf)
             end
         end
     end

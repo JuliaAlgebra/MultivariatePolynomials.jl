@@ -95,7 +95,7 @@ leading_term
 leading_coefficient
 leading_monomial
 deg_num_leading_terms
-remove_leading_term
+SA.remove_leading_term
 remove_monomials
 filter_terms
 OfDegree

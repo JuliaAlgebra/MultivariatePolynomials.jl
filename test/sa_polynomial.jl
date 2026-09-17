@@ -225,6 +225,90 @@ end
     @test c == 2x
 end
 
+@testset "Leading-term removal and restoration" begin
+    DP.@polyvar x
+    for p in (x, x^2, 2x)
+        remainder = MP.MA.operate(SA.remove_leading_term, p)
+        @test typeof(remainder) === typeof(zero(p))
+        @test iszero(remainder)
+    end
+    for (p, expected) in (
+        (zero(x + 1), 0),
+        (MP.polynomial(2x), 0),
+        (x^2 + x + 1, x + 1),
+        (big(2) * x + 3, 3),
+    )
+        original = deepcopy(p)
+        leading = MP.leading_term(p)
+        remainder = SA.remove_leading_term(p)
+        @test remainder == expected
+        @test typeof(remainder) ===
+              MP.MA.promote_operation(SA.remove_leading_term, typeof(p)) ===
+              typeof(p)
+        @test parent(remainder) === parent(p)
+        @test p == original
+        @test MP.MA.operate!(SA.remove_leading_term, p) === p
+        @test p == expected
+        @test all(c -> !iszero(c), values(SA.coeffs(p)))
+        @test MP.MA.operate!(MP.unsafe_restore_leading_term, p, leading) === p
+        @test p == original
+        if !iszero(leading)
+            @test MP.leading_coefficient(p) === MP.coefficient(leading)
+        end
+    end
+
+    basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[0], [1], [2]])
+    for c in ([1, 0, 3], SA.SparseArrays.sparsevec([1, 3], [1, 3], 3))
+        p = SA.AlgebraElement(c, MP.algebra(basis))
+        leading = MP.leading_term(p)
+        @test SA.remove_leading_term(p) == 1
+        @test MP.MA.operate!(SA.remove_leading_term, p) === p
+        @test p == 1
+        @test MP.MA.operate!(MP.unsafe_restore_leading_term, p, leading) === p
+        @test p == 3x^2 + 1
+    end
+
+    coefficient = [1 2; 3 4]
+    p = MP.polynomial(MP.term(coefficient, x))
+    leading = MP.leading_term(p)
+    MP.MA.operate!(SA.remove_leading_term, p)
+    @test iszero(p)
+    @test MP.coefficient(leading) == [1 2; 3 4]
+    MP.MA.operate!(MP.unsafe_restore_leading_term, p, leading)
+    @test MP.leading_coefficient(p) === coefficient
+end
+
+@testset "Polynomial division" begin
+    DP.@polyvar x y
+    for T in (Int, Rational{Int}, Float64, BigInt)
+        for (f, g, q, r) in
+            ((x^2 - 1, x - 1, x + 1, 0), (x^3 + 2x + 1, x^2 + 1, x, x + 1))
+            f = convert(DP.Polynomial{T}, f)
+            g = convert(DP.Polynomial{T}, g)
+            originals = deepcopy((f, g))
+            quotient, remainder = divrem(f, g)
+            @test quotient == q
+            @test remainder == r
+            @test quotient * g + remainder == f
+            @test (f, g) == originals
+        end
+    end
+    f = x^2 * y + x + 1
+    divisors = [MP.polynomial(x * y)]
+    originals = deepcopy((f, divisors))
+    quotients, remainder = divrem(f, divisors)
+    @test quotients == [x]
+    @test remainder == x + 1
+    @test (f, divisors) == originals
+
+    f = convert(DP.Polynomial{Rational{Int}}, 2)
+    g = convert(DP.Polynomial{Rational{Int}}, 3x^2 + 1)
+    original = deepcopy(g)
+    @test MP.MA.operate!(rem, f, g, MP.GeneralizedEuclideanAlgorithm()) === f
+    @test f == 2
+    @test g == original
+end
+
 @testset "GCD result type promotion" begin
     DP.@polyvar x y
     for (a, b) in (

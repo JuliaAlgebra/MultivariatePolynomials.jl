@@ -362,39 +362,22 @@ function leading_monomial(p::AbstractPolynomialLike)
 end
 leading_monomial(t::AbstractTermLike) = monomial(t)
 
-#$(SIGNATURES)
-"""
-    remove_leading_term(p::AbstractPolynomialLike)
-
-Returns a polynomial with the leading term removed in the polynomial `p`.
-
-### Examples
-
-Calling `remove_leading_term` on ``4x^2y + xy + 2x`` should return ``xy + 2x``.
-"""
-function remove_leading_term(p::AbstractPolynomialLike)
-    # Iterators.drop returns an Interators.Drop which is not an AbstractVector
-    return polynomial(terms(p)[1:(end-1)], SortedUniqState())
+SA.remove_leading_term(m::AbstractMonomialLike) = zero(m)
+function MA.operate(::typeof(SA.remove_leading_term), m::AbstractMonomialLike)
+    return SA.remove_leading_term(m)
 end
-function MA.promote_operation(
-    ::typeof(remove_leading_term),
-    ::Type{PT},
-) where {PT<:AbstractPolynomial}
-    return PT
-end
-function MA.operate(::typeof(remove_leading_term), t::AbstractTermLike)
-    return remove_leading_term(t)
-end
-remove_leading_term(t::AbstractTermLike) = zero(t)
 
 function unsafe_restore_leading_term end
 function MA.operate!(
     ::typeof(unsafe_restore_leading_term),
     p::AbstractPolynomial,
-    t::AbstractTermLike,
+    t::AbstractTerm,
 )
-    # `MA.add!` will copy the coefficient of `t` so `Polynomial` redefines this
-    return MA.add!!(p, t)
+    @assert parent(p) == parent(t)
+    if !iszero(t)
+        SA.coeffs(p)[t.index] = coefficient(t)
+    end
+    return p
 end
 
 #$(SIGNATURES)
