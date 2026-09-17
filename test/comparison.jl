@@ -26,6 +26,21 @@ function test_equal()
     @test exp != ExponentsIterator{LexOrder}([0], maxdegree = 2)
 end
 
+function test_in()
+    # Unbounded iterator (no maxdegree)
+    it = ExponentsIterator{Graded{LexOrder}}([0, 0])
+    @test [0, 0] in it
+    @test [1, 2] in it
+    @test [3] ∉ it          # wrong number of variables
+    @test [0, 0, 0] ∉ it   # wrong number of variables
+    # Bounded iterator
+    it2 = ExponentsIterator{LexOrder}([0, 0], mindegree = 1, maxdegree = 3)
+    @test [1, 0] in it2
+    @test [1, 2] in it2
+    @test [0, 0] ∉ it2     # degree too low
+    @test [2, 2] ∉ it2     # degree too high
+end
+
 function test_errors()
     err = ArgumentError(
         "The `mindegree` of `ExponentsIterator` cannot be negative.",

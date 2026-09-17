@@ -1,4 +1,4 @@
-function LinearAlgebra.norm(p::AbstractPolynomialLike, r::Int = 2)
+function LinearAlgebra.norm(p::_APL, r::Int = 2)
     return LinearAlgebra.norm(coefficients(p), r)
 end
 
@@ -286,7 +286,7 @@ Returns the minimal degree of the monomials of `p` in the variable `v`, i.e. `mi
 Calling `mindegree` on on ``4x^2y + xy + 2x`` should return 1, `mindegree(4x^2y + xy + 2x, x)` should return 1 and  `mindegree(4x^2y + xy + 2x, y)` should return 0.
 """
 function mindegree(
-    X::AbstractVector{<:AbstractPolynomialLike},
+    X::AbstractVector{<:_APL},
     args::Vararg{Any,N},
 ) where {N}
     return isempty(X) ? 0 : minimum(t -> mindegree(t, args...), X)
@@ -312,7 +312,7 @@ Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `ma
 Calling `maxdegree` on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
 function maxdegree(
-    X::AbstractVector{<:AbstractPolynomialLike},
+    X::AbstractVector{<:_APL},
     args::Vararg{Any,N},
 ) where {N}
     return mapreduce(t -> maxdegree(t, args...), max, X, init = 0)
@@ -634,7 +634,7 @@ function map_coefficients_to! end
 Return `deg, num` where `deg = maxdegree(p, var)` and `num` is the number of
 terms `t` such that `degree(t, var) == deg`.
 """
-function deg_num_leading_terms(p::AbstractPolynomialLike, var)
+function deg_num_leading_terms(p::_APL, var)
     deg = 0
     num = 0
     for mono in monomials(p)
@@ -673,4 +673,5 @@ function multiplication_preserves_monomial_order(
 end
 
 Base.ndims(::Union{Type{<:AbstractPolynomialLike},AbstractPolynomialLike}) = 0
+# ndims and broadcastable for SA.Term are defined in StarAlgebras
 Base.broadcastable(p::AbstractPolynomialLike) = Ref(p)

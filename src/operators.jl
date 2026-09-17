@@ -26,6 +26,7 @@ function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
     return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
            monomial(t1) == monomial(t2)
 end
+# dot for SA.Term is defined in StarAlgebras
 
 function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
     return isapprox(promote(p1, p2)...; kwargs...)
@@ -81,6 +82,10 @@ function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), α, p::_APL)
 end
 function MA.operate_to!(output::AbstractPolynomial, op::typeof(*), p::_APL, α)
     return MA.operate_to!(output, right_constant_mult, p, α)
+end
+# Disambiguation: both args are _APL — use polynomial multiplication
+function MA.operate_to!(output::AbstractPolynomial, ::typeof(*), p::_APL, q::_APL)
+    return MA.operate_to!(output, *, polynomial(p), polynomial(q))
 end
 function MA.operate_to!(output::_APL, op::typeof(/), p::_APL, α)
     return map_coefficients_to!(output, Base.Fix2(op, α), p)
@@ -288,6 +293,13 @@ left_constant_mult(α, v::AbstractMonomial) = term_type(v, typeof(α))(α, v)
 left_constant_mult(α, v::AbstractVariable) = left_constant_mult(α, monomial(v)) # TODO linear term
 right_constant_mult(m::AbstractMonomialLike, α) = left_constant_mult(α, m)
 
+function left_constant_mult(α, t::SA.Term)
+    return term(α * coefficient(t), monomial(t))
+end
+function right_constant_mult(t::SA.Term, α)
+    return term(coefficient(t) * α, monomial(t))
+end
+
 function left_constant_mult(α, p::AbstractPolynomialLike)
     return map_coefficients(Base.Fix1(*, α), p)
 end
@@ -354,7 +366,7 @@ function _polynomial_2terms(
     t1::TT,
     t2::TT,
     ::Type{T},
-) where {TT<:AbstractTerm,T}
+) where {TT<:SA.Term,T}
     if iszero(t1)
         polynomial(t2, T)
     elseif iszero(t2)
@@ -372,10 +384,10 @@ for op in [:+, :-]
         function Base.$op(t1::AbstractTermLike, t2::AbstractTermLike)
             return $op(term(t1), term(t2))
         end
-        function Base.$op(t1::AbstractTerm, t2::AbstractTerm)
+        function Base.$op(t1::SA.Term, t2::SA.Term)
             return $op(_promote_terms(t1, t2)...)
         end
-        function Base.$op(t1::TT, t2::TT) where {T,TT<:AbstractTerm{T}}
+        function Base.$op(t1::TT, t2::TT) where {T,TT<:SA.Term{T}}
             S = MA.promote_operation($op, T, T)
             # t1 > t2 would compare the coefficient in case the monomials are equal
             # and it will throw a MethodError in case the coefficients are not comparable
@@ -395,21 +407,21 @@ end
 _promote_terms(t1, t2) = promote(t1, t2)
 # Promotion between `I` and `1` is `Any`.
 function _promote_terms(
-    t1::AbstractTerm,
-    t2::AbstractTerm{<:LinearAlgebra.UniformScaling},
+    t1::SA.Term,
+    t2::SA.Term{<:LinearAlgebra.UniformScaling},
 )
     return _promote_terms(t1, coefficient(t2).λ * monomial(t2))
 end
 function _promote_terms(
-    t1::AbstractTerm{<:LinearAlgebra.UniformScaling},
-    t2::AbstractTerm,
+    t1::SA.Term{<:LinearAlgebra.UniformScaling},
+    t2::SA.Term,
 )
     return _promote_terms(coefficient(t1).λ * monomial(t1), t2)
 end
 # Promotion between `I` and `2I` is `UniformScaling`, not `UniformScaling{Int}`.
 function _promote_terms(
-    t1::AbstractTerm{LinearAlgebra.UniformScaling{S}},
-    t2::AbstractTerm{LinearAlgebra.UniformScaling{T}},
+    t1::SA.Term{LinearAlgebra.UniformScaling{S}},
+    t2::SA.Term{LinearAlgebra.UniformScaling{T}},
 ) where {S<:Number,T<:Number}
     U = LinearAlgebra.UniformScaling{promote_type(S, T)}
     return _promote_terms(
@@ -418,15 +430,15 @@ function _promote_terms(
     )
 end
 function _promote_terms(
-    t1::AbstractTerm{LinearAlgebra.UniformScaling{T}},
-    t2::AbstractTerm{LinearAlgebra.UniformScaling{T}},
+    t1::SA.Term{LinearAlgebra.UniformScaling{T}},
+    t2::SA.Term{LinearAlgebra.UniformScaling{T}},
 ) where {T<:Number}
     return promote(t1, t2)
 end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
 LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
-function LinearAlgebra.adjoint(t::AbstractTerm)
+function LinearAlgebra.adjoint(t::SA.Term)
     return _term(adjoint(coefficient(t)), adjoint(monomial(t)))
 end
 function LinearAlgebra.adjoint(p::AbstractPolynomialLike)
@@ -447,7 +459,7 @@ LinearAlgebra.ishermitian(p::AbstractPolynomialLike) = p == conj(p)
 
 LinearAlgebra.transpose(v::AbstractVariable) = v
 LinearAlgebra.transpose(m::AbstractMonomial) = m
-function LinearAlgebra.transpose(t::AbstractTerm)
+function LinearAlgebra.transpose(t::SA.Term)
     return _term(LinearAlgebra.transpose(coefficient(t)), monomial(t))
 end
 function LinearAlgebra.transpose(p::AbstractPolynomialLike)
@@ -480,6 +492,7 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 
 # https://github.com/JuliaLang/julia/pull/23332
 Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
+# ^(::SA.Term, ::Integer) is defined in StarAlgebras
 
 function MA.operate_to!(
     output::AbstractPolynomial,

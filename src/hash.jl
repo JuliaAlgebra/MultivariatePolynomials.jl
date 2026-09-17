@@ -15,17 +15,7 @@ function Base.hash(m::AbstractMonomial, u::UInt)
     end
 end
 
-function Base.hash(t::AbstractTerm, u::UInt)
-    if iszero(t)
-        hash(0, u)
-    elseif isone(coefficient(t))
-        # We want the has of `t` to match the hash of `monomial(t)`
-        # so we ignore the coefficient one.
-        hash(monomial(t), u)
-    else
-        hash(monomial(t), hash(coefficient(t), u))
-    end
-end
+# hash for SA.Term is defined in StarAlgebras
 
 function Base.hash(p::AbstractPolynomial, u::UInt)
     if iszero(p)

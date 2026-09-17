@@ -18,18 +18,11 @@ polynomial of only one term.
 abstract type AbstractPolynomialLike{T} <: MA.AbstractMutable end
 
 """
-    AbstractTermLike{T}
-
-Abstract type for a value that can act like a term. For instance, an `AbstractMonomial` is an `AbstractTermLike{Int}` since it can act as a term with coefficient `1`.
-"""
-abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
-
-"""
     AbstractMonomialLike
 
 Abstract type for a value that can act like a monomial. For instance, an `AbstractVariable` is an `AbstractMonomialLike` since it can act as a monomial of one variable with degree `1`.
 """
-abstract type AbstractMonomialLike <: AbstractTermLike{Int} end
+abstract type AbstractMonomialLike <: AbstractPolynomialLike{Int} end
 
 """
     AbstractVariable <: AbstractMonomialLike
@@ -46,11 +39,20 @@ Abstract type for a monomial, i.e. a product of variables elevated to a nonnegat
 abstract type AbstractMonomial <: AbstractMonomialLike end
 
 """
-    AbstractTerm{T} <: AbstractTermLike{T}
+    AbstractTermLike{T}
 
-Abstract type for a term of coefficient type `T`, i.e. the product between a value of type `T` and a monomial.
+Union type for values that can act like a term. This includes `AbstractMonomialLike`
+(which acts as a term with coefficient `1`) and `SA.Term{T}`.
 """
-abstract type AbstractTerm{T} <: AbstractTermLike{T} end
+const AbstractTermLike{T} = Union{AbstractMonomialLike,SA.Term{T}}
+
+"""
+    AbstractTerm{T}
+
+Type alias for a term of coefficient type `T`, i.e. the product between a
+value of type `T` and a monomial. This is [`StarAlgebras.Term{T}`](@ref).
+"""
+const AbstractTerm{T} = SA.Term{T}
 
 """
     AbstractPolynomial{T} <: AbstractPolynomialLike{T}
@@ -59,7 +61,7 @@ Abstract type for a polynomial of coefficient type `T`, i.e. a sum of `AbstractT
 """
 abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
 
-const _APL{T} = AbstractPolynomialLike{T}
+const _APL{T} = Union{AbstractPolynomialLike{T},SA.Term{T}}
 
 include("zip.jl")
 include("lazy_iterators.jl")

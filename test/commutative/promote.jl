@@ -55,34 +55,7 @@ using LinearAlgebra
         return _t(a, 1.0x + y, PT())
     end
 
-    function _test(a, af, TT)
-        __test(a, apl, TT, TT)
-        # `x isa _APL{Int}` so here we don't have `Float64`:
-        pt() = apl()
-        pt(T) = apl()
-        tt() = TT()
-        tt(T) = TT()
-        __test(af, pt, tt, tt)
-        @test typeof(af) == Vector{TT()}
-        return _t(af, a, TT())
-    end
-
-    apl() = MP._APL
-    apl(T::Type) = MP._APL{T}
-    p = [i == 1 ? x + y : x for i in 1:2]
-    pf = [i == 1 ? 1.0x + y : x for i in 1:2]
-    _test(p, pf, apl)
-
-    atl() = MP.AbstractTermLike
-    atl(T::Type) = MP.AbstractTermLike{T}
-    t = [i == 1 ? 2x : x for i in 1:2]
-    tf = [i == 1 ? 2.0x : x for i in 1:2]
-    _test(t, tf, atl)
-    _t(p, t, apl(Int))
-    _t(pf, t, apl())
-    _t(p, tf, apl())
-    _t(pf, tf, apl())
-
+    # Test with concrete types from promote_typejoin
     __pt = Base.promote_typejoin(typeof(x + 2), typeof(x + 2.0))
     _pt() = __pt
     _pt(::Type) = __pt
@@ -93,13 +66,28 @@ using LinearAlgebra
     _tt(::Type) = __tt
     __test([i == 1 ? 2x : 2.0x for i in 1:2], _pt, _tt, _tt)
 
+    # Test with monomials: typejoin(x^2, x) = AbstractMonomialLike
     aml(args...) = MP.AbstractMonomialLike
     a = [i == 1 ? x^2 : x for i in 1:2]
-    __test(a, apl, atl, aml)
-    _t(a, t, atl(Int))
-    _t(a, tf, atl())
-    _t(a, p, apl(Int))
-    _t(a, pf, apl())
+    @test eltype(a) == MP.AbstractMonomialLike
+
+    # Concrete type promote_type tests
+    @test promote_type(typeof(x), typeof(y)) <: AbstractMonomialLike
+    @test promote_type(typeof(2x), typeof(3y)) <: AbstractTerm{Int}
+    @test promote_type(typeof(2x), typeof(3.0y)) <: AbstractTerm{Float64}
+    @test promote_type(typeof(x + y), typeof(x)) <: AbstractPolynomialLike{Int}
+    @test promote_type(typeof(2x + y), typeof(3.0y)) <: AbstractPolynomialLike{Float64}
+
+    # vcat with AbstractMonomialLike vectors
+    _t(a, 1, Any)
+    _t(a, x, aml(Int))
+    _t(a, x^2, aml(Int))
+
+    # Test promote_rule for AbstractMonomialLike vs SA.Term
+    @test promote_type(MP.AbstractMonomialLike, typeof(2x)) ==
+          MP.AbstractTermLike{Int}
+    @test promote_type(MP.AbstractMonomialLike, typeof(2.0x)) ==
+          MP.AbstractTermLike{Float64}
 end
 
 struct A end
@@ -274,4 +262,52 @@ end
     @test MP.variables(rx) == MP.variables(ry)
     @test mx isa MP.ExponentMap
     @test my isa MP.ExponentMap
+
+    # Term with Monomial
+    t = 3x^2
+    m = y^2
+    pt, pm = SA.promote_bases(t, m)
+    @test MP.variables(pt) == MP.variables(pm)
+    @test length(MP.variables(pt)) == 2
+    @test MP.coefficient(pt) == 3
+    @test MP.degree(pt) == 2
+    @test MP.degree(pt, x) == 2
+    @test MP.degree(pt, y) == 0
+    @test MP.degree(pm, x) == 0
+    @test MP.degree(pm, y) == 2
+
+    # Term with Term
+    t1 = 2x^2
+    t2 = 5y^3
+    pt1, pt2 = SA.promote_bases(t1, t2)
+    @test MP.variables(pt1) == MP.variables(pt2)
+    @test MP.coefficient(pt1) == 2
+    @test MP.coefficient(pt2) == 5
+    @test MP.degree(pt1, x) == 2
+    @test MP.degree(pt1, y) == 0
+    @test MP.degree(pt2, x) == 0
+    @test MP.degree(pt2, y) == 3
+
+    # Term with same variables (no promotion needed)
+    t3 = 4x^2
+    t4 = 7x^3
+    pt3, pt4 = SA.promote_bases(t3, t4)
+    @test MP.coefficient(pt3) == 4
+    @test MP.coefficient(pt4) == 7
+
+    # Polynomial with Monomial
+    p = 2x^2 + 3x
+    m = y^2
+    pp, pm = SA.promote_bases(p, m)
+    @test MP.variables(pp) == MP.variables(pm)
+    @test length(MP.variables(pp)) == 2
+    @test MP.degree(pm, y) == 2
+    @test MP.degree(pm, x) == 0
+
+    # Polynomial with Polynomial (different variables)
+    p1 = x^2 + 2x
+    p2 = y^3 + 3y
+    pp1, pp2 = SA.promote_bases(p1, p2)
+    @test MP.variables(pp1) == MP.variables(pp2)
+    @test length(MP.variables(pp1)) == 2
 end
