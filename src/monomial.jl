@@ -11,7 +11,9 @@ monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
 # AbstractMonomialLike is its own monomial type (like AbstractMonomial).
 monomial_type(::Union{AbstractMonomialLike,Type{AbstractMonomialLike}}) = AbstractMonomialLike
 # For SA.Term{T,A,I}: derive monomial type from the algebra type A
-monomial_type(::Type{<:SA.Term{<:Any,A}}) where {A} = monomial_type(A)
+function monomial_type(::Type{SA.Term{T,A,I}}) where {T,A<:_PolynomialAlgebra,I}
+    return monomial_type(A)
+end
 # Generic fallback for other _APL types (polynomials etc.)
 function monomial_type(::Union{PT,Type{PT}}) where {PT<:AbstractPolynomialLike}
     return monomial_type(term_type(PT))

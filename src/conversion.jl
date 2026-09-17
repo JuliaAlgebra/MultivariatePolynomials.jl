@@ -1,4 +1,15 @@
 function Base.convert(
+    ::Type{P},
+    m::AbstractMonomialLike,
+) where {P<:AbstractPolynomial}
+    return convert(P, term(m))
+end
+
+function Base.convert(::Type{P}, c::Number) where {P<:AbstractPolynomial}
+    return convert(P, constant_term(c, P))
+end
+
+function Base.convert(
     ::Type{V},
     mono::AbstractMonomial,
 ) where {V<:AbstractVariable}

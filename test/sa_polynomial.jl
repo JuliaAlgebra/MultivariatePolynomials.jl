@@ -148,7 +148,23 @@ end
     @test isempty(Test.detect_unbound_args(MP))
 end
 
-@testset "Polynomial constructors in division and GCD" begin
+@testset "Polynomial conversion" begin
+    DP.@polyvar x
+    R = DP.Polynomial{Rational{Int}}
+    for p in (x, x^2, 2x, 2x + 1, 3, 0)
+        converted = convert(R, p)
+        @test converted isa R
+        @test converted == p
+        @test convert(R, converted) === converted
+    end
+    p = 2x + 1
+    @test parent(convert(R, p)) === parent(p)
+    @test_throws InexactError convert(DP.Polynomial{Int}, (1 // 2) * x + 1)
+    @test_throws InexactError convert(DP.Polynomial{Int}, (1 // 2) * x)
+    @test_throws InexactError convert(DP.Polynomial{Int}, 1 // 2)
+end
+
+@testset "Polynomial conversion in division and GCD" begin
     DP.@polyvar x y
     for p in (x, x^2, 2x, 2x + 1)
         original = deepcopy(p)
@@ -170,8 +186,43 @@ end
     @test MP.inflate(3, one(x), one(x)) == 3
     nested = MP.term(2x, MP.monomial(y))
     c = MP.content(nested, algo, MP.MA.IsNotMutable())
-    @test c isa DP.Polynomial{Int}
+    @test c isa DP.Term{Int}
     @test c == 2x
+end
+
+@testset "GCD result type promotion" begin
+    DP.@polyvar x y
+    for (a, b) in (
+        (x, y),
+        (x^2, x),
+        (6x^2, 9x),
+        (2x, y),
+        (2.0x, 3y),
+        ((2 // 3) * x, 3y),
+        ((2 + 3im) * x, 3y),
+        ((2 + 3im) * x, 3.0y),
+        (MP.term(2x, MP.monomial(y)), MP.term(3x, MP.monomial(y))),
+    )
+        for (p, q) in ((a, b), (b, a))
+            @test MP.MA.promote_operation(gcd, typeof(p), typeof(q)) ===
+                  typeof(gcd(p, q))
+            for algo in
+                (MP.GeneralizedEuclideanAlgorithm(), MP.SubresultantAlgorithm())
+                @test MP.MA.promote_operation(
+                    gcd,
+                    typeof(p),
+                    typeof(q),
+                    typeof(algo),
+                ) === typeof(gcd(p, q, algo))
+            end
+        end
+    end
+    @test MP.MA.promote_operation(gcd, typeof(x + 1), typeof(x + 1)) ===
+          DP.Polynomial{Int}
+    nested = MP.term(x, MP.monomial(y))
+    c = MP.content(nested, MP.SubresultantAlgorithm(), MP.MA.IsNotMutable())
+    @test c isa MP.AbstractMonomial
+    @test c == x
 end
 
 end # module

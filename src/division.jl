@@ -243,11 +243,9 @@ function _pseudo_divrem(::UFD, f::_APL, g::_APL, algo)
         new_f = st * remove_leading_term(f)
         qt = term(coefficient(ltf), div_multiple(monomial(ltf), monomial(ltg)))
         new_g = qt * rg
-        T = coefficient_type(f)
+        R = polynomial_type(f)
         # Check with `::` that we don't have any type unstability on this variable.
-        return polynomial(st, T),
-        polynomial(qt, T),
-        (new_f - new_g)::polynomial_type(f)
+        return convert(R, st), convert(R, qt), (new_f - new_g)::R
     end
 end
 
@@ -463,7 +461,7 @@ function MA.promote_operation(
 end
 function Base.divrem(f::_APL, g::_APL; kwargs...)
     R = MA.promote_operation(div, typeof(f), typeof(g))
-    rf = polynomial(MA.copy_if_mutable(f), coefficient_type(R))
+    rf = convert(R, MA.copy_if_mutable(f))
     q = zero(rf)
     r = zero(rf)
     lt = leading_term(g)
@@ -492,7 +490,7 @@ function Base.divrem(f::_APL, g::_APL; kwargs...)
 end
 function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
     R = MA.promote_operation(div, typeof(f), eltype(g))
-    rf = polynomial(MA.copy_if_mutable(f), coefficient_type(R))
+    rf = convert(R, MA.copy_if_mutable(f))
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
