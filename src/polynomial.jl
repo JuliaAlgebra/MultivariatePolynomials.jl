@@ -334,9 +334,9 @@ Returns the coefficient of the leading term of `p`, i.e. `coefficient(leading_te
 
 Calling `leading_coefficient` on ``4x^2y + xy + 2x`` should return ``4`` and calling it on ``0`` should return ``0``.
 """
-function leading_coefficient(p::AbstractPolynomialLike{T}) where {T}
+function leading_coefficient(p::AbstractPolynomialLike)
     if iszero(p)
-        zero(T)
+        zero(coefficient_type(p))
     else
         last(coefficients(p))
     end
@@ -481,7 +481,7 @@ function monic(p::_APL)
     return polynomial!(_div_to_one.(terms(p), α))
 end
 monic(m::AbstractMonomialLike) = m
-monic(t::AbstractTermLike{T}) where {T} = term(one(T), monomial(t))
+monic(t::AbstractTermLike) = term(one(coefficient_type(t)), monomial(t))
 
 function _div_to_one(t::AbstractTermLike, α::S) where {S}
     U = Base.promote_op(/, coefficient_type(t), S)
