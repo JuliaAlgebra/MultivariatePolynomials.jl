@@ -51,6 +51,31 @@ end
 left_constant_eq(α, p::_APL; comp = (==)) = right_term_eq(p, α; comp)
 right_constant_eq(p::_APL, α; comp = (==)) = right_term_eq(p, α; comp)
 
+for comp in (:(==), :isequal)
+    @eval begin
+        function Base.$comp(
+            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+            a::Union{T,Number},
+        ) where {T}
+            return right_constant_eq(p, a; comp = $comp)
+        end
+        function Base.$comp(
+            a::Union{T,Number},
+            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+        ) where {T}
+            return left_constant_eq(a, p; comp = $comp)
+        end
+        Base.$comp(m::AbstractMonomialLike, a::Number) =
+            right_constant_eq(m, a; comp = $comp)
+        Base.$comp(a::Number, m::AbstractMonomialLike) =
+            left_constant_eq(a, m; comp = $comp)
+        Base.$comp(p::AbstractPolynomial, m::AbstractMonomialLike) =
+            right_term_eq(p, term(m); comp = $comp)
+        Base.$comp(m::AbstractMonomialLike, p::AbstractPolynomial) =
+            right_term_eq(p, term(m); comp = $comp)
+    end
+end
+
 function Base.:(==)(mono::AbstractMonomial, v::AbstractVariable)
     return isone(degree(mono)) && variable(mono) == v
 end

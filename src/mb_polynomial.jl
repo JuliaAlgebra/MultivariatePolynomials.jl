@@ -1,65 +1,4 @@
-# From MultivariateBases/src/polynomial.jl
-# Polynomial{B,V,E} is a basis element (single monomial-like indexed object)
-
-# Bridge code for SA types and MP types
-variables(p::SA.AlgebraElement) = variables(explicit_basis(p))
-Base.keytype(p::AbstractPolynomialLike) = monomial_type(p)
-SA.value_type(p::AbstractPolynomialLike) = coefficient_type(p)
-SA.nonzero_pairs(p::AbstractPolynomialLike) = terms(p)
-function Base.similar(p::PT, ::Type{T}) where {PT<:AbstractPolynomial,T}
-    return convert(similar_type(PT, T), copy(p))
-end
-function Base.getindex(p::AbstractPolynomialLike, mono::AbstractMonomial)
-    return coefficient(p, mono)
-end
-Base.iterate(t::SA.Term) = iterate(t, 1)
-function Base.iterate(t::SA.Term, state)
-    if state == 1
-        return monomial(t), 2
-    elseif state == 2
-        return coefficient(t), 3
-    else
-        return nothing
-    end
-end
-function SA.unsafe_push!(p::AbstractPolynomial, mono::AbstractMonomial, α)
-    return MA.operate!(MA.add_mul, p, α, mono)
-end
-function MA.operate!(
-    ::SA.UnsafeAddMul{typeof(*)},
-    mc::AbstractPolynomial,
-    val,
-    c::AbstractPolynomialLike,
-)
-    return MA.operate!(MA.add_mul, mc, val, c)
-end
-MA.operate!(::typeof(SA.canonical), p::AbstractPolynomial) = p
-function MA.promote_operation(
-    ::typeof(SA.canonical),
-    ::Type{P},
-) where {P<:AbstractPolynomialLike}
-    return P
-end
-
-abstract type AbstractMonomialIndexed end
-
-"""
-    struct Polynomial{B<:AbstractMonomialIndexed,V,E}
-        variables::Variables{B,V}
-        exponents::E
-    end
-
-Polynomial of basis `FullBasis{B,V,E}(variables)` at index `exponents`.
-This represents a single basis element, not a sum of terms.
-"""
-struct Polynomial{B<:AbstractMonomialIndexed,V,E}
-    variables::Variables{B,V}
-    exponents::E
-end
-
-function Polynomial(v::Variables{B,V}, e) where {B,V}
-    return Polynomial{B,V,typeof(e)}(v, e)
-end
+variables(p::AbstractPolynomial) = variables(SA.basis(p))
 
 function Polynomial{B}(v::AbstractVariable) where {B}
     vars = variables(v)
@@ -74,14 +13,19 @@ end
 exponents(p::Polynomial) = p.exponents
 exponents(p::Polynomial, vars) = exponents(monomial(p), vars)
 monomial(p::Polynomial) = monomial(variables(p), exponents(p))
+monomial(p::AbstractMonomial) = p
 
 function Base.hash(p::Polynomial{B}, u::UInt) where {B}
-    return hash(p.variables, hash(p.exponents, u))
+    return hash(
+        Tuple(
+            (v, e) for (v, e) in zip(variables(p), exponents(p)) if !iszero(e)
+        ),
+        hash(B, u),
+    )
 end
-
 function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
-    return isequal(p.variables, q.variables) &&
-           isequal(p.exponents, q.exponents)
+    a, b = SA.promote_bases(p, q)
+    return isequal(exponents(a), exponents(b))
 end
 
 Base.isone(p::Polynomial) = all(iszero, p.exponents)
@@ -100,16 +44,17 @@ Base.iterate(p::Polynomial) = p, nothing
 Base.iterate(::Polynomial, ::Nothing) = nothing
 
 function Base.:(==)(p::Polynomial{B}, q::Polynomial{B}) where {B}
-    return p.variables == q.variables && p.exponents == q.exponents
+    a, b = SA.promote_bases(p, q)
+    return exponents(a) == exponents(b)
 end
 
 variables(p::Polynomial) = variables(p.variables)
 nvariables(p::Polynomial) = nvariables(p.variables)
 
 monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
+monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
 # SA.Term constructor for Polynomial{...} basis elements is in mb_monomial_basis.jl
 
-polynomial(p::Polynomial) = polynomial(algebra_element(p))
 
 function algebra_element(p, basis::SA.AbstractBasis)
     return SA.AlgebraElement(p, algebra(basis))
@@ -122,13 +67,8 @@ function _algebra_element(p, ::Type{B}) where {B<:AbstractMonomialIndexed}
     )
 end
 
-function algebra_element(p::Polynomial{B}) where {B}
-    return _algebra_element(monomial(p), B)
-end
-
-function Base.:*(a::Polynomial{B}, b::SA.AlgebraElement) where {B}
-    return _algebra_element(a) * b
-end
+algebra_element(p::Polynomial{B}) where {B} = _algebra_element(monomial(p), B)
+polynomial(p::Polynomial) = algebra_element(p)
 
 function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
     if B != Monomial
@@ -193,29 +133,12 @@ function Base.zero(p::Polynomial)
 end
 typeof_basis(::Polynomial{B}) where {B} = B
 
-function convert_basis(basis::SA.AbstractBasis, p::AbstractPolynomialLike)
+function convert_basis(basis::SA.AbstractBasis, p::AbstractTermLike)
     return convert_basis(basis, _algebra_element(p, Monomial))
 end
 
 function convert_basis(basis::SA.AbstractBasis, p::SA.AlgebraElement)
     return SA.AlgebraElement(SA.coeffs(p, basis), algebra(basis))
-end
-
-# isapprox: AlgebraElement IS the polynomial, so compare via algebra_element
-function Base.isapprox(
-    p::AbstractPolynomialLike,
-    a::SA.AlgebraElement;
-    kws...,
-)
-    return isapprox(algebra_element(p), a; kws...)
-end
-
-function Base.isapprox(
-    a::SA.AlgebraElement,
-    p::AbstractPolynomialLike;
-    kws...,
-)
-    return isapprox(p, a; kws...)
 end
 
 function Base.isapprox(a::SA.AlgebraElement, α::Number; kws...)
@@ -229,9 +152,6 @@ end
 # Type operations for AlgebraElement
 function monomial_type(::Type{<:SA.AlgebraElement{T,A}}) where {T,A}
     return monomial_type(A)
-end
-function polynomial_type(::Type{<:SA.AlgebraElement{T,A}}) where {A,T}
-    return polynomial_type(A, T)
 end
 monomial_type(::Type{<:SA.StarAlgebra{O}}) where {O} = monomial_type(O)
 function polynomial_type(::Type{A}, ::Type{T}) where {A<:SA.StarAlgebra,T}

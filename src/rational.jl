@@ -30,7 +30,7 @@ end
 function Base.convert(::Type{RationalPoly{NT,DT}}, p::_APL) where {NT,DT}
     return convert(NT, p) / one(DT)
 end
-function Base.convert(::Type{RationalPoly{NT,DT}}, α) where {NT,DT}
+function Base.convert(::Type{RationalPoly{NT,DT}}, α::Number) where {NT,DT}
     return convert(NT, α) / one(DT)
     #convert(RationalPoly{NT, DT}, convert(NT, α))
 end
@@ -39,19 +39,24 @@ end
 RationalPoly{NT,DT}(r::RationalPoly{NT,DT}) where {NT,DT} = r
 
 Base.inv(r::RationalPoly) = r.den / r.num
-Base.inv(p::_APL{T}) where {T} = one(T) / p
-Base.:/(r::RationalPoly, p) = r.num / (r.den * p)
+Base.inv(p::_APL) = one(coefficient_type(p)) / p
+Base.:/(r::RationalPoly, p::Number) = r.num / (r.den * p)
 Base.:/(r::RationalPoly, p::_APL) = r.num / (r.den * p)
 Base.:/(r::RationalPoly, s::RationalPoly) = (r.num * s.den) / (s.num * r.den)
 function Base.:/(num::NT, den::DT) where {NT<:_APL,DT<:_APL}
     return RationalPoly{NT,DT}(num, den)
 end
-function Base.:/(num, den::_APL)
+function Base.:/(num::Number, den::_APL)
     return constant_term(num, den) / den
 end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients
-Base.:/(num::_APL, den) = map_coefficients(α -> α / den, num, nonzero = true)
+function Base.:/(num::AbstractMonomialLike, den::Number)
+    return map_coefficients(α -> α / den, num, nonzero = true)
+end
+function Base.:/(num::AbstractTerm{T}, den::Union{T,Number}) where {T}
+    return algebra_element(num) / den
+end
 
 function Base.:+(r::RationalPoly, s::RationalPoly)
     return (r.num * s.den + r.den * s.num) / (r.den * s.den)
@@ -61,8 +66,8 @@ function _plus(r::RationalPoly, p)
 end
 Base.:+(p::_APL, r::RationalPoly) = _plus(r, p)
 Base.:+(r::RationalPoly, p::_APL) = _plus(r, p)
-Base.:+(r::RationalPoly, α) = _plus(r, α)
-Base.:+(α, r::RationalPoly) = _plus(r, α)
+Base.:+(r::RationalPoly, α::Number) = _plus(r, α)
+Base.:+(α::Number, r::RationalPoly) = _plus(r, α)
 function Base.:-(r::RationalPoly, s::RationalPoly)
     return (r.num * s.den - r.den * s.num) / (r.den * s.den)
 end
@@ -70,15 +75,15 @@ _minus(p, s::RationalPoly) = (p * s.den - s.num) / s.den
 _minus(s::RationalPoly, p) = (s.num - p * s.den) / s.den
 Base.:-(p::_APL, r::RationalPoly) = _minus(p, r)
 Base.:-(r::RationalPoly, p::_APL) = _minus(r, p)
-Base.:-(r::RationalPoly, α) = _minus(r, α)
-Base.:-(α, r::RationalPoly) = _minus(α, r)
+Base.:-(r::RationalPoly, α::Number) = _minus(r, α)
+Base.:-(α::Number, r::RationalPoly) = _minus(α, r)
 Base.:-(r::RationalPoly) = (-r.num) / r.den
 
 Base.:*(r::RationalPoly, s::RationalPoly) = (r.num * s.num) / (r.den * s.den)
 Base.:*(p::_APL, r::RationalPoly) = (p * r.num) / r.den
 Base.:*(r::RationalPoly, p::_APL) = (r.num * p) / r.den
-Base.:*(α, r::RationalPoly) = (α * r.num) / r.den
-Base.:*(r::RationalPoly, α) = (r.num * α) / r.den
+Base.:*(α::Number, r::RationalPoly) = (α * r.num) / r.den
+Base.:*(r::RationalPoly, α::Number) = (r.num * α) / r.den
 
 Base.zero(r::RationalPoly) = zero(typeof(r))
 Base.zero(::Type{RationalPoly{NT,DT}}) where {NT,DT} = zero(NT) / one(DT)

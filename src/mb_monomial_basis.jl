@@ -1,22 +1,14 @@
-# From MultivariateBases/src/monomial.jl
-# Monomial basis type and operations
-
-# Note: AbstractMonomial is already defined in MP as:
-#   abstract type AbstractMonomial <: AbstractMonomialLike end
-# MB has its own AbstractMonomial <: AbstractMonomialIndexed.
-# We use a different name to avoid collision.
-abstract type AbstractMonomialBasis <: AbstractMonomialIndexed end
-
 # Polynomial{Monomial,...} acts as a monomial: support term creation and const mult
 term(coeff, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(coeff, p)
 term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(one(Int), p)
 left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
 right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α) = left_constant_mult(α, p)
 
-# term_type for Polynomial{Monomial,...} basis elements
-# Can't return a concrete Term type without the algebra, so return SA.Term{T}
-term_type(::Type{<:Polynomial{<:AbstractMonomialBasis}}, ::Type{T}) where {T} = SA.Term{T}
-term_type(::Type{<:Polynomial{<:AbstractMonomialBasis}}) = SA.Term{Int}
+function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
+    A = MA.promote_operation(algebra, full_basis_type(B, Polynomial{B,V,E}))
+    return SA.Term{T,A,E}
+end
+term_type(::Type{P}) where {P<:Polynomial} = term_type(P, Int)
 
 function explicit_basis_covering(
     full::FullBasis{B},
@@ -38,15 +30,6 @@ function Base.adjoint(p::Polynomial{B}) where {B<:AbstractMonomialIndexed}
     return Polynomial(Variables{B}(variables(mono)), exponents(mono))
 end
 
-"""
-    struct Monomial <: AbstractMonomialBasis end
-
-Monomial basis with the monomials of the vector `monomials`.
-For instance, `SubBasis{Monomial}([1, x, y, x^2, x*y, y^2])` is the monomial basis
-for the subspace of quadratic polynomials in the variables `x`, `y`.
-"""
-struct Monomial <: AbstractMonomialBasis end
-
 degree_one_univariate_polynomial(::Type{Monomial}, value) = value
 
 function recurrence_eval(::Type{Monomial}, previous, value, degree)
@@ -61,40 +44,20 @@ end
 # Monomial multiplication: align variables via promote_variables_with_maps,
 # then apply f to the aligned exponent vectors.
 function map_exponents(f, a::Polynomial{Monomial}, b::Polynomial{Monomial})
-    if a.variables == b.variables
-        return Polynomial(a.variables, f.(a.exponents, b.exponents))
-    end
-    # Merge variable lists
-    (all_a, map_a), (all_b, map_b) = promote_variables_with_maps(variables(a), variables(b))
-    ea = map_a === nothing ? a.exponents : map_a(a.exponents)
-    eb = map_b === nothing ? b.exponents : map_b(b.exponents)
-    return Polynomial(Variables{Monomial}(all_a), f.(ea, eb))
+    a, b = SA.promote_bases(a, b)
+    return Polynomial(a.variables, f.(exponents(a), exponents(b)))
 end
 
 function Base.:*(a::Polynomial{Monomial}, b::Polynomial{Monomial})
     return map_exponents(+, a, b)
 end
 
-# Monomial * Variable and Variable * Monomial
-Base.:*(v::AbstractVariable, m::Polynomial{Monomial}) = monomial(v) * m
-Base.:*(m::Polynomial{Monomial}, v::AbstractVariable) = m * monomial(v)
-
-# Monomial + Monomial and Monomial - Monomial go through Term arithmetic
-Base.:+(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) + SA.Term(1, b)
-Base.:-(a::Polynomial{Monomial}, b::Polynomial{Monomial}) = SA.Term(1, a) - SA.Term(1, b)
-
 # Monomial power: multiply exponents by n
 function Base.:^(m::Polynomial{Monomial}, n::Integer)
     return Polynomial(m.variables, m.exponents .* n)
 end
 
-# Monomial + Term, Term + Monomial, etc.
-Base.:+(m::Polynomial{Monomial}, t::SA.Term) = SA.Term(1, m) + t
-Base.:+(t::SA.Term, m::Polynomial{Monomial}) = t + SA.Term(1, m)
-Base.:-(m::Polynomial{Monomial}, t::SA.Term) = SA.Term(1, m) - t
-Base.:-(t::SA.Term, m::Polynomial{Monomial}) = t - SA.Term(1, m)
-
-SA.coeffs(p::Polynomial{Monomial}, ::FullBasis{Monomial}) = p.monomial
+SA.coeffs(p::Polynomial{Monomial}, ::FullBasis{Monomial}) = p
 
 function polynomial_type(
     ::Union{SubBasis{B,V,E},Type{<:SubBasis{B,V,E}}},
@@ -103,21 +66,8 @@ function polynomial_type(
     return _polynomial_type(B, V, T)
 end
 
-# polynomial_type for a basis element: return the full AlgebraElement type directly
-function polynomial_type(
-    ::Type{Polynomial{B,V,E}},
-    ::Type{T},
-) where {B,V,E,T}
-    BT = SA.MappedBasis{
-        Polynomial{B,V,E},E,
-        ExponentsIterator{ordering(V),Nothing,E},
-        Variables{B,V},
-        typeof(exponents),
-    }
-    A = MA.promote_operation(algebra, BT)
-    I = E
-    CT = SA.SparseCoefficients{I,T,Vector{I},Vector{T},typeof(isless)}
-    return SA.AlgebraElement{T,A,CT}
+function polynomial_type(::Type{P}, ::Type{T}) where {B,P<:Polynomial{B},T}
+    return algebra_element_type(Vector{T}, full_basis_type(B, P))
 end
 
 function keys_as_monomials(keys, mb::FullBasis)
@@ -203,6 +153,47 @@ function SA.coeffs(
     end
 end
 
+function SA.adjoint_coeffs(
+    cfs,
+    source::MonomialIndexedBasis{B1},
+    target::MonomialIndexedBasis{B2},
+) where {B1,B2}
+    source === target && return cfs
+    source == target && return cfs
+    res = SA.zero_coeffs(
+        _promote_coef(_promote_coef(SA.value_type(cfs), B1), B2),
+        source,
+    )
+    return SA.adjoint_coeffs!(res, cfs, source, target)
+end
+
+function SA.adjoint_coeffs!(
+    res,
+    cfs,
+    source::MonomialIndexedBasis{B1},
+    target::MonomialIndexedBasis{B2},
+) where {B1,B2}
+    if B1 === B2
+        return @invoke SA.adjoint_coeffs!(
+            res,
+            cfs,
+            source::SA.AbstractBasis,
+            target::SA.AbstractBasis,
+        )
+    end
+    MA.operate!(zero, res)
+    target_full = implicit_basis(target)
+    for (i, src_elem) in enumerate(source)
+        full_col = SA.coeffs(algebra_element(src_elem), target_full)
+        col = SA.coeffs(full_col, target_full, target)
+        for (j, v) in SA.nonzero_pairs(col)
+            res[i] += v * cfs[j]
+        end
+    end
+    return res
+end
+
+# FIXME this assumes that the basis is invariant under adjoint
 SA.star(::SubBasis, coeffs) = SA.star.(coeffs)
 
 function _show_vector(io::IO, mime::MIME, v, map = identity)

@@ -21,6 +21,7 @@ end
 
 if try_import(:DynamicPolynomials)
     Mod = DynamicPolynomials
+    include("sa_polynomial.jl")
     include("commutativetests.jl")
     include("noncommutativetests.jl")
 end

@@ -9,17 +9,11 @@ function similar_type(::Type{PT}, ::Type{T}) where {PT<:AbstractPolynomial,T}
     return polynomial_type(PT, T)
 end
 
-function Base.similar(p::PT, ::Type{T}) where {PT<:_APL,T}
-    return convert(similar_type(PT, T), p)
-end
-
 abstract type ListState end
 abstract type UnsortedState <: ListState end
 struct MessyState <: UnsortedState end
 # No duplicates or zeros
 struct UniqState <: UnsortedState end
-sortstate(::MessyState) = SortedState()
-sortstate(::UniqState) = SortedUniqState()
 struct SortedState <: ListState end
 struct SortedUniqState <: ListState end
 
@@ -49,9 +43,6 @@ Creates a polynomial equal to `sum(f(i) * mv[i] for i in 1:length(mv))`.
 Calling `polynomial([2, 4, 1], [x, x^2*y, x*y])` should return ``4x^2y + xy + 2x``.
 """
 function polynomial end
-function polynomial(p::_APL, args::Vararg{Type,N}) where {N}
-    return polynomial!(copy(p), args...)
-end
 function polynomial(Q::AbstractMatrix, mv::AbstractVector)
     return LinearAlgebra.dot(mv, Q * mv)
 end
@@ -80,49 +71,11 @@ end
 
 polynomial(ts::AbstractVector, s::ListState = MessyState()) = sum(ts)
 
-function polynomial!(p::_APL, args::Vararg{Any,N}) where {N}
-    return convert(polynomial_type(p, args...), p)
+function polynomial!(p::_APL, args::Type...)
+    return polynomial(p, args...)
 end
 
 polynomial!(ts::AbstractVector, s::ListState = MessyState()) = sum(ts)
-
-function polynomial!(
-    ts::AbstractVector{TT},
-    s::SortedUniqState,
-) where {TT<:AbstractTerm}
-    if isempty(ts)
-        M = monomial_type(TT)
-        return zero(Polynomial{Monomial,MA.promote_operation(variables, M)})
-    end
-    # Use monomial_vector to merge all monomials into a common variable set
-    # This handles variable alignment for us
-    monos = monomial_vector(monomial.(ts))
-    vars = variables(monos)
-    basis = FullBasis{Monomial}(vars)
-    exps = [collect(exponents(m)) for m in monos]
-    coeffs = [coefficient(ts[i]) for i in eachindex(ts)]
-    sc = SA.SparseCoefficients(exps, coeffs)
-    return algebra_element(sc, basis)
-end
-
-function polynomial!(ts::AbstractVector{<:AbstractTerm}, s::SortedState)
-    return polynomial!(uniqterms!(ts), SortedUniqState())
-end
-function polynomial!(
-    ts::AbstractVector{<:AbstractTerm},
-    s::UnsortedState = MessyState(),
-)
-    return polynomial!(sort!(ts, lt = (<)), sortstate(s))
-end
-
-_collect(v::Vector) = v
-_collect(v::AbstractVector) = collect(v)
-function polynomial(
-    ts::AbstractVector{<:AbstractTerm},
-    args::Vararg{ListState,N},
-) where {N}
-    return polynomial!(MA.mutable_copy(_collect(ts)), args...)
-end
 
 """
     polynomial_type(p::AbstractPolynomialLike)
@@ -142,34 +95,24 @@ Returns the type that `p` would have if it was converted into a polynomial of co
 Returns the same as `polynomial_type(::PT, ::Type{T})`.
 """
 function polynomial_type end
-# Catch-all for SA.Term: derive AlgebraElement type from A if fully parametrized
-function polynomial_type(::Type{TT}) where {TT<:SA.Term}
-    if TT isa DataType && length(TT.parameters) == 3 && all(p -> p isa Type, TT.parameters)
-        T = TT.parameters[1]
-        A = TT.parameters[2]
-        I = TT.parameters[3]
-        V = SA.SparseCoefficients{I,T,Vector{I},Vector{T},typeof(isless)}
-        return SA.AlgebraElement{T,A,V}
-    end
-    # Not fully parametrized: return UnionAll
-    T = TT isa DataType ? TT.parameters[1] : Any
-    return SA.AlgebraElement{T}
+polynomial_type(p::_APL, args::Type...) = polynomial_type(typeof(p), args...)
+function polynomial_type(::Type{M}) where {M<:AbstractMonomialLike}
+    return polynomial_type(M, Int)
 end
-function polynomial_type(::Union{P,Type{P}}) where {P<:_APL}
-    return polynomial_type(term_type(P))
+function polynomial_type(::Type{V}, ::Type{T}) where {V<:AbstractVariable,T}
+    return polynomial_type(monomial_type(V), T)
 end
-polynomial_type(::Union{P,Type{P}}) where {P<:AbstractPolynomial} = P
-function polynomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomialLike}
-    return polynomial_type(term_type(M))
+polynomial_type(::Type{P}) where {P<:AbstractPolynomial} = P
+function polynomial_type(::Type{P}, ::Type{T}) where {P<:AbstractPolynomial,T}
+    return SA.similar_type(P, T)
 end
 function polynomial_type(
-    ::Union{M,Type{M}},
-    ::Type{T},
-) where {M<:AbstractMonomialLike,T}
-    return polynomial_type(term_type(M, T))
+    ::Type{<:SA.Term{T,A,I}},
+) where {T,A<:_PolynomialAlgebra,I}
+    return polynomial_type(monomial_type(A), T)
 end
-function polynomial_type(::Union{P,Type{P}}, ::Type{T}) where {P<:_APL,T}
-    return polynomial_type(polynomial_type(P), T)
+function polynomial_type(::Type{P}, ::Type{T}) where {P<:AbstractTerm,T}
+    return polynomial_type(term_type(P, T))
 end
 function polynomial_type(
     ::Union{AbstractVector{PT},Type{<:AbstractVector{PT}}},
@@ -183,32 +126,6 @@ function polynomial_type(
     return polynomial_type(PT, T)
 end
 
-function uniqterms!(ts::AbstractVector{<:AbstractTerm})
-    i = firstindex(ts)
-    for j in Iterators.drop(eachindex(ts), 1)
-        if !iszero(ts[j])
-            if monomial(ts[i]) == monomial(ts[j])
-                ts[i] = term(
-                    MA.add!!(coefficient(ts[i]), coefficient(ts[j])),
-                    monomial(ts[i]),
-                )
-            else
-                if !iszero(ts[i])
-                    i += 1
-                end
-                ts[i] = MA.copy_if_mutable(ts[j])
-            end
-        end
-    end
-    if i < length(ts)
-        if iszero(ts[i])
-            i -= 1
-        end
-        resize!(ts, i)
-    end
-    return ts
-end
-
 """
     terms(p::AbstractPolynomialLike)
 
@@ -219,7 +136,11 @@ Returns an iterator over the nonzero terms of the polynomial `p` sorted in the d
 Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy, 2x]``.
 """
 terms(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), term(t))
-terms(p::AbstractPolynomialLike) = terms(polynomial(p))
+function terms(p::AbstractPolynomial)
+    return [
+        SA.Term(parent(p), i, c) for (i, c) in SA.nonzero_pairs(SA.coeffs(p))
+    ]
+end
 
 """
     nterms(p::AbstractPolynomialLike)
@@ -249,8 +170,14 @@ Returns an iterator over the coefficients of the monomials of `X` in `p` where `
 Calling `coefficients` on ``4x^2y + xy + 2x`` should return an iterator of ``[4, 1, 2]``.
 Calling `coefficients(4x^2*y + x*y + 2x + 3, [x, 1, x*y, y])` should return an iterator of ``[2, 3, 1, 0]``.
 """
-coefficients(p::_APL{T}) where {T} = LazyMap{T}(coefficient, terms(p))
-function coefficients(p::_APL{T}, X::AbstractVector) where {T}
+function coefficients(p::AbstractPolynomial)
+    return LazyMap{coefficient_type(p)}(coefficient, terms(p))
+end
+function coefficients(p::AbstractTermLike)
+    return OneOrZeroElementVector(iszero(p), coefficient(p))
+end
+function coefficients(p::_APL, X::AbstractVector)
+    T = coefficient_type(p)
     σ, mv = sort_monomial_vector(X)
     @assert length(mv) == length(X) # no duplicate in X
     c = zeros(T, length(mv))
@@ -286,7 +213,7 @@ Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y,
 
 Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
 """
-monomials(p::_APL) = monomial_vector(monomial.(terms(p)))
+monomials(p::AbstractPolynomial) = monomial.(terms(p))
 monomials(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), monomial(t))
 
 function isconstant(p::_APL)
@@ -556,8 +483,8 @@ end
 monic(m::AbstractMonomialLike) = m
 monic(t::AbstractTermLike{T}) where {T} = term(one(T), monomial(t))
 
-function _div_to_one(t::AbstractTermLike{T}, α::S) where {T,S}
-    U = Base.promote_op(/, T, S)
+function _div_to_one(t::AbstractTermLike, α::S) where {S}
+    U = Base.promote_op(/, coefficient_type(t), S)
     β = coefficient(t)
     if β == α
         term(one(U), monomial(t))
