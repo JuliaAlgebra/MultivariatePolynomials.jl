@@ -227,6 +227,16 @@ end
 
 @testset "Leading-term removal and restoration" begin
     DP.@polyvar x
+    p = big(2) * x + 3
+    owned = MP.MA.copy_if_mutable(p)
+    @test parent(owned) === parent(p)
+    @test owned !== p
+    @test last(keys(SA.coeffs(owned))) !== last(keys(SA.coeffs(p)))
+    MP.MA.operate!(+, MP.leading_coefficient(owned), 1)
+    last(keys(SA.coeffs(owned)))[1] = 2
+    @test p == big(2) * x + 3
+    @test MP.MA.operate!!(SA.remove_leading_term, owned) === owned
+    @test owned == 3
     for p in (x, x^2, 2x)
         remainder = MP.MA.operate(SA.remove_leading_term, p)
         @test typeof(remainder) === typeof(zero(p))
