@@ -5,9 +5,12 @@ using Latexify
     operation := :*
     mult_symbol --> ""
     index --> :subscript
-    vars = [Meta.parse(string(v)) for v = variables(m)]
+    vars = [Meta.parse(string(v)) for v in variables(m)]
     exps = exponents(m)
-    factors = ((e == 1) ? var : :($(var) ^ $e) for (var, e) = zip(vars, exps) if e != 0)
+    factors = (
+        (e == 1) ? var : :($(var) ^ $e) for
+        (var, e) in zip(vars, exps) if e != 0
+    )
     return Expr(:call, :*, factors...)
 end
 
