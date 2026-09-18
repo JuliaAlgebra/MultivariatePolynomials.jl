@@ -48,6 +48,15 @@ end
 function substitute(st::_AST, v::AbstractVariable, s::Substitutions)
     return substitute(st, v, s...)
 end
+function substitute(st::_AST, v::AbstractVariable, s::Substitution...)
+    for rule in s
+        if v == first(rule)
+            return last(rule)
+        end
+    end
+    st isa Eval && throw(ArgumentError("No value provided for variable $v"))
+    return v
+end
 
 ## Monomials
 function powersubstitute(
@@ -129,9 +138,13 @@ end
 
 function substitute(st::_AST, m::AbstractMonomial, s::Substitutions)
     if isconstant(m)
-        return one(power_promote(typeof(st), variables(m), s))
+        return 1
     else
-        return powersubstitute(st, s, powers(m)...)
+        return powersubstitute(
+            st,
+            s,
+            filter(p -> !iszero(last(p)), collect(powers(m)))...,
+        )
     end
 end
 
@@ -167,14 +180,7 @@ function substitute(st::_AST, p::AbstractPolynomial, s::Substitutions)
     if iszero(p)
         _polynomial(substitute(st, zero_term(p), s))
     else
-        ts = terms(p)
-        r1 = substitute(st, ts[1], s)
-        R = MA.promote_operation(+, typeof(r1), typeof(r1))
-        result::R = convert(R, r1)
-        for i in 2:length(ts)
-            result += substitute(st, ts[i], s)
-        end
-        result
+        return sum(t -> substitute(st, t, s), terms(p))
     end
 end
 
@@ -237,3 +243,7 @@ p(y => 2) # Do not do that, this works fine with TypedPolynomials but it will no
 subs(p, s::AbstractSubstitution...) = substitute(Subs(), p, s)
 
 (p::RationalPoly)(s::AbstractSubstitution...) = p.num(s...) / p.den(s...)
+
+function (p::Union{AbstractTerm,AbstractPolynomial})(s::AbstractSubstitution...)
+    return substitute(Eval(), p, s)
+end
