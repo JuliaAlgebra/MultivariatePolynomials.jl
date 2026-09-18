@@ -41,6 +41,13 @@ function (m::MStruct{Monomial,V,E})(a::E, b::E, ::Type{E}) where {V,E}
     return SA.SparseCoefficients((a .+ b,), (1,))
 end
 
+function SA.term_product_style(
+    ::MStruct{Monomial,V,E,E,<:FullBasis},
+    ::AbstractMonomialOrdering,
+) where {V,E}
+    return SA.OrderedTermProduct()
+end
+
 # Monomial multiplication: align variables via promote_variables_with_maps,
 # then apply f to the aligned exponent vectors.
 function map_exponents(f, a::Polynomial{Monomial}, b::Polynomial{Monomial})

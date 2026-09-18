@@ -319,6 +319,47 @@ end
     @test g == original
 end
 
+@testset "Ordered term products in division" begin
+    DP.@polyvar x y z
+    f, g, t = x^2 + x + 1, x + 1, 2x
+    @test SA.term_product_style(SA.mstructure(f), SA.coeffs(f).isless) isa
+          SA.OrderedTermProduct
+    buffer = MP.MA.buffer_for(MP.MA.sub_mul, typeof(f), typeof(t), typeof(g))
+    @test buffer === nothing
+    @test MP.MA.buffered_operate!!(buffer, MP.MA.sub_mul, f, t, g) === f
+    @test f == 1 - x - x^2
+    @test g == x + 1
+
+    # Coefficient promotion and different bases still use allocating arithmetic.
+    f, g, t = x + 1, x + 1, (1 // 2) * x
+    original = deepcopy(f)
+    result = MP.MA.operate!!(MP.MA.sub_mul, f, t, g)
+    @test result == f - t * g
+    @test result isa DP.Polynomial{Rational{Int}}
+    @test f == original
+    @test MP.MA.operate!!(MP.MA.sub_mul, f, 2y, y + 1) == f - 2y * (y + 1)
+    @test f == original
+
+    f, g = x^2 + y, x + 1
+    originals = deepcopy((f, g))
+    @test divrem(f, g) == (x - 1, y + 1)
+    @test (f, g) == originals
+    f, divisors = x^2 + y^2 + z, [x + 1, y + 1]
+    originals = deepcopy((f, divisors))
+    q, r = divrem(f, divisors)
+    @test q == [x - 1, y - 1]
+    @test r == z + 2
+    @test (f, divisors) == originals
+    @test MP.div_multiple((x + y) * (x + 1), x + 1) == x + y
+
+    f = convert(DP.Polynomial{Rational{Int}}, x^3 + 2x + 1)
+    g = convert(DP.Polynomial{Rational{Int}}, x^2 + 1)
+    original = deepcopy(g)
+    @test MP.MA.operate!(rem, f, g, MP.GeneralizedEuclideanAlgorithm()) === f
+    @test f == x + 1
+    @test g == original
+end
+
 @testset "GCD result type promotion" begin
     DP.@polyvar x y
     for (a, b) in (

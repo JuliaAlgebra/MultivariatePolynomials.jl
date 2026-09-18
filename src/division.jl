@@ -170,6 +170,10 @@ function div_multiple(f::_APL, g::_APL, mf::MA.MutableTrait = MA.IsNotMutable())
         return div_multiple(f, lt, mf)
     end
     rf = _copy(f, mf)
+    rf, g = SA.promote_bases(
+        convert(polynomial_type(rf), rf),
+        convert(polynomial_type(g), g),
+    )
     rg = SA.remove_leading_term(g)
     q = zero(rf)
     while !iszero(rf)
@@ -461,7 +465,10 @@ function MA.promote_operation(
 end
 function Base.divrem(f::_APL, g::_APL; kwargs...)
     R = MA.promote_operation(div, typeof(f), typeof(g))
-    rf = convert(R, MA.copy_if_mutable(f))
+    rf, g = SA.promote_bases(
+        convert(R, MA.copy_if_mutable(f)),
+        convert(polynomial_type(g), g),
+    )
     q = zero(rf)
     r = zero(rf)
     lt = leading_term(g)
@@ -491,6 +498,11 @@ end
 function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
     R = MA.promote_operation(div, typeof(f), eltype(g))
     rf = convert(R, MA.copy_if_mutable(f))
+    g = map(p -> convert(polynomial_type(p), p), g)
+    for p in g
+        rf, _ = SA.promote_bases(rf, p)
+    end
+    g = map(p -> first(SA.promote_bases(p, rf)), g)
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
