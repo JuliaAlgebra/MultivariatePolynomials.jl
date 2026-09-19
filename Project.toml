@@ -19,6 +19,7 @@ MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
 [compat]
 ChainRulesCore = "1"
 DataStructures = "0.19"
+LinearAlgebra = "1.10"
 MutableArithmetics = "0.3, 1"
 StarAlgebras = "0.3"
 julia = "1.10"
