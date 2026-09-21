@@ -95,7 +95,7 @@ function LinearAlgebra.transpose(t::AbstractTerm)
     return _term(LinearAlgebra.transpose(coefficient(t)), monomial(t))
 end
 function LinearAlgebra.transpose(p::AbstractPolynomial)
-    return polynomial(map(LinearAlgebra.transpose, terms(p)))
+    return map_coefficients(LinearAlgebra.transpose, p; nonzero = true)
 end
 function LinearAlgebra.transpose(r::RationalPoly)
     return transpose(numerator(r)) / transpose(denominator(r))

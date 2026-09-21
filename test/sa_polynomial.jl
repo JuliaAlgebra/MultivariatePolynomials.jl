@@ -293,6 +293,21 @@ end
     for T in (Int, BigInt)
         p = convert(DP.Polynomial{T}, 2x^2 + 3x + 2)
         original = deepcopy(p)
+        mapped = @inferred MP.map_coefficients(c -> c // 2, p)
+        @test mapped == x^2 + (3 // 2) * x + 1
+        @test MP.coefficient_type(mapped) === Rational{T}
+        @test parent(mapped) === parent(p)
+        @test SA.coeffs(mapped) !== SA.coeffs(p)
+        @test MP.map_coefficients(c -> c - 2, p) == x
+        @test MP.map_coefficients(c -> 2c, p; nonzero = true) == 2p
+        @test p == original
+
+        z = zero(p)
+        mapped = @inferred MP.map_coefficients(c -> c // 2, z)
+        @test iszero(mapped)
+        @test MP.coefficient_type(mapped) === Rational{T}
+        @test parent(mapped) === parent(z)
+
         output = zero(p)
         @test SA.map_coefficients_to!(output, c -> c - 2, p) === output
         @test output == x
@@ -316,6 +331,32 @@ end
         @test f == 3x + 2
         @test g == g_original
     end
+
+    basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[0], [1], [2]])
+    for c in ([2, 0, 4], SA.SparseArrays.sparsevec([1, 3], [2, 4], 3))
+        p = SA.AlgebraElement(c, MP.algebra(basis))
+        mapped = @inferred MP.map_coefficients(c -> c / 2 + 1, p)
+        @test parent(mapped) === parent(p)
+        @test SA.coeffs(mapped) == [2.0, 0.0, 3.0]
+        @test SA.coeffs(p) == [2, 0, 4]
+    end
+
+    p = x + 1
+    c = SA.SparseCoefficients(([0], [1]), (2, 3), SA.coeffs(p).isless)
+    p = SA.AlgebraElement(c, parent(p))
+    mapped = @inferred MP.map_coefficients(c -> c / 2, p)
+    @test mapped == 1 + 1.5x
+    @test mapped isa DP.Polynomial{Float64}
+    @test parent(mapped) === parent(p)
+    @test values(c) == (2, 3)
+
+    a = [1 2; 3 4]
+    p = MP.polynomial(MP.term(a, x))
+    q = @inferred transpose(p)
+    @test MP.coefficient(q, x) == transpose(a)
+    @test parent(q) === parent(p)
+    @test MP.coefficient_type(q) === typeof(transpose(a))
+    @test MP.coefficient(p, x) == a
 end
 
 @testset "Coefficient mapping deprecations" begin
