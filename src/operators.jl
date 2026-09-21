@@ -183,6 +183,7 @@ for (A, B) in (
         ::typeof(*),
         A::AbstractMatrix{<:$A},
         B::AbstractVecOrMat{<:$B},
+        α::Number = true,
     ) where {P<:AbstractPolynomial}
         # Bare monomials acquire the numeric product's coefficient type;
         # algebra factors keep their own coefficient types.
@@ -194,7 +195,7 @@ for (A, B) in (
             B,
             eltype(A) <: Number ? coefficient_type(P) : Int,
         )
-        return MA.operate_to!(output, *, a, b)
+        return MA.operate_to!(output, *, a, b, α)
     end
 end
 

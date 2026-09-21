@@ -318,6 +318,14 @@ end
             output = similar(result)
             @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
             @test output == expected
+            for (α, β) in ((2, 0), (2, 3), (0, 1))
+                initial = fill(convert(eltype(result), z + 1), size(result))
+                output = iszero(β) ? similar(result) : copy(initial)
+                @test (@inferred LinearAlgebra.mul!(output, A, B, α, β)) ===
+                      output
+                @test output == expected .* α .+ initial .* β
+                @test all(c == z + 1 for c in initial)
+            end
             @test (A, B) == originals
             bad = B isa AbstractVector ? B[1:1] : B[1:1, :]
             @test_throws DimensionMismatch A * bad
@@ -357,6 +365,16 @@ end
         output = similar(expected)
         @test (@inferred LinearAlgebra.mul!(output, left, right)) === output
         @test output == expected
+        initial = fill(convert(eltype(expected), z + 1), size(expected))
+        output = copy(initial)
+        @test (@inferred LinearAlgebra.mul!(
+            output,
+            left,
+            right,
+            1 + im,
+            2 - im,
+        )) === output
+        @test output == expected .* (1 + im) .+ initial .* (2 - im)
     end
 
     for P in (typeof(x), DP.Term{Int}, DP.Polynomial{Int})
@@ -391,12 +409,66 @@ end
         @test_throws ArgumentError LinearAlgebra.mul!(A, B, [1 2; 3 4])
         @test_throws ArgumentError LinearAlgebra.mul!(A, [1 2; 3 4], B)
         @test A == originals
+        for (α, β) in ((0, 0), (2, 3))
+            @test_throws ArgumentError LinearAlgebra.mul!(
+                A,
+                B,
+                [1 2; 3 4],
+                α,
+                β,
+            )
+            @test_throws ArgumentError LinearAlgebra.mul!(
+                A,
+                [1 2; 3 4],
+                B,
+                α,
+                β,
+            )
+            @test A == originals
+        end
     end
     output = [x + 1 y + 2]
     @test_throws DimensionMismatch LinearAlgebra.mul!(output, A, A)
     @test output == [x + 1 y + 2]
     @test_throws DimensionMismatch LinearAlgebra.mul!(output, [1 2], A[1:1, :])
     @test output == [x + 1 y + 2]
+
+    @test_throws DimensionMismatch LinearAlgebra.mul!(output, A, A, 2, 3)
+    @test_throws DimensionMismatch LinearAlgebra.mul!(
+        output,
+        [1 2],
+        A[1:1, :],
+        2,
+        3,
+    )
+    @test output == [x + 1 y + 2]
+
+    output = Vector{DP.Polynomial{Int}}(undef, 1)
+    @test LinearAlgebra.mul!(output, [NaN Inf], [x + 1, y + 2], 0, 0) === output
+    @test iszero(only(output))
+    output = [z + 1]
+    @test LinearAlgebra.mul!(output, [NaN Inf], [x, y], 0, 2) === output
+    @test output == [2z + 2]
+    @test_throws InexactError LinearAlgebra.mul!(output, [2;;], [x + 1], 0.5, 0)
+    @test_throws InexactError LinearAlgebra.mul!(output, [2;;], [x + 1], 1, 0.5)
+
+    for output in ([x + 1, z + 2], [x + 1 z + 2; z + 2 x + 1])
+        initial = copy(output)
+        B =
+            output isa AbstractVector ? DP.Polynomial{Int}[] :
+            Matrix{DP.Polynomial{Int}}(undef, 0, 2)
+        @test (@inferred LinearAlgebra.mul!(
+            output,
+            zeros(Int, 2, 0),
+            B,
+            2,
+            3,
+        )) === output
+        @test output == initial .* 3
+    end
+    output = Matrix{DP.Polynomial{Int}}(undef, 0, 2)
+    @test (@inferred LinearAlgebra.mul!(output, zeros(Int, 0, 2), A, 2, 3)) ===
+          output
 
     result =
         @inferred zeros(Int, 2, 0) * Matrix{DP.Polynomial{BigInt}}(undef, 0, 2)
