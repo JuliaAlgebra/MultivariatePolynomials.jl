@@ -131,6 +131,32 @@ end
     @test LinearAlgebra.dot([t, t], [t, t]) == 10 * x^2
 end
 
+@testset "Fused polynomial products" begin
+    DP.@polyvar x y
+    for T in (Int, BigInt), op in (MP.MA.add_mul, MP.MA.sub_mul)
+        a, b = SA.promote_bases(
+            convert(DP.Polynomial{T}, x + 1),
+            convert(DP.Polynomial{T}, y + 2),
+        )
+        for (left, right) in ((a, b), (last(MP.terms(a)), last(MP.terms(b))))
+            f = convert(DP.Polynomial{T}, x + y)
+            originals = MP.MA.copy_if_mutable.((f, left, right))
+            expected = op(f, left, right)
+            out = zero(f)
+            @test (@inferred MP.MA.operate_to!!(out, op, f, left, right)) === out
+            @test out == expected
+            @test (f, left, right) == originals
+            @test (@inferred MP.MA.operate!!(op, f, left, right)) === f
+            @test f == expected
+            @test (left, right) == originals[2:3]
+        end
+        f = MP.MA.mutable_copy(a)
+        expected = op(f, f, b)
+        @test (@inferred MP.MA.operate!!(op, f, f, b)) === f
+        @test f == expected
+    end
+end
+
 @testset "Matching coefficient type" begin
     DP.@polyvar x
     a = [1 2; 3 4]
