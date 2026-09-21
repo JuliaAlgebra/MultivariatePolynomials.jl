@@ -367,7 +367,6 @@ end
             (x^2, 2x, 0),
             (2x, x^2 + 1, 2x),
             (x^3 + 2x + 1, convert(DP.Polynomial{BigInt}, 2x^2 + 1), 3x + 2),
-            (x^3 + 2x + 1, 2x^2 + 1 + zero(x + y), 3x + 2),
         )
             originals = deepcopy((f, g))
             r = @inferred MP.MA.operate!!(op, f, g, algo)
@@ -391,7 +390,15 @@ end
 
         f = x^3 + 2x + 1
         originals = deepcopy((f, g))
-        @test MP.MA.operate_to!!(zero(f), op, f, g, algo) == 3x + 2
+        # A missing operate_to! method must not silently allocate.
+        @test_throws ErrorException MP.MA.operate_to!!(zero(f), op, f, g, algo)
+        @test (f, g) == originals
+
+        g = 2x^2 + 1 + zero(x + y)
+        originals = deepcopy((f, g))
+        @test_throws ArgumentError MP.MA.operate!!(op, f, g, algo)
+        @test (f, g) == originals
+        @test op(f, g, algo) == 3x + 2
         @test (f, g) == originals
     end
 
@@ -402,6 +409,48 @@ end
     @test r == (3 // 2) * x + 1
     @test (f, g) == originals
     @test MP.MA.operate!!(rem, r, g, algo) === r
+end
+
+@testset "In-place quotient term accumulation" begin
+    DP.@polyvar x y
+    for T in (Int, BigInt)
+        q = convert(DP.Polynomial{T}, x^2 + 1)
+        t = MP.term(T(2), x)
+        original = deepcopy(t)
+        @test (@inferred MP.MA.add!!(q, t)) === q
+        @test q == x^2 + 2x + 1
+        @test MP.MA.add!!(q, -t) === q
+        @test q == x^2 + 1
+        @test t == original
+
+        q = zero(q)
+        @test MP.MA.add!!(q, t) === q
+        stored = only(keys(SA.coeffs(q)))
+        @test stored !== t.index
+        @test stored == t.index
+        stored[1] += 1
+        @test t == original
+        if T === BigInt
+            MP.MA.operate!(+, MP.leading_coefficient(q), 1)
+            @test t == original
+        end
+    end
+
+    q = x + 1
+    t = 0.5x
+    original = deepcopy((q, t))
+    result = @inferred MP.MA.add!!(q, t)
+    @test result == 1.5x + 1
+    @test result isa DP.Polynomial{Float64}
+    @test (q, t) == original
+
+    q = x + 1
+    t = 2y
+    original = deepcopy((q, t))
+    @test_throws ArgumentError MP.MA.add!!(q, t)
+    @test (q, t) == original
+    @test_throws ArgumentError MP.MA.operate!(+, q, t)
+    @test (q, t) == original
 end
 
 @testset "Polynomial division" begin
@@ -427,8 +476,8 @@ end
     @test remainder == x + 1
     @test (f, divisors) == originals
 
-    f = convert(DP.Polynomial{Rational{Int}}, 2)
     g = convert(DP.Polynomial{Rational{Int}}, 3x^2 + 1)
+    f = 2 * one(g)
     original = deepcopy(g)
     @test MP.MA.operate!(rem, f, g, MP.GeneralizedEuclideanAlgorithm()) === f
     @test f == 2
@@ -446,14 +495,22 @@ end
     @test f == 1 - x - x^2
     @test g == x + 1
 
-    # Coefficient promotion and different bases still use allocating arithmetic.
+    # Coefficient promotion still uses allocating arithmetic.
     f, g, t = x + 1, x + 1, (1 // 2) * x
     original = deepcopy(f)
     result = MP.MA.operate!!(MP.MA.sub_mul, f, t, g)
     @test result == f - t * g
     @test result isa DP.Polynomial{Rational{Int}}
     @test f == original
-    @test MP.MA.operate!!(MP.MA.sub_mul, f, 2y, y + 1) == f - 2y * (y + 1)
+    @test_throws ArgumentError MP.MA.operate!!(MP.MA.sub_mul, f, 2y, y + 1)
+    @test f == original
+    @test_throws ArgumentError MP.MA.operate_to!!(
+        f,
+        MP.MA.sub_mul,
+        y + 1,
+        2y,
+        y + 1,
+    )
     @test f == original
 
     f, g = x^2 + y, x + 1

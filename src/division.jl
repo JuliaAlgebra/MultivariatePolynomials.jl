@@ -321,6 +321,7 @@ function MA.buffered_operate!(
     g::_APL,
     algo,
 )
+    SA._assert_same_basis(op, f, g)
     ltg = leading_term(g)
     ltf = leading_term(f)
     # This only makes sense in the univariate case but it's only used for univariate gcd anyway
@@ -382,39 +383,24 @@ function MA.operate(
 end
 
 function MA.mutability(
-    ::Type{F},
-    op::Union{typeof(rem),typeof(pseudo_rem),typeof(rem_or_pseudo_rem)},
-    ::Type{F},
-    ::Type{G},
-    ::Type{A},
-) where {F<:AbstractPolynomial,G<:AbstractPolynomial,A}
-    if MA.mutability(F) isa MA.IsMutable &&
-       MA.mutability(G) isa MA.IsMutable &&
-       MA.promote_operation(op, F, G, A) === F
-        return MA.IsMutable()
-    end
-    return MA.IsNotMutable()
-end
-
-function MA.mutability(
     output::AbstractPolynomial,
     op::Union{typeof(rem),typeof(pseudo_rem),typeof(rem_or_pseudo_rem)},
     f::AbstractPolynomial,
     g::AbstractPolynomial,
     algo,
 )
-    # The kernel mutates `f` and temporarily removes and restores the divisor's
-    # leading term, so the dividend and divisor need separate storage.
-    if output === f && parent(f) == parent(g) && SA.coeffs(f) !== SA.coeffs(g)
-        return MA.mutability(
-            typeof(output),
-            op,
-            typeof(f),
-            typeof(g),
-            typeof(algo),
-        )
+    # The kernel temporarily removes and restores the divisor's leading term.
+    # Aliasing its storage requires an independent dividend to preserve `g`.
+    if SA.coeffs(output) === SA.coeffs(g)
+        return MA.IsNotMutable()
     end
-    return MA.IsNotMutable()
+    return MA.mutability(
+        typeof(output),
+        op,
+        typeof(f),
+        typeof(g),
+        typeof(algo),
+    )
 end
 
 _op(::Field) = rem
