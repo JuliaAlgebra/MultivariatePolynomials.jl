@@ -265,7 +265,7 @@ See [`pseudo_divrem`](@ref) for more details.
 Addison-Wesley Professional. Third edition.
 """
 function pseudo_rem(f::_APL, g::_APL, algo)
-    return MA.operate!!(pseudo_rem, MA.mutable_copy(f), g, algo)
+    return MA.operate(pseudo_rem, f, g, algo)
 end
 
 function MA.promote_operation(
@@ -278,8 +278,11 @@ function MA.promote_operation(
     S = coefficient_type(Q)
     U1 = MA.promote_operation(*, S, T)
     U2 = MA.promote_operation(*, T, S)
-    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
-    return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U1, U2))
+    return MA.promote_operation(
+        -,
+        polynomial_type(P, U1),
+        polynomial_type(Q, U2),
+    )
 end
 
 function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
@@ -361,7 +364,57 @@ end
 If the coefficient type is a field, return `rem`, otherwise, return [`pseudo_rem`](@ref).
 """
 function rem_or_pseudo_rem(f::_APL, g::_APL, algo)
-    return MA.operate!!(rem_or_pseudo_rem, MA.mutable_copy(f), g, algo)
+    return MA.operate(rem_or_pseudo_rem, f, g, algo)
+end
+
+function MA.operate(
+    op::Union{typeof(rem),typeof(pseudo_rem),typeof(rem_or_pseudo_rem)},
+    f::_APL,
+    g::_APL,
+    algo,
+)
+    R = MA.promote_operation(op, typeof(f), typeof(g), typeof(algo))
+    rf, g = SA.promote_bases(
+        convert(R, MA.copy_if_mutable(f)),
+        convert(polynomial_type(g), g),
+    )
+    return MA.operate!(op, rf, g, algo)
+end
+
+function MA.mutability(
+    ::Type{F},
+    op::Union{typeof(rem),typeof(pseudo_rem),typeof(rem_or_pseudo_rem)},
+    ::Type{F},
+    ::Type{G},
+    ::Type{A},
+) where {F<:AbstractPolynomial,G<:AbstractPolynomial,A}
+    if MA.mutability(F) isa MA.IsMutable &&
+       MA.mutability(G) isa MA.IsMutable &&
+       MA.promote_operation(op, F, G, A) === F
+        return MA.IsMutable()
+    end
+    return MA.IsNotMutable()
+end
+
+function MA.mutability(
+    output::AbstractPolynomial,
+    op::Union{typeof(rem),typeof(pseudo_rem),typeof(rem_or_pseudo_rem)},
+    f::AbstractPolynomial,
+    g::AbstractPolynomial,
+    algo,
+)
+    # The kernel mutates `f` and temporarily removes and restores the divisor's
+    # leading term, so the dividend and divisor need separate storage.
+    if output === f && parent(f) == parent(g) && SA.coeffs(f) !== SA.coeffs(g)
+        return MA.mutability(
+            typeof(output),
+            op,
+            typeof(f),
+            typeof(g),
+            typeof(algo),
+        )
+    end
+    return MA.IsNotMutable()
 end
 
 _op(::Field) = rem
@@ -460,8 +513,7 @@ function MA.promote_operation(
     T = coefficient_type(P)
     S = coefficient_type(Q)
     U = MA.promote_operation(/, promote_to_field(T), promote_to_field(S))
-    # `promote_type(P, Q)` is needed for TypedPolynomials in case they use different variables
-    return polynomial_type(promote_type(P, Q), MA.promote_operation(-, U, U))
+    return MA.promote_operation(-, polynomial_type(P, U), polynomial_type(Q, U))
 end
 function Base.divrem(f::_APL, g::_APL; kwargs...)
     R = MA.promote_operation(div, typeof(f), typeof(g))
