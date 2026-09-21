@@ -493,16 +493,11 @@ Calling `map_coefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x +
 function map_coefficients end
 function map_coefficients(
     f::F,
-    p::AbstractPolynomialLike;
+    p::AbstractPolynomial;
     nonzero = false,
-) where {F<:Function} # Not used by either TypedPolynomials or DynamicPolynomials but used by CustomPoly in tests. FIXME Remove in a breaking release
-    # Invariant: p has only nonzero coefficient
-    # therefore f(α) will be nonzero for every coefficient α of p
-    # hence we can use Uniq
-    return polynomial!(
-        map_coefficients.(f, terms(p)),
-        nonzero ? SortedUniqState() : SortedState(),
-    )
+) where {F<:Function}
+    output = similar(p, Base.promote_op(f, coefficient_type(p)))
+    return SA.map_coefficients_to!(output, f, p; nonzero)
 end
 function map_coefficients(
     f::F,
