@@ -104,6 +104,51 @@ end
     @test adjoint((1 + im) * w + x) == (1 - im) * conj(w) + x
 end
 
+@testset "Parent-aware dot products" begin
+    DP.@polyvar x y z
+    for (a, b) in (
+        ([x, y], [y, z]),
+        ([2x, 3y], [4y, 5z]),
+        ([x + 1, y + 2], [y - 1, z + 3]),
+        ([2x, 3y], [y - 1, z + 3]),
+        ([x + 1, y + 2], [4y, 5z]),
+        ([x + 1, y + 2], [big(2) * y, big(3) * z]),
+        (
+            [big(2) * x + 1, big(3) * y + 2],
+            [big(4) * y + 1, big(5) * z + 2],
+        ),
+    )
+        originals = MP.MA.mutable_copy.((a, b))
+        expected =
+            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        @test (@inferred LinearAlgebra.dot(a, b)) == expected
+        @test (@inferred MP.MA.operate(LinearAlgebra.dot, a, b)) == expected
+        @test a' * b == expected
+        @test LinearAlgebra.dot(reshape(a, 1, 2), reshape(b, 2, 1)) == expected
+        @test (a, b) == originals
+        @test_throws DimensionMismatch LinearAlgebra.dot(a, b[1:1])
+    end
+    for T in (Int, BigInt, Complex{Int}), P in (DP.Polynomial{T}, DP.Term{T})
+        @test (@inferred LinearAlgebra.dot(P[], P[])) isa DP.Polynomial{T}
+        result = LinearAlgebra.dot(P[], P[])
+        @test iszero(result)
+        @test MP.coefficient_type(result) === T
+    end
+    @test iszero(LinearAlgebra.dot(typeof(x)[], typeof(x)[]))
+
+    DP.@complex_polyvar w
+    a = DP.Polynomial{Complex{Int}}[(1 + 2im) * w + x, w + y]
+    b = DP.Polynomial{Complex{Int}}[z + w, (2 - im) * w + x]
+    originals = MP.MA.mutable_copy.((a, b))
+    @test (@inferred LinearAlgebra.dot(a, b)) ==
+          ((1 - 2im) * conj(w) + x) * b[1] + (conj(w) + y) * b[2]
+    @test a' * b == LinearAlgebra.dot(a, b)
+    @test transpose(a) * b == a[1] * b[1] + a[2] * b[2]
+    @test (a, b) == originals
+    @test LinearAlgebra.dot([(1 + im) * w, 2x], [3y, 1z]) ==
+          3 * (1 - im) * conj(w) * y + 2x * z
+end
+
 @testset "Equality and adjoints" begin
     DP.@polyvar x y
     p = x + y
