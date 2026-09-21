@@ -77,6 +77,18 @@ end
 
 polynomial!(ts::AbstractVector, s::ListState = MessyState()) = sum(ts)
 
+function Base.sum(a::AbstractArray{<:AbstractMonomialLike}; kwargs...)
+    return sum(term.(a); kwargs...)
+end
+
+function MA.operate(
+    ::typeof(sum),
+    a::AbstractArray{<:AbstractMonomialLike};
+    kwargs...,
+)
+    return MA.operate(sum, term.(a); kwargs...)
+end
+
 """
     polynomial_type(p::AbstractPolynomialLike)
 

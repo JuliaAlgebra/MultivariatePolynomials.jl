@@ -64,6 +64,46 @@ import LinearAlgebra
     @test iszero(sum([u, v]) - q)
 end
 
+@testset "Parent-aware sums" begin
+    DP.@polyvar x y z
+    left, right = @inferred SA.promote_bases(2x, 3y)
+    @test parent(left) == parent(right)
+    @test left == 2x
+    @test right == 3y
+    for a in ([x, y], [2x, 3y], [x + 1, y + 2])
+        originals = deepcopy(a)
+        expected = a[1] + a[2]
+        @test (@inferred sum(a)) == expected
+        @test (@inferred MP.MA.operate(sum, a)) == expected
+        @test sum(a; init = z + 1) == expected + z + 1
+        @test sum(a; init = 0.5) ==
+              convert(DP.Polynomial{Float64}, expected) + 0.5
+        @test a == originals
+        @test parent(sum(a)) == parent(expected)
+    end
+
+    p = x + y
+    a = [p, p]
+    original = deepcopy(p)
+    @test sum(a; init = p) == 3p
+    @test p == original
+    @test iszero(sum(DP.Polynomial{Int}[]))
+    @test iszero(sum(DP.Term{Int}[]))
+    @test iszero(sum(typeof(x)[]))
+    @test sum(DP.Polynomial{Int}[]; init = p) == p
+    @test parent(sum(DP.Polynomial{Int}[]; init = p)) === parent(p)
+
+    a = [x y; z x]
+    @test sum(a; dims = 1) == [x + z y + x]
+    @test sum(a; dims = 2) == reshape([x + y, z + x], 2, 1)
+    @test sum(a; dims = (1, 2)) == fill(2x + y + z, 1, 1)
+
+    @test MP.polynomial([2x, 3y, -2x]) == 3y
+    @test MP.differentiate(x^2 + 2x*y + y, x) == 2x + 2y
+    DP.@complex_polyvar w
+    @test adjoint((1 + im) * w + x) == (1 - im) * conj(w) + x
+end
+
 @testset "Equality and adjoints" begin
     DP.@polyvar x y
     p = x + y
