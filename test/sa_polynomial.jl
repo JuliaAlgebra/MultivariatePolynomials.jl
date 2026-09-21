@@ -262,6 +262,27 @@ end
     end
 end
 
+@testset "Fused scalar products" begin
+    DP.@polyvar x y
+    for T in (Int, BigInt), op in (MP.MA.add_mul, MP.MA.sub_mul)
+        g = convert(DP.Polynomial{T}, x + 2y)
+        for p in (g, last(MP.terms(g))), (a, b) in ((2.0, p), (p, 2.0))
+            f = one(g)
+            expected = op(f, a, b)
+            original = MP.MA.mutable_copy(g)
+            out = zero(f)
+            @test (@inferred MP.MA.operate_to!!(out, op, f, a, b)) === out
+            @test out == expected
+            @test (@inferred MP.MA.operate!!(op, f, a, b)) === f
+            @test f == expected
+            @test g == original
+            # Mutating an inserted exponent vector must not modify the source.
+            fill!(last(keys(SA.coeffs(f))), 0)
+            @test g == original
+        end
+    end
+end
+
 @testset "Matching coefficient type" begin
     DP.@polyvar x
     a = [1 2; 3 4]
