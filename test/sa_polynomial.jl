@@ -288,6 +288,52 @@ end
     @test MP.leading_coefficient(p) === coefficient
 end
 
+@testset "Shared coefficient mapping" begin
+    DP.@polyvar x
+    for T in (Int, BigInt)
+        p = convert(DP.Polynomial{T}, 2x^2 + 3x + 2)
+        original = deepcopy(p)
+        output = zero(p)
+        @test SA.map_coefficients_to!(output, c -> c - 2, p) === output
+        @test output == x
+        @test p == original
+        @test MP.MA.operate!(MP.right_constant_mult, p, T(2)) === p
+        @test p == 2original
+        @test MP.right_constant_div_multiple(p, T(2), MP.MA.IsMutable()) === p
+        @test p == original
+        @test SA.map_coefficients!(zero, p) === p
+        @test iszero(p)
+
+        f = convert(DP.Polynomial{T}, x^3 + 2x + 1)
+        g = convert(DP.Polynomial{T}, 2x^2 + 1)
+        g_original = deepcopy(g)
+        @test MP.MA.operate!(
+            MP.pseudo_rem,
+            f,
+            g,
+            MP.GeneralizedEuclideanAlgorithm(),
+        ) === f
+        @test f == 3x + 2
+        @test g == g_original
+    end
+end
+
+@testset "Coefficient mapping deprecations" begin
+    DP.@polyvar x
+    p = x + 1
+    @test_deprecated r"SA\.map_coefficients!" MP.map_coefficients!(
+        identity,
+        p;
+        nonzero = true,
+    )
+    @test_deprecated r"SA\.map_coefficients_to!" MP.map_coefficients_to!(
+        p,
+        identity,
+        p;
+        nonzero = true,
+    )
+end
+
 @testset "Polynomial division" begin
     DP.@polyvar x y
     for T in (Int, Rational{Int}, Float64, BigInt)

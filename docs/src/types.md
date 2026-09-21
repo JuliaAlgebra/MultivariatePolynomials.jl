@@ -101,8 +101,8 @@ filter_terms
 OfDegree
 monic
 map_coefficients
-map_coefficients!
-map_coefficients_to!
+SA.map_coefficients!
+SA.map_coefficients_to!
 conj(::_APL)
 real(::_APL)
 imag(::_APL)

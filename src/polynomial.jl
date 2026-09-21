@@ -484,7 +484,7 @@ The function may return zero in which case the term is dropped.
 If the function is known to never return zero for a nonzero input, `nonzero`
 can be set to `true` to get a small speedup.
 
-See also [`map_coefficients!`](@ref) and [`map_coefficients_to!`](@ref).
+See also [`SA.map_coefficients!`](@ref) and [`SA.map_coefficients_to!`](@ref).
 
 ### Examples
 
@@ -512,24 +512,6 @@ function map_coefficients(
     return term(f(coefficient(t)), monomial(t))
 end
 
-"""
-    map_coefficients!(f::Function, p::AbstractPolynomialLike, nonzero = false)
-
-Mutate `p` by replacing each coefficient `α` by `f(α)`.
-The function may return zero in which case the term is dropped.
-If the function is known to never return zero for a nonzero input, `nonzero`
-can be set to `true` to get a small speedup.
-The function returns `p`, which is identically equal to the second argument.
-
-See also [`map_coefficients`](@ref) and [`map_coefficients_to!`](@ref).
-
-### Examples
-
-Let `p = 2x*y + 3x + 1`, after `map_coefficients!(α -> mod(3α, 6), p)`, `p` is
-equal to `3x + 3`.
-"""
-function map_coefficients! end
-
 function map_coefficients(
     f::F,
     p::_APL,
@@ -544,21 +526,8 @@ function map_coefficients(
     ::MA.IsMutable;
     nonzero = false,
 ) where {F<:Function}
-    return map_coefficients!(f, p; nonzero = nonzero)
+    return SA.map_coefficients!(f, p; nonzero = nonzero)
 end
-
-"""
-    map_coefficients_to!(output::AbstractPolynomialLike, f::Function, p::AbstractPolynomialLike, nonzero = false)
-
-Mutate `output` by replacing each coefficient `α` of `p` by `f(α)`.
-The function may return zero in which case the term is dropped.
-If the function is known to never returns zero for a nonzero input, `nonzero`
-can be set to `true` to get a small speedup.
-The function returns `output`, which is identically equal to the first argument.
-
-See also [`map_coefficients!`](@ref) and [`map_coefficients`](@ref).
-"""
-function map_coefficients_to! end
 
 """
     deg_num_leading_terms(p::AbstractPolynomialLike, var)
