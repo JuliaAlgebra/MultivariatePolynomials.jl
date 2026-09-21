@@ -334,6 +334,76 @@ end
     )
 end
 
+@testset "Remainder operation routing" begin
+    DP.@polyvar x y
+    algo = MP.GeneralizedEuclideanAlgorithm()
+    for T in (Int, BigInt, Rational{Int}, Float64)
+        f = convert(DP.Polynomial{T}, x^3 + 2x + 1)
+        g = convert(DP.Polynomial{T}, 2x^2 + 1)
+        originals = deepcopy((f, g))
+        for op in (MP.pseudo_rem, MP.rem_or_pseudo_rem)
+            expected =
+                op === MP.pseudo_rem || T <: Integer ? 3x + 2 : (3 // 2) * x + 1
+            r = @inferred op(f, g, algo)
+            @test r == expected
+            @test typeof(r) === MP.MA.promote_operation(
+                op,
+                typeof(f),
+                typeof(g),
+                typeof(algo),
+            )
+            @test (f, g) == originals
+
+            owned = MP.MA.mutable_copy(f)
+            @test (@inferred MP.MA.operate!!(op, owned, g, algo)) === owned
+            @test owned == expected
+            @test g == originals[2]
+        end
+    end
+
+    for op in (MP.pseudo_rem, MP.rem_or_pseudo_rem)
+        for (f, g, expected) in (
+            (x, 2x + 1, -1),
+            (x^2, 2x, 0),
+            (2x, x^2 + 1, 2x),
+            (x^3 + 2x + 1, convert(DP.Polynomial{BigInt}, 2x^2 + 1), 3x + 2),
+            (x^3 + 2x + 1, 2x^2 + 1 + zero(x + y), 3x + 2),
+        )
+            originals = deepcopy((f, g))
+            r = @inferred MP.MA.operate!!(op, f, g, algo)
+            @test r == expected
+            @test (f, g) == originals
+        end
+
+        f = x^3 + 2x + 1
+        for g in (f, SA.AlgebraElement(SA.coeffs(f), parent(f)))
+            original = deepcopy(f)
+            @test iszero(MP.MA.operate!!(op, f, g, algo))
+            @test f == original
+        end
+
+        f = x^3 + 2x + 1
+        g = 2x^2 + 1
+        buffer = MP.MA.buffer_for(op, typeof(f), typeof(g), typeof(algo))
+        @test MP.MA.buffered_operate!!(buffer, op, f, g, algo) === f
+        @test f == 3x + 2
+        @test g == 2x^2 + 1
+
+        f = x^3 + 2x + 1
+        originals = deepcopy((f, g))
+        @test MP.MA.operate_to!!(zero(f), op, f, g, algo) == 3x + 2
+        @test (f, g) == originals
+    end
+
+    f = x^3 + 2x + 1
+    g = 2x^2 + 1
+    originals = deepcopy((f, g))
+    r = @inferred MP.MA.operate!!(rem, f, g, algo)
+    @test r == (3 // 2) * x + 1
+    @test (f, g) == originals
+    @test MP.MA.operate!!(rem, r, g, algo) === r
+end
+
 @testset "Polynomial division" begin
     DP.@polyvar x y
     for T in (Int, Rational{Int}, Float64, BigInt)
