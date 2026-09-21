@@ -39,8 +39,8 @@ end
 # option.
 Base.:-(m::AbstractMonomialLike) = _term(-1, MA.copy_if_mutable(m))
 Base.:-(t::AbstractTermLike) = _term(MA.operate(-, coefficient(t)), monomial(t))
-Base.:+(p::Union{_APL,RationalPoly}) = p
-Base.:*(p::Union{_APL,RationalPoly}) = p
+Base.:+(p::Union{AbstractMonomialLike,RationalPoly}) = p
+Base.:*(p::Union{AbstractMonomialLike,RationalPoly}) = p
 
 # Coefficients and variables commute
 left_constant_mult(α, v::AbstractMonomialLike) = SA.Term(α, monomial(v))
