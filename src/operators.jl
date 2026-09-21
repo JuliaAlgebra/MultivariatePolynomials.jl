@@ -27,13 +27,6 @@ for op in [:+, :-]
             $op(a, algebra_element(p))
     end
 end
-function Base.:*(a::Union{T,Number}, t::AbstractTerm{T}) where {T}
-    return SA.Term(parent(t), t.index, convert(T, a) * coefficient(t))
-end
-function Base.:*(t::AbstractTerm{T}, a::Union{T,Number}) where {T}
-    return SA.Term(parent(t), t.index, coefficient(t) * convert(T, a))
-end
-
 _term(α, mono) = term(α, MA.copy_if_mutable(mono))
 
 function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
