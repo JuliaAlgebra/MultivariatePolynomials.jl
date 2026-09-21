@@ -110,6 +110,28 @@ end
 LinearAlgebra.dot(x::Number, p::AbstractPolynomialLike) = x' * p
 LinearAlgebra.dot(p::AbstractPolynomialLike, x::Number) = p' * x
 
+_sum_product_operand(p::Union{AbstractPolynomial,AbstractTerm}) = p
+_sum_product_operand(m::AbstractMonomialLike) = term(m)
+
+function MA.operate(
+    ::typeof(LinearAlgebra.dot),
+    a::AbstractArray{<:AbstractPolynomialLike},
+    b::AbstractArray{<:AbstractPolynomialLike},
+)
+    # Conjugation can change the basis, so do it before basis promotion.
+    return LinearAlgebra._dot_nonrecursive(adjoint.(a), b)
+end
+
+function LinearAlgebra._dot_nonrecursive(
+    a::AbstractArray{<:AbstractPolynomialLike},
+    b::AbstractArray{<:AbstractPolynomialLike},
+)
+    return SA.sum_products(
+        map(_sum_product_operand, a),
+        map(_sum_product_operand, b),
+    )
+end
+
 LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT
 LinearAlgebra.symmetric(p::_APL, ::Symbol) = p
 LinearAlgebra.issymmetric(::_APL) = true
