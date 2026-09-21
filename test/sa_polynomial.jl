@@ -5,10 +5,15 @@ import DynamicPolynomials as DP
 import MultivariatePolynomials as MP
 import StarAlgebras as SA
 import LinearAlgebra
+import SparseArrays
 
 @testset "Shared polynomial representation" begin
     DP.@polyvar x y
     p = 2x + y
+    for a in (x, x * y)
+        @test +a === a
+        @test *(a) === a
+    end
     @test x isa MP.AbstractPolynomialLike
     @test x^2 isa MP.AbstractTermLike
     @test 2x isa MP.AbstractTerm
@@ -474,6 +479,72 @@ end
         @inferred zeros(Int, 2, 0) * Matrix{DP.Polynomial{BigInt}}(undef, 0, 2)
     MP.MA.operate!(+, result[1], one(result[1]))
     @test result == [1 0; 0 0]
+end
+
+@testset "Mixed sparse and dense matrix products" begin
+    DP.@polyvar x y z w
+    N = SparseArrays.sparse([0 2; 3 0])
+    P = SparseArrays.sparse([2, 1, 2], [1, 2, 2], [x + 1, y + 2, z + 3], 2, 2)
+    D = [x + 1 y + 2; y + 1 z + 2]
+    originals = MP.MA.mutable_copy(SparseArrays.nonzeros(P))
+    for (A, B) in (
+        (N, [x, y]),
+        (N, [2x, 3y]),
+        (N, D),
+        (D, N),
+        (transpose(N), D),
+        (D, adjoint(N)),
+        (P, [2, 3]),
+        (P, [x + 1, y + 2]),
+        (P, [1 2; 3 4]),
+        ([1 2; 3 4], P),
+        (P, D),
+        (D, P),
+    )
+        expected = if B isa AbstractVector
+            [A[i, 1] * B[1] + A[i, 2] * B[2] for i in 1:2]
+        else
+            [A[i, 1] * B[1, j] + A[i, 2] * B[2, j] for i in 1:2, j in 1:2]
+        end
+        @test (@inferred A * B) == expected
+        @test (@inferred MP.MA.operate(*, A, B)) == expected
+        output = similar(expected)
+        @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
+        @test output == expected
+        for (α, β) in ((2, 0), (2, 3), (0, 1))
+            initial = fill(w + 1, size(expected))
+            output = iszero(β) ? similar(expected) : copy(initial)
+            @test (@inferred LinearAlgebra.mul!(output, A, B, α, β)) === output
+            @test output == expected .* α .+ initial .* β
+            @test initial == fill(w + 1, size(expected))
+        end
+        @test SparseArrays.nonzeros(P) == originals
+    end
+
+    DP.@complex_polyvar u
+    P = SparseArrays.sparse(
+        [2, 1, 2],
+        [1, 2, 2],
+        DP.Polynomial{Complex{Int}}[(1+im)*u+x, y+u, z+2u],
+        2,
+        2,
+    )
+    D = Complex{Int}[1 2; 3 4]
+    for wrapper in (identity, transpose, adjoint),
+        (A, B) in ((wrapper(P), D), (D, wrapper(P)))
+
+        expected =
+            [A[i, 1] * B[1, j] + A[i, 2] * B[2, j] for i in 1:2, j in 1:2]
+        @test (@inferred A * B) == expected
+        output = similar(expected)
+        @test (@inferred LinearAlgebra.mul!(output, A, B, 2, 0)) === output
+        @test output == expected .* 2
+    end
+
+    empty = SparseArrays.spzeros(DP.Polynomial{Int}, 2, 2)
+    @test (@inferred empty * [2, 3]) == [0, 0]
+    @test (@inferred [1 2; 3 4] * empty) == zeros(Int, 2, 2)
+    @test isempty(@inferred zeros(Int, 0, 2) * empty)
 end
 
 @testset "Equality and adjoints" begin
