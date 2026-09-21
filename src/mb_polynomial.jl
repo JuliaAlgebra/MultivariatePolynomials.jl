@@ -11,9 +11,21 @@ function Polynomial{B}(mono::AbstractMonomial) where {B}
 end
 
 exponents(p::Polynomial) = p.exponents
-exponents(p::Polynomial, vars) = exponents(monomial(p), vars)
+function exponents(p::Polynomial, vars)
+    (all_vars, map), _ = promote_variables_with_maps(variables(p), vars)
+    if all_vars != vars
+        throw(
+            ArgumentError("The supplied variables cannot represent this monomial"),
+        )
+    end
+    return map === nothing ? copy(exponents(p)) : map(exponents(p))
+end
 monomial(p::Polynomial) = monomial(variables(p), exponents(p))
 monomial(p::AbstractMonomial) = p
+
+function Base.copy(p::Polynomial{B}) where {B}
+    return Polynomial(Variables{B}(copy(variables(p))), copy(exponents(p)))
+end
 
 function Base.hash(p::Polynomial{B}, u::UInt) where {B}
     return hash(

@@ -213,12 +213,14 @@ function _similar_type(::Type{V}, ::Type{T}) where {V<:AbstractVector,T}
 end
 
 function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
+    inverse_map =
+        is_commutative(V) ? typeof(exponents) : _ExponentsWithVariables{V}
     return SA.MappedBasis{
         Polynomial{B,V,E},
         E,
         ExponentsIterator{ordering(V),Nothing,E},
         Variables{B,V},
-        typeof(exponents),
+        inverse_map,
     }
 end
 
