@@ -453,6 +453,34 @@ end
     @test (q, t) == original
 end
 
+@testset "In-place polynomial addition" begin
+    DP.@polyvar x y
+    for T in (Int, BigInt)
+        f = convert(DP.Polynomial{T}, x^2 + 1)
+        g = convert(DP.Polynomial{T}, 2x - 1)
+        original = deepcopy(g)
+        @test (@inferred MP.MA.add!!(f, g)) === f
+        @test f == x^2 + 2x
+        @test g == original
+        alias = SA.AlgebraElement(SA.coeffs(f), parent(f))
+        @test (@inferred MP.MA.add!!(f, alias)) === f
+        @test f == 2x^2 + 4x
+        @test g == original
+    end
+
+    f, g = x + 1, 0.5x - 1
+    originals = deepcopy((f, g))
+    result = @inferred MP.MA.add!!(f, g)
+    @test result == 1.5x
+    @test result isa DP.Polynomial{Float64}
+    @test (f, g) == originals
+
+    g = y + 1
+    originals = deepcopy((f, g))
+    @test_throws ArgumentError MP.MA.add!!(f, g)
+    @test (f, g) == originals
+end
+
 @testset "Polynomial division" begin
     DP.@polyvar x y
     for T in (Int, Rational{Int}, Float64, BigInt)
