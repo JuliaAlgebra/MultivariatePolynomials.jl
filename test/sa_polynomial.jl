@@ -285,7 +285,7 @@ end
     end
 end
 
-@testset "Matrix-vector products in a common basis" begin
+@testset "Matrix products in a common basis" begin
     DP.@polyvar x y z
     for (A, b) in (
         ([1 2; 3 4], [x, y]),
@@ -303,18 +303,25 @@ end
         ([x + 1 y + 2; z + 3 x + y], [2, 3]),
         ([x + 1 y + 2; z + 3 x + y], [y + 1, z + 2]),
     )
-        originals = MP.MA.mutable_copy.((A, b))
-        expected = [A[i, 1] * b[1] + A[i, 2] * b[2] for i in 1:2]
-        result = @inferred A * b
-        @test result == expected
-        @test typeof(result) === typeof(expected)
-        @test (@inferred MP.MA.operate(*, A, b)) == expected
-        @test parent(result[1]) == parent(result[2])
-        output = similar(result)
-        @test (@inferred LinearAlgebra.mul!(output, A, b)) === output
-        @test output == expected
-        @test (A, b) == originals
-        @test_throws DimensionMismatch A * b[1:1]
+        for B in (b, hcat(b, reverse(b), b))
+            originals = MP.MA.mutable_copy.((A, B))
+            expected = if B isa AbstractVector
+                [A[i, 1] * B[1] + A[i, 2] * B[2] for i in 1:2]
+            else
+                [A[i, 1] * B[1, j] + A[i, 2] * B[2, j] for i in 1:2, j in 1:3]
+            end
+            result = @inferred A * B
+            @test result == expected
+            @test typeof(result) === typeof(expected)
+            @test (@inferred MP.MA.operate(*, A, B)) == expected
+            @test all(parent(r) == parent(first(result)) for r in result)
+            output = similar(result)
+            @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
+            @test output == expected
+            @test (A, B) == originals
+            bad = B isa AbstractVector ? B[1:1] : B[1:1, :]
+            @test_throws DimensionMismatch A * bad
+        end
     end
 
     DP.@complex_polyvar w
@@ -328,20 +335,73 @@ end
         @test (@inferred matrix * b) == expected
         @test (@inferred MP.MA.operate(*, matrix, b)) == expected
     end
+    N = [1 + im 2 - im; 2 + im 1 - im]
+    for (left, right) in (
+        (transpose(A), N),
+        (adjoint(A), N),
+        (view(A, :, :), N),
+        (N, transpose(A)),
+        (N, adjoint(A)),
+        (N, view(A, :, :)),
+        (transpose(A), transpose(A)),
+        (adjoint(A), adjoint(A)),
+        (transpose(A), adjoint(A)),
+        (adjoint(A), transpose(A)),
+    )
+        expected = [
+            left[i, 1] * right[1, j] + left[i, 2] * right[2, j] for
+            i in 1:2, j in 1:2
+        ]
+        @test (@inferred left * right) == expected
+        @test (@inferred MP.MA.operate(*, left, right)) == expected
+        output = similar(expected)
+        @test (@inferred LinearAlgebra.mul!(output, left, right)) === output
+        @test output == expected
+    end
 
     for P in (typeof(x), DP.Term{Int}, DP.Polynomial{Int})
         result = @inferred zeros(Float64, 2, 0) * P[]
         @test length(result) == 2
         @test all(iszero, result)
-        @test eltype(result) ===
-              MP.polynomial_type(P, P <: MP.AbstractMonomialLike ? Float64 : Int)
+        @test eltype(result) === MP.polynomial_type(
+            P,
+            P <: MP.AbstractMonomialLike ? Float64 : Int,
+        )
+        result = @inferred zeros(Float64, 2, 0) * Matrix{P}(undef, 0, 3)
+        @test size(result) == (2, 3)
+        @test all(iszero, result)
+        @test eltype(result) === MP.polynomial_type(
+            P,
+            P <: MP.AbstractMonomialLike ? Float64 : Int,
+        )
+        @test isempty(@inferred zeros(Int, 0, 2) * Matrix{P}(undef, 2, 0))
     end
     @test isempty(@inferred zeros(Int, 0, 2) * [x, y])
     @test_throws InexactError [0.5 1.5] * [2x, 3y]
     @test_throws InexactError [0.5 1.5] * [x + 1, y + 2]
+    @test_throws InexactError [0.5 1.5] * [2x 3y; 3y 2x]
+    @test_throws InexactError [x + 1 y + 2] * [0.5 1.5; 0.5 1.5]
     @test MP.polynomial([1 2; 3 4], [x, y]) == x^2 + 5x*y + 4y^2
     @test (@inferred MP.polynomial([0.5 1.5; 0.5 3.0], [x, y])) ==
           0.5x^2 + 2x*y + 3y^2
+
+    A = [x + 1 y + 2; x + y z + 3]
+    originals = MP.MA.mutable_copy(A)
+    for B in (A, view(A, :, :))
+        @test_throws ArgumentError LinearAlgebra.mul!(A, B, [1 2; 3 4])
+        @test_throws ArgumentError LinearAlgebra.mul!(A, [1 2; 3 4], B)
+        @test A == originals
+    end
+    output = [x + 1 y + 2]
+    @test_throws DimensionMismatch LinearAlgebra.mul!(output, A, A)
+    @test output == [x + 1 y + 2]
+    @test_throws DimensionMismatch LinearAlgebra.mul!(output, [1 2], A[1:1, :])
+    @test output == [x + 1 y + 2]
+
+    result =
+        @inferred zeros(Int, 2, 0) * Matrix{DP.Polynomial{BigInt}}(undef, 0, 2)
+    MP.MA.operate!(+, result[1], one(result[1]))
+    @test result == [1 0; 0 0]
 end
 
 @testset "Equality and adjoints" begin

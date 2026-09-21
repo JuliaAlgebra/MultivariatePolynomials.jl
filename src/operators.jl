@@ -179,19 +179,19 @@ for (A, B) in (
     (Union{Number,AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
 )
     @eval function MA.operate_to!(
-        output::Vector{P},
+        output::VecOrMat{P},
         ::typeof(*),
         A::AbstractMatrix{<:$A},
-        b::AbstractVector{<:$B},
+        B::AbstractVecOrMat{<:$B},
     ) where {P<:AbstractPolynomial}
         # Bare monomials acquire the numeric product's coefficient type;
         # algebra factors keep their own coefficient types.
         a = _matrix_product_array(
             A,
-            eltype(b) <: Number ? coefficient_type(P) : Int,
+            eltype(B) <: Number ? coefficient_type(P) : Int,
         )
         b = _matrix_product_array(
-            b,
+            B,
             eltype(A) <: Number ? coefficient_type(P) : Int,
         )
         return MA.operate_to!(output, *, a, b)
