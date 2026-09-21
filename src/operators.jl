@@ -106,13 +106,19 @@ LinearAlgebra.dot(p::AbstractPolynomialLike, x::Number) = p' * x
 _sum_product_operand(p::Union{AbstractPolynomial,AbstractTerm}) = p
 _sum_product_operand(m::AbstractMonomialLike) = term(m)
 
-function MA.operate(
-    ::typeof(LinearAlgebra.dot),
-    a::AbstractArray{<:AbstractPolynomialLike},
-    b::AbstractArray{<:AbstractPolynomialLike},
+for (A, B) in (
+    (AbstractPolynomialLike, AbstractPolynomialLike),
+    (Number, AbstractPolynomialLike),
+    (AbstractPolynomialLike, Number),
 )
-    # Conjugation can change the basis, so do it before basis promotion.
-    return LinearAlgebra._dot_nonrecursive(adjoint.(a), b)
+    @eval function MA.operate(
+        ::typeof(LinearAlgebra.dot),
+        a::AbstractArray{<:$A},
+        b::AbstractArray{<:$B},
+    )
+        # Conjugation can change the basis, so do it before basis promotion.
+        return LinearAlgebra._dot_nonrecursive(adjoint.(a), b)
+    end
 end
 
 function LinearAlgebra._dot_nonrecursive(
@@ -123,6 +129,38 @@ function LinearAlgebra._dot_nonrecursive(
         map(_sum_product_operand, a),
         map(_sum_product_operand, b),
     )
+end
+
+function LinearAlgebra._dot_nonrecursive(
+    a::AbstractArray{<:Number},
+    b::AbstractArray{<:Union{AbstractPolynomial,AbstractTerm}},
+)
+    return SA.sum_products(a, b)
+end
+function LinearAlgebra._dot_nonrecursive(
+    a::AbstractArray{<:Union{AbstractPolynomial,AbstractTerm}},
+    b::AbstractArray{<:Number},
+)
+    return SA.sum_products(a, b)
+end
+
+# A bare monomial takes its coefficient from the numeric factor. Existing
+# terms and polynomials instead convert numeric factors to their coefficients.
+function _sum_monomial_products(a, b)
+    MA._check_same_length(a, b)
+    return sum(map(term, vec(a), vec(b)))
+end
+function LinearAlgebra._dot_nonrecursive(
+    a::AbstractArray{<:Number},
+    b::AbstractArray{<:AbstractMonomialLike},
+)
+    return _sum_monomial_products(a, b)
+end
+function LinearAlgebra._dot_nonrecursive(
+    a::AbstractArray{<:AbstractMonomialLike},
+    b::AbstractArray{<:Number},
+)
+    return _sum_monomial_products(b, a)
 end
 
 LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT

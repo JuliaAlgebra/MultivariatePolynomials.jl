@@ -209,6 +209,82 @@ end
           3 * (1 - im) * conj(w) * y + 2x * z
 end
 
+@testset "Mixed numeric and polynomial dot products" begin
+    DP.@polyvar x y
+    for polynomials in (
+        [x, y],
+        [x^2, y^2],
+        [2x, 3y],
+        [x + 1, y + 2],
+        [big(2) * x, big(3) * y],
+        [big(2) * x + 1, big(3) * y + 2],
+    ), numbers in ([2, 3], [2.0, 3.0]), left in (false, true)
+
+        a, b = left ? (numbers, polynomials) : (polynomials, numbers)
+        originals = MP.MA.mutable_copy.((a, b))
+        expected =
+            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        @test (@inferred LinearAlgebra.dot(a, b)) == expected
+        @test (@inferred MP.MA.operate(LinearAlgebra.dot, a, b)) == expected
+        @test a' * b == expected
+        @test transpose(a) * b == a[1] * b[1] + a[2] * b[2]
+        @test LinearAlgebra.dot(reshape(a, 1, 2), reshape(b, 2, 1)) == expected
+        @test (a, b) == originals
+        @test_throws DimensionMismatch LinearAlgebra.dot(a, b[1:1])
+        @test_throws DimensionMismatch LinearAlgebra.dot(a[1:0], b)
+    end
+
+    for monomials in ([x, y], [x^2, y^2])
+        expected = 0.5 * monomials[1] + 1.5 * monomials[2]
+        @test (@inferred LinearAlgebra.dot([0.5, 1.5], monomials)) == expected
+        @test (@inferred LinearAlgebra.dot(monomials, [0.5, 1.5])) == expected
+    end
+    for polynomials in ([2x, 3y], [x + 1, y + 2])
+        @test_throws InexactError LinearAlgebra.dot([0.5, 1.5], polynomials)
+        @test_throws InexactError LinearAlgebra.dot(polynomials, [0.5, 1.5])
+        @test MP.coefficient_type(LinearAlgebra.dot([2.0, 3.0], polynomials)) ===
+              Int
+    end
+    numbers = BigInt[2, 3]
+    result = @inferred LinearAlgebra.dot(numbers, [x, y])
+    MP.MA.operate!(+, first(MP.coefficients(result)), big(1))
+    @test numbers == [2, 3]
+
+    for T in (Int, BigInt, Complex{Int}), P in (DP.Polynomial{T}, DP.Term{T})
+        for (a, b) in ((Float64[], P[]), (P[], Float64[]))
+            result = @inferred LinearAlgebra.dot(a, b)
+            @test result isa DP.Polynomial{T}
+            @test iszero(result)
+        end
+    end
+    for T in (Float64, BigInt), P in (typeof(x), typeof(x^2))
+        for (a, b) in ((T[], P[]), (P[], T[]))
+            result = @inferred LinearAlgebra.dot(a, b)
+            @test result isa DP.Polynomial{T}
+            @test iszero(result)
+        end
+    end
+
+    DP.@complex_polyvar w
+    numbers = [1 + 2im, 3 - im]
+    for polynomials in (
+        [w, x],
+        [w^2, x^2],
+        [(2 + im) * w, (3 - im) * x],
+        [(2 + im) * w + x, (3 - im) * x + 1],
+    ), left in (false, true)
+
+        a, b = left ? (numbers, polynomials) : (polynomials, numbers)
+        originals = MP.MA.mutable_copy.((a, b))
+        expected =
+            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        @test (@inferred LinearAlgebra.dot(a, b)) == expected
+        @test a' * b == expected
+        @test transpose(a) * b == a[1] * b[1] + a[2] * b[2]
+        @test (a, b) == originals
+    end
+end
+
 @testset "Equality and adjoints" begin
     DP.@polyvar x y
     p = x + y
