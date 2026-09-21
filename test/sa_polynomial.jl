@@ -285,6 +285,65 @@ end
     end
 end
 
+@testset "Matrix-vector products in a common basis" begin
+    DP.@polyvar x y z
+    for (A, b) in (
+        ([1 2; 3 4], [x, y]),
+        ([0.5 1.5; 2.5 3.5], [x^2, y^2]),
+        ([1 2; 3 4], [2x, 3y]),
+        ([2.0 3.0; 4.0 5.0], [x + 1, y + 2]),
+        ([1 2; 3 4], [big(2) * x + 1, big(3) * y + 2]),
+        ([x y; z x], [0.5, 1.5]),
+        ([x y; z x], [y, z]),
+        ([x^2 y^2; z^2 x*y], [y, z]),
+        ([2x 3y; 4z 1x], [x, z]),
+        ([x y; z x], [2y, 3z]),
+        ([x + 1 y + 2; z + 3 x + y], [x, y]),
+        ([x y; z x], [y + 1, z + 2]),
+        ([x + 1 y + 2; z + 3 x + y], [2, 3]),
+        ([x + 1 y + 2; z + 3 x + y], [y + 1, z + 2]),
+    )
+        originals = MP.MA.mutable_copy.((A, b))
+        expected = [A[i, 1] * b[1] + A[i, 2] * b[2] for i in 1:2]
+        result = @inferred A * b
+        @test result == expected
+        @test typeof(result) === typeof(expected)
+        @test (@inferred MP.MA.operate(*, A, b)) == expected
+        @test parent(result[1]) == parent(result[2])
+        output = similar(result)
+        @test (@inferred LinearAlgebra.mul!(output, A, b)) === output
+        @test output == expected
+        @test (A, b) == originals
+        @test_throws DimensionMismatch A * b[1:1]
+    end
+
+    DP.@complex_polyvar w
+    A = DP.Polynomial{Complex{Int}}[
+        (1 + im) * w + x w + y
+        w + z (2 - im) * w + x
+    ]
+    b = [1 + im, 2 - im]
+    for matrix in (A, transpose(A), adjoint(A), view(A, :, :))
+        expected = [matrix[i, 1] * b[1] + matrix[i, 2] * b[2] for i in 1:2]
+        @test (@inferred matrix * b) == expected
+        @test (@inferred MP.MA.operate(*, matrix, b)) == expected
+    end
+
+    for P in (typeof(x), DP.Term{Int}, DP.Polynomial{Int})
+        result = @inferred zeros(Float64, 2, 0) * P[]
+        @test length(result) == 2
+        @test all(iszero, result)
+        @test eltype(result) ===
+              MP.polynomial_type(P, P <: MP.AbstractMonomialLike ? Float64 : Int)
+    end
+    @test isempty(@inferred zeros(Int, 0, 2) * [x, y])
+    @test_throws InexactError [0.5 1.5] * [2x, 3y]
+    @test_throws InexactError [0.5 1.5] * [x + 1, y + 2]
+    @test MP.polynomial([1 2; 3 4], [x, y]) == x^2 + 5x*y + 4y^2
+    @test (@inferred MP.polynomial([0.5 1.5; 0.5 3.0], [x, y])) ==
+          0.5x^2 + 2x*y + 3y^2
+end
+
 @testset "Equality and adjoints" begin
     DP.@polyvar x y
     p = x + y

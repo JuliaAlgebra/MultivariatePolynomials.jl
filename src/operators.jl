@@ -163,6 +163,41 @@ function LinearAlgebra._dot_nonrecursive(
     return _sum_monomial_products(b, a)
 end
 
+function _matrix_product_array(a, ::Type)
+    return a
+end
+function _matrix_product_array(
+    a::AbstractArray{<:AbstractMonomialLike},
+    ::Type{T},
+) where {T}
+    return map(m -> term(one(T), m), a)
+end
+
+for (A, B) in (
+    (AbstractMonomialLike, AbstractMonomialLike),
+    (AbstractMonomialLike, Union{Number,AbstractPolynomial,AbstractTerm}),
+    (Union{Number,AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
+)
+    @eval function MA.operate_to!(
+        output::Vector{P},
+        ::typeof(*),
+        A::AbstractMatrix{<:$A},
+        b::AbstractVector{<:$B},
+    ) where {P<:AbstractPolynomial}
+        # Bare monomials acquire the numeric product's coefficient type;
+        # algebra factors keep their own coefficient types.
+        a = _matrix_product_array(
+            A,
+            eltype(b) <: Number ? coefficient_type(P) : Int,
+        )
+        b = _matrix_product_array(
+            b,
+            eltype(A) <: Number ? coefficient_type(P) : Int,
+        )
+        return MA.operate_to!(output, *, a, b)
+    end
+end
+
 LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT
 LinearAlgebra.symmetric(p::_APL, ::Symbol) = p
 LinearAlgebra.issymmetric(::_APL) = true
