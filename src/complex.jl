@@ -203,7 +203,7 @@ for fun in [:real, :imag]
                         full_version,
                         real(coefficient_type(full_version)),
                     ),
-                    map_coefficients!($fun, full_version),
+                    SA.map_coefficients!($fun, full_version),
                 )
             end
             function Base.$fun(x::AbstractVector{<:AbstractMonomial})

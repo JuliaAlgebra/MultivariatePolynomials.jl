@@ -127,14 +127,14 @@ Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
 # ^(::SA.Term, ::Integer) is defined in StarAlgebras
 
 function MA.operate_to!(output, ::typeof(left_constant_mult), α, p::_APL)
-    return map_coefficients_to!(output, Base.Fix1(*, α), p)
+    return SA.map_coefficients_to!(output, Base.Fix1(*, α), p)
 end
 function MA.operate_to!(output, ::typeof(right_constant_mult), p::_APL, α)
-    return map_coefficients_to!(output, Base.Fix2(*, α), p)
+    return SA.map_coefficients_to!(output, Base.Fix2(*, α), p)
 end
 function MA.operate!(::typeof(left_constant_mult), α, p::_APL)
-    return map_coefficients!(Base.Fix1(*, α), p)
+    return SA.map_coefficients!(Base.Fix1(*, α), p)
 end
 function MA.operate!(::typeof(right_constant_mult), p::_APL, α)
-    return map_coefficients!(Base.Fix2(MA.mul!!, α), p)
+    return SA.map_coefficients!(Base.Fix2(MA.mul!!, α), p)
 end
