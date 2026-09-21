@@ -64,6 +64,66 @@ import LinearAlgebra
     @test iszero(sum([u, v]) - q)
 end
 
+@testset "Ordered noncommutative monomials" begin
+    DP.@ncpolyvar x y z
+    xy, yx = @inferred(x * y), @inferred(y * x)
+    @test xy != yx
+    @test MP.variables(xy) == [x, y]
+    @test MP.variables(yx) == [y, x]
+    @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
+    @test x * x == x^2
+    for (word, vars, exps) in (
+        (x * (y * x), [x, y, x], [1, 1, 1]),
+        ((x * y^2) * (y^3 * z), [x, y, z], [1, 5, 1]),
+        ((x * x * y) * (y * x), [x, y, x], [2, 2, 1]),
+        ((x * y)^2, [x, y, x, y], [1, 1, 1, 1]),
+        ((x * y)^3, [x, y, x, y, x, y], ones(Int, 6)),
+        (x^1000000 * y, [x, y], [1000000, 1]),
+    )
+        @test MP.variables(word) == vars
+        @test MP.exponents(word) == exps
+    end
+    @test x^0 * y == y
+    @test y * x^0 == y
+    @test isone((x * y)^0)
+    @test (x * y)^1 == xy
+    copied = xy^1
+    @test MP.variables(copied) !== MP.variables(xy)
+    @test MP.exponents(copied) !== MP.exponents(xy)
+    MP.variables(copied)[1] = z
+    MP.exponents(copied)[2] = 3
+    @test MP.variables(xy) == [x, y]
+    @test MP.exponents(xy) == [1, 1]
+    @test (@inferred MP.degree(x * y^4 * x^2, x)) == 3
+
+    a, b = @inferred SA.promote_bases(xy, yx)
+    @test MP.variables(a) == MP.variables(b) == [x, y, x]
+    @test MP.exponents(a) == [1, 1, 0]
+    @test MP.exponents(b) == [0, 1, 1]
+    @test a == xy && b == yx
+    @test isequal(a, xy) && hash(a) == hash(xy)
+    @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
+    @test (@inferred MP.exponents(x^2 * y * x, [x, y, x, z])) == [2, 1, 1, 0]
+    @test MP.exponents(a, MP.variables(a)) == MP.exponents(a)
+    @test MP.exponents(a, MP.variables(a)) !== MP.exponents(a)
+    @test_throws ArgumentError MP.exponents(yx, [x, y])
+
+    p = @inferred x + y
+    @test typeof(2x) === MP.term_type(x)
+    @test typeof(p) === MP.polynomial_type(x)
+    @test p == y + x
+    @test (@inferred sum([x, y])) == p
+    @test (@inferred LinearAlgebra.dot([x, y], [x, y])) == x^2 + y^2
+    @test (x + 1) * (x + 2) == x^2 + 3x + 2
+    p = MP.term(2, xy) + MP.term(3, yx)
+    @test MP.coefficient(p, xy) == 2
+    @test MP.coefficient(p, yx) == 3
+
+    DP.@polyvar u v w
+    @test (@inferred MP.exponents(u^2 * v, [u, v, w])) == [2, 1, 0]
+    @test_throws ArgumentError MP.exponents(u * v, [u])
+end
+
 @testset "Parent-aware sums" begin
     DP.@polyvar x y z
     left, right = @inferred SA.promote_bases(2x, 3y)
