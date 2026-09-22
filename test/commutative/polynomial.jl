@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 import MutableArithmetics as MA
+import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 @testset "Polynomial" begin
@@ -242,16 +243,16 @@ const MP = MultivariatePolynomials
         p = 2x + 1
         @test map_coefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
         @test map_coefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
-        @test p === map_coefficients!(x -> x + 1, p, nonzero = nz)
+        @test p === SA.map_coefficients!(x -> x + 1, p, nonzero = nz)
         @test p == 3x + 2
         q = zero(p)
-        @test q === map_coefficients_to!(q, x -> 2x, p, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, p, nonzero = nz)
         @test q == 6x + 4
-        @test q === map_coefficients_to!(q, x -> 2x, 3x, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, 3x, nonzero = nz)
         @test q == 6x
-        @test q === map_coefficients_to!(q, x -> 2x, x, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, x, nonzero = nz)
         @test q == 2x
-        @test q === map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
         @test q == 2x^2
     end
 end
