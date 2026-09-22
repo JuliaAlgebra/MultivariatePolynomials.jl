@@ -500,6 +500,9 @@ end
         ([1 2; 3 4], P),
         (P, D),
         (D, P),
+        (N, P),
+        (P, N),
+        (P, P),
     )
         expected = if B isa AbstractVector
             [A[i, 1] * B[1] + A[i, 2] * B[2] for i in 1:2]
@@ -511,6 +514,15 @@ end
         output = similar(expected)
         @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
         @test output == expected
+        if B isa AbstractMatrix
+            output = SparseArrays.spzeros(eltype(expected), size(expected)...)
+            @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
+            @test output == expected
+            @test all(
+                p -> MP.variables(p) == MP.variables(sum(expected)),
+                SparseArrays.nonzeros(output),
+            )
+        end
         for (α, β) in ((2, 0), (2, 3), (0, 1))
             initial = fill(w + 1, size(expected))
             output = iszero(β) ? similar(expected) : copy(initial)
@@ -531,7 +543,12 @@ end
     )
     D = Complex{Int}[1 2; 3 4]
     for wrapper in (identity, transpose, adjoint),
-        (A, B) in ((wrapper(P), D), (D, wrapper(P)))
+        (A, B) in (
+            (wrapper(P), D),
+            (D, wrapper(P)),
+            (wrapper(P), SparseArrays.sparse(D)),
+            (SparseArrays.sparse(D), wrapper(P)),
+        )
 
         expected =
             [A[i, 1] * B[1, j] + A[i, 2] * B[2, j] for i in 1:2, j in 1:2]
@@ -545,6 +562,7 @@ end
     @test (@inferred empty * [2, 3]) == [0, 0]
     @test (@inferred [1 2; 3 4] * empty) == zeros(Int, 2, 2)
     @test isempty(@inferred zeros(Int, 0, 2) * empty)
+    @test SparseArrays.nnz(@inferred empty * empty) == 0
 end
 
 @testset "Equality and adjoints" begin
@@ -572,6 +590,53 @@ end
     @test LinearAlgebra.dot(t, t) == 5 * x^2
     @test LinearAlgebra.dot([p, p], [p, p]) == 2 * p * p
     @test LinearAlgebra.dot([t, t], [t, t]) == 10 * x^2
+end
+
+function same_basis_promotion_allocations(output, x)
+    SA._promote_operand(+, output, x)
+    return @allocated SA._promote_operand(+, output, x)
+end
+
+@testset "Prepared destinations promote operands" begin
+    DP.@polyvar x y z
+    for T in (Int, BigInt)
+        a = convert(DP.Polynomial{T}, 2x + 2)
+        b = convert(DP.Polynomial{T}, y + 1)
+        prototype = convert(DP.Polynomial{T}, x + y + z)
+        alg = parent(prototype)
+        originals = MP.MA.mutable_copy.((a, b))
+        same_basis = first(SA.promote_bases(a, alg))
+        @test (@inferred SA._promote_operand(+, prototype, same_basis)) ===
+              same_basis
+        @test same_basis_promotion_allocations(prototype, same_basis) == 0
+        for op in (+, -, *)
+            output = zero(prototype)
+            @test (@inferred MP.MA.operate_to!(output, op, a, b)) === output
+            @test output == op(a, b)
+            @test parent(output) === alg
+        end
+        output = zero(prototype)
+        @test (@inferred MP.MA.operate_to!(output, -, a)) === output
+        @test output == -a
+        @test (@inferred MP.MA.operate_to!(output, *, 2, a)) === output
+        @test output == 2a
+        for op in (*, /, //, div)
+            @test (@inferred MP.MA.operate_to!(output, op, a, 2)) === output
+            @test output == op(a, 2)
+        end
+        for op in (MP.MA.add_mul, MP.MA.sub_mul),
+            (left, right) in
+            ((a, b), (2x, b), (a, 3y), (2x, 3y), (2, b), (b, 2))
+
+            output = zero(prototype)
+            @test (@inferred MP.MA.operate_to!(output, op, a, left, right)) ===
+                  output
+            @test output == op(a, left, right)
+            @test parent(output) === alg
+        end
+        @test (a, b) == originals
+        @test parent(a) != alg && parent(b) != alg
+    end
 end
 
 @testset "Fused polynomial products" begin
