@@ -593,6 +593,7 @@ end
 end
 
 include("sa_operand_promotion.jl")
+include("sa_dense_products.jl")
 
 @testset "Prepared fused polynomial destinations" begin
     DP.@polyvar x y z

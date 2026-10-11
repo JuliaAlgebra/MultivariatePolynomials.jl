@@ -42,7 +42,7 @@ end
         @test (@inferred MP.MA.add!!(output, 2x)) === output
         @test output == 2x
         for op in (MP.MA.add_mul, MP.MA.sub_mul),
-            (left, right) in ((2x, b), (a, 3y))
+            (left, right) in ((a, b), (2x, b), (a, 3y), (2, b), (b, 2))
 
             output = zero(prototype)
             @test (@inferred MP.MA.operate_to!(output, op, a, left, right)) ===
@@ -59,6 +59,16 @@ end
             @test_throws ArgumentError MP.MA.add!!(output, operand)
             @test output == a
             @test parent(output) === parent(a)
+        end
+        for (left, right) in ((a, b), (2, b), (b, 2))
+            output = MP.MA.mutable_copy(a)
+            @test_throws ArgumentError MP.MA.operate!!(
+                MP.MA.add_mul,
+                output,
+                left,
+                right,
+            )
+            @test output == a
         end
         @test (a, b) == originals
         @test parent(a) != alg && parent(b) != alg
