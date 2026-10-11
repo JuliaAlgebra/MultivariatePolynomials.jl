@@ -107,9 +107,10 @@ _sum_product_operand(p::Union{AbstractPolynomial,AbstractTerm}) = p
 _sum_product_operand(m::AbstractMonomialLike) = term(m)
 
 for (A, B) in (
-    (AbstractPolynomialLike, AbstractPolynomialLike),
-    (Number, AbstractPolynomialLike),
-    (AbstractPolynomialLike, Number),
+    (AbstractMonomialLike, AbstractPolynomialLike),
+    (Union{AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
+    (Number, AbstractMonomialLike),
+    (AbstractMonomialLike, Number),
 )
     @eval function MA.operate(
         ::typeof(LinearAlgebra.dot),
@@ -121,27 +122,20 @@ for (A, B) in (
     end
 end
 
-function LinearAlgebra._dot_nonrecursive(
-    a::AbstractArray{<:AbstractPolynomialLike},
-    b::AbstractArray{<:AbstractPolynomialLike},
+for (A, B) in (
+    (AbstractMonomialLike, AbstractPolynomialLike),
+    (Union{AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
 )
-    return SA.sum_products(
-        map(_sum_product_operand, a),
-        map(_sum_product_operand, b),
+    @eval function LinearAlgebra._dot_nonrecursive(
+        a::AbstractArray{<:$A},
+        b::AbstractArray{<:$B},
     )
-end
-
-function LinearAlgebra._dot_nonrecursive(
-    a::AbstractArray{<:Number},
-    b::AbstractArray{<:Union{AbstractPolynomial,AbstractTerm}},
-)
-    return SA.sum_products(a, b)
-end
-function LinearAlgebra._dot_nonrecursive(
-    a::AbstractArray{<:Union{AbstractPolynomial,AbstractTerm}},
-    b::AbstractArray{<:Number},
-)
-    return SA.sum_products(a, b)
+        return MA.fused_map_reduce(
+            MA.add_mul,
+            map(_sum_product_operand, a),
+            map(_sum_product_operand, b),
+        )
+    end
 end
 
 # A bare monomial takes its coefficient from the numeric factor. Existing
