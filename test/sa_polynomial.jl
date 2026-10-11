@@ -592,12 +592,9 @@ end
     @test LinearAlgebra.dot([t, t], [t, t]) == 10 * x^2
 end
 
-function same_basis_promotion_allocations(output, x)
-    SA._promote_operand(+, output, x)
-    return @allocated SA._promote_operand(+, output, x)
-end
+include("sa_operand_promotion.jl")
 
-@testset "Prepared destinations promote operands" begin
+@testset "Prepared fused polynomial destinations" begin
     DP.@polyvar x y z
     for T in (Int, BigInt)
         a = convert(DP.Polynomial{T}, 2x + 2)
@@ -605,25 +602,6 @@ end
         prototype = convert(DP.Polynomial{T}, x + y + z)
         alg = parent(prototype)
         originals = MP.MA.mutable_copy.((a, b))
-        same_basis = first(SA.promote_bases(a, alg))
-        @test (@inferred SA._promote_operand(+, prototype, same_basis)) ===
-              same_basis
-        @test same_basis_promotion_allocations(prototype, same_basis) == 0
-        for op in (+, -, *)
-            output = zero(prototype)
-            @test (@inferred MP.MA.operate_to!(output, op, a, b)) === output
-            @test output == op(a, b)
-            @test parent(output) === alg
-        end
-        output = zero(prototype)
-        @test (@inferred MP.MA.operate_to!(output, -, a)) === output
-        @test output == -a
-        @test (@inferred MP.MA.operate_to!(output, *, 2, a)) === output
-        @test output == 2a
-        for op in (*, /, //, div)
-            @test (@inferred MP.MA.operate_to!(output, op, a, 2)) === output
-            @test output == op(a, 2)
-        end
         for op in (MP.MA.add_mul, MP.MA.sub_mul),
             (left, right) in
             ((a, b), (2x, b), (a, 3y), (2x, 3y), (2, b), (b, 2))
