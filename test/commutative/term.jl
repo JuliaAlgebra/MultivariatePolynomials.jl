@@ -47,6 +47,42 @@ Base.iszero(::CoefNotComparable) = false
     @test zero_term(1x) == 0 * x
 
     Mod.@polyvar y
+    @testset "Products of terms are polynomials" begin
+        for (a, b, expected) in (
+            (2x, 3y, polynomial(term(6, x * y))),
+            (2x, 3.0y, polynomial(term(6.0, x * y))),
+            (0 * x, 3y, polynomial(term(0, x * y))),
+        )
+            product = @inferred a * b
+            @test product isa typeof(expected)
+            @test product == expected
+            @test (@inferred MA.promote_operation(*, typeof(a), typeof(b))) ===
+                  typeof(product)
+            @test monomial(a) == x
+            @test monomial(b) == y
+        end
+    end
+    @testset "Monomial products preserve terms" begin
+        for c in (0, 2, 2.5, 2 // 3, big(2))
+            t = term(c, y)
+            for m in (x, x^2), (a, b) in ((m, t), (t, m))
+                product = @inferred a * b
+                @test product isa AbstractTerm{typeof(c)}
+                @test product == term(c, m * y)
+                @test (@inferred MA.promote_operation(
+                    *,
+                    typeof(a),
+                    typeof(b),
+                )) === typeof(product)
+                @test (@inferred MA.operate!!(*, a, b)) == product
+                @test monomial(t) == y
+                if c isa BigInt
+                    MA.operate!(+, coefficient(product), big(1))
+                    @test coefficient(t) == 2
+                end
+            end
+        end
+    end
     @test degree(2x^2, x) == 2
     @test degree(2x^2, y) == 0
     @test degree(2x^2, y) == 0
@@ -108,19 +144,14 @@ Base.iszero(::CoefNotComparable) = false
     end
 
     @testset "MA $T" for T in [Int, BigInt]
-        M = typeof(x^2)
         t = one(T) * x
-        s = MA.operate!!(*, t, x)
+        s = @inferred MA.operate!!(*, t, x)
         @test monomial(s) == x^2
-        if T == BigInt && MA.mutability(M) isa MA.IsMutable
-            @test monomial(t) == x^2
-        end
-        u = MA.operate!!(*, s, term(T(2), x^3))
-        @test monomial(u) == x^5
-        @test coefficient(u) == 2
-        if T == BigInt && MA.mutability(M) isa MA.IsMutable
-            @test monomial(t) == x^5
-            @test coefficient(t) == 2
-        end
+        @test t == one(T) * x
+        u = @inferred MA.operate!!(*, s, term(T(2), x^3))
+        @test u isa AbstractPolynomial{T}
+        @test u == term(T(2), x^5)
+        @test s == term(one(T), x^2)
+        @test t == one(T) * x
     end
 end

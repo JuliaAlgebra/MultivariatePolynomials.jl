@@ -65,6 +65,27 @@ function MA.promote_operation(
 end
 
 function MA.promote_operation(
+    ::typeof(*),
+    ::Type{M},
+    ::Type{T},
+) where {M<:AbstractMonomialLike,T<:AbstractTerm}
+    return term_type(
+        MA.promote_operation(*, M, monomial_type(T)),
+        coefficient_type(T),
+    )
+end
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{T},
+    ::Type{M},
+) where {T<:AbstractTerm,M<:AbstractMonomialLike}
+    return term_type(
+        MA.promote_operation(*, monomial_type(T), M),
+        coefficient_type(T),
+    )
+end
+
+function MA.promote_operation(
     op::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{T},
     ::Type{S},
