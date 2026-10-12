@@ -1,13 +1,17 @@
 # Variables and monomials enter the shared term/algebra arithmetic.
-for op in [:+, :-, :*]
+for op in [:+, :-]
     @eval begin
         Base.$op(a::AbstractMonomialLike, b::AbstractTerm) = $op(term(a), b)
         Base.$op(a::AbstractTerm, b::AbstractMonomialLike) = $op(a, term(b))
+        Base.$op(a::AbstractMonomialLike, b::AbstractMonomialLike) =
+            $op(term(a), term(b))
     end
 end
-for op in [:+, :-]
-    @eval Base.$op(a::AbstractMonomialLike, b::AbstractMonomialLike) =
-        $op(term(a), term(b))
+function Base.:*(a::AbstractMonomialLike, b::AbstractTerm)
+    return term(MA.copy_if_mutable(coefficient(b)), a * monomial(b))
+end
+function Base.:*(a::AbstractTerm, b::AbstractMonomialLike)
+    return term(MA.copy_if_mutable(coefficient(a)), monomial(a) * b)
 end
 function Base.:*(a::AbstractMonomialLike, b::AbstractMonomialLike)
     return monomial(a) * monomial(b)
