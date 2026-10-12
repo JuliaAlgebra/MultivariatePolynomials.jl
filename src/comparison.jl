@@ -99,7 +99,12 @@ function Base.isequal(t::SA.Term, p::AbstractPolynomial)
     return right_term_eq(p, t; comp = isequal)
 end
 
-function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, isz, op)
+function compare_terms(
+    p1::AbstractPolynomialLike,
+    p2::AbstractPolynomialLike,
+    isz,
+    op,
+)
     i1 = 1
     i2 = 1
     t1 = terms(p1)
@@ -178,18 +183,29 @@ function Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...)
            monomial(t1) == monomial(t2)
 end
 function Base.isapprox(
-    p1::AbstractPolynomial{S},
-    p2::AbstractPolynomial{T};
+    p1::AbstractPolynomialLike,
+    p2::AbstractPolynomialLike;
     atol = 0,
-    ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
+    ztol::Real = if iszero(atol)
+        Base.rtoldefault(coefficient_type(p1), coefficient_type(p2), 0)
+    else
+        atol
+    end,
     kwargs...,
-) where {S,T}
+)
     return compare_terms(
         p1,
         p2,
         t -> isapproxzero(t; ztol = ztol),
         (x, y) -> isapprox(x, y; atol = atol, kwargs...),
     )
+end
+
+function Base.isapprox(p::AbstractPolynomialLike, c::Number; kwargs...)
+    return isapprox(p, constant_term(c, p); kwargs...)
+end
+function Base.isapprox(c::Number, p::AbstractPolynomialLike; kwargs...)
+    return isapprox(constant_term(c, p), p; kwargs...)
 end
 
 function Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...)
@@ -339,7 +355,6 @@ exponent vectors for the monomials of `p`.
 """
 function ordering end
 
-ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
 ordering(::Type{P}) where {P} = ordering(monomial_type(P))
 ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
 # For type-level: derive ordering from Vector's element type

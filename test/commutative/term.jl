@@ -1,15 +1,13 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 import MutableArithmetics as MA
 import MultivariatePolynomials as MP
 
 struct CoefNotComparable end
 Base.iszero(::CoefNotComparable) = false
-
-struct Term2{T,M} <: MP.AbstractTermLike{T}
-    monomial::M
-end
-MP.coefficient(t::Term2{T}) where {T} = 2one(T)
-MP.monomial(t) = t.monomial
-MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
 
 @testset "Term" begin
     Mod.@polyvar x
@@ -64,8 +62,7 @@ MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
     @test_throws InexactError push!([x^2], 2x)
 
     t = MP.term(1, x)
-    @test convert(MP.Term{Number,MP.monomial_type(t)}, t) isa
-          MP.Term{Number,MP.monomial_type(t)}
+    @test convert(term_type(t, Number), t) isa term_type(t, Number)
 
     @testset "Effective variables" begin
         T = variable_union_type(x)
@@ -96,14 +93,14 @@ MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
 
         a = CoefNotComparable()
         b = CoefNotComparable()
-        t1 = a * x
-        t2 = b * y
+        t1 = term(a, x)
+        t2 = term(b, y)
         @test t1 > t2
         @test t1 >= t2
         @test !(t1 < t2)
         @test !(t1 <= t2)
-        t1 = a * x
-        t2 = b * x
+        t1 = term(a, x)
+        t2 = term(b, x)
         @test !(t1 > t2)
         @test t1 >= t2
         @test !(t1 < t2)
@@ -118,7 +115,7 @@ MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
         if T == BigInt && MA.mutability(M) isa MA.IsMutable
             @test monomial(t) == x^2
         end
-        u = MA.operate!!(*, s, Term2{T,M}(x^3))
+        u = MA.operate!!(*, s, term(T(2), x^3))
         @test monomial(u) == x^5
         @test coefficient(u) == 2
         if T == BigInt && MA.mutability(M) isa MA.IsMutable

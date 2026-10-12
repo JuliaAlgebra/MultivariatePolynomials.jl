@@ -17,10 +17,8 @@ Base.:*(a::AbstractMonomialLike, b::Number) = term(b, monomial(a))
 
 for op in [:+, :-]
     @eval begin
-        Base.$op(p::AbstractMonomialLike, a::Number) =
-            $op(algebra_element(p), a)
-        Base.$op(a::Number, p::AbstractMonomialLike) =
-            $op(a, algebra_element(p))
+        Base.$op(p::AbstractMonomialLike, a::Number) = $op(term(one(a), p), a)
+        Base.$op(a::Number, p::AbstractMonomialLike) = $op(a, term(one(a), p))
         Base.$op(p::AbstractTerm{T}, a::Union{T,Number}) where {T} =
             $op(algebra_element(p), a)
         Base.$op(a::Union{T,Number}, p::AbstractTerm{T}) where {T} =
@@ -177,7 +175,6 @@ for (A, B) in (
         ::typeof(*),
         A::AbstractMatrix{<:$A},
         B::AbstractVecOrMat{<:$B},
-        α::Number = true,
     ) where {P<:AbstractPolynomial}
         # Bare monomials acquire the numeric product's coefficient type;
         # algebra factors keep their own coefficient types.
@@ -189,7 +186,7 @@ for (A, B) in (
             B,
             eltype(A) <: Number ? coefficient_type(P) : Int,
         )
-        return MA.operate_to!(output, *, a, b, α)
+        return MA.operate_to!(output, *, a, b)
     end
 end
 

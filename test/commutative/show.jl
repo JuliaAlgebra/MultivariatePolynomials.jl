@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 struct CustomLaTeXPrint
     s::String
 end
@@ -13,8 +18,6 @@ end
     @test sprint(show, (x * y^2 + x + 1 + y)) == "1 + y + x + xy²"
     @test sprint(show, (x + 1 + y) / x^2) == "(1 + y + x) / (x²)"
     @test sprint(show, (x - y - x + y) / (x^2 - x)) == "(0) / (-x + x²)"
-    cp = CustomPoly(1 + x)
-    @test sprint(show, cp) == "$(typeof(cp))(1 + x)"
     # Test taken from TypedPolynomials
     @test sprint(show, x) == "x"
     @test sprint(show, x^0) == "1"

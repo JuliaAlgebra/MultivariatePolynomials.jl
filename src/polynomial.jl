@@ -149,9 +149,13 @@ Calling `terms` on ``4x^2y + xy + 2x`` should return an iterator of ``[4x^2y, xy
 """
 terms(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), term(t))
 function terms(p::AbstractPolynomial)
-    return [
-        SA.Term(parent(p), i, c) for (i, c) in SA.nonzero_pairs(SA.coeffs(p))
-    ]
+    c = SA.coeffs(p)
+    if c isa SA.SparseCoefficients
+        return LazyMap{term_type(p)}(eachindex(values(c))) do i
+            return SA.Term(parent(p), keys(c)[i], values(c)[i])
+        end
+    end
+    return [SA.Term(parent(p), i, value) for (i, value) in SA.nonzero_pairs(c)]
 end
 
 """
@@ -246,10 +250,7 @@ Returns the minimal degree of the monomials of `p` in the variable `v`, i.e. `mi
 ### Examples
 Calling `mindegree` on on ``4x^2y + xy + 2x`` should return 1, `mindegree(4x^2y + xy + 2x, x)` should return 1 and  `mindegree(4x^2y + xy + 2x, y)` should return 0.
 """
-function mindegree(
-    X::AbstractVector{<:_APL},
-    args::Vararg{Any,N},
-) where {N}
+function mindegree(X::AbstractVector{<:_APL}, args::Vararg{Any,N}) where {N}
     return isempty(X) ? 0 : minimum(t -> mindegree(t, args...), X)
 end
 function mindegree(p::AbstractPolynomialLike, args::Vararg{Any,N}) where {N}
@@ -272,10 +273,7 @@ Returns the maximal degree of the monomials of `p` in the variable `v`, i.e. `ma
 ### Examples
 Calling `maxdegree` on ``4x^2y + xy + 2x`` should return 3, `maxdegree(4x^2y + xy + 2x, x)` should return 2 and  `maxdegree(4x^2y + xy + 2x, y)` should return 1.
 """
-function maxdegree(
-    X::AbstractVector{<:_APL},
-    args::Vararg{Any,N},
-) where {N}
+function maxdegree(X::AbstractVector{<:_APL}, args::Vararg{Any,N}) where {N}
     return mapreduce(t -> maxdegree(t, args...), max, X, init = 0)
 end
 function maxdegree(p::AbstractPolynomialLike, args::Vararg{Any,N}) where {N}
