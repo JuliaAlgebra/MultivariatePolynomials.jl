@@ -27,6 +27,20 @@ end
 # Convert any polynomial-like to a term
 term(m::AbstractMonomialLike) = term(one(Int), monomial(m))
 term(t::AbstractTerm) = t
+function term(p::AbstractPolynomial)
+    nterms(p) <= 1 || throw(InexactError(:term, term_type(p), p))
+    return leading_term(p)
+end
+
+function Base.convert(
+    ::Type{T},
+    m::AbstractMonomialLike,
+) where {T<:AbstractTerm}
+    return convert(T, term(m))
+end
+function Base.convert(::Type{T}, c::Number) where {T<:AbstractTerm}
+    return convert(T, constant_term(c, T))
+end
 
 """
     term_type(p::AbstractPolynomialLike)
@@ -234,6 +248,9 @@ function MA.promote_operation(::typeof(zero), ::Type{T}) where {T<:AbstractTerm}
     return polynomial_type(T)
 end
 Base.one(t::AbstractTerm) = one(algebra_element(t))
+function Base.one(::Type{P}) where {P<:Union{AbstractTerm,AbstractPolynomial}}
+    return convert(P, 1)
+end
 function MA.promote_operation(
     ::typeof(one),
     ::Type{T},

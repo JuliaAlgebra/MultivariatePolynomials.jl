@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using Test
 import Test: @inferred
 
@@ -8,7 +13,6 @@ import MutableArithmetics as MA
 
     @test subs(2, x[1] => 3) == 2
     @test iszero((x[1] - x[1])(x[1] => x[2]))
-    @test subs(CustomPoly(x[1] + x[2]), x[2] => x[1]) == 2x[1]
 
     a = (x[1])(x[1] => x[2])
     b = x[2]

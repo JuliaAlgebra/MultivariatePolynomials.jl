@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using LinearAlgebra, Test
 using ChainRulesCore
 
@@ -25,7 +30,7 @@ end
     output, pullback = ChainRulesCore.rrule(-, q)
     @test output ≈ -q
     @test pullback(2) == (NoTangent(), -2)
-    @test pullback(x + 3im) == (NoTangent(), -x - 3im)
+    @test pullback(x + 3im) == (NoTangent(), -(x + 3im))
 
     output, pullback = ChainRulesCore.rrule(+, p, q)
     @test output == (1.0 + im)x
@@ -35,7 +40,7 @@ end
     output, pullback = ChainRulesCore.rrule(-, p, q)
     @test output ≈ (1.2 - im) * x + 2y
     @test pullback(2) == (NoTangent(), 2, -2)
-    @test pullback(im * x + 3) == (NoTangent(), im * x + 3, -im * x - 3)
+    @test pullback(1im * x + 3) == (NoTangent(), 1im * x + 3, -1im * x - 3)
 
     output, pullback = ChainRulesCore.rrule(differentiate, p, x)
     @test output == 1.1

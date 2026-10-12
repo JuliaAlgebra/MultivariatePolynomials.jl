@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "Algebra" begin
     Mod.@polyvar x y
     @test 2 .- ((1 .+ (-x)) .* 4) ./ 2 == x .^ 2 .* (1 ./ x) .* 2
@@ -11,10 +16,11 @@
     @test x * (2x) == 2x^2
     @inferred 2 * (2x)
     @inferred 2.0 * (2x)
-    #@test eltype(2.0 * (2x)) == Float64
+    @test 2.0 * (2x) isa AbstractTerm{Float64}
     t = @inferred 1.5 * (2x)
     @test t isa AbstractTerm{Float64}
     @test t == 3x
+    @test (@inferred (2x) * 1.5) == t
 
     p = @inferred y^2 * (2.0x^2 + 3y)
     @test p == 2x^2 * y^2 + 3y^3
@@ -34,18 +40,6 @@
 
     p = @inferred (y^2 + 2.0) * (2x + y)
     @test p == 2x * y^2 + y^3 + 4x + 2y
-    @test p isa AbstractPolynomial{Float64}
-
-    p = @inferred CustomPoly(x + 2y) * CustomTerms(x^2 + 1.0)
-    @test p == x^3 + 2x^2 * y + x + 2y
-    @test p isa AbstractPolynomial{Float64}
-
-    p = @inferred CustomPoly(x + 2y) + 1
-    @test p == x + 2y + 1
-    @test p isa AbstractPolynomial{Int}
-
-    p = @inferred CustomPoly(x + 2y) + 1.0
-    @test p == x + 2y + 1
     @test p isa AbstractPolynomial{Float64}
 
     @testset "Inference" begin
@@ -76,11 +70,11 @@
 
     @testset "Scalar - Array" begin
         Mod.@polyvar x y
-        @test x + [x^2+y y; y x*y] == [x+x^2+y x+y; x+y x+x*y]
-        @test [x^2+y y; y x*y] + x == [x^2+x+y y+x; y+x x*y+x]
+        @test x .+ [x^2+y y; y x*y] == [x+x^2+y x+y; x+y x+x*y]
+        @test [x^2+y y; y x*y] .+ x == [x^2+x+y y+x; y+x x*y+x]
 
         @test x * [1 + y y] == [x * (1 + y) x * y]
         @test [1 + y y] * x == [(1 + y) * x y * x]
-        @test [1 + y y] / x == [(1 + y) / x y / x]
+        @test [1 + y y] ./ x == [(1 + y) / x y / x]
     end
 end

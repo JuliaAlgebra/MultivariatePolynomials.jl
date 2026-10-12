@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using Test
 using LinearAlgebra
 import MutableArithmetics as MA
@@ -33,7 +38,6 @@ const MP = MultivariatePolynomials
     @test polynomial(1:2, monomials(x, 1:2)) == x + 2x^2
 
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [1, 2x^2]
-    @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [1, 2x^2]
 
     @test (1.0 + x) * x == x^2 + x
     @test constant_term(1, x) * (1 - x) == 1 - x

@@ -244,6 +244,6 @@ subs(p, s::AbstractSubstitution...) = substitute(Subs(), p, s)
 
 (p::RationalPoly)(s::AbstractSubstitution...) = p.num(s...) / p.den(s...)
 
-function (p::Union{AbstractTerm,AbstractPolynomial})(s::AbstractSubstitution...)
+function (p::AbstractPolynomialLike)(s::AbstractSubstitution...)
     return substitute(Eval(), p, s)
 end
