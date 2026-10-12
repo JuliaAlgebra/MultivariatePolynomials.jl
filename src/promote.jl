@@ -86,7 +86,7 @@ function MA.promote_operation(
 end
 
 function MA.promote_operation(
-    op::Union{typeof(+),typeof(-),typeof(*)},
+    op::Union{typeof(+),typeof(-)},
     ::Type{T},
     ::Type{S},
 ) where {T<:AbstractTerm,S<:AbstractTerm}

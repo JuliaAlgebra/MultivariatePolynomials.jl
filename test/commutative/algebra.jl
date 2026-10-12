@@ -3,6 +3,8 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+import MutableArithmetics as MA
+
 @testset "Algebra" begin
     Mod.@polyvar x y
     @test 2 .- ((1 .+ (-x)) .* 4) ./ 2 == x .^ 2 .* (1 ./ x) .* 2
@@ -41,6 +43,18 @@ end
     p = @inferred (y^2 + 2.0) * (2x + y)
     @test p == 2x * y^2 + y^3 + 4x + 2y
     @test p isa AbstractPolynomial{Float64}
+
+    @testset "Integer product promotion" begin
+        t = 2x
+        p = x + y
+        for (a, b) in ((t, t), (t, p), (p, t), (p, p))
+            product = @inferred a * b
+            @test product isa AbstractPolynomial{Int}
+            @test (@inferred MA.promote_operation(*, typeof(a), typeof(b))) ===
+                  typeof(product)
+        end
+        @test (@inferred p * p) == x^2 + 2x * y + y^2
+    end
 
     @testset "Inference" begin
         @inferred x^2
