@@ -44,7 +44,24 @@ function variables(
 end
 
 """
+    variables(ps::AbstractArray{<:AbstractPolynomialLike})
+
+Return the common variables of the elements of `ps`, including variables of zero
+degree. Commutative variables are sorted in decreasing order without duplicates.
+For noncommutative variables, the common ordered sequence may repeat variables.
+"""
+function variables(ps::AbstractArray{PT}) where {PT<:AbstractPolynomialLike}
+    vars = variables(constant_monomial(PT))
+    for p in ps
+        (vars, _), _ = promote_variables_with_maps(vars, variables(p))
+    end
+    return vars
+end
+
+"""
     nvariables(p::AbstractPolynomialLike)
+
+    nvariables(p::AbstractArray{<:AbstractPolynomialLike})
 
 Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero degree (see the Examples section of [`variables`](@ref)).
 
@@ -52,10 +69,11 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
-nvariables(::Union{AbstractVariable,Type{<:AbstractVariable}}) = 1
+nvariables(::AbstractVariable) = 1
+nvariables(::Type{<:AbstractVariable}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
-nvariables(p::_APL) = length(variables(p))
+nvariables(p::Union{_APL,AbstractArray{<:_APL}}) = length(variables(p))
 
 """
     exponents(t::AbstractTermLike)

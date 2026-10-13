@@ -31,6 +31,37 @@ end
     @test monos[3] == x^2
 end
 
+@testset "Variables in collections" begin
+    Mod.@polyvar x y z
+    @test (@inferred nvariables(x)) == 1
+    @test (@inferred nvariables(typeof(x))) == 1
+    @test (@inferred nvariables(x * y)) == 2
+    @test (@inferred nvariables(x + y)) == 2
+    for ps in ([y, x, y], [x^2, y^3], [2x, 3y], [x + 1, y^2])
+        @test collect(@inferred variables(ps)) == [x, y]
+        @test (@inferred nvariables(ps)) == 2
+        @test collect(@inferred variables(reverse(ps))) == [x, y]
+        @test collect(@inferred variables(@view(ps[:]))) == [x, y]
+        @test (@inferred nvariables(@view(ps[:]))) == 2
+        @test collect(@inferred variables(reshape(ps, :, 1))) == [x, y]
+        @test (@inferred nvariables(reshape(ps, :, 1))) == 2
+        if typeof(x) === typeof(y)
+            @test (@inferred variables(eltype(ps)[])) == typeof(x)[]
+            @test (@inferred nvariables(eltype(ps)[])) == 0
+        end
+    end
+    @test collect(@inferred variables([zero(x + y)])) == [x, y]
+    @test (@inferred nvariables([zero(x + y)])) == 2
+    @test collect(@inferred variables([one(x)])) == collect(variables(one(x)))
+    @test collect(@inferred variables([x^2, z^3])) == [x, z]
+    @test collect(@inferred variables([x + 1, y^2, z + x])) == [x, y, z]
+
+    basis = MP.maxdegree_basis(MP.FullBasis{MP.Monomial}([x, y]), 2)
+    @test collect(basis) == monomials([x, y], 0:2)
+    @test collect(variables(basis)) == [x, y]
+    @test nvariables(basis) == 2
+end
+
 @testset "Monomial Vector" begin
     Mod.@polyvar x y
     @test x > y

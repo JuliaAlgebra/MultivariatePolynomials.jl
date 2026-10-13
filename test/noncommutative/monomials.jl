@@ -4,6 +4,26 @@ if !@isdefined(Mod)
     import DynamicPolynomials as Mod
 end
 
+@testset "Noncommutative variables in collections" begin
+    Mod.@ncpolyvar x y
+    monos = [x * y, y * x]
+    @test (@inferred variables(monos)) == [x, y, x]
+    @test (@inferred variables(reverse(monos))) == [x, y, x]
+    @test (@inferred nvariables(monos)) == 3
+    @test (@inferred variables(@view(monos[:]))) == [x, y, x]
+    @test (@inferred variables([x * y * x])) == [x, y, x]
+    @test (@inferred variables([2x * y, 3y * x])) == [x, y, x]
+    @test (@inferred variables([polynomial(m) for m in monos])) == [x, y, x]
+    @test (@inferred variables(monomials([x, y], 3))) == [x, y, x, y]
+    @test (@inferred variables([y, x, y])) == [x, y]
+    @test (@inferred nvariables([y, x, y])) == 2
+    @test (@inferred variables(eltype(monos)[])) == typeof(x)[]
+    @test (@inferred nvariables(eltype(monos)[])) == 0
+    @test variables(monos[1]) == [x, y]
+    @test variables(monos[2]) == [y, x]
+    @test monos == [x * y, y * x]
+end
+
 function monomial_word(m)
     return Tuple(v for (v, e) in powers(m) for _ in 1:e)
 end
