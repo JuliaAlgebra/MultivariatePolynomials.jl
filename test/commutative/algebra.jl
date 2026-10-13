@@ -47,9 +47,14 @@ import MutableArithmetics as MA
     @testset "Integer product promotion" begin
         t = 2x
         p = x + y
-        for (a, b) in ((t, t), (t, p), (p, t), (p, p))
+        for (a, b, R) in (
+            (t, t, AbstractTerm{Int}),
+            (t, p, AbstractPolynomial{Int}),
+            (p, t, AbstractPolynomial{Int}),
+            (p, p, AbstractPolynomial{Int}),
+        )
             product = @inferred a * b
-            @test product isa AbstractPolynomial{Int}
+            @test product isa R
             @test (@inferred MA.promote_operation(*, typeof(a), typeof(b))) ===
                   typeof(product)
         end
@@ -58,6 +63,7 @@ import MutableArithmetics as MA
 
     @testset "Inference" begin
         @inferred x^2
+        @test (@inferred x^UInt(2)) == x^2
         @inferred x^2 - 2x
         @inferred x + 2x
         @inferred -2x + 2
@@ -73,10 +79,11 @@ import MutableArithmetics as MA
         @inferred (x^2)^2
         @inferred (x^2)^3
         @inferred (2x) * (3x)
-        @inferred (2x)^0
-        @inferred (2x)^1
-        @inferred (2x)^2
-        @inferred (2x)^3
+        for n in 0:3
+            p = @inferred (2x)^n
+            @test p isa AbstractPolynomial{Int}
+            @test p == term(2^n, x^n)
+        end
     end
 
     @test iszero((x + x - 2 * x) * (x * (x^2 + y^2)))

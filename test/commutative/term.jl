@@ -47,11 +47,12 @@ Base.iszero(::CoefNotComparable) = false
     @test zero_term(1x) == 0 * x
 
     Mod.@polyvar y
-    @testset "Products of terms are polynomials" begin
+    @testset "Products of terms stay terms" begin
         for (a, b, expected) in (
-            (2x, 3y, polynomial(term(6, x * y))),
-            (2x, 3.0y, polynomial(term(6.0, x * y))),
-            (0 * x, 3y, polynomial(term(0, x * y))),
+            (2x, 3y, term(6, x * y)),
+            (2x, 3.0y, term(6.0, x * y)),
+            (big(2) * x, big(3) * y, term(big(6), x * y)),
+            (0 * x, 3y, term(0, x * y)),
         )
             product = @inferred a * b
             @test product isa typeof(expected)
@@ -60,6 +61,11 @@ Base.iszero(::CoefNotComparable) = false
                   typeof(product)
             @test monomial(a) == x
             @test monomial(b) == y
+            if coefficient(product) isa BigInt
+                MA.operate!(+, coefficient(product), big(1))
+                @test coefficient(a) == 2
+                @test coefficient(b) == 3
+            end
         end
     end
     @testset "Monomial products preserve terms" begin
@@ -149,7 +155,7 @@ Base.iszero(::CoefNotComparable) = false
         @test monomial(s) == x^2
         @test t == one(T) * x
         u = @inferred MA.operate!!(*, s, term(T(2), x^3))
-        @test u isa AbstractPolynomial{T}
+        @test u isa AbstractTerm{T}
         @test u == term(T(2), x^5)
         @test s == term(one(T), x^2)
         @test t == one(T) * x
