@@ -1,3 +1,36 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
+@testset "Monomial enumeration" begin
+    Mod.@polyvar x y
+    vars = [y, x, y]
+    degrees = [3, 1, 3]
+    expected = [y, x, y^3, x * y^2, x^2 * y, x^3]
+    @test (@inferred monomials(vars, degrees)) == expected
+    @test (@inferred monomials(@view(vars[1:2]), degrees)) == expected
+    @test vars == [y, x, y]
+    @test degrees == [3, 1, 3]
+    @test (@inferred monomials((y, x), 2)) == [y^2, x * y, x^2]
+    @test (@inferred monomials(x, 1:2)) == [x, x^2]
+    @test (@inferred monomials((x, y), [1, 3], m -> degree(m, y) != 1)) ==
+          [x, y^3, x * y^2, x^3]
+    @test isempty(@inferred monomials(vars, Int[]))
+    @test isempty(@inferred monomials(vars, 1:0))
+    @test isempty(@inferred monomials(vars, 0:2, _ -> false))
+    @test (@inferred monomials(typeof(x)[], 0:2)) == [x^0]
+    @test isempty(@inferred monomials(typeof(x)[], 1:2))
+    @test_throws ArgumentError monomials(vars, -1)
+    @test_throws ArgumentError monomials(vars, -1:1)
+    @test_throws ArgumentError monomials(vars, [1, -1])
+
+    monos = monomials(vars, 2)
+    exponents(monos[1])[1] = 5
+    @test monos[2] == x * y
+    @test monos[3] == x^2
+end
+
 @testset "Monomial Vector" begin
     Mod.@polyvar x y
     @test x > y
@@ -21,10 +54,12 @@
     for (i, m) in enumerate(monomials((x, y), 2, m -> m != x * y))
         @test m == X[i]
     end
-    @test (@inferred monomial_vector_type([1, x])) <:
-          AbstractArray{<:AbstractMonomial}
-    @test (@inferred monomial_vector_type([x])) <:
-          AbstractArray{<:AbstractMonomial}
+    @test (@inferred monomial_vector_type([1, x]))<:AbstractArray{
+        <:AbstractMonomial,
+    }
+    @test (@inferred monomial_vector_type([x]))<:AbstractArray{
+        <:AbstractMonomial,
+    }
     @test (@inferred monomial_vector([1, x])) isa monomial_vector_type([1, x])
     @test (@inferred monomial_vector([x])) isa monomial_vector_type([x])
     @test (@inferred monomial_vector([1, 2], [1, x]))[2] isa
