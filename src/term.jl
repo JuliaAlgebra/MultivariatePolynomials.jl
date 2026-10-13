@@ -247,13 +247,12 @@ end
 function MA.promote_operation(::typeof(zero), ::Type{T}) where {T<:AbstractTerm}
     return polynomial_type(T)
 end
-Base.one(t::AbstractTerm) = one(algebra_element(t))
 function Base.one(::Type{P}) where {P<:Union{AbstractTerm,AbstractPolynomial}}
     return convert(P, 1)
 end
 function MA.promote_operation(
     ::typeof(one),
     ::Type{T},
-) where {T<:Union{AbstractTerm,AbstractPolynomial}}
+) where {T<:AbstractPolynomial}
     return polynomial_type(T)
 end
