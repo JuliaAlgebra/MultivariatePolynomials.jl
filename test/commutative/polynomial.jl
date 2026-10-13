@@ -200,7 +200,11 @@ const MP = MultivariatePolynomials
         @test convert(Union{Nothing,typeof(p)}, p) === p
         a = 2y
         q = polynomial([a, z, -a], [x, 1, x])
+        r = @inferred convert_to_constant(q)
+        @test r == z
+        @test MA.add!!(r, 1) == z + 1
         @test convert_to_constant(q) == z
+        @test iszero(@inferred convert_to_constant(zero(q)))
         q = polynomial([a, z], [x, 1])
         @test_throws InexactError convert_to_constant(q)
         alloc_test(() -> convert(typeof(p), p), 0)
@@ -237,10 +241,13 @@ const MP = MultivariatePolynomials
         zero,
         one,
     ]
-        p = 2x + 1
+        # In-place addition requires a destination containing both variables.
+        p = 2x + 1 + zero(x + y)
         q = f(p)
         q = MA.add!!(q, 2y)
+        @test q == f(p) + 2y
         @test p == 2x + 1
+        @test_throws ArgumentError MA.add!!(f(2x + 1), 2y)
     end
 
     @testset "map_coefficients $nz" for nz in [false, true]
@@ -258,5 +265,34 @@ const MP = MultivariatePolynomials
         @test q == 2x
         @test q === SA.map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
         @test q == 2x^2
+
+        input = 3x^2
+        output = zero(x + 1)
+        SA.map_coefficients_to!(output, identity, input; nonzero = nz)
+        exponents(leading_monomial(output))[1] = 3
+        @test input == 3x^2
+        @test output == 3x^3
+
+        for input in (x, x^2, 3x, 2x + 1)
+            output = one(x + y)
+            @test (@inferred SA.map_coefficients_to!(
+                output,
+                c -> 2c,
+                input;
+                nonzero = nz,
+            )) === output
+            @test output == 2input
+            @test variables(output) == variables(x + y)
+        end
+        for input in (y, y^2, 3y, 2y + 1)
+            output = x + 1
+            @test_throws ArgumentError SA.map_coefficients_to!(
+                output,
+                zero,
+                input;
+                nonzero = nz,
+            )
+            @test output == x + 1
+        end
     end
 end
