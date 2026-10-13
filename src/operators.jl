@@ -207,8 +207,8 @@ Base.vec(vars::Tuple{Vararg{AbstractVariable}}) = [vars...]
 # vec(vars::Tuple{Vararg{TypedVariable}}) = SVector(vars)
 
 # https://github.com/JuliaLang/julia/pull/23332
-Base.:^(x::AbstractPolynomialLike, p::Integer) = Base.power_by_squaring(x, p)
-# ^(::SA.Term, ::Integer) is defined in StarAlgebras
+Base.:^(x::AbstractMonomialLike, p::Integer) = Base.power_by_squaring(x, p)
+# Powers of SA.Term and SA.AlgebraElement are defined in StarAlgebras.
 
 function MA.operate_to!(output, ::typeof(left_constant_mult), α, p::_APL)
     return SA.map_coefficients_to!(output, Base.Fix1(*, α), p)
