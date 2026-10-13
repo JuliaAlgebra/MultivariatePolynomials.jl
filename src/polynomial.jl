@@ -528,6 +528,15 @@ function map_coefficients(
     return term(f(coefficient(t)), monomial(t))
 end
 
+function SA.map_coefficients_to!(
+    output::AbstractPolynomial,
+    f::F,
+    m::AbstractMonomialLike;
+    nonzero = false,
+) where {F}
+    return SA.map_coefficients_to!(output, f, term(m); nonzero)
+end
+
 function map_coefficients(
     f::F,
     p::_APL,

@@ -32,10 +32,7 @@ function Base.convert(
     return variable
 end
 
-function Base.convert(
-    ::Type{M},
-    t::SA.Term,
-) where {M<:AbstractMonomialLike}
+function Base.convert(::Type{M}, t::SA.Term) where {M<:AbstractMonomialLike}
     if isone(coefficient(t))
         return convert(M, monomial(t))
     else
@@ -60,7 +57,7 @@ MA.scaling(p::AbstractPolynomialLike) = convert(coefficient_type(p), p)
 # We don't define a method for `Base.convert` to reduce invalidations;
 # see https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/172
 function convert_to_constant(::Type{S}, p::_APL) where {S}
-    s = zero(S)
+    s = MA.zero_for(S, coefficients(p))
     for t in terms(p)
         if !isconstant(t)
             # The polynomial is not constant
