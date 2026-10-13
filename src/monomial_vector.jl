@@ -2,6 +2,46 @@ function monomials(v::AbstractVariable, degree, args...)
     return monomials(variables(v), degree, args...)
 end
 
+function monomials(vars::Tuple{Vararg{AbstractVariable}}, args...)
+    return monomials(collect(vars), args...)
+end
+
+function monomials(
+    vars::AbstractVector{<:AbstractVariable},
+    degree::Int,
+    args...,
+)
+    return monomials(vars, degree:degree, args...)
+end
+
+function monomials(
+    vars::AbstractVector{<:AbstractVariable},
+    degrees::AbstractVector{Int},
+    filter::F = _ -> true,
+) where {F}
+    if !is_commutative(vars)
+        throw(
+            ArgumentError(
+                "Noncommutative monomial enumeration is not implemented.",
+            ),
+        )
+    end
+    basis = FullBasis{Monomial}(unique!(sort(vars; rev = true)))
+    mindeg, maxdeg = isempty(degrees) ? (0, -1) : extrema(degrees)
+    exps = ExponentsIterator{ordering(vars)}(
+        constant_monomial_exponents(basis);
+        mindegree = mindeg,
+        maxdegree = maxdeg,
+    )
+    monos = eltype(basis)[]
+    for exp in exps
+        sum(exp) in degrees || continue
+        mono = basis[exp]
+        filter(mono) && push!(monos, mono)
+    end
+    return monos
+end
+
 """
     empty_monomial_vector(p::AbstractPolynomialLike)
 

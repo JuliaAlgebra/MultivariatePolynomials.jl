@@ -215,19 +215,28 @@ end
 """
     monomials(p::AbstractPolynomialLike)
 
-Returns an iterator over the monomials of `p` of the nonzero terms of the polynomial sorted in the decreasing order.
+Returns an iterator over the monomials of the nonzero terms of `p`, sorted in
+increasing monomial order.
 
-    monomials(vars::Union{Vector{<:AbstractVariable},Tuple}, degs::AbstractVector{Int}, filter::Function = m -> true)
+    monomials(vars, degrees::Union{Int,AbstractVector{Int}}, filter = m -> true)
 
-Builds the vector of all the monomial_vector `m` with variables `vars` such that the degree `degree(m)` is in `degs` and `filter(m)` is `true`.
+Builds a vector of monomials in the commutative variables `vars`, sorted in
+increasing monomial order. Accepts a single degree or a collection of degrees,
+and retains only monomials `m` for which `filter(m)` is `true`.
+The variables may be supplied as a vector, a tuple, or a single variable.
+Negative degrees are rejected; an empty collection of degrees gives an empty
+monomial vector.
 
 See also [`ExponentsIterator`](@ref).
 
 ### Examples
 
-Calling `monomials` on ``4x^2y + xy + 2x`` should return an iterator of ``[x^2y, xy, x]``.
+Calling `monomials` on ``4x^2y + xy + 2x`` returns an iterator of
+``[x, xy, x^2y]``.
 
-Calling `monomials((x, y), [1, 3], m -> degree(m, y) != 1)` should return `[x^3, x*y^2, y^3, x]` where `x^2*y` and `y` have been excluded by the filter.
+With graded lexicographic order and `x > y`,
+`monomials((x, y), [1, 3], m -> degree(m, y) != 1)` returns
+`[x, y^3, x*y^2, x^3]`, excluding `y` and `x^2*y`.
 """
 monomials(p::AbstractPolynomial) = monomial.(terms(p))
 monomials(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), monomial(t))
