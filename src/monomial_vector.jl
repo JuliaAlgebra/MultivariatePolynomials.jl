@@ -19,14 +19,11 @@ function monomials(
     degrees::AbstractVector{Int},
     filter::F = _ -> true,
 ) where {F}
+    vars = unique!(sort(vars; rev = true))
     if !is_commutative(vars)
-        throw(
-            ArgumentError(
-                "Noncommutative monomial enumeration is not implemented.",
-            ),
-        )
+        return _noncommutative_monomials(vars, degrees, filter)
     end
-    basis = FullBasis{Monomial}(unique!(sort(vars; rev = true)))
+    basis = FullBasis{Monomial}(vars)
     mindeg, maxdeg = isempty(degrees) ? (0, -1) : extrema(degrees)
     exps = ExponentsIterator{ordering(vars)}(
         constant_monomial_exponents(basis);
@@ -40,6 +37,68 @@ function monomials(
         filter(mono) && push!(monos, mono)
     end
     return monos
+end
+
+function _noncommutative_monomials(vars, degrees, filter::F) where {F}
+    if ordering(vars) !== Graded{LexOrder}
+        throw(
+            ArgumentError(
+                "Noncommutative enumeration requires Graded{LexOrder}.",
+            ),
+        )
+    end
+    foreach(error_for_negative_degree, degrees)
+    n = length(vars)
+    maxdeg = maximum(degrees; init = 0)
+    # Each new factor advances by at most n - 1 positions in the repeated
+    # variable sequence; repeated adjacent factors stay at the same position.
+    len = iszero(n) ? 0 : (n - 1) * maxdeg + 1
+    repeated_vars = [vars[mod1(i, n)] for i in 1:len]
+    exps = zeros(Int, len)
+    monos = monomial_type(vars)[]
+    for deg in unique!(sort!(collect(degrees)))
+        _noncommutative_monomials!(
+            monos,
+            repeated_vars,
+            exps,
+            1,
+            n,
+            deg,
+            filter,
+        )
+    end
+    return monos
+end
+
+function _noncommutative_monomials!(
+    monos,
+    vars,
+    exps,
+    start,
+    n,
+    degree,
+    filter::F,
+) where {F}
+    if iszero(degree)
+        mono = monomial(vars, copy(exps))
+        filter(mono) && push!(monos, mono)
+    else
+        # Visit later positions first to generate increasing lexicographic order.
+        for i in (start+n-1):-1:start
+            exps[i] += 1
+            _noncommutative_monomials!(
+                monos,
+                vars,
+                exps,
+                i,
+                n,
+                degree - 1,
+                filter,
+            )
+            exps[i] -= 1
+        end
+    end
+    return
 end
 
 """
