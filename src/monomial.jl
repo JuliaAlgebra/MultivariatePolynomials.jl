@@ -176,7 +176,22 @@ function map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
     return map_exponents(f, monomial(m1), monomial(m2))
 end
 
+"""
+    map_exponents_to!(output, f, a, b)
+
+Write the pointwise map of the exponents of `a` and `b` into `output`.
+The destination must have mutable exponent storage and contain all variables
+of both operands. Its variables are unchanged; only its exponents are mutated.
+Use `StarAlgebras.promote_bases` to prepare a common basis when necessary.
+"""
 function map_exponents_to! end
+
+"""
+    map_exponents!(f, a, b)
+
+Equivalent to `map_exponents_to!(a, f, a, b)`. The variables of `a` must
+contain those of `b`.
+"""
 function map_exponents! end
 
 map_exponents(f, a, b, ::MA.IsMutable) = map_exponents!(f, a, b)
