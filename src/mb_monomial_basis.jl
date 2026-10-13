@@ -57,6 +57,28 @@ function map_exponents(f, a::Polynomial{Monomial}, b::Polynomial{Monomial})
     return Polynomial(a.variables, f.(exponents(a), exponents(b)))
 end
 
+function _aligned_exponents(m::AbstractMonomialLike, vars)
+    m = monomial(m)
+    return variables(m) == vars ? exponents(m) : exponents(m, vars)
+end
+
+function map_exponents_to!(
+    output::Polynomial{Monomial,V,<:AbstractVector},
+    f::F,
+    a::AbstractMonomialLike,
+    b::AbstractMonomialLike,
+) where {V,F}
+    vars = variables(output)
+    ea = _aligned_exponents(a, vars)
+    eb = _aligned_exponents(b, vars)
+    broadcast!(f, exponents(output), ea, eb)
+    return output
+end
+
+function map_exponents!(f, a::AbstractMonomial, b::AbstractMonomialLike)
+    return map_exponents_to!(a, f, a, b)
+end
+
 function Base.:*(a::Polynomial{Monomial}, b::Polynomial{Monomial})
     return map_exponents(+, a, b)
 end
