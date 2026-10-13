@@ -220,12 +220,14 @@ increasing monomial order.
 
     monomials(vars, degrees::Union{Int,AbstractVector{Int}}, filter = m -> true)
 
-Builds a vector of monomials in the commutative variables `vars`, sorted in
+Builds a vector of monomials in the variables `vars`, sorted in
 increasing monomial order. Accepts a single degree or a collection of degrees,
 and retains only monomials `m` for which `filter(m)` is `true`.
 The variables may be supplied as a vector, a tuple, or a single variable.
 Negative degrees are rejected; an empty collection of degrees gives an empty
 monomial vector.
+Noncommutative enumeration preserves factor order and supports
+`Graded{LexOrder}`.
 
 See also [`ExponentsIterator`](@ref).
 
