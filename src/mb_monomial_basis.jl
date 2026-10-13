@@ -2,7 +2,9 @@
 term(coeff, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(coeff, p)
 term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(one(Int), p)
 left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
-right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α) = left_constant_mult(α, p)
+function right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α)
+    return left_constant_mult(α, p)
+end
 
 function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
     A = MA.promote_operation(algebra, full_basis_type(B, Polynomial{B,V,E}))
@@ -90,10 +92,7 @@ function polynomial(Q::AbstractMatrix, mb::SubBasis{Monomial}, T::Type)
     return polynomial(Q, keys_as_monomials(mb), T)
 end
 
-function coefficients(
-    p::AbstractPolynomialLike,
-    basis::SubBasis{Monomial},
-)
+function coefficients(p::AbstractPolynomialLike, basis::SubBasis{Monomial})
     return coefficients(p, keys_as_monomials(basis))
 end
 
@@ -142,36 +141,21 @@ end
 _vec(v::Vector) = v
 _vec(v::AbstractVector) = collect(v)
 
-function SA.coeffs(
-    cfs,
-    source::MonomialIndexedBasis{B1},
-    target::MonomialIndexedBasis{B2},
-) where {B1,B2}
-    source === target && return cfs
-    source == target && return cfs
-    if B1 === B2 && target isa FullBasis
-        return SA.SparseCoefficients(_vec(source.keys), _vec(cfs))
-    else
-        res = SA.zero_coeffs(
-            _promote_coef(_promote_coef(SA.value_type(cfs), B1), B2),
-            target,
-        )
-        return SA.coeffs!(res, cfs, source, target)
-    end
+function SA.coeffs(cfs, source::SubBasis{B}, target::FullBasis{B}) where {B}
+    return SA.SparseCoefficients(
+        _vec(source.keys),
+        _vec(cfs),
+        SA.comparable(target),
+    )
 end
 
-function SA.adjoint_coeffs(
-    cfs,
-    source::MonomialIndexedBasis{B1},
-    target::MonomialIndexedBasis{B2},
-) where {B1,B2}
-    source === target && return cfs
-    source == target && return cfs
-    res = SA.zero_coeffs(
-        _promote_coef(_promote_coef(SA.value_type(cfs), B1), B2),
-        source,
-    )
-    return SA.adjoint_coeffs!(res, cfs, source, target)
+function SA.promote_coefficient_type(
+    ::Union{typeof(SA.coeffs),typeof(SA.adjoint_coeffs)},
+    ::Type{T},
+    ::Type{<:MonomialIndexedBasis{B1}},
+    ::Type{<:MonomialIndexedBasis{B2}},
+) where {T,B1,B2}
+    return B1 === B2 ? T : _promote_coef(_promote_coef(T, B1), B2)
 end
 
 function SA.adjoint_coeffs!(
@@ -218,12 +202,7 @@ end
 
 function _show(io::IO, mime::MIME, basis::SubBasis{B}) where {B}
     print(io, "SubBasis{$(nameof(B))}(")
-    _show_vector(
-        io,
-        mime,
-        basis.keys,
-        Base.Fix1(monomial, variables(basis)),
-    )
+    _show_vector(io, mime, basis.keys, Base.Fix1(monomial, variables(basis)))
     print(io, ')')
     return
 end
