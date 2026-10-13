@@ -65,10 +65,12 @@ end
     a = CustomLaTeXPrint(" \$\$ \\[\\(α_β∀ \\) \\]\t  \$\$")
     @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==
           "\$\$ (α_β∀)x_{1}^{2} \$\$"
-    @test sprint(
-        (io, x) -> show(io, "text/latex", x),
-        polynomial([a, a], [x[1]^2, x[2]]),
-    ) == "\$\$ (α_β∀)x_{2} + (α_β∀)x_{1}^{2} \$\$"
+    # This display fixture does not implement coefficient arithmetic.
+    p = let a = a
+        map_coefficients(_ -> a, x[1]^2 + x[2]; nonzero = true)
+    end
+    @test sprint((io, x) -> show(io, "text/latex", x), p) ==
+          "\$\$ (α_β∀)x_{2} + (α_β∀)x_{1}^{2} \$\$"
     # Test that the check for `\\)` handles unicode well
     a = CustomLaTeXPrint("\\(β∀")
     @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==
