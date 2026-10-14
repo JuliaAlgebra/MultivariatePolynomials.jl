@@ -9,7 +9,7 @@ function Base.zero(
     ::Type{SA.AlgebraElement{T,A,C}},
 ) where {T,A<:_PolynomialAlgebra,C}
     M = monomial_type(A)
-    return zero(algebra_element(term(zero(T), constant_monomial(M))))
+    return zero(T, algebra(FullBasis{Monomial}(constant_monomial(M))))
 end
 
 # Arithmetic for AlgebraElement polynomials.

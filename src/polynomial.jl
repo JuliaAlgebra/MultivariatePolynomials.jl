@@ -64,7 +64,12 @@ function polynomial(
 )
     # If `x` is e.g. `[v, 1]` then it will contains terms that are convertible to monomials.
     return polynomial(
-        [term(α, convert(monomial_type(m), m)) for (α, m) in zip(a, x)],
+        [
+            convert(
+                term_type(m, eltype(a)),
+                term(α, convert(monomial_type(m), m)),
+            ) for (α, m) in zip(a, x)
+        ],
         s,
     )
 end
