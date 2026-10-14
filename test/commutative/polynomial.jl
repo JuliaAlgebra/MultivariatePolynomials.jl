@@ -54,6 +54,25 @@ const MP = MultivariatePolynomials
 
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [1, 2x^2]
 
+    @testset "Scalar coefficient promotion" begin
+        for (c, a) in ((2, 0.5), (2.0, 5.0im), ([1 2; 3 4], [2 3; 4 5])),
+            (p, k) in
+            ((term(c, x), zero(c)), (polynomial([c, c], [one(x), x]), c))
+
+            original = copy(p)
+            for (q, cx, c0) in (
+                ((@inferred p + a), c, k + a),
+                ((@inferred a + p), c, a + k),
+                ((@inferred p - a), c, k - a),
+                ((@inferred a - p), -c, a - k),
+            )
+                @test coefficient_type(q) === typeof(c + a)
+                @test q == polynomial([c0, cx], [one(x), x])
+            end
+            @test p == original
+        end
+    end
+
     @test (1.0 + x) * x == x^2 + x
     @test constant_term(1, x) * (1 - x) == 1 - x
     @test promote_type(typeof(1 - x), typeof(x)) <: AbstractPolynomial{Int}

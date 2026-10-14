@@ -38,16 +38,16 @@ for op in [:+, :-, :*]
     end
 end
 
-# Scalars use the polynomial's coefficient type.
+# SA promotes coefficient types after embedding scalars as constants.
 for op in [:+, :-]
     @eval begin
         function Base.$op(p::Union{T,Number}, q::_AE{T}) where {T}
             i = implicit(q)
-            return $op(constant_algebra_element(SA.basis(i), convert(T, p)), i)
+            return $op(constant_algebra_element(SA.basis(i), p), i)
         end
         function Base.$op(p::_AE{T}, q::Union{T,Number}) where {T}
             i = implicit(p)
-            return $op(i, constant_algebra_element(SA.basis(i), convert(T, q)))
+            return $op(i, constant_algebra_element(SA.basis(i), q))
         end
     end
 end
