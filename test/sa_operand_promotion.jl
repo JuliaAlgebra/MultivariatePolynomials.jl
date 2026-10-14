@@ -29,6 +29,21 @@ end
             @test output == op(a, b)
             @test parent(output) === alg
         end
+        output = copy(same_basis)
+        @test (@inferred MP.MA.mul!!(output, b)) === output
+        @test output == a * b
+        @test parent(output) === parent(same_basis)
+        output = copy(same_basis)
+        right = SA.AlgebraElement(SA.coeffs(output), alg)
+        @test right !== output
+        @test SA.coeffs(right) === SA.coeffs(output)
+        @test (@inferred MP.MA.mul!!(output, right)) === output
+        @test output == a * a
+        @test parent(output) === parent(same_basis)
+        output = copy(a)
+        @test_throws ArgumentError MP.MA.mul!!(output, b)
+        @test output == a
+        @test parent(output) === parent(a)
         output = zero(prototype)
         @test (@inferred MP.MA.operate_to!(output, -, a)) === output
         @test output == -a
