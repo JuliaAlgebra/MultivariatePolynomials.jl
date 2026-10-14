@@ -1,9 +1,14 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "Non-commutative Monomial" begin
     Mod.@ncpolyvar x
     X_ = constant_monomial(typeof(x))
     @test nvariables(X_) == 0
-    @test isempty(X_.vars)
-    @test isempty(X_.z)
+    @test isempty(variables(X_))
+    @test isempty(exponents(X_))
     X0 = constant_monomial(x)
     for Y in [x^0, X0]
         @test nvariables(Y) == 1
@@ -45,8 +50,9 @@ end
     @test iszero(nvariables(X))
     @test isempty(variables(X))
     X = empty_monomial_vector(x)
-    @test nvariables(X) == 1
-    @test variables(X)[1] == x
+    # An ordinary empty vector has no variables stored alongside its entries.
+    @test iszero(nvariables(X))
+    @test isempty(variables(X))
     X = monomial_vector([y, x])
     @test X[1] == y
     @test X[2] == x
@@ -54,18 +60,17 @@ end
     X = monomials([y, x, y, x, y], 0:2)
     Y = monomials([x, y], 2)
     for M in [X, Y]
-        @test variables(X)[1] == x
-        @test variables(X)[2] == y
-        @test variables(X)[3] == x
-        @test collect(exponents(X[7])) == [2, 0, 0]
-        @test collect(exponents(X[6])) == [1, 1, 0]
-        @test collect(exponents(X[5])) == [0, 2, 0]
-        @test collect(exponents(X[4])) == [0, 1, 1]
+        @test variables(M) == [x, y, x]
+        @test collect(exponents(M[end])) == [2, 0, 0]
+        @test collect(exponents(M[end-1])) == [1, 1, 0]
+        @test collect(exponents(M[end-2])) == [0, 2, 0]
+        @test collect(exponents(M[end-3])) == [0, 1, 1]
     end
     @test collect(exponents(X[3])) == [1, 0, 0]
     @test collect(exponents(X[2])) == [0, 1, 0]
     @test collect(exponents(X[1])) == [0, 0, 0]
     X0 = [x^3, x^2 * y, x * y^2, x * y * x, y^3, y^2 * x, y * x^2, y * x * y]
+    original = copy(X0)
     X1 = monomials([x, y], 3)
     X2 = monomial_vector(X0)
     Z = reverse([
@@ -83,24 +88,28 @@ end
     @test length(X1) == length(X2) == length(Z)
     @test issorted(X1)
     @test issorted(X2)
-    @test X1 == X0
+    @test X0 == original
+    @test X1 == X2 == reverse(X0)
+    vars = [x, y, x, y]
+    @test variables(X1) == variables(X2) == vars
     for i in eachindex(Z)
-        @test variables(X1[i])[1] == variables(X2[i])[1] == x
-        @test variables(X1[i])[2] == variables(X2[i])[2] == y
-        @test variables(X1[i])[3] == variables(X2[i])[3] == x
-        @test variables(X1[i])[4] == variables(X2[i])[4] == y
-        @test collect(exponents(X1[i])) == collect(exponents(X2[i])) == Z[i]
+        @test variables(X1[i]) == vars
+        # Sorting keeps each input monomial's variable sequence. Align it
+        # explicitly to compare with the padded enumeration representation.
+        @test collect(exponents(X1[i])) == exponents(X2[i], vars) == Z[i]
     end
 end
 @testset "is_commutative" begin
-    function _is_comm_test(p)
-        @test !MP.is_commutative(p)
-        @test !MP.is_commutative(typeof(p))
+    function _is_comm_test(p, expected)
+        @test (@inferred MP.is_commutative(p)) === expected
+        @test (@inferred MP.is_commutative(typeof(p))) === expected
     end
     Mod.@ncpolyvar x y[1:2]
-    _is_comm_test(x)
-    _is_comm_test(y)
-    _is_comm_test(x^2)
-    _is_comm_test(2x^2)
-    _is_comm_test(sum(y))
+    for p in (x, y, x^2, 2x^2, sum(y))
+        _is_comm_test(p, false)
+    end
+    Mod.@polyvar x y[1:2]
+    for p in (x, y, x^2, 2x^2, sum(y))
+        _is_comm_test(p, true)
+    end
 end
