@@ -299,7 +299,8 @@ end
         @test isone(g)
 
         p1 = p - 2.5im
-        p2 = 2.0p - 5.0im
+        p2 = @inferred 2.0p - 5.0im
+        @test coefficient_type(p2) === ComplexF64
         g = @inferred gcd(p1, p2)
         @test isequal(p1, g) || isequal(p2, g)
     end
