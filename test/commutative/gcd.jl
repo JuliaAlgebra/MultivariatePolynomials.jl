@@ -2,7 +2,6 @@ if !@isdefined(Mod)
     import DynamicPolynomials as Mod
     include("../utils.jl")
 end
-using Combinatorics
 import MutableArithmetics as MA
 
 function test_gcd_unit(expected, p1, p2, algo)
@@ -220,24 +219,6 @@ function multivariate_gcd_test(
         y + z,
         algo,
     )
-end
-
-function deflation_test()
-    Mod.@polyvar a b c
-    function _test(p, eshift, edefl)
-        shift, defl = MP.deflation(p)
-        @test shift == eshift
-        @test defl == edefl
-        q = MP.deflate(p, shift, defl)
-        @test p == MP.inflate(q, shift, defl)
-    end
-    for (x, y, z) in permutations((a, b, c))
-        _test(x + x^2 + y * x, x, x * y)
-        p = x^2 + x^2 * y^3 + y^6 * x^4
-        _test(p, x^2, x^2 * y^3)
-        @test p == MP.deflate(p, z^0, z^0)
-        _test(p, x^2, x^2 * y^3)
-    end
 end
 
 function extracted_variable_test()

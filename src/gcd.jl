@@ -323,10 +323,12 @@ end
 
 function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = map_exponents(-, mono, shift)
+    mutable_mono, defl = SA.promote_bases(mutable_mono, defl)
     return map_exponents!(div, mutable_mono, defl)
 end
 function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = map_exponents(*, mono, defl)
+    mutable_mono, shift = SA.promote_bases(mutable_mono, shift)
     return map_exponents!(+, mutable_mono, shift)
 end
 
