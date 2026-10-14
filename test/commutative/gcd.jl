@@ -286,6 +286,7 @@ end
             p2 = MP.polynomial(p * q, Number)
             g = @inferred gcd(p1, p2)
             @test isone(g)
+            @test coefficient_type(g) === Number
         end
     end
     @testset "Complex coefficient GCD" begin

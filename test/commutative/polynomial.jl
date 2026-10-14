@@ -37,6 +37,21 @@ const MP = MultivariatePolynomials
     @test polynomial(1:2, [x, x^2]) == x + 2x^2
     @test polynomial(1:2, monomials(x, 1:2)) == x + 2x^2
 
+    @testset "Coefficient vector types" begin
+        for T in (Int, BigInt, Real, Number),
+            (c, m, expected) in (
+                (T[1, 2], [x, x^2], x + 2x^2),
+                (T[1, -1], [x, x], 0),
+                (T[], typeof(x)[], 0),
+            )
+
+            p = @inferred polynomial(c, m)
+            @test p == expected
+            @test coefficient_type(p) === T
+        end
+        @test coefficient_type(polynomial(Number[1, 0.5], [x, x^2])) === Number
+    end
+
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [1, 2x^2]
 
     @test (1.0 + x) * x == x^2 + x
