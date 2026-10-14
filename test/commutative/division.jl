@@ -5,6 +5,9 @@ import MutableArithmetics as MA
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+end
 
 function div_number_test()
     Mod.@polyvar x

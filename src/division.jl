@@ -394,13 +394,7 @@ function MA.mutability(
     if SA.coeffs(output) === SA.coeffs(g)
         return MA.IsNotMutable()
     end
-    return MA.mutability(
-        typeof(output),
-        op,
-        typeof(f),
-        typeof(g),
-        typeof(algo),
-    )
+    return MA.mutability(typeof(output), op, typeof(f), typeof(g), typeof(algo))
 end
 
 _op(::Field) = rem
@@ -540,7 +534,7 @@ function Base.divrem(f::_APL, g::AbstractVector{<:_APL}; kwargs...)
     for p in g
         rf, _ = SA.promote_bases(rf, p)
     end
-    g = map(p -> first(SA.promote_bases(p, rf)), g)
+    g = map(first ∘ Base.Fix2(SA.promote_bases, rf), g)
     r = zero(rf)
     q = similar(g, typeof(rf))
     for i in eachindex(q)
