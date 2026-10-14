@@ -147,14 +147,17 @@ function right_constant_div_multiple(
     )
 end
 function div_multiple(
-    f::_APL,
+    f::AbstractPolynomial,
     g::AbstractMonomialLike,
     mf::MA.MutableTrait = MA.IsNotMutable(),
 )
     if isconstant(g)
         return _copy(f, mf)
     end
-    return map_exponents(-, f, g, mf)
+    shift = _aligned_exponents(g, variables(f))
+    f = _copy(f, mf)
+    SA.map_keys!(Base.Fix2(-, shift), SA.coeffs(f))
+    return f
 end
 function div_multiple(
     f::_APL,

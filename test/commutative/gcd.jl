@@ -69,6 +69,8 @@ function _gcd_test(expected, a, b, algo, expected_type)
         MA.IsNotMutable(),
         MA.IsNotMutable(),
     )
+    @test a == A
+    @test b == B
     @test are_independent(g, a)
     @test are_independent(g, b)
     @test g isa expected_type
