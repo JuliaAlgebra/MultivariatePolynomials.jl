@@ -1,3 +1,10 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+using Combinatorics
+import MutableArithmetics as MA
+
 function test_gcd_unit(expected, p1, p2, algo)
     g = @inferred gcd(p1, p2, algo)
     # it does not make sense, in general, to speak of "the" greatest common
