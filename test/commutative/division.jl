@@ -2,6 +2,7 @@ using LinearAlgebra, Test
 using Combinatorics
 
 import MutableArithmetics as MA
+import StarAlgebras as SA
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
@@ -136,6 +137,44 @@ function lcm_test()
 end
 
 @testset "Division" begin
+    @testset "Exact division by a monomial" begin
+        Mod.@polyvar x y z
+        for T in (Int, BigInt, Rational{BigInt}, Float64),
+            (u, v) in ((x, y), (y, x)),
+            mutability in (MA.IsMutable(), MA.IsNotMutable()),
+            (divisor, expected) in
+            ((v, 2u + 4v), (T(2) * v, u + 2v), (polynomial(T(2) * v), u + 2v))
+
+            input = polynomial(T(2) * u * v + T(4) * v^2)
+            original = MA.mutable_copy(input)
+            storage = SA.coeffs(input)
+            old_keys = copy(keys(storage))
+            output = @inferred MP.div_multiple(input, divisor, mutability)
+            @test output == expected
+            @test parent(output) === parent(input)
+            @test old_keys == keys(SA.coeffs(original))
+            if mutability isa MA.IsMutable
+                @test output === input
+                @test SA.coeffs(output) === storage
+            else
+                @test input == original
+            end
+        end
+        input = polynomial(x^2 + x^3)
+        divisor = monomial(first(terms(input)))
+        @test divisor == x^2
+        @test MP.div_multiple(input, divisor, MA.IsMutable()) === input
+        @test input == 1 + x
+        @test divisor == x^2
+        @test MP.div_multiple(2x^2, x) == 2x
+        input = zero(x + y)
+        @test MP.div_multiple(input, y, MA.IsMutable()) === input
+        @test iszero(input)
+        input = x^2 + x
+        @test MP.div_multiple(input, one(z), MA.IsMutable()) === input
+        @test_throws ArgumentError MP.div_multiple(input, y, MA.IsMutable())
+        @test input == x^2 + x
+    end
     @testset "div by number" begin
         div_number_test()
     end
