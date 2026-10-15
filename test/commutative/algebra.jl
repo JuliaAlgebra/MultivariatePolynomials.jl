@@ -81,7 +81,7 @@ import MutableArithmetics as MA
         @inferred (2x) * (3x)
         for n in 0:3
             p = @inferred (2x)^n
-            @test p isa AbstractPolynomial{Int}
+            @test p isa AbstractTerm{Int}
             @test p == term(2^n, x^n)
         end
     end

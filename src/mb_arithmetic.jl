@@ -1,9 +1,11 @@
 # SA.Term constructor for Polynomial{...} basis elements (monomials)
 function SA.Term(coeff, p::Polynomial{B}) where {B}
     alg = algebra(FullBasis{B}(p))
-    idx = exponents(p)
+    idx = SA.basis(alg)[p]
     return SA.Term(alg, idx, coeff)
 end
+
+SA._algebra_operand(m::AbstractMonomialLike) = term(m)
 
 function Base.zero(
     ::Type{SA.AlgebraElement{T,A,C}},
@@ -24,30 +26,34 @@ function polynomial(a::AbstractPolynomialLike, ::Type{T}) where {T}
     return SA.AlgebraElement{T}(polynomial(a))
 end
 
-# _APL (monomials, terms) + _AE: convert to AE first.
-# Note: SA already defines +(::Term, ::AlgebraElement); we only handle
-# AbstractMonomialLike (not Term) to avoid ambiguity.
+# Bare monomials enter SA's term arithmetic.
 for op in [:+, :-, :*]
     @eval begin
-        Base.$op(p::AbstractMonomialLike, q::_AE) = $op(algebra_element(p), q)
-        Base.$op(p::_AE, q::AbstractMonomialLike) = $op(p, algebra_element(q))
+        Base.$op(p::AbstractMonomialLike, q::_AE) = $op(term(p), q)
+        Base.$op(p::_AE, q::AbstractMonomialLike) = $op(p, term(q))
         Base.$op(p::Polynomial{<:AbstractMonomialIndexed}, q::_AE) =
-            $op(algebra_element(SA.Term(1, p)), q)
+            $op(SA.Term(1, p), q)
         Base.$op(p::_AE, q::Polynomial{<:AbstractMonomialIndexed}) =
-            $op(p, algebra_element(SA.Term(1, q)))
+            $op(p, SA.Term(1, q))
     end
 end
 
-# SA promotes coefficient types after embedding scalars as constants.
+# Extend finite bases before embedding scalars as constant terms.
 for op in [:+, :-]
     @eval begin
-        function Base.$op(p::Union{T,Number}, q::_AE{T}) where {T}
+        function Base.$op(
+            p::Union{T,Number},
+            q::Union{AbstractPolynomial{T},AbstractTerm{T}},
+        ) where {T}
             i = implicit(q)
-            return $op(constant_algebra_element(SA.basis(i), p), i)
+            return $op(SA._constant_term(i, p), i)
         end
-        function Base.$op(p::_AE{T}, q::Union{T,Number}) where {T}
+        function Base.$op(
+            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+            q::Union{T,Number},
+        ) where {T}
             i = implicit(p)
-            return $op(i, constant_algebra_element(SA.basis(i), q))
+            return $op(i, SA._constant_term(i, q))
         end
     end
 end

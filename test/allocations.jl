@@ -15,10 +15,14 @@ using MutableArithmetics
 import MultivariatePolynomials
 const MP = MultivariatePolynomials
 using TypedPolynomials
+import StarAlgebras as SA
 
 function test_polynomial_merge()
     @polyvar x
     p = x^2 + x + 1
+    # Reverse merging temporarily holds both supports, up to seven entries.
+    sizehint!(keys(SA.coeffs(p)), 7)
+    sizehint!(values(SA.coeffs(p)), 7)
     # Want to avoid it converting everything to polynomial
     Q = AbstractPolynomialLike[x, x^2, 2x, 2x+3]
     for q in Q

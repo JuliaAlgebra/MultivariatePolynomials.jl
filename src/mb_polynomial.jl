@@ -15,13 +15,14 @@ function exponents(p::Polynomial, vars)
     (all_vars, map), _ = promote_variables_with_maps(variables(p), vars)
     if all_vars != vars
         throw(
-            ArgumentError("The supplied variables cannot represent this monomial"),
+            ArgumentError(
+                "The supplied variables cannot represent this monomial",
+            ),
         )
     end
     return map === nothing ? copy(exponents(p)) : map(exponents(p))
 end
 monomial(p::Polynomial) = monomial(variables(p), exponents(p))
-monomial(p::AbstractMonomial) = p
 
 function Base.copy(p::Polynomial{B}) where {B}
     return Polynomial(Variables{B}(copy(variables(p))), copy(exponents(p)))
@@ -50,7 +51,9 @@ monomial_type(p::Polynomial{<:AbstractMonomialIndexed}) = typeof(p)
 # Ordering: derive from the variable type
 ordering(::Type{Polynomial{B,V,E}}) where {B,V,E} = ordering(V)
 # constant_monomial: return a monomial with all-zero exponents
-constant_monomial(p::Polynomial) = Polynomial(p.variables, zero(p.exponents))
+function constant_monomial(p::Polynomial)
+    return Polynomial(p.variables, map(zero, p.exponents))
+end
 
 Base.iterate(p::Polynomial) = p, nothing
 Base.iterate(::Polynomial, ::Nothing) = nothing
@@ -67,16 +70,12 @@ monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
 monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
 # SA.Term constructor for Polynomial{...} basis elements is in mb_monomial_basis.jl
 
-
 function algebra_element(p, basis::SA.AbstractBasis)
     return SA.AlgebraElement(p, algebra(basis))
 end
 
 function _algebra_element(p, ::Type{B}) where {B<:AbstractMonomialIndexed}
-    return algebra_element(
-        sparse_coefficients(p),
-        FullBasis{B}(variables(p)),
-    )
+    return algebra_element(sparse_coefficients(p), FullBasis{B}(variables(p)))
 end
 
 algebra_element(p::Polynomial{B}) where {B} = _algebra_element(monomial(p), B)

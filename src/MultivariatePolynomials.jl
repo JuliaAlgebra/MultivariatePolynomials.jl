@@ -36,7 +36,6 @@ include("division.jl")
 include("gcd.jl")
 include("det.jl")
 
-
 # Polynomial bases and algebra representation shared with MultivariateBases.
 include("mb_interface.jl")
 include("mb_variables.jl")
@@ -45,6 +44,7 @@ include("mb_bases.jl")
 include("mb_mstructures.jl")
 include("mb_monomial_basis.jl")
 include("mb_algebra.jl")
+include("noncommutative.jl")
 include("mb_arithmetic.jl")
 
 include("deprecate.jl")

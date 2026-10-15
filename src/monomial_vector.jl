@@ -20,6 +20,10 @@ function monomials(
     filter::F = _ -> true,
 ) where {F}
     vars = unique!(sort(vars; rev = true))
+    return _monomials(vars, degrees, filter)
+end
+
+function _monomials(vars, degrees, filter::F) where {F}
     if !is_commutative(vars)
         return _noncommutative_monomials(vars, degrees, filter)
     end
@@ -32,7 +36,7 @@ function monomials(
     )
     monos = eltype(basis)[]
     for exp in exps
-        sum(exp) in degrees || continue
+        sum(exp; init = 0) in degrees || continue
         mono = basis[exp]
         filter(mono) && push!(monos, mono)
     end

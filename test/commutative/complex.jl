@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "ComplexPoly" begin
     Mod.@polyvar a
     @test isreal(a)
@@ -42,6 +47,29 @@
     @test iszero(imag(x + conj(x)))
     @test iszero(real(x - conj(x)))
     @test imag(x - conj(x)) == 2imag(x)
+    @testset "Complex substitution and coefficient parts" begin
+        for v in (x, conj(x), real(x), imag(x)), value in (2 + 3im, y + 1)
+            expected =
+                v == x ? value :
+                isconj(v) ? conj(value) :
+                isrealpart(v) ? real(value) : imag(value)
+            @test subs(v, x => value) == expected
+            @test subs(v, [x] => [value]) == expected
+        end
+        for p in ((3 + 4im) * a, (3 + 4im) * a + 5)
+            original = copy(p)
+            @test real(p) == 3a + (p isa AbstractTerm ? 0 : 5)
+            @test imag(p) == 4a
+            @test coefficient_type(real(p)) === Int
+            @test p == original
+        end
+        p = zero((3 + 4im) * a + 5)
+        for f in (real, imag)
+            @test iszero(f(p))
+            @test variables(f(p)) == variables(p)
+            @test coefficient_type(f(p)) === Int
+        end
+    end
     @test !isreal(x^3 + 5x^2 + 4x)
     @test isreal(a^3 + 5a^2 + 4a + x^0)
     @test conj(7x^3 + 6y^2 - (3 + im)x + 8a) ==
@@ -77,7 +105,8 @@
     # only be the ordinary_variable, not a conjugate or real/imaginary part)
     @test_broken subs(4x + 8y^2 - 6x^3, [x, conj(y)] => [2 + 4im, 9 - im]) ==
                  (1176 + 256im) * x^0
-    @test_broken subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9])
+    @test_broken subs(4x + 8y^2 - 6x^3, [x, real(y)] => [2 + 4im, 9]) ==
+                 1184 + 112im + 144im * imag(y) - 8imag(y)^2
     @test_broken subs(
         4x + 8y^2 - 6x^3,
         [x, real(y)] => [2 + 4im, 9 + 0 * x^0],

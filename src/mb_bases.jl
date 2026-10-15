@@ -12,25 +12,17 @@ function ordering(::Type{MonomialIndexedBasis{B,V,E}}) where {B,V,E}
 end
 ordering(b::MonomialIndexedBasis) = ordering(typeof(b))
 
-struct _ExponentsWithVariables{V}
-    variables::V
-end
-
-(e::_ExponentsWithVariables)(mono) = exponents(mono, e.variables)
-
-function Base.:(==)(a::_ExponentsWithVariables, b::_ExponentsWithVariables)
-    return unique(sort(a.variables)) == unique(sort(b.variables))
-end
-
 function FullBasis(vars::Variables{B,V}) where {B,V}
+    if !is_commutative(V)
+        B === Monomial ||
+            error("Noncommutative variables require the Monomial basis")
+        return _NoncommutativeBasis{monomial_type(V),V}(
+            unique!(sort(vars.variables; rev = true)),
+        )
+    end
     O = ordering(vars.variables)
     exps = ExponentsIterator{O}(constant_monomial_exponents(vars))
-    inverse_map = if is_commutative(V)
-        exponents
-    else
-        _ExponentsWithVariables(vars.variables)
-    end
-    return SA.MappedBasis{Polynomial{B,V,eltype(exps)}}(exps, vars, inverse_map)
+    return SA.MappedBasis{Polynomial{B,V,eltype(exps)}}(exps, vars, exponents)
 end
 
 function FullBasis{B}(vars) where {B}
@@ -112,7 +104,14 @@ implicit_basis(basis::FullBasis) = basis
 
 function implicit(a::SA.AlgebraElement)
     basis = implicit_basis(SA.basis(a))
+    basis === SA.basis(a) && return a
     return algebra_element(SA.coeffs(a, basis), basis)
+end
+
+function implicit(t::SA.Term)
+    basis = implicit_basis(SA.basis(parent(t)))
+    basis === SA.basis(parent(t)) && return t
+    return SA.Term(algebra(basis), basis[SA.basis_element(t)], coefficient(t))
 end
 
 function _comparable_type(
@@ -120,7 +119,10 @@ function _comparable_type(
 ) where {T,I,M}
     return M
 end
-function _coeffs_type(::Type{C}, ::Type{B}) where {C,B<:FullBasis}
+function _coeffs_type(
+    ::Type{C},
+    ::Type{B},
+) where {C,B<:Union{FullBasis,_NoncommutativeBasis}}
     T = eltype(C) # Even works for `NTuple`!
     E = SA.key_type(B)
     L = _comparable_type(B)
@@ -131,16 +133,9 @@ function _coeffs_type(::Type{C}, ::Type{B}) where {C,B<:SubBasis}
     return C
 end
 
-function algebra_element_type(
-    ::Type{C},
-    ::Type{B},
-) where {C,B}
+function algebra_element_type(::Type{C}, ::Type{B}) where {C,B}
     A = MA.promote_operation(algebra, B)
-    return SA.AlgebraElement{
-        eltype(C),
-        A,
-        _coeffs_type(C, B),
-    }
+    return SA.AlgebraElement{eltype(C),A,_coeffs_type(C, B)}
 end
 
 function MA.promote_operation(
@@ -213,14 +208,17 @@ function _similar_type(::Type{V}, ::Type{T}) where {V<:AbstractVector,T}
 end
 
 function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
-    inverse_map =
-        is_commutative(V) ? typeof(exponents) : _ExponentsWithVariables{V}
+    if !is_commutative(V)
+        B === Monomial ||
+            error("Noncommutative variables require the Monomial basis")
+        return _NoncommutativeBasis{Polynomial{B,V,E},V}
+    end
     return SA.MappedBasis{
         Polynomial{B,V,E},
         E,
         ExponentsIterator{ordering(V),Nothing,E},
         Variables{B,V},
-        inverse_map,
+        typeof(exponents),
     }
 end
 
@@ -237,14 +235,13 @@ _one_if_type(::Type{T}) where {T} = one(T)
 function constant_algebra_element_type(
     ::Type{BT},
     ::Type{T},
-) where {BT<:FullBasis,T}
+) where {BT<:Union{FullBasis,_NoncommutativeBasis},T}
     return algebra_element_type(Tuple{T}, BT)
 end
 
-function constant_algebra_element(b::FullBasis, α)
-    return SA.algebra_element(
-        SA.Term(algebra(b), constant_monomial_exponents(b), _one_if_type(α)),
-    )
+function constant_algebra_element(b::Union{FullBasis,_NoncommutativeBasis}, α)
+    A = algebra(b)
+    return SA.algebra_element(SA.Term(A, b[one(SA.object(A))], _one_if_type(α)))
 end
 
 function constant_algebra_element_type(

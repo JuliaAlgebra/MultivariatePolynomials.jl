@@ -7,11 +7,28 @@ import StarAlgebras as SA
 import LinearAlgebra
 
 function same_basis_promotion_allocations(output, x)
-    SA._promote_operand(+, output, x)
-    return @allocated SA._promote_operand(+, output, x)
+    SA._promote_operand!(+, output, x)
+    return @allocated SA._promote_operand!(+, output, x)
 end
 
-@testset "Prepared destinations promote operands" begin
+@testset "Scalar addition prepares an implicit basis" begin
+    DP.@polyvar x
+    p = 2x + 1
+    @test (@inferred MP.implicit(p)) === p
+    t = 2x
+    @test (@inferred MP.implicit(t)) === t
+    basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[1]])
+    q = SA.AlgebraElement([2], MP.algebra(basis))
+    for a in (q, SA.Term(parent(q), 1, 2))
+        @test (@inferred a + 3) == 2x + 3
+        @test (@inferred 3 + a) == 3 + 2x
+        @test (@inferred a - 3) == 2x - 3
+        @test (@inferred 3 - a) == 3 - 2x
+    end
+    @test SA.coeffs(q) == [2]
+end
+
+@testset "Mutable destinations promote bases" begin
     DP.@polyvar x y z
     for T in (Int, BigInt)
         a = convert(DP.Polynomial{T}, 2x + 2)
@@ -20,7 +37,7 @@ end
         alg = parent(prototype)
         originals = MP.MA.mutable_copy.((a, b))
         same_basis = first(SA.promote_bases(a, alg))
-        @test (@inferred SA._promote_operand(+, prototype, same_basis)) ===
+        @test (@inferred SA._promote_operand!(+, prototype, same_basis)) ===
               same_basis
         @test same_basis_promotion_allocations(prototype, same_basis) == 0
         for op in (+, -, *)
@@ -41,9 +58,10 @@ end
         @test output == a * a
         @test parent(output) === parent(same_basis)
         output = copy(a)
-        @test_throws ArgumentError MP.MA.mul!!(output, b)
-        @test output == a
-        @test parent(output) === parent(a)
+        @test (@inferred MP.MA.operate!(*, output, b)) === output
+        @test output == a * b
+        @test parent(output) == parent(a * b)
+        @test parent(output) !== parent(a)
         output = zero(prototype)
         @test (@inferred MP.MA.operate_to!(output, -, a)) === output
         @test output == -a
@@ -71,19 +89,20 @@ end
         end
         for operand in (b, 3y)
             output = MP.MA.mutable_copy(a)
-            @test_throws ArgumentError MP.MA.add!!(output, operand)
-            @test output == a
-            @test parent(output) === parent(a)
+            @test (@inferred MP.MA.add!!(output, operand)) === output
+            @test output == a + operand
+            @test parent(output) == parent(a + operand)
+            @test parent(output) !== parent(a)
         end
         for (left, right) in ((a, b), (2, b), (b, 2))
             output = MP.MA.mutable_copy(a)
-            @test_throws ArgumentError MP.MA.operate!!(
+            @test (@inferred MP.MA.operate!(
                 MP.MA.add_mul,
                 output,
                 left,
                 right,
-            )
-            @test output == a
+            )) === output
+            @test output == a + left * right
         end
         @test (a, b) == originals
         @test parent(a) != alg && parent(b) != alg
