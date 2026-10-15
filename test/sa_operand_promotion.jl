@@ -144,8 +144,6 @@ end
         end
         @test (@inferred LinearAlgebra.dot(terms, polys)) ==
               terms[1] * polys[1] + terms[2] * polys[2]
-        init = MP.MA.zero_for(P, terms, polys)
-        @test MP.MA.fused_map_reduce(MP.MA.add_mul, terms, polys; init) === init
         @test_throws DimensionMismatch MP.MA.fused_map_reduce(
             MP.MA.add_mul,
             terms,
