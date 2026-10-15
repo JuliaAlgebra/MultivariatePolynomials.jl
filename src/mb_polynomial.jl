@@ -86,25 +86,7 @@ function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
         print(io, B)
         print(io, "(")
     end
-    # Display monomial from variables and exponents directly
-    vars = variables(p)
-    exps = exponents(p)
-    if all(iszero, exps)
-        print(io, "1")
-    else
-        first = true
-        for (v, e) in zip(vars, exps)
-            iszero(e) && continue
-            if !first
-                print(io, "*")
-            end
-            first = false
-            show(io, mime, v)
-            if e > 1
-                print(io, "^", e)
-            end
-        end
-    end
+    _show(io, mime, monomial(p))
     if B != Monomial
         print(io, ")")
     end
@@ -144,8 +126,17 @@ function Base.zero(p::Polynomial)
 end
 typeof_basis(::Polynomial{B}) where {B} = B
 
-function convert_basis(basis::SA.AbstractBasis, p::AbstractTermLike)
-    return convert_basis(basis, _algebra_element(p, Monomial))
+"""
+    convert_basis(basis, p)
+
+Express `p` in `basis`. Polynomial construction preserves its basis family;
+arithmetic between different families requires an explicit conversion first.
+"""
+function convert_basis(
+    basis::SA.AbstractBasis,
+    p::Union{AbstractTermLike,Polynomial},
+)
+    return convert_basis(basis, algebra_element(p))
 end
 
 function convert_basis(basis::SA.AbstractBasis, p::SA.AlgebraElement)

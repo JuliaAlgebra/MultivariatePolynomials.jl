@@ -9,9 +9,19 @@ SA._algebra_operand(m::AbstractMonomialLike) = term(m)
 
 function Base.zero(
     ::Type{SA.AlgebraElement{T,A,C}},
-) where {T,A<:_PolynomialAlgebra,C}
-    M = monomial_type(A)
-    return zero(T, algebra(FullBasis{Monomial}(constant_monomial(M))))
+) where {
+    T,
+    B,
+    V,
+    E,
+    A<:SA.StarAlgebra{
+        <:Union{Variables,_NoncommutativeBasis},
+        Polynomial{B,V,E},
+    },
+    C,
+}
+    M = monomial_type(V)
+    return zero(T, algebra(FullBasis{B}(constant_monomial(M))))
 end
 
 # Arithmetic for AlgebraElement polynomials.

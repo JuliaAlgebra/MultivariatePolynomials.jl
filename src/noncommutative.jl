@@ -38,7 +38,9 @@ end
 
 SA.comparable(::_NoncommutativeBasis) = isless
 _comparable_type(::Type{<:_NoncommutativeBasis}) = typeof(isless)
-implicit_basis(b::_NoncommutativeBasis) = b
+function keys_as_monomials(keys, ::_NoncommutativeBasis)
+    return collect(keys)
+end
 
 function polynomial_type(
     ::Type{<:_NoncommutativeBasis{M}},
