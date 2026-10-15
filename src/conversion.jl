@@ -9,6 +9,11 @@ function Base.convert(::Type{P}, c::Number) where {P<:AbstractPolynomial}
     return convert(P, constant_term(c, P))
 end
 
+function Base.convert(::Type{M}, c::Number) where {M<:AbstractMonomial}
+    isone(c) || throw(InexactError(:convert, M, c))
+    return one(M)
+end
+
 function Base.convert(
     ::Type{V},
     mono::AbstractMonomial,

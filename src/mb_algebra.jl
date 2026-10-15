@@ -1,8 +1,6 @@
 # From MultivariateBases/src/MultivariateBases.jl — algebra() function
 
-function algebra(
-    basis::Union{FullBasis{B,V},SubBasis{B,V}},
-) where {B,V}
+function algebra(basis::Union{FullBasis{B,V},SubBasis{B,V}}) where {B,V}
     mstruct = if is_commutative(V)
         MStruct(basis)
     else
@@ -18,12 +16,7 @@ end
 
 function MA.promote_operation(
     ::typeof(algebra),
-    BT::Type{
-        <:Union{
-            FullBasis{B,V,E},
-            SubBasis{B,V,E},
-        },
-    },
+    BT::Type{<:Union{FullBasis{B,V,E},SubBasis{B,V,E}}},
 ) where {B,V,E}
     P = Polynomial{B,V,E}
     MS = if is_commutative(V)

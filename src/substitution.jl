@@ -137,15 +137,28 @@ function substitute(st::_AST, p::_APL, s::AbstractSubstitution...)
     return substitute(st, p, s)
 end
 
+function _evaluate_positional(p, vals)
+    nvariables(p) == length(vals) || throw(
+        ArgumentError(
+            "Cannot evaluate a polynomial of $(nvariables(p)) variables with $(length(vals)) values",
+        ),
+    )
+    return _substitute(p, vals)
+end
+
+function substitute(::Eval, p::_APL, vals::AbstractVector)
+    return _evaluate_positional(p, vals)
+end
+
 _substitute(::AbstractVariable, vals) = only(vals)
 
-_substitute_powers(::Tuple{}, ::Tuple{}) = 1
-function _substitute_powers(vals::Tuple{Any}, exps::Tuple{Int})
-    return only(vals)^only(exps)
+_substitute_powers(::Tuple{}, exps, i = 1) = 1
+function _substitute_powers(vals::Tuple{Any}, exps, i = 1)
+    return only(vals)^exps[i]
 end
-function _substitute_powers(vals::Tuple, exps::Tuple)
-    return first(vals)^first(exps) *
-           _substitute_powers(Base.tail(vals), Base.tail(exps))
+function _substitute_powers(vals::Tuple, exps, i = 1)
+    return first(vals)^exps[i] *
+           _substitute_powers(Base.tail(vals), exps, i + 1)
 end
 function _substitute(m::AbstractMonomial, vals::Tuple)
     return _substitute_powers(vals, exponents(m))
@@ -193,12 +206,12 @@ end
 _polynomial(α) = α
 _polynomial(p::_APL) = polynomial(p)
 function _substitute(p::AbstractPolynomial, vals)
-    # Evaluating the constant monomial prepares the result's common basis,
+    # Multiplying zeroth powers prepares the result's common basis,
     # including for zero polynomials. Subsequent additions can mutate it.
     # Noncommutative monomial products may drop zero-degree variables. Algebra
     # elements keep their parents when raised to the zeroth power.
     unit_vals = is_commutative(p) ? vals : _polynomial.(vals)
-    unit = _substitute(constant_monomial(p), unit_vals)
+    unit = prod(Base.Fix2(^, 0), unit_vals)
     result = _polynomial(zero(coefficient_type(p)) * unit)
     for t in terms(p)
         # Noncommutative keys have their own variable sequence, with repetitions.
@@ -244,8 +257,9 @@ The allowed substutions are:
 * `V => P` where `V` is a tuple or vector of variables and `P` a tuple or vector of polynomials, e.g. `(x, y) => (y, x)` or `(y, x) => (2, 1)`.
 
 The order of the variables is lexicographic with the name with TypedPolynomials and by order of creation with DynamicPolynomials.
-Since there is no guarantee on the order of the variables, substitution directly with a tuple or a vector is not allowed.
-You can use `p(variables(p) => (1, 2))` instead if you are sure of the order of the variables (e.g. the name order matches the creation order).
+Positional evaluation `p(1, 2)`, `p((1, 2))`, or `p([1, 2])` follows
+`variables(p)` and requires one value per variable. Use explicit variable/value
+pairs when you do not want to depend on this ordering.
 
 ### Examples
 
@@ -264,4 +278,17 @@ subs(p, s::AbstractSubstitution...) = substitute(Subs(), p, s)
 
 function (p::AbstractPolynomialLike)(s::AbstractSubstitution...)
     return substitute(Eval(), p, s)
+end
+
+function (p::AbstractPolynomialLike)(
+    vals::Union{AbstractVector{<:Number},Tuple{Vararg{Number}}},
+)
+    return _evaluate_positional(p, vals)
+end
+
+function (p::AbstractPolynomialLike)(
+    value::Number,
+    values::Vararg{Number,N},
+) where {N}
+    return _evaluate_positional(p, (value, values...))
 end

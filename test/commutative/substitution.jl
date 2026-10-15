@@ -77,6 +77,21 @@ import MutableArithmetics as MA
     @test p(varst => valst) == 13
     @test p(varsv => valsv) == 13
 
+    @testset "Positional evaluation" begin
+        for q in (x[1], x[1] * x[2], 2x[1] * x[2], p)
+            vals = ntuple(i -> Float64(i), nvariables(q))
+            expected = q(variables(q) => vals)
+            @test (@inferred q(vals)) == expected
+            @test (@inferred q(vals...)) == expected
+            @test (@inferred q(collect(vals))) == expected
+            @test (@inferred substitute(Eval(), q, collect(vals))) == expected
+            @test_throws ArgumentError q([vals...; 3.0])
+            @test_throws ArgumentError q(Float64[])
+        end
+        c = constant_monomial(typeof(x[1]))
+        @test (@inferred c(ntuple(_ -> 2, nvariables(c)))) == 1
+    end
+
     @testset "Eval on constant monomial" begin
         m = constant_monomial(prod(x))
         mr = m(x => reverse(x))

@@ -10,6 +10,13 @@ import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+@testset "Polynomial coefficient and monomial lengths" begin
+    Mod.@polyvar x
+    @test_throws ArgumentError polynomial([1, 2], [x])
+    @test_throws ArgumentError polynomial([1], [x, x^2])
+    @test_throws ArgumentError polynomial(Int[], [x])
+end
+
 @testset "Accumulate monomials in a prepared polynomial" begin
     Mod.@polyvar x y
     p = x + y + 1

@@ -85,5 +85,8 @@ end
     @test pp == p
     @test qq == q
     output = zero(p)
-    @test_throws ArgumentError MA.operate!(+, output, q)
+    @test (@inferred MA.operate!(+, output, q)) === output
+    @test output == q
+    @test variables(output) == [x, y, z]
+    @test variables(p) == [x, y]
 end
