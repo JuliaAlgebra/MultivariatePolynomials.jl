@@ -131,11 +131,20 @@ end
 
 function MA.operate_to!(
     output::AbstractPolynomial,
-    op::Union{typeof(+),typeof(-)},
+    op::Union{typeof(+),typeof(-),typeof(*)},
     p::AbstractPolynomial,
     m::AbstractMonomialLike,
 )
     return MA.operate_to!(output, op, p, term(m))
+end
+
+function MA.operate_to!(
+    output::AbstractPolynomial,
+    ::typeof(*),
+    m::AbstractMonomialLike,
+    p::AbstractPolynomial,
+)
+    return MA.operate_to!(output, *, term(m), p)
 end
 
 for (A, B) in (

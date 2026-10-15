@@ -75,17 +75,25 @@ function unsafe_basis(
     ::Type{B},
     monomials_vec::AbstractVector{<:AbstractMonomial},
 ) where {B<:AbstractMonomialIndexed}
-    return SA.SubBasis(
-        FullBasis{B}(variables(monomials_vec)),
-        exponents.(monomials_vec),
-    )
+    vars = variables(monomials_vec)
+    basis = FullBasis{B}(vars)
+    keys =
+        is_commutative(vars) ?
+        map(m -> _aligned_exponents(m, vars), monomials_vec) : monomials_vec
+    return SA.SubBasis(basis, keys)
 end
 
 function Base.getindex(
-    ::FullBasis{B},
+    basis::FullBasis{B},
     monomials_vec::AbstractVector{M},
 ) where {B,M<:AbstractMonomial}
-    return unsafe_basis(B, monomial_vector(monomials_vec)::AbstractVector{M})
+    return SA.SubBasis(
+        basis,
+        map(
+            m -> exponents(m, variables(basis)),
+            monomial_vector(monomials_vec),
+        ),
+    )
 end
 
 function SubBasis{B}(
@@ -99,8 +107,12 @@ end
 
 SubBasis{B}(monos::Tuple) where {B} = SubBasis{B}([monos...])
 
-implicit_basis(basis::SubBasis) = parent(basis)
-implicit_basis(basis::FullBasis) = basis
+function implicit_basis(basis::SA.SubBasis)
+    return parent(basis)
+end
+function implicit_basis(basis::SA.ImplicitBasis)
+    return basis
+end
 
 function implicit(a::SA.AlgebraElement)
     basis = implicit_basis(SA.basis(a))
@@ -155,14 +167,14 @@ function MA.promote_operation(
     return B
 end
 
-function _explicit_basis(coeffs, basis::FullBasis{B}) where {B}
+function _explicit_basis(coeffs, basis::SA.ImplicitBasis)
     return SA.SubBasis(basis, _lazy_collect(SA.keys(coeffs)))
 end
 
 _explicit_basis(_, basis::SubBasis) = basis
 
-function explicit_basis(p::AbstractPolynomialLike)
-    return SubBasis{Monomial}(monomials(p))
+function explicit_basis(p::AbstractTermLike)
+    return explicit_basis(algebra_element(p))
 end
 
 function explicit_basis(a::SA.AlgebraElement)
@@ -236,7 +248,7 @@ function constant_algebra_element_type(
     ::Type{BT},
     ::Type{T},
 ) where {BT<:Union{FullBasis,_NoncommutativeBasis},T}
-    return algebra_element_type(Tuple{T}, BT)
+    return algebra_element_type(Vector{T}, BT)
 end
 
 function constant_algebra_element(b::Union{FullBasis,_NoncommutativeBasis}, α)
@@ -268,7 +280,15 @@ end
 
 SA.promote_with_map(::FullBasis, vars, m) = FullBasis(vars), m
 
-function promote_variables_with_maps(a::Variables, b::Variables)
+function promote_variables_with_maps(
+    a::Variables{B1},
+    b::Variables{B2},
+) where {B1,B2}
+    B1 === B2 || throw(
+        ArgumentError(
+            "Cannot promote different basis families $B1 and $B2; use convert_basis explicitly.",
+        ),
+    )
     _a, _b = promote_variables_with_maps(a.variables, b.variables)
     return SA.maybe_promote(a, _a...), SA.maybe_promote(b, _b...)
 end

@@ -107,7 +107,7 @@ function polynomial_type(
     ::Union{SubBasis{B,V,E},Type{<:SubBasis{B,V,E}}},
     ::Type{T},
 ) where {B,V,E,T}
-    return _polynomial_type(B, V, T)
+    return polynomial_type(Polynomial{B,V,E}, T)
 end
 
 function polynomial_type(::Type{P}, ::Type{T}) where {B,P<:Polynomial{B},T}
@@ -119,8 +119,8 @@ function keys_as_monomials(keys, mb::FullBasis)
 end
 keys_as_monomials(mb::SubBasis) = keys_as_monomials(mb.keys, parent(mb))
 
-function polynomial(f::Function, mb::SubBasis{Monomial})
-    return polynomial(f, keys_as_monomials(mb))
+function polynomial(f::Function, mb::SubBasis)
+    return implicit(algebra_element(f, mb))
 end
 
 function polynomial(Q::AbstractMatrix, mb::SubBasis{Monomial}, T::Type)
@@ -165,8 +165,8 @@ end
 
 _promote_coef(::Type{T}, ::Type{Monomial}) where {T} = T
 
-function polynomial_type(::Type{<:FullBasis{B,V}}, ::Type{T}) where {T,B,V}
-    return _polynomial_type(B, V, T)
+function polynomial_type(::Type{BT}, ::Type{T}) where {T,BT<:FullBasis}
+    return algebra_element_type(Vector{T}, BT)
 end
 
 function _polynomial_type(::Type{B}, ::Type{V}, ::Type{T}) where {B,V,T}
