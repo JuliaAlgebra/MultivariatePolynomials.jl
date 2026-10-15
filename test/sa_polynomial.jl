@@ -71,6 +71,20 @@ end
 
 @testset "Ordered noncommutative monomials" begin
     DP.@ncpolyvar x y z
+    @testset "Finite word bases" begin
+        full = MP.FullBasis{MP.Monomial}([x, y])
+        basis = MP.SubBasis{MP.Monomial}([x * y * x, y^2, 1])
+        @test (@inferred MP.explicit_basis_type(typeof(full))) === typeof(basis)
+        @test (@inferred MP.maxdegree(basis)) == 3
+        @test MP.mindegree(basis) == 0
+        @test MP.extdegree(basis) == (0, 3)
+        @test MP.maxdegree(basis, x) == MP.maxdegree(basis, y) == 2
+        @test MP.mindegree(basis, x) == 0
+        @test MP.extdegree(basis, x) == (0, 2)
+        @test MP.explicit_basis_covering(full, basis) == basis
+        @test MP.keys_as_monomials(MP.maxdegree_basis(full, 2)) ==
+              MP.monomials([x, y], 0:2)
+    end
     xy, yx = @inferred(x * y), @inferred(y * x)
     @test xy != yx
     @test MP.variables(xy) == [x, y]

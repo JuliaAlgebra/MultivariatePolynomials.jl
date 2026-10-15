@@ -42,6 +42,18 @@ function keys_as_monomials(keys, ::_NoncommutativeBasis)
     return collect(keys)
 end
 
+function explicit_basis_covering(
+    full::_NoncommutativeBasis,
+    target::SubBasis{Monomial},
+)
+    @assert full == parent(target)
+    return SA.SubBasis(full, target.keys)
+end
+
+function maxdegree_basis(basis::_NoncommutativeBasis, maxdeg::Int)
+    return unsafe_basis(Monomial, monomials(variables(basis), 0:maxdeg))
+end
+
 function polynomial_type(
     ::Type{<:_NoncommutativeBasis{M}},
     ::Type{T},
