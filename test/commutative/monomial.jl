@@ -5,6 +5,19 @@ end
 
 import StarAlgebras as SA
 
+@testset "Aligned exponents" begin
+    Mod.@polyvar x y
+    p = x^2 * y
+    e = @inferred exponents(p, variables(p))
+    @test e == exponents(p)
+    @test typeof(e) == typeof(exponents(p))
+    if e isa AbstractVector
+        @test e !== exponents(p)
+    end
+    @test collect(@inferred exponents(x^2, variables(p))) == [2, 0]
+    @test_throws ArgumentError exponents(p, variables(x))
+end
+
 @testset "Numeric monomial conversion" begin
     Mod.@polyvar x
     M = monomial_type(x)
