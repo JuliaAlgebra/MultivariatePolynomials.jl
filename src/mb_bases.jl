@@ -181,8 +181,9 @@ function explicit_basis(a::SA.AlgebraElement)
     return _explicit_basis(SA.coeffs(a), SA.basis(a))
 end
 
-function explicit_basis_type(BT::Type{<:FullBasis{B,V,E}}) where {B,V,E}
-    return SA.SubBasis{eltype(BT),Int,SA.key_type(BT),BT,Vector{E}}
+function explicit_basis_type(BT::Type{<:Union{FullBasis,_NoncommutativeBasis}})
+    K = SA.key_type(BT)
+    return SA.SubBasis{eltype(BT),Int,K,BT,Vector{K}}
 end
 
 function empty_basis(

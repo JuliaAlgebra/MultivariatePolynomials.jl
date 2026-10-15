@@ -143,24 +143,21 @@ function _assert_constant(
     return error("Expected constant element, got type `$(typeof(x))`")
 end
 
-mindegree(basis::SubBasis{Monomial}) = minimum(sum, basis.keys)
-maxdegree(basis::SubBasis) = maximum(sum, basis.keys)
-extdegree(basis::SubBasis{Monomial}) = extrema(sum, basis.keys)
+mindegree(basis::SubBasis{Monomial}) = minimum(sum ∘ exponents, basis)
+maxdegree(basis::SubBasis) = maximum(sum ∘ exponents, basis)
+extdegree(basis::SubBasis{Monomial}) = extrema(sum ∘ exponents, basis)
 
 variable_index(basis::FullBasis, v) = variable_index(basis.map, v)
 variable_index(basis::SubBasis, v) = variable_index(basis.parent_basis, v)
 
 function mindegree(basis::SubBasis{Monomial}, v)
-    i = variable_index(basis, v)
-    return minimum(Base.Fix2(getindex, i), basis.keys)
+    return minimum(Base.Fix2(degree, v) ∘ monomial, basis)
 end
 function maxdegree(basis::SubBasis, v)
-    i = variable_index(basis, v)
-    return maximum(Base.Fix2(getindex, i), basis.keys)
+    return maximum(Base.Fix2(degree, v) ∘ monomial, basis)
 end
 function extdegree(basis::SubBasis{Monomial}, v)
-    i = variable_index(basis, v)
-    return extrema(Base.Fix2(getindex, i), basis.keys)
+    return extrema(Base.Fix2(degree, v) ∘ monomial, basis)
 end
 
 _promote_coef(::Type{T}, ::Type{Monomial}) where {T} = T
