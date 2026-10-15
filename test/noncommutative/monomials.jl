@@ -13,7 +13,8 @@ end
     @test (@inferred variables(@view(monos[:]))) == [x, y, x]
     @test (@inferred variables([x * y * x])) == [x, y, x]
     @test (@inferred variables([2x * y, 3y * x])) == [x, y, x]
-    @test (@inferred variables([polynomial(m) for m in monos])) == [x, y, x]
+    # Polynomial parents store the alphabet; each monomial key retains order.
+    @test (@inferred variables([polynomial(m) for m in monos])) == [x, y]
     @test (@inferred variables(monomials([x, y], 3))) == [x, y, x, y]
     @test (@inferred variables([y, x, y])) == [x, y]
     @test (@inferred nvariables([y, x, y])) == 2

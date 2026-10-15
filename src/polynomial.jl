@@ -62,6 +62,9 @@ function polynomial(
     x::AbstractVector,
     s::ListState = MessyState(),
 )
+    length(a) == length(x) || throw(
+        ArgumentError("There should be as many coefficients as monomials"),
+    )
     # If `x` is e.g. `[v, 1]` then it will contains terms that are convertible to monomials.
     return polynomial(
         [

@@ -5,6 +5,18 @@ end
 
 import StarAlgebras as SA
 
+@testset "Numeric monomial conversion" begin
+    Mod.@polyvar x
+    M = monomial_type(x)
+    for value in (1, 1.0, 1 // 1)
+        @test (@inferred convert(M, value)) isa M
+        @test convert(M, value) == one(x)
+    end
+    for value in (0, 2, 0.5)
+        @test_throws InexactError convert(M, value)
+    end
+end
+
 function effective_variables_test()
     Mod.@polyvar x
     Mod.@polyvar y[1:7]
