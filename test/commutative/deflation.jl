@@ -28,15 +28,15 @@ end
             m, shift, defl = y^2, y^2, x * y
             @test isone(@inferred MP.deflate(m, shift, defl))
             @test m == shift == y^2
-            @test variables(m) == variables(shift) == [y]
+            @test collect(variables(m)) == collect(variables(shift)) == [y]
             @test defl == x * y
 
             m, shift, defl = y^2, monomial(x), y^2
             @test (@inferred MP.inflate(m, shift, defl)) == x * y^4
             @test m == defl == y^2
-            @test variables(m) == variables(defl) == [y]
+            @test collect(variables(m)) == collect(variables(defl)) == [y]
             @test shift == x
-            @test variables(shift) == [x]
+            @test collect(variables(shift)) == [x]
         end
     end
 end

@@ -297,37 +297,39 @@ function deflation(p::_APL)
     return s, d
 end
 
-function _zero_to_one_exp(defl::AbstractMonomial)
-    # TODO Make it faster by calling something like `map_exponents`.
-    return prod(
-        variables(defl) .^ map(d -> iszero(d) ? one(d) : d, exponents(defl)),
-    )
-end
 function deflate(p::_APL, shift, defl)
-    if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
+    if variables(p) == variables(shift) == variables(defl) &&
+       isconstant(shift) &&
+       all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
-    q = MA.operate(deflate, p, shift, _zero_to_one_exp(defl))
+    q = MA.operate(deflate, p, shift, defl)
     return q
 end
 function inflate(α, shift, defl)
     return inflate(convert(polynomial_type(shift, typeof(α)), α), shift, defl)
 end
 function inflate(p::_APL, shift, defl)
-    if isconstant(shift) && all(d -> isone(d) || iszero(d), exponents(defl))
+    if variables(p) == variables(shift) == variables(defl) &&
+       isconstant(shift) &&
+       all(d -> isone(d) || iszero(d), exponents(defl))
         return p
     end
-    q = MA.operate(inflate, p, shift, _zero_to_one_exp(defl))
+    q = MA.operate(inflate, p, shift, defl)
     return q
 end
 
 function MA.operate(::typeof(deflate), mono::AbstractMonomial, shift, defl)
     mutable_mono = map_exponents(-, mono, shift)
     mutable_mono, defl = SA.promote_bases(mutable_mono, defl)
-    return map_exponents!(div, mutable_mono, defl)
+    return map_exponents!(
+        (e, d) -> iszero(d) ? e : div(e, d),
+        mutable_mono,
+        defl,
+    )
 end
 function MA.operate(::typeof(inflate), mono::AbstractMonomial, shift, defl)
-    mutable_mono = map_exponents(*, mono, defl)
+    mutable_mono = map_exponents((e, d) -> iszero(d) ? e : e * d, mono, defl)
     mutable_mono, shift = SA.promote_bases(mutable_mono, shift)
     return map_exponents!(+, mutable_mono, shift)
 end
@@ -968,6 +970,8 @@ function content(
     return g::P
 end
 
+const _FloatingCoefficient = Union{AbstractFloat,Complex{<:AbstractFloat}}
+
 """
     primitive_part(poly::_APL, algo::AbstractUnivariateGCDAlgorithm)
 
@@ -986,7 +990,7 @@ function primitive_part(
     algo::AbstractUnivariateGCDAlgorithm,
     mutability::MA.MutableTrait,
 )
-    if coefficient_type(p) <: Union{AbstractFloat,Complex{<:AbstractFloat}}
+    if coefficient_type(p) <: _FloatingCoefficient
         return p
     end
     return primitive_part_content(p, algo, mutability)[1]

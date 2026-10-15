@@ -383,7 +383,7 @@ function leading_monomial(p::AbstractPolynomialLike)
     if iszero(p)
         constant_monomial(p)
     else
-        last(monomials(p))
+        monomial(last(terms(p)))
     end
 end
 leading_monomial(t::AbstractTermLike) = monomial(t)

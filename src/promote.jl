@@ -85,12 +85,17 @@ function MA.promote_operation(
     )
 end
 
-function MA.promote_operation(
-    op::Union{typeof(+),typeof(-)},
-    ::Type{T},
-    ::Type{S},
-) where {T<:AbstractTerm,S<:AbstractTerm}
-    return MA.promote_operation(op, polynomial_type(T), polynomial_type(S))
+for (L, R) in (
+    (AbstractMonomialLike, Union{AbstractTerm,AbstractPolynomial}),
+    (Union{AbstractTerm,AbstractPolynomial}, AbstractMonomialLike),
+)
+    @eval function MA.promote_operation(
+        op::Union{typeof(+),typeof(-),typeof(*)},
+        ::Type{A},
+        ::Type{B},
+    ) where {A<:$L,B<:$R}
+        return MA.promote_operation(op, polynomial_type(A), polynomial_type(B))
+    end
 end
 
 # Rational
@@ -240,6 +245,27 @@ function SA.promote_bases_with_maps(
 ) where {B}
     a, b = promote_variables_with_maps(variables(p), variables(q))
     return SA.maybe_promote(p, a...), SA.maybe_promote(q, b...)
+end
+function SA.promote_bases_with_maps(
+    p::AbstractVariable,
+    q::AbstractMonomialLike,
+)
+    return SA.promote_bases_with_maps(monomial(p), monomial(q))
+end
+function SA.promote_bases_with_maps(p::AbstractMonomial, q::AbstractVariable)
+    return SA.promote_bases_with_maps(monomial(p), monomial(q))
+end
+function SA.promote_bases_with_maps(
+    p::AbstractMonomialLike,
+    q::Union{AbstractTerm,AbstractPolynomial},
+)
+    return SA.promote_bases_with_maps(term(p), q)
+end
+function SA.promote_bases_with_maps(
+    p::Union{AbstractTerm,AbstractPolynomial},
+    q::AbstractMonomialLike,
+)
+    return SA.promote_bases_with_maps(p, term(q))
 end
 function promote_variables(p::AbstractMonomial, q::AbstractMonomial)
     return SA.promote_bases(p, q)

@@ -106,19 +106,9 @@ degree(t::AbstractTermLike) = sum(exponents(t); init = 0)
 
 degree(t::AbstractTermLike, var::AbstractVariable) = degree(monomial(t), var)
 degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
-#_deg(v::AbstractVariable) = 0
-#_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
-#degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
-
 function degree(m::AbstractMonomial, v::AbstractVariable)
-    deg = 0
-    # With Noncommutative variables, there may be several powers with the same variable
-    for (var, exp) in powers(m)
-        if var == v
-            deg += exp
-        end
-    end
-    return deg
+    # Noncommutative monomials may contain several powers of the same variable.
+    return mapreduce(p -> p[1] == v ? p[2] : 0, +, powers(m); init = 0)
 end
 
 """

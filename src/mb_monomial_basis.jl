@@ -7,8 +7,9 @@ function right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α)
 end
 
 function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
-    A = MA.promote_operation(algebra, full_basis_type(B, Polynomial{B,V,E}))
-    return SA.Term{T,A,E}
+    BT = full_basis_type(B, Polynomial{B,V,E})
+    A = MA.promote_operation(algebra, BT)
+    return SA.Term{T,A,SA.key_type(BT)}
 end
 term_type(::Type{P}) where {P<:Polynomial} = term_type(P, Int)
 
@@ -73,6 +74,18 @@ function map_exponents_to!(
     eb = _aligned_exponents(b, vars)
     broadcast!(f, exponents(output), ea, eb)
     return output
+end
+
+function map_exponents_to!(
+    output::Polynomial{Monomial,V,<:Tuple},
+    f::F,
+    a::AbstractMonomialLike,
+    b::AbstractMonomialLike,
+) where {V,F}
+    vars = variables(output)
+    ea = _aligned_exponents(a, vars)
+    eb = _aligned_exponents(b, vars)
+    return Polynomial(output.variables, map(f, ea, eb))
 end
 
 function map_exponents!(f, a::AbstractMonomial, b::AbstractMonomialLike)

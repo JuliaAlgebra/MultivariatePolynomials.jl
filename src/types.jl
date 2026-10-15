@@ -22,9 +22,16 @@ struct Polynomial{B<:AbstractMonomialIndexed,V,E} <: MA.AbstractMutable
     exponents::E
 end
 
+# Noncommutative keys retain their own ordered variables and exponents. The
+# parent records only the alphabet, without imposing a common factor sequence.
+struct _NoncommutativeBasis{M,V} <: SA.ImplicitBasis{M,M}
+    variables::V
+end
+
 const AbstractMonomial = Polynomial{Monomial}
 const AbstractMonomialLike = Union{AbstractVariable,AbstractMonomial}
-const _PolynomialAlgebra = SA.StarAlgebra{<:Variables}
+const _PolynomialAlgebra =
+    SA.StarAlgebra{<:Union{Variables,_NoncommutativeBasis}}
 const AbstractTerm{T} = SA.Term{T,<:_PolynomialAlgebra}
 const AbstractPolynomial{T} = SA.AlgebraElement{T,<:_PolynomialAlgebra}
 const AbstractTermLike{T} = Union{AbstractMonomialLike,AbstractTerm{T}}

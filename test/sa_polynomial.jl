@@ -33,11 +33,11 @@ import SparseArrays
     @test sprint(show, typeof(2x)) == "DynamicPolynomials.Term{$Int}"
     @test promote_type(typeof(x), String) === Any
     @test_throws MethodError p * "x"
-    @test_throws InexactError p * 0.5
+    @test MP.coefficients(@inferred p * 0.5) == [0.5, 1.0]
     @test MP.coefficients(p / 2) == [0.5, 1.0]
     @test MP.coefficients(p // 2) == [1 // 2, 1 // 1]
     @test div(p, 2) == MP.polynomial(x)
-    @test_throws InexactError p / 2.5
+    @test MP.coefficients(@inferred p / 2.5) == [0.4, 0.8]
     @test iszero(p - (x + y) - x)
     @test iszero((x + y)^2 - (x^2 + 2x*y + y^2))
     @test iszero(sum([x, y]) - (x + y))
@@ -178,14 +178,10 @@ end
         ([2x, 3y], [y - 1, z + 3]),
         ([x + 1, y + 2], [4y, 5z]),
         ([x + 1, y + 2], [big(2) * y, big(3) * z]),
-        (
-            [big(2) * x + 1, big(3) * y + 2],
-            [big(4) * y + 1, big(5) * z + 2],
-        ),
+        ([big(2) * x + 1, big(3) * y + 2], [big(4) * y + 1, big(5) * z + 2]),
     )
         originals = MP.MA.mutable_copy.((a, b))
-        expected =
-            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        expected = LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
         @test (@inferred LinearAlgebra.dot(a, b)) == expected
         @test (@inferred MP.MA.operate(LinearAlgebra.dot, a, b)) == expected
         @test a' * b == expected
@@ -202,8 +198,8 @@ end
     @test iszero(LinearAlgebra.dot(typeof(x)[], typeof(x)[]))
 
     DP.@complex_polyvar w
-    a = DP.Polynomial{Complex{Int}}[(1 + 2im) * w + x, w + y]
-    b = DP.Polynomial{Complex{Int}}[z + w, (2 - im) * w + x]
+    a = DP.Polynomial{Complex{Int}}[(1+2im)*w+x, w+y]
+    b = DP.Polynomial{Complex{Int}}[z+w, (2-im)*w+x]
     originals = MP.MA.mutable_copy.((a, b))
     @test (@inferred LinearAlgebra.dot(a, b)) ==
           ((1 - 2im) * conj(w) + x) * b[1] + (conj(w) + y) * b[2]
@@ -217,18 +213,19 @@ end
 @testset "Mixed numeric and polynomial dot products" begin
     DP.@polyvar x y
     for polynomials in (
-        [x, y],
-        [x^2, y^2],
-        [2x, 3y],
-        [x + 1, y + 2],
-        [big(2) * x, big(3) * y],
-        [big(2) * x + 1, big(3) * y + 2],
-    ), numbers in ([2, 3], [2.0, 3.0]), left in (false, true)
+            [x, y],
+            [x^2, y^2],
+            [2x, 3y],
+            [x + 1, y + 2],
+            [big(2) * x, big(3) * y],
+            [big(2) * x + 1, big(3) * y + 2],
+        ),
+        numbers in ([2, 3], [2.0, 3.0]),
+        left in (false, true)
 
         a, b = left ? (numbers, polynomials) : (polynomials, numbers)
         originals = MP.MA.mutable_copy.((a, b))
-        expected =
-            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        expected = LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
         @test (@inferred LinearAlgebra.dot(a, b)) == expected
         @test (@inferred MP.MA.operate(LinearAlgebra.dot, a, b)) == expected
         @test a' * b == expected
@@ -245,10 +242,12 @@ end
         @test (@inferred LinearAlgebra.dot(monomials, [0.5, 1.5])) == expected
     end
     for polynomials in ([2x, 3y], [x + 1, y + 2])
-        @test_throws InexactError LinearAlgebra.dot([0.5, 1.5], polynomials)
-        @test_throws InexactError LinearAlgebra.dot(polynomials, [0.5, 1.5])
-        @test MP.coefficient_type(LinearAlgebra.dot([2.0, 3.0], polynomials)) ===
-              Int
+        expected = 0.5polynomials[1] + 1.5polynomials[2]
+        @test (@inferred LinearAlgebra.dot([0.5, 1.5], polynomials)) == expected
+        @test (@inferred LinearAlgebra.dot(polynomials, [0.5, 1.5])) == expected
+        @test MP.coefficient_type(
+            LinearAlgebra.dot([2.0, 3.0], polynomials),
+        ) === Float64
     end
     numbers = BigInt[2, 3]
     result = @inferred LinearAlgebra.dot(numbers, [x, y])
@@ -258,7 +257,7 @@ end
     for T in (Int, BigInt, Complex{Int}), P in (DP.Polynomial{T}, DP.Term{T})
         for (a, b) in ((Float64[], P[]), (P[], Float64[]))
             result = @inferred LinearAlgebra.dot(a, b)
-            @test result isa DP.Polynomial{T}
+            @test result isa DP.Polynomial{promote_type(T, Float64)}
             @test iszero(result)
         end
     end
@@ -273,16 +272,16 @@ end
     DP.@complex_polyvar w
     numbers = [1 + 2im, 3 - im]
     for polynomials in (
-        [w, x],
-        [w^2, x^2],
-        [(2 + im) * w, (3 - im) * x],
-        [(2 + im) * w + x, (3 - im) * x + 1],
-    ), left in (false, true)
+            [w, x],
+            [w^2, x^2],
+            [(2 + im) * w, (3 - im) * x],
+            [(2 + im) * w + x, (3 - im) * x + 1],
+        ),
+        left in (false, true)
 
         a, b = left ? (numbers, polynomials) : (polynomials, numbers)
         originals = MP.MA.mutable_copy.((a, b))
-        expected =
-            LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
+        expected = LinearAlgebra.dot(a[1], b[1]) + LinearAlgebra.dot(a[2], b[2])
         @test (@inferred LinearAlgebra.dot(a, b)) == expected
         @test a' * b == expected
         @test transpose(a) * b == a[1] * b[1] + a[2] * b[2]
@@ -386,24 +385,18 @@ end
         result = @inferred zeros(Float64, 2, 0) * P[]
         @test length(result) == 2
         @test all(iszero, result)
-        @test eltype(result) === MP.polynomial_type(
-            P,
-            P <: MP.AbstractMonomialLike ? Float64 : Int,
-        )
+        @test eltype(result) === MP.polynomial_type(P, Float64)
         result = @inferred zeros(Float64, 2, 0) * Matrix{P}(undef, 0, 3)
         @test size(result) == (2, 3)
         @test all(iszero, result)
-        @test eltype(result) === MP.polynomial_type(
-            P,
-            P <: MP.AbstractMonomialLike ? Float64 : Int,
-        )
+        @test eltype(result) === MP.polynomial_type(P, Float64)
         @test isempty(@inferred zeros(Int, 0, 2) * Matrix{P}(undef, 2, 0))
     end
     @test isempty(@inferred zeros(Int, 0, 2) * [x, y])
-    @test_throws InexactError [0.5 1.5] * [2x, 3y]
-    @test_throws InexactError [0.5 1.5] * [x + 1, y + 2]
-    @test_throws InexactError [0.5 1.5] * [2x 3y; 3y 2x]
-    @test_throws InexactError [x + 1 y + 2] * [0.5 1.5; 0.5 1.5]
+    @test [0.5 1.5] * [2x, 3y] == [x + 4.5y]
+    @test [0.5 1.5] * [x + 1, y + 2] == [0.5x + 1.5y + 3.5]
+    @test [0.5 1.5] * [2x 3y; 3y 2x] == [x+4.5y 3x+1.5y]
+    @test [x + 1 y + 2] * [0.5 1.5; 0.5 1.5] == [0.5x+0.5y+1.5 1.5x+1.5y+4.5]
     @test MP.polynomial([1 2; 3 4], [x, y]) == x^2 + 5x*y + 4y^2
     @test (@inferred MP.polynomial([0.5 1.5; 0.5 3.0], [x, y])) ==
           0.5x^2 + 2x*y + 3y^2
@@ -630,7 +623,8 @@ end
             originals = MP.MA.copy_if_mutable.((f, left, right))
             expected = op(f, left, right)
             out = zero(f)
-            @test (@inferred MP.MA.operate_to!!(out, op, f, left, right)) === out
+            @test (@inferred MP.MA.operate_to!!(out, op, f, left, right)) ===
+                  out
             @test out == expected
             @test (f, left, right) == originals
             @test (@inferred MP.MA.operate!!(op, f, left, right)) === f
@@ -652,6 +646,13 @@ end
             f = one(g)
             expected = op(f, a, b)
             original = MP.MA.mutable_copy(g)
+            out = zero(f)
+            # A wider scalar coefficient makes operate!! return a replacement.
+            @test (@inferred MP.MA.operate_to!!(out, op, f, a, b)) == expected
+            @test iszero(out)
+            @test (@inferred MP.MA.operate!!(op, f, a, b)) == expected
+            @test isone(f)
+            f = convert(typeof(expected), f)
             out = zero(f)
             @test (@inferred MP.MA.operate_to!!(out, op, f, a, b)) === out
             @test out == expected
@@ -1011,10 +1012,16 @@ end
 
         g = 2x^2 + 1 + zero(x + y)
         originals = deepcopy((f, g))
-        @test_throws ArgumentError MP.MA.operate!!(op, f, g, algo)
-        @test (f, g) == originals
         @test op(f, g, algo) == 3x + 2
         @test (f, g) == originals
+        @test (@inferred MP.MA.operate!(op, f, g, algo)) === f
+        @test f == 3x + 2
+        @test g == originals[2]
+        @test parent(f) == parent(g)
+        f = MP.MA.mutable_copy(originals[1])
+        @test (@inferred MP.MA.operate!!(op, f, g, algo)) === f
+        @test f == 3x + 2
+        @test g == originals[2]
     end
 
     f = x^3 + 2x + 1
@@ -1062,10 +1069,10 @@ end
     q = x + 1
     t = 2y
     original = deepcopy((q, t))
-    @test_throws ArgumentError MP.MA.add!!(q, t)
-    @test (q, t) == original
-    @test_throws ArgumentError MP.MA.operate!(+, q, t)
-    @test (q, t) == original
+    @test (@inferred MP.MA.add!!(q, t)) === q
+    @test q == x + 2y + 1
+    @test t == original[2]
+    @test parent(original[1]) != parent(q)
 end
 
 @testset "In-place polynomial addition" begin
@@ -1092,8 +1099,10 @@ end
 
     g = y + 1
     originals = deepcopy((f, g))
-    @test_throws ArgumentError MP.MA.add!!(f, g)
-    @test (f, g) == originals
+    @test (@inferred MP.MA.operate!(+, f, g)) === f
+    @test f == x + y + 2
+    @test g == originals[2]
+    @test parent(originals[1]) != parent(f)
 end
 
 @testset "Polynomial division" begin
@@ -1145,16 +1154,12 @@ end
     @test result == f - t * g
     @test result isa DP.Polynomial{Rational{Int}}
     @test f == original
-    @test_throws ArgumentError MP.MA.operate!!(MP.MA.sub_mul, f, 2y, y + 1)
-    @test f == original
-    @test_throws ArgumentError MP.MA.operate_to!!(
-        f,
-        MP.MA.sub_mul,
-        y + 1,
-        2y,
-        y + 1,
-    )
-    @test f == original
+    @test (@inferred MP.MA.operate!(MP.MA.sub_mul, f, 2y, y + 1)) === f
+    @test f == original - 2y * (y + 1)
+    @test (@inferred MP.MA.operate_to!!(f, MP.MA.sub_mul, y + 1, 2y, y + 1)) ===
+          f
+    @test f == y + 1 - 2y * (y + 1)
+    @test original == x + 1
 
     f, g = x^2 + y, x + 1
     originals = deepcopy((f, g))

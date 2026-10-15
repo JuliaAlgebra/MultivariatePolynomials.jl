@@ -9,6 +9,94 @@ import MutableArithmetics as MA
 import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
+
+@testset "Accumulate monomials in a prepared polynomial" begin
+    Mod.@polyvar x y
+    p = x + y + 1
+    for op in (+, -), m in (x, y^2)
+        output = copy(p)
+        expected = op(p, m)
+        @test (@inferred MA.operate!!(op, output, m)) === output
+        @test output == expected
+        @test p == x + y + 1
+    end
+end
+
+@testset "Mutable operations promote insufficient destination bases" begin
+    Mod.@polyvar x y
+    for T in (Int, BigInt)
+        original = T(2) * x + T(1)
+        for (op, args) in (
+            (+, (y,)),
+            (-, (T(2) * y,)),
+            (*, (T(2) * y + T(1),)),
+            (MA.add_mul, (T(2) * y, y + T(1))),
+            (MA.sub_mul, (y + T(1), T(2) * y)),
+            (MA.add_mul, (transpose([T(2) * y]), [y + T(1)])),
+        )
+            expected = op(original, args...)
+            saved_args = MA.copy_if_mutable.(args)
+            mutable =
+                MA.mutability(
+                    typeof(original),
+                    op,
+                    typeof(original),
+                    typeof.(args)...,
+                ) isa MA.IsMutable
+            output = MA.mutable_copy(original)
+            if mutable
+                @test (@inferred MA.operate!(op, output, args...)) === output
+                @test output == expected
+            else
+                @test_throws ArgumentError MA.operate!(op, output, args...)
+                @test output == original
+            end
+            buffer = MA.buffer_for(op, typeof(original), typeof.(args)...)
+            for call in (
+                output -> MA.operate!!(op, output, args...),
+                output -> MA.operate_to!!(output, op, original, args...),
+                output -> MA.buffered_operate!!(buffer, op, output, args...),
+                output -> MA.buffered_operate_to!!(
+                    buffer,
+                    output,
+                    op,
+                    original,
+                    args...,
+                ),
+            )
+                output = MA.mutable_copy(original)
+                alg = parent(output)
+                @test MA.mutability(output, op, output, args...) ===
+                      MA.mutability(
+                    typeof(output),
+                    op,
+                    typeof(output),
+                    typeof.(args)...,
+                )
+                result = @inferred call(output)
+                @test result == expected
+                @test (result === output) == mutable
+                @test output == (mutable ? expected : original)
+                @test parent(original) === alg
+                @test parent(result) == parent(expected)
+                if !mutable
+                    @test parent(output) === alg
+                end
+                @test args == saved_args
+            end
+
+            output = original + zero(T(1) * x + T(1) * y)
+            @test MA.mutability(output, op, output, args...) isa MA.IsMutable
+            @test (@inferred MA.operate!!(op, output, args...)) === output
+            @test output == expected
+            @test args == saved_args
+        end
+        @test MA.@rewrite((original + 1) + y) == original + 1 + y
+        @test MA.@rewrite(original + 2y * (y + 1)) == original + 2y * (y + 1)
+        @test original == T(2) * x + T(1)
+    end
+end
+
 @testset "Polynomial" begin
     Mod.@polyvar x
 
@@ -275,13 +363,18 @@ const MP = MultivariatePolynomials
         zero,
         one,
     ]
-        # In-place addition requires a destination containing both variables.
         p = 2x + 1 + zero(x + y)
         q = f(p)
         q = MA.add!!(q, 2y)
         @test q == f(p) + 2y
         @test p == 2x + 1
-        @test_throws ArgumentError MA.add!!(f(2x + 1), 2y)
+        q = f(2x + 1)
+        mutable =
+            MA.mutability(typeof(q), +, typeof(q), typeof(2y)) isa MA.IsMutable
+        result = @inferred MA.add!!(q, 2y)
+        @test result == f(2x + 1) + 2y
+        @test (result === q) == mutable
+        @test q == (mutable ? result : f(2x + 1))
     end
 
     @testset "map_coefficients $nz" for nz in [false, true]
@@ -303,9 +396,12 @@ const MP = MultivariatePolynomials
         input = 3x^2
         output = zero(x + 1)
         SA.map_coefficients_to!(output, identity, input; nonzero = nz)
-        exponents(leading_monomial(output))[1] = 3
+        @test output == 3x^2
+        if exponents(leading_monomial(output)) isa AbstractVector
+            exponents(leading_monomial(output))[1] = 3
+            @test output == 3x^3
+        end
         @test input == 3x^2
-        @test output == 3x^3
 
         for input in (x, x^2, 3x, 2x + 1)
             output = one(x + y)
@@ -320,13 +416,25 @@ const MP = MultivariatePolynomials
         end
         for input in (y, y^2, 3y, 2y + 1)
             output = x + 1
-            @test_throws ArgumentError SA.map_coefficients_to!(
-                output,
-                zero,
-                input;
-                nonzero = nz,
-            )
-            @test output == x + 1
+            if MA.promote_operation(+, typeof(output), typeof(input)) ===
+               typeof(output)
+                @test (@inferred SA.map_coefficients_to!(
+                    output,
+                    identity,
+                    input;
+                    nonzero = nz,
+                )) === output
+                @test output == input
+                @test variables(output) == variables(x + y)
+            else
+                @test_throws ArgumentError SA.map_coefficients_to!(
+                    output,
+                    zero,
+                    input;
+                    nonzero = nz,
+                )
+                @test output == x + 1
+            end
         end
     end
 end

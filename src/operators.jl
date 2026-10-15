@@ -23,12 +23,17 @@ for op in [:+, :-]
     @eval begin
         Base.$op(p::AbstractMonomialLike, a::Number) = $op(term(one(a), p), a)
         Base.$op(a::Number, p::AbstractMonomialLike) = $op(a, term(one(a), p))
-        Base.$op(p::AbstractTerm{T}, a::Union{T,Number}) where {T} =
-            $op(algebra_element(p), a)
-        Base.$op(a::Union{T,Number}, p::AbstractTerm{T}) where {T} =
-            $op(a, algebra_element(p))
     end
 end
+for op in (:+, :-, :*)
+    @eval begin
+        Base.$op(p::AbstractPolynomialLike, s::LinearAlgebra.UniformScaling) =
+            $op(p, s.λ)
+        Base.$op(s::LinearAlgebra.UniformScaling, p::AbstractPolynomialLike) =
+            $op(s.λ, p)
+    end
+end
+
 _term(α, mono) = term(α, MA.copy_if_mutable(mono))
 
 function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
@@ -105,8 +110,52 @@ end
 LinearAlgebra.dot(x::Number, p::AbstractPolynomialLike) = x' * p
 LinearAlgebra.dot(p::AbstractPolynomialLike, x::Number) = p' * x
 
-_sum_product_operand(p::Union{AbstractPolynomial,AbstractTerm}) = p
+_sum_product_operand(p) = p
 _sum_product_operand(m::AbstractMonomialLike) = term(m)
+
+function MA.operate!(
+    op::Union{typeof(+),typeof(-)},
+    p::AbstractPolynomial,
+    s::LinearAlgebra.UniformScaling,
+)
+    return MA.operate!(op, p, s.λ)
+end
+
+function MA.operate!(
+    op::Union{typeof(+),typeof(-)},
+    p::AbstractPolynomial,
+    m::AbstractMonomialLike,
+)
+    return MA.operate!(op, p, term(m))
+end
+
+function MA.operate_to!(
+    output::AbstractPolynomial,
+    op::Union{typeof(+),typeof(-)},
+    p::AbstractPolynomial,
+    m::AbstractMonomialLike,
+)
+    return MA.operate_to!(output, op, p, term(m))
+end
+
+for (A, B) in (
+    (AbstractMonomialLike, Union{Number,AbstractPolynomialLike}),
+    (Union{Number,AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
+)
+    @eval function MA.operate!(
+        op::MA.AddSubMul,
+        p::AbstractPolynomial,
+        a::$A,
+        b::$B,
+    )
+        return MA.operate!(
+            op,
+            p,
+            _sum_product_operand(a),
+            _sum_product_operand(b),
+        )
+    end
+end
 
 for (A, B) in (
     (AbstractMonomialLike, AbstractPolynomialLike),
@@ -157,41 +206,6 @@ function LinearAlgebra._dot_nonrecursive(
     b::AbstractArray{<:Number},
 )
     return _sum_monomial_products(b, a)
-end
-
-function _matrix_product_array(a, ::Type)
-    return a
-end
-function _matrix_product_array(
-    a::AbstractArray{<:AbstractMonomialLike},
-    ::Type{T},
-) where {T}
-    return map(m -> term(one(T), m), a)
-end
-
-for (A, B) in (
-    (AbstractMonomialLike, AbstractMonomialLike),
-    (AbstractMonomialLike, Union{Number,AbstractPolynomial,AbstractTerm}),
-    (Union{Number,AbstractPolynomial,AbstractTerm}, AbstractMonomialLike),
-)
-    @eval function MA.operate_to!(
-        output::VecOrMat{P},
-        ::typeof(*),
-        A::AbstractMatrix{<:$A},
-        B::AbstractVecOrMat{<:$B},
-    ) where {P<:AbstractPolynomial}
-        # Bare monomials acquire the numeric product's coefficient type;
-        # algebra factors keep their own coefficient types.
-        a = _matrix_product_array(
-            A,
-            eltype(B) <: Number ? coefficient_type(P) : Int,
-        )
-        b = _matrix_product_array(
-            B,
-            eltype(A) <: Number ? coefficient_type(P) : Int,
-        )
-        return MA.operate_to!(output, *, a, b)
-    end
 end
 
 LinearAlgebra.symmetric_type(PT::Type{<:_APL}) = PT

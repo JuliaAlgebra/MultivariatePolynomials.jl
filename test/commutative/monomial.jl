@@ -29,11 +29,11 @@ function map_exponents_test()
     shared = one(a)
     @test_throws ArgumentError MP.map_exponents!(+, a, b)
     @test a == x^2
-    @test variables(shared) == [x]
+    @test collect(variables(shared)) == [x]
 
     a, b = SA.promote_bases(a, b)
     c = @inferred MP.map_exponents!(+, a, b)
-    @test c === a
+    @test (c === a) == (exponents(a) isa AbstractVector)
     @test c == x^3 * y
     @test variables(c) == variables(b)
     @test b == x * y
@@ -43,29 +43,29 @@ function map_exponents_test()
     @test a == x^3
     a, b = SA.promote_bases(a, b)
     d = @inferred MP.map_exponents_to!(a, -, b, b)
-    @test d === a
+    @test (d === a) == (exponents(a) isa AbstractVector)
     @test isone(d)
     @test variables(d) == variables(b)
 
     # Smaller operand bases are aligned without changing the destination.
     output = one(x * y)
     vars = variables(output)
-    @test (@inferred MP.map_exponents_to!(output, +, x^2, y)) === output
+    output = @inferred MP.map_exponents_to!(output, +, x^2, y)
     @test output == x^2 * y
     @test variables(output) === vars
-    @test (@inferred MP.map_exponents!(+, output, y)) === output
+    output = @inferred MP.map_exponents!(+, output, y)
     @test output == x^2 * y^2
 
     # Either input may alias the destination.
     a, b = x^2 * y, x * y^3
-    @test (@inferred MP.map_exponents_to!(b, +, a, b)) === b
+    b = @inferred MP.map_exponents_to!(b, +, a, b)
     @test b == x^3 * y^4
     @test a == x^2 * y
-    @test (@inferred MP.map_exponents_to!(a, -, a, a)) === a
+    a = @inferred MP.map_exponents_to!(a, -, a, a)
     @test isone(a)
     @test (@inferred MP.map_exponents!(div, x^4 * y^6, x^2 * y^3)) == x^2 * y^2
 
-    let a = x^2 * y, b = x * y^3
+    let output = output, a = x^2 * y, b = x * y^3
         alloc_test(() -> MP.map_exponents_to!(output, +, a, b), 0)
         alloc_test(() -> MP.map_exponents!(+, output, a), 0)
     end

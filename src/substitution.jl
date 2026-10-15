@@ -67,6 +67,20 @@ end
 function _substitution_value(::Type, ::Eval, v)
     return throw(ArgumentError("No value provided for variable $v"))
 end
+
+function _substitution_matches(v, w)
+    return v == w ||
+           (w isa AbstractVariable && !isreal(w) && ordinary_variable(v) == w)
+end
+
+function _substitution_part(v, w, value)
+    v == w && return value
+    # A value for a complex variable also determines its conjugate and parts.
+    isconj(v) && return conj(value)
+    isrealpart(v) && return real(value)
+    return imag(value)
+end
+
 function _substitution_value(
     ::Type{T},
     st::_AST,
@@ -74,8 +88,8 @@ function _substitution_value(
     s::Substitution,
     tail::Vararg{AbstractSubstitution,N},
 ) where {T,N}
-    if v == first(s)
-        return convert(T, last(s))
+    if _substitution_matches(v, first(s))
+        return convert(T, _substitution_part(v, first(s), last(s)))
     end
     return _substitution_value(T, st, v, tail...)
 end
@@ -86,9 +100,9 @@ function _substitution_value(
     s::AbstractMultiSubstitution,
     tail::Vararg{AbstractSubstitution,N},
 ) where {T,N}
-    i = findfirst(isequal(v), first(s))
+    i = findfirst(Base.Fix1(_substitution_matches, v), first(s))
     if !isnothing(i)
-        return convert(T, last(s)[i])
+        return convert(T, _substitution_part(v, first(s)[i], last(s)[i]))
     end
     return _substitution_value(T, st, v, tail...)
 end
@@ -105,7 +119,16 @@ end
 
 function substitute(st::_AST, p::_APL, s::Substitutions)
     foreach(_check_substitution, s)
-    T = _substitution_type(typeof(st), typeof(p), typeof.(s)...)
+    if st isa Eval && isempty(s)
+        return convert_to_constant(p)
+    end
+    T =
+        variables(p) isa Tuple && st isa Subs ? Any :
+        _substitution_type(typeof(st), typeof(p), typeof.(s)...)
+    if variables(p) isa Tuple
+        vals = map(v -> _substitution_value(T, st, v, s...), variables(p))
+        return _substitute(p, vals)
+    end
     # Prepare homogeneous values once, also when p has no nonzero terms.
     vals = T[_substitution_value(T, st, v, s...) for v in variables(p)]
     return _substitute(p, vals)
@@ -115,6 +138,18 @@ function substitute(st::_AST, p::_APL, s::AbstractSubstitution...)
 end
 
 _substitute(::AbstractVariable, vals) = only(vals)
+
+_substitute_powers(::Tuple{}, ::Tuple{}) = 1
+function _substitute_powers(vals::Tuple{Any}, exps::Tuple{Int})
+    return only(vals)^only(exps)
+end
+function _substitute_powers(vals::Tuple, exps::Tuple)
+    return first(vals)^first(exps) *
+           _substitute_powers(Base.tail(vals), Base.tail(exps))
+end
+function _substitute(m::AbstractMonomial, vals::Tuple)
+    return _substitute_powers(vals, exponents(m))
+end
 
 function _substitute(m::AbstractMonomial, vals::AbstractVector{T}) where {T}
     if isempty(vals)
@@ -160,10 +195,17 @@ _polynomial(p::_APL) = polynomial(p)
 function _substitute(p::AbstractPolynomial, vals)
     # Evaluating the constant monomial prepares the result's common basis,
     # including for zero polynomials. Subsequent additions can mutate it.
-    unit = _substitute(constant_monomial(p), vals)
+    # Noncommutative monomial products may drop zero-degree variables. Algebra
+    # elements keep their parents when raised to the zeroth power.
+    unit_vals = is_commutative(p) ? vals : _polynomial.(vals)
+    unit = _substitute(constant_monomial(p), unit_vals)
     result = _polynomial(zero(coefficient_type(p)) * unit)
     for t in terms(p)
-        result = MA.operate!!(+, result, _substitute(t, vals))
+        # Noncommutative keys have their own variable sequence, with repetitions.
+        term_vals =
+            is_commutative(t) ? vals :
+            [vals[findfirst(isequal(v), variables(p))] for v in variables(t)]
+        result = MA.operate!!(+, result, _substitute(t, term_vals))
     end
     return result
 end

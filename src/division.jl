@@ -156,7 +156,7 @@ function div_multiple(
     end
     shift = _aligned_exponents(g, variables(f))
     f = _copy(f, mf)
-    SA.map_keys!(Base.Fix2(-, shift), SA.coeffs(f))
+    SA.map_keys!(Base.Fix2(Base.BroadcastFunction(-), shift), SA.coeffs(f))
     return f
 end
 function div_multiple(
@@ -324,7 +324,7 @@ function MA.buffered_operate!(
     g::_APL,
     algo,
 )
-    SA._assert_same_basis(op, f, g)
+    g = SA._promote_operand!(op, f, g)
     ltg = leading_term(g)
     ltf = leading_term(f)
     # This only makes sense in the univariate case but it's only used for univariate gcd anyway
