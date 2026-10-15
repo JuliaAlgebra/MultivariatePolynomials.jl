@@ -20,7 +20,8 @@ function exponents(p::Polynomial, vars)
             ),
         )
     end
-    return map === nothing ? copy(exponents(p)) : map(exponents(p))
+    return map === nothing ? MA.copy_if_mutable(exponents(p)) :
+           map(exponents(p))
 end
 monomial(p::Polynomial) = monomial(variables(p), exponents(p))
 
