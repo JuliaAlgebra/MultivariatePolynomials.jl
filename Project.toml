@@ -26,3 +26,7 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [targets]
 test = ["ChainRulesCore"]
+
+[sources]
+MutableArithmetics = {url = "https://github.com/jump-dev/MutableArithmetics.jl", rev = "main"}
+StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "bl/term"}
