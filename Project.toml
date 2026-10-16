@@ -21,7 +21,7 @@ LatexifyExt = "Latexify"
 ChainRulesCore = "1"
 Latexify = "0.16.12"
 LinearAlgebra = "1.10"
-MutableArithmetics = "0.3, 1"
+MutableArithmetics = "1.9"
 StarAlgebras = "0.3"
 julia = "1.10"
 
@@ -32,5 +32,4 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 test = ["ChainRulesCore"]
 
 [sources]
-MutableArithmetics = {url = "https://github.com/jump-dev/MutableArithmetics.jl", rev = "main"}
 StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "bl/term"}
