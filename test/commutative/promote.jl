@@ -1,8 +1,33 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using Test
 import MutableArithmetics as MA
 using MultivariatePolynomials
 import MultivariatePolynomials as MP
 using LinearAlgebra
+
+@testset "Fused promotion preserves operand bases" begin
+    Mod.@polyvar x y z
+    f = x + 1
+    for op in (MA.add_mul, MA.sub_mul), a in (2, 2y, y + 1), b in (3z, z + 1)
+        expected = op(f, a, b)
+        @test (@inferred MA.promote_operation(
+            op,
+            typeof(f),
+            typeof(a),
+            typeof(b),
+        )) === typeof(expected)
+        @test (@inferred MA.promote_operation(
+            op,
+            typeof(f),
+            typeof(b),
+            typeof(a),
+        )) === typeof(op(f, b, a))
+    end
+end
 
 @testset "Promotion" begin
     Mod.@polyvar x y
@@ -34,60 +59,34 @@ using LinearAlgebra
     @test Y[2] == 2x + 4y
     @test dot(X, [1 2; 3 4] * X) == x^2 + 5x * y + 4y^2
 
-    function _t(a, b, T)
-        if VERSION < v"1.6"
-            @test typeof(@inferred vcat(a, b)) in [Vector{T}, Vector{Any}]
-            @test typeof(@inferred vcat(b, a)) in [Vector{T}, Vector{Any}]
-        else
-            @test typeof(@inferred vcat(a, b)) == Vector{T}
-            @test typeof(@inferred vcat(b, a)) == Vector{T}
-        end
+    # Concatenation promotes concrete terms and polynomial coefficients.
+    for (a, b, T) in (
+        ([x^2], x, monomial_type(x)),
+        ([x^2], 2x, term_type(x, Int)),
+        ([2x], 2.0x, term_type(x, Float64)),
+        ([2x, 2.0x], 3x, term_type(x, Float64)),
+        ([x + y], 2.0x, polynomial_type(x * y, Float64)),
+        ([x + 2, x + 2.0], y, polynomial_type(x * y, Float64)),
+    )
+        ab = @inferred vcat(a, b)
+        ba = @inferred vcat(b, a)
+        @test ab isa Vector{T}
+        @test ba isa Vector{T}
+        @test ab[1:(end-1)] == ba[2:end] == a
+        @test ab[end] == ba[1] == b
     end
-
-    function __test(a, PT, TT, MT)
-        @test typeof(a) == Vector{MT(Int)}
-        _t(a, 1, Any)
-        _t(a, x, MT(Int))
-        _t(a, x^2, MT(Int))
-        _t(a, 1x, TT(Int))
-        _t(a, 1.0x, TT())
-        _t(a, x + y, PT(Int))
-        return _t(a, 1.0x + y, PT())
-    end
-
-    # Test with concrete types from promote_typejoin
-    __pt = Base.promote_typejoin(typeof(x + 2), typeof(x + 2.0))
-    _pt() = __pt
-    _pt(::Type) = __pt
-    __test([i == 1 ? x + 2 : x + 2.0 for i in 1:2], _pt, _pt, _pt)
-
-    __tt = Base.promote_typejoin(typeof(2x), typeof(2.0x))
-    _tt() = __tt
-    _tt(::Type) = __tt
-    __test([i == 1 ? 2x : 2.0x for i in 1:2], _pt, _tt, _tt)
-
-    # Test with monomials: typejoin(x^2, x) = AbstractMonomialLike
-    aml(args...) = MP.AbstractMonomialLike
-    a = [i == 1 ? x^2 : x for i in 1:2]
-    @test eltype(a) == MP.AbstractMonomialLike
 
     # Concrete type promote_type tests
     @test promote_type(typeof(x), typeof(y)) <: AbstractMonomialLike
     @test promote_type(typeof(2x), typeof(3y)) <: AbstractTerm{Int}
     @test promote_type(typeof(2x), typeof(3.0y)) <: AbstractTerm{Float64}
     @test promote_type(typeof(x + y), typeof(x)) <: AbstractPolynomialLike{Int}
-    @test promote_type(typeof(2x + y), typeof(3.0y)) <: AbstractPolynomialLike{Float64}
+    @test promote_type(typeof(2x + y), typeof(3.0y)) <:
+          AbstractPolynomialLike{Float64}
 
-    # vcat with AbstractMonomialLike vectors
-    _t(a, 1, Any)
-    _t(a, x, aml(Int))
-    _t(a, x^2, aml(Int))
-
-    # Test promote_rule for AbstractMonomialLike vs SA.Term
-    @test promote_type(MP.AbstractMonomialLike, typeof(2x)) ==
-          MP.AbstractTermLike{Int}
-    @test promote_type(MP.AbstractMonomialLike, typeof(2.0x)) ==
-          MP.AbstractTermLike{Float64}
+    for p in (x, x^2, 2x, x + y)
+        @test promote_type(typeof(p), String) === Any
+    end
 end
 
 struct A end
@@ -95,6 +94,8 @@ Base.zero(::Type{A}) = A()
 Base.:*(::A, ::A) = B()
 struct B end
 Base.zero(::Type{B}) = B()
+# Algebra products multiply coefficient products by integer basis weights.
+Base.:*(::Int, ::B) = B()
 Base.:+(::B, ::B) = C()
 struct C end
 Base.:+(::B, ::C) = C()
@@ -163,6 +164,17 @@ end
         __promote_prod(PY, PY, PY)
         __promote_prod(PXY, PY, PXY)
         __promote_prod(PXY, PXY, PXY)
+    end
+    a = x + 1
+    p = polynomial([a, x], [y, one(y)])
+    expected = polynomial([a * a, a * x], [y, one(y)])
+    @test (@inferred a * p) == expected
+    @test (@inferred p * a) == expected
+    @test coefficient_type(a * p) === typeof(a)
+    for (left, right) in ((a, p), (p, a))
+        output = zero(p)
+        @test (@inferred MA.operate_to!!(output, *, left, right)) === output
+        @test output == expected
     end
 end
 
@@ -310,4 +322,12 @@ end
     pp1, pp2 = SA.promote_bases(p1, p2)
     @test MP.variables(pp1) == MP.variables(pp2)
     @test length(MP.variables(pp1)) == 2
+
+    for (a, b) in ((x, y), (x, y^2), (2x, y^2), (x + 1, y^2))
+        aa, bb = @inferred SA.promote_bases(a, b)
+        rb, ra = @inferred SA.promote_bases(b, a)
+        @test variables(aa) == variables(bb) == variables(ra) == variables(rb)
+        @test aa == ra == a
+        @test bb == rb == b
+    end
 end

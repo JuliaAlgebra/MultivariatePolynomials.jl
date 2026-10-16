@@ -87,7 +87,7 @@ function bench(T)
     println("### Benchmark 3")
     println()
     prettyprint(bs3, bd3, bt3)
-    println()
+    return println()
 end
 
 function bench()

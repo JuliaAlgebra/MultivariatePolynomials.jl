@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "Product with non-commutative monomials and variables" begin
     Mod.@ncpolyvar x y z
     m1 = x * (y * x)
@@ -21,10 +26,11 @@
         @test collect(exponents(m3)) == [2, 2, 1]
     end
     mv = monomial_vector([x, y, x * y])
-    @test x * mv == [x^2, x * y, x^2 * y]
-    @test mv * x == [x^2, y * x, x * y * x]
-    @test y^2 * mv == [y^2 * x, y^3, y^2 * x * y]
-    @test mv * y^2 == [x * y^2, y^3, x * y^3]
+    @test mv == [y, x, x * y]
+    @test x * mv == [x * y, x^2, x^2 * y]
+    @test mv * x == [y * x, x^2, x * y * x]
+    @test y^2 * mv == [y^3, y^2 * x, y^2 * x * y]
+    @test mv * y^2 == [y^3, x * y^2, x * y^3]
     m4 = y * x^2
     @test variables(m4)[1] == y
     @test variables(m4)[2] == x

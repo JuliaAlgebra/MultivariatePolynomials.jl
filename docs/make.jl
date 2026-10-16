@@ -4,17 +4,15 @@ DocMeta.setdocmeta!(
     MultivariatePolynomials,
     :DocTestSetup,
     :(using MultivariatePolynomials);
-    recursive=true,
+    recursive = true,
 )
 
 makedocs(
     sitename = "MultivariatePolynomials",
-
     format = Documenter.HTML(
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
-        prettyurls = get(ENV, "CI", nothing) == "true"
+        prettyurls = get(ENV, "CI", nothing) == "true",
     ),
-
     pages = [
         "Introduction" => "index.md",
         "Types" => "types.md",
@@ -29,6 +27,4 @@ makedocs(
     modules = [MultivariatePolynomials],
 )
 
-deploydocs(
-    repo   = "github.com/JuliaAlgebra/MultivariatePolynomials.jl.git",
-)
+deploydocs(repo = "github.com/JuliaAlgebra/MultivariatePolynomials.jl.git")

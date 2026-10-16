@@ -1,8 +1,109 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using Test
 using LinearAlgebra
 import MutableArithmetics as MA
+import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
+
+@testset "Polynomial coefficient and monomial lengths" begin
+    Mod.@polyvar x
+    @test_throws ArgumentError polynomial([1, 2], [x])
+    @test_throws ArgumentError polynomial([1], [x, x^2])
+    @test_throws ArgumentError polynomial(Int[], [x])
+end
+
+@testset "Accumulate monomials in a prepared polynomial" begin
+    Mod.@polyvar x y
+    p = x + y + 1
+    for op in (+, -), m in (x, y^2)
+        output = copy(p)
+        expected = op(p, m)
+        @test (@inferred MA.operate!!(op, output, m)) === output
+        @test output == expected
+        @test p == x + y + 1
+    end
+end
+
+@testset "Mutable operations promote insufficient destination bases" begin
+    Mod.@polyvar x y
+    for T in (Int, BigInt)
+        original = T(2) * x + T(1)
+        for (op, args) in (
+            (+, (y,)),
+            (-, (T(2) * y,)),
+            (*, (T(2) * y + T(1),)),
+            (MA.add_mul, (T(2) * y, y + T(1))),
+            (MA.sub_mul, (y + T(1), T(2) * y)),
+            (MA.add_mul, (transpose([T(2) * y]), [y + T(1)])),
+        )
+            expected = op(original, args...)
+            saved_args = MA.copy_if_mutable.(args)
+            mutable =
+                MA.mutability(
+                    typeof(original),
+                    op,
+                    typeof(original),
+                    typeof.(args)...,
+                ) isa MA.IsMutable
+            output = MA.mutable_copy(original)
+            if mutable
+                @test (@inferred MA.operate!(op, output, args...)) === output
+                @test output == expected
+            else
+                @test_throws ArgumentError MA.operate!(op, output, args...)
+                @test output == original
+            end
+            buffer = MA.buffer_for(op, typeof(original), typeof.(args)...)
+            for call in (
+                output -> MA.operate!!(op, output, args...),
+                output -> MA.operate_to!!(output, op, original, args...),
+                output -> MA.buffered_operate!!(buffer, op, output, args...),
+                output -> MA.buffered_operate_to!!(
+                    buffer,
+                    output,
+                    op,
+                    original,
+                    args...,
+                ),
+            )
+                output = MA.mutable_copy(original)
+                alg = parent(output)
+                @test MA.mutability(output, op, output, args...) ===
+                      MA.mutability(
+                    typeof(output),
+                    op,
+                    typeof(output),
+                    typeof.(args)...,
+                )
+                result = @inferred call(output)
+                @test result == expected
+                @test (result === output) == mutable
+                @test output == (mutable ? expected : original)
+                @test parent(original) === alg
+                @test parent(result) == parent(expected)
+                if !mutable
+                    @test parent(output) === alg
+                end
+                @test args == saved_args
+            end
+
+            output = original + zero(T(1) * x + T(1) * y)
+            @test MA.mutability(output, op, output, args...) isa MA.IsMutable
+            @test (@inferred MA.operate!!(op, output, args...)) === output
+            @test output == expected
+            @test args == saved_args
+        end
+        @test MA.@rewrite((original + 1) + y) == original + 1 + y
+        @test MA.@rewrite(original + 2y * (y + 1)) == original + 2y * (y + 1)
+        @test original == T(2) * x + T(1)
+    end
+end
+
 @testset "Polynomial" begin
     Mod.@polyvar x
 
@@ -31,8 +132,41 @@ const MP = MultivariatePolynomials
     @test polynomial(1:2, [x, x^2]) == x + 2x^2
     @test polynomial(1:2, monomials(x, 1:2)) == x + 2x^2
 
+    @testset "Coefficient vector types" begin
+        for T in (Int, BigInt, Real, Number),
+            (c, m, expected) in (
+                (T[1, 2], [x, x^2], x + 2x^2),
+                (T[1, -1], [x, x], 0),
+                (T[], typeof(x)[], 0),
+            )
+
+            p = @inferred polynomial(c, m)
+            @test p == expected
+            @test coefficient_type(p) === T
+        end
+        @test coefficient_type(polynomial(Number[1, 0.5], [x, x^2])) === Number
+    end
+
     @test terms(polynomial(1 + x + x^2 - x + x^2)) == [1, 2x^2]
-    @test terms(CustomPoly(1 + x + x^2 - x + x^2)) == [1, 2x^2]
+
+    @testset "Scalar coefficient promotion" begin
+        for (c, a) in ((2, 0.5), (2.0, 5.0im), ([1 2; 3 4], [2 3; 4 5])),
+            (p, k) in
+            ((term(c, x), zero(c)), (polynomial([c, c], [one(x), x]), c))
+
+            original = copy(p)
+            for (q, cx, c0) in (
+                ((@inferred p + a), c, k + a),
+                ((@inferred a + p), c, a + k),
+                ((@inferred p - a), c, k - a),
+                ((@inferred a - p), -c, a - k),
+            )
+                @test coefficient_type(q) === typeof(c + a)
+                @test q == polynomial([c0, cx], [one(x), x])
+            end
+            @test p == original
+        end
+    end
 
     @test (1.0 + x) * x == x^2 + x
     @test constant_term(1, x) * (1 - x) == 1 - x
@@ -195,7 +329,11 @@ const MP = MultivariatePolynomials
         @test convert(Union{Nothing,typeof(p)}, p) === p
         a = 2y
         q = polynomial([a, z, -a], [x, 1, x])
+        r = @inferred convert_to_constant(q)
+        @test r == z
+        @test MA.add!!(r, 1) == z + 1
         @test convert_to_constant(q) == z
+        @test iszero(@inferred convert_to_constant(zero(q)))
         q = polynomial([a, z], [x, 1])
         @test_throws InexactError convert_to_constant(q)
         alloc_test(() -> convert(typeof(p), p), 0)
@@ -232,26 +370,78 @@ const MP = MultivariatePolynomials
         zero,
         one,
     ]
-        p = 2x + 1
+        p = 2x + 1 + zero(x + y)
         q = f(p)
         q = MA.add!!(q, 2y)
+        @test q == f(p) + 2y
         @test p == 2x + 1
+        q = f(2x + 1)
+        mutable =
+            MA.mutability(typeof(q), +, typeof(q), typeof(2y)) isa MA.IsMutable
+        result = @inferred MA.add!!(q, 2y)
+        @test result == f(2x + 1) + 2y
+        @test (result === q) == mutable
+        @test q == (mutable ? result : f(2x + 1))
     end
 
     @testset "map_coefficients $nz" for nz in [false, true]
         p = 2x + 1
         @test map_coefficients(x -> x / 2, p, nonzero = nz) == 1.0x + 0.5
         @test map_coefficients(x -> x / 2, 3x, nonzero = nz) == 1.5x
-        @test p === map_coefficients!(x -> x + 1, p, nonzero = nz)
+        @test p === SA.map_coefficients!(x -> x + 1, p, nonzero = nz)
         @test p == 3x + 2
         q = zero(p)
-        @test q === map_coefficients_to!(q, x -> 2x, p, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, p, nonzero = nz)
         @test q == 6x + 4
-        @test q === map_coefficients_to!(q, x -> 2x, 3x, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, 3x, nonzero = nz)
         @test q == 6x
-        @test q === map_coefficients_to!(q, x -> 2x, x, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, x, nonzero = nz)
         @test q == 2x
-        @test q === map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
+        @test q === SA.map_coefficients_to!(q, x -> 2x, x^2, nonzero = nz)
         @test q == 2x^2
+
+        input = 3x^2
+        output = zero(x + 1)
+        SA.map_coefficients_to!(output, identity, input; nonzero = nz)
+        @test output == 3x^2
+        if exponents(leading_monomial(output)) isa AbstractVector
+            exponents(leading_monomial(output))[1] = 3
+            @test output == 3x^3
+        end
+        @test input == 3x^2
+
+        for input in (x, x^2, 3x, 2x + 1)
+            output = one(x + y)
+            @test (@inferred SA.map_coefficients_to!(
+                output,
+                c -> 2c,
+                input;
+                nonzero = nz,
+            )) === output
+            @test output == 2input
+            @test variables(output) == variables(x + y)
+        end
+        for input in (y, y^2, 3y, 2y + 1)
+            output = x + 1
+            if MA.promote_operation(+, typeof(output), typeof(input)) ===
+               typeof(output)
+                @test (@inferred SA.map_coefficients_to!(
+                    output,
+                    identity,
+                    input;
+                    nonzero = nz,
+                )) === output
+                @test output == input
+                @test variables(output) == variables(x + y)
+            else
+                @test_throws ArgumentError SA.map_coefficients_to!(
+                    output,
+                    zero,
+                    input;
+                    nonzero = nz,
+                )
+                @test output == x + 1
+            end
+        end
     end
 end

@@ -7,19 +7,13 @@ function print_row(s1, s2, s3, s4, c)
     print(lpad(s3, 10, c))
     print(c, "|", c)
     print(lpad(s4, 10, c))
-    println(c, "|")
+    return println(c, "|")
 end
 function prettyprint(name, ::Nothing)
-    print_row(
-        name,
-        "",
-        "",
-        "",
-        ' ',
-    )
+    return print_row(name, "", "", "", ' ')
 end
 function prettyprint(name, b::BenchmarkTools.Trial)
-    print_row(
+    return print_row(
         name,
         BenchmarkTools.prettytime(time(b)),
         allocs(b),
@@ -33,5 +27,5 @@ function prettyprint(bs, bd, bt)
     print_row("", "", "", "", '-')
     prettyprint("SIMDPolynomials", bs)
     prettyprint("DynamicPolynomials", bd)
-    prettyprint("TypedPolynomials", bt)
+    return prettyprint("TypedPolynomials", bt)
 end

@@ -29,6 +29,9 @@ antidifferentiate(α::T, v::AbstractVariable) where {T} = α * v
 function antidifferentiate(v1::AbstractVariable, v2::AbstractVariable)
     return v1 == v2 ? 1 // 2 * v1 * v2 : v1 * v2
 end
+function antidifferentiate(m::AbstractMonomial, v::AbstractVariable)
+    return term(1 // (degree(m, v) + 1), m * monomial(v))
+end
 function antidifferentiate(t::AbstractTermLike, v::AbstractVariable)
     return coefficient(t) * antidifferentiate(monomial(t), v)
 end

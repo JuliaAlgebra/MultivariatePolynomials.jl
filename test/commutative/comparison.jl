@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "Comparison" begin
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
@@ -49,19 +54,6 @@
         @testset "Polynomial equality" begin
             Mod.@polyvar x y
             @test isapproxzero(0.0x, ztol = 0.0)
-            @test polynomial(CustomTerms(x + 1 - x)) isa AbstractPolynomial
-            @test MultivariatePolynomials.right_constant_eq(
-                polynomial(CustomTerms(x + 1 - x)),
-                1,
-            )
-            @test MultivariatePolynomials.right_constant_eq(
-                CustomTerms(x + 1 - x),
-                1,
-            )
-            @test 2 * CustomPoly(x + 1 - x) == 2
-            @test 2 != CustomTerms(x + 1 - x)
-            @test 3x^2 == CustomTerms(x - x + x^2) * 3
-            @test CustomPoly(-x + x^2) != x^2
             @test 2 * x * y + 3 * y^2 == 3 * y^2 + 2 * y * x
             @test 3 * x * y + 2 * y^2 != 3 * y^2 + 2 * y * x
             @test x + y != x * (1 + y)

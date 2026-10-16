@@ -1,6 +1,14 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 @testset "Differentiation" begin
     Mod.@polyvar x y z
     @test differentiate(3, y) == 0
+    d = @inferred differentiate(1.5x^2, x)
+    @test d isa AbstractTerm{Float64}
+    @test d == 3x
     @test differentiate.([x, y], y) == [0, 1]
     @test differentiate([x, y], (x, y)) == Matrix(1.0I, 2, 2) # TODO: this can be just `I` on v0.7 and above
     @test differentiate(true * x + true * x^2, y) == 0
@@ -31,7 +39,7 @@
     p = differentiate(2x^2 + 3x * y + y^2, [x, y], 2)
     @test isa(p, Matrix{<:AbstractPolynomial{Int}})
     @test p == [4 3; 3 2]
-    p = differentiate(2x^2 + 3x * y^2 + 4y^3 + 2.0, (x, y), 2)
+    p = differentiate(2.0x^2 + 3x * y^2 + 4y^3 + 2, (x, y), 2)
     @test isa(p, Matrix{<:AbstractPolynomial{Float64}})
     @test p == [4.0 6.0y; 6.0y 6.0x+24.0y]
 

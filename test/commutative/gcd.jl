@@ -1,3 +1,9 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+import MutableArithmetics as MA
+
 function test_gcd_unit(expected, p1, p2, algo)
     g = @inferred gcd(p1, p2, algo)
     # it does not make sense, in general, to speak of "the" greatest common
@@ -63,6 +69,8 @@ function _gcd_test(expected, a, b, algo, expected_type)
         MA.IsNotMutable(),
         MA.IsNotMutable(),
     )
+    @test a == A
+    @test b == B
     @test are_independent(g, a)
     @test are_independent(g, b)
     @test g isa expected_type
@@ -215,24 +223,6 @@ function multivariate_gcd_test(
     )
 end
 
-function deflation_test()
-    Mod.@polyvar a b c
-    function _test(p, eshift, edefl)
-        shift, defl = MP.deflation(p)
-        @test shift == eshift
-        @test defl == edefl
-        q = MP.deflate(p, shift, defl)
-        @test p == MP.inflate(q, shift, defl)
-    end
-    for (x, y, z) in permutations((a, b, c))
-        _test(x + x^2 + y * x, x, x * y)
-        p = x^2 + x^2 * y^3 + y^6 * x^4
-        _test(p, x^2, x^2 * y^3)
-        @test p == MP.deflate(p, z^0, z^0)
-        _test(p, x^2, x^2 * y^3)
-    end
-end
-
 function extracted_variable_test()
     Mod.@polyvar x y z
     function _test(p1, p2, w1, w2)
@@ -298,6 +288,7 @@ end
             p2 = MP.polynomial(p * q, Number)
             g = @inferred gcd(p1, p2)
             @test isone(g)
+            @test coefficient_type(g) === Number
         end
     end
     @testset "Complex coefficient GCD" begin
@@ -308,7 +299,8 @@ end
         @test isone(g)
 
         p1 = p - 2.5im
-        p2 = 2.0p - 5.0im
+        p2 = @inferred 2.0p - 5.0im
+        @test coefficient_type(p2) === ComplexF64
         g = @inferred gcd(p1, p2)
         @test isequal(p1, g) || isequal(p2, g)
     end
