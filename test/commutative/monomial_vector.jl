@@ -21,10 +21,12 @@
     for (i, m) in enumerate(monomials((x, y), 2, m -> m != x * y))
         @test m == X[i]
     end
-    @test (@inferred monomial_vector_type([1, x])) <:
-          AbstractArray{<:AbstractMonomial}
-    @test (@inferred monomial_vector_type([x])) <:
-          AbstractArray{<:AbstractMonomial}
+    @test (@inferred monomial_vector_type([1, x]))<:AbstractArray{
+        <:AbstractMonomial,
+    }
+    @test (@inferred monomial_vector_type([x]))<:AbstractArray{
+        <:AbstractMonomial,
+    }
     @test (@inferred monomial_vector([1, x])) isa monomial_vector_type([1, x])
     @test (@inferred monomial_vector([x])) isa monomial_vector_type([x])
     @test (@inferred monomial_vector([1, 2], [1, x]))[2] isa

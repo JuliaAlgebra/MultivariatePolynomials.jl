@@ -291,4 +291,25 @@ end
             end
         end
     end
+    if nameof(Mod) == :DynamicPolynomials
+        @testset "Non-concrete polynomial GCD" begin
+            Mod.@polyvar p q
+            p1 = MP.polynomial(p^2 + q^2, Number)
+            p2 = MP.polynomial(p * q, Number)
+            g = @inferred gcd(p1, p2)
+            @test isone(g)
+        end
+    end
+    @testset "Complex coefficient GCD" begin
+        Mod.@polyvar p q
+        p1 = MP.polynomial(p^2 + q^2, ComplexF64)
+        p2 = MP.polynomial(p * q, ComplexF64)
+        g = @inferred gcd(p1, p2)
+        @test isone(g)
+
+        p1 = p - 2.5im
+        p2 = 2.0p - 5.0im
+        g = @inferred gcd(p1, p2)
+        @test isequal(p1, g) || isequal(p2, g)
+    end
 end

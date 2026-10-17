@@ -63,6 +63,10 @@ MP.term_type(::Type{Term2{T,M}}) where {T,M} = MP.Term{T,M}
     @test_throws InexactError push!([1], 2x)
     @test_throws InexactError push!([x^2], 2x)
 
+    t = MP.term(1, x)
+    @test convert(MP.Term{Number,MP.monomial_type(t)}, t) isa
+          MP.Term{Number,MP.monomial_type(t)}
+
     @testset "Effective variables" begin
         T = variable_union_type(x)
         @test x isa T

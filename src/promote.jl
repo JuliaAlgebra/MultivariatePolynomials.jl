@@ -41,7 +41,9 @@ function promote_rule_constant(::Type{S}, PT::Type{<:_APL{T}}) where {S,T}
     return polynomial_type(PT, promote_type(S, T))
 end
 function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:_APL}
-    return promote_rule_constant(T, PT)
+    R = promote_rule_constant(T, PT)
+    # Unrelated constants must not be converted to polynomial coefficients.
+    return R <: _APL{Any} ? Any : R
 end
 
 # We don't have any information on the MultivariatePolynomials implementation,
@@ -183,7 +185,8 @@ function promote_rule_constant(
     ::Type{T},
     ::Type{RationalPoly{NT,DT}},
 ) where {T,NT,DT}
-    return RationalPoly{promote_type(T, NT),promote_type(DT, term_type(DT))}
+    U = promote_type(T, NT)
+    return U === Any ? Any : RationalPoly{U,promote_type(DT, term_type(DT))}
 end
 
 function Base.promote_rule(::Type{RT}, ::Type{T}) where {T,RT<:RationalPoly}
@@ -333,4 +336,97 @@ function MA.promote_operation(
         MA.promote_operation(*, NS, NT),
         MA.promote_operation(*, DS, DT),
     }
+end
+
+function _search_sorted_first(haystack::AbstractVector, needle; kws...)
+    return searchsortedfirst(haystack, needle; kws...)
+end
+function _search_sorted_first(haystack::Tuple, needle; kws...)
+    return findfirst(isequal(needle), haystack)
+end
+
+_idx(needle, haystack) = _search_sorted_first(haystack, needle, rev = true)
+
+struct ExponentMap{I,L} <: Function
+    indices::I
+    length::L
+end
+
+function (map::ExponentMap{Vector{Int}})(exp::Vector{Int})
+    new_exp = zeros(Int, map.length)
+    for (i, e) in zip(map.indices, exp)
+        new_exp[i] = e
+    end
+    return new_exp
+end
+
+function (map::ExponentMap{NTuple{N,Int}})(exp::NTuple{N,Int}) where {N}
+    return ntuple(map.length::Val) do i
+        # This does not have the best complexity since `findfirst`
+        # search through the whole list each time but since we're using
+        # tuples, we're probably not having a large list if indices anyway
+        j = findfirst(isequal(i), map.indices)
+        if isnothing(j)
+            return 0
+        else
+            return exp[j]
+        end
+    end
+end
+
+_length(x::AbstractVector) = length(x)
+_length(::NTuple{N,Any}) where {N} = Val(N)
+
+function _map(needles, haystack)
+    if length(needles) == length(haystack)
+        return nothing
+    end
+    return ExponentMap(
+        map(Base.Fix2(_idx, haystack), needles),
+        _length(haystack),
+    )
+end
+
+"""
+    promote_variables_with_maps(a, b)
+
+Given two sorted variable collections `a` and `b`, return
+`((all_vars, map_a), (all_vars, map_b))` where `all_vars` is the merged
+sorted variable set and `map_a` (resp. `map_b`) is an `ExponentMap`
+that maps exponents from `a` (resp. `b`) to exponents in `all_vars`,
+or `nothing` if no mapping is needed.
+"""
+function promote_variables_with_maps(a, b)
+    if a == b
+        return (a, nothing), (b, nothing)
+    end
+    all_vars = SA.merge_sorted(
+        a,
+        b;
+        lt = isless,
+        combine = SA.first_of,
+        filter = _ -> true,
+        rev = true,
+    )
+    return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
+end
+
+function SA.promote_with_map(t::AbstractTerm, all_vars, map::ExponentMap)
+    mono, _ = SA.promote_with_map(monomial(t), all_vars, map)
+    return term(coefficient(t), mono), map
+end
+
+function SA.promote_with_map(p::AbstractPolynomial, all_vars, map::ExponentMap)
+    new_terms = [
+        term(
+            coefficient(t),
+            first(SA.promote_with_map(monomial(t), all_vars, map)),
+        ) for t in terms(p)
+    ]
+    return polynomial(new_terms, SortedUniqState()), map
+end
+
+function SA.promote_bases_with_maps(p::_APL, q::_APL)
+    _p, _q = promote_variables_with_maps(variables(p), variables(q))
+    return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
 end

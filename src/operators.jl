@@ -21,6 +21,12 @@ for op in [:+, :-]
         return $op(map_coefficients(J -> J.λ, p1, nonzero = true), p2)
     end
 end
+
+function Base.isapprox(t1::AbstractTermLike, t2::AbstractTermLike; kwargs...)
+    return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
+           monomial(t1) == monomial(t2)
+end
+
 function Base.isapprox(p1::_APL, p2::_APL; kwargs...)
     return isapprox(promote(p1, p2)...; kwargs...)
 end
@@ -91,7 +97,9 @@ function polynomial_merge!(
     combine::F6,
     keep::F7,
     resize::F8,
-) where {F1,F2,F3,F4,F5,F6,F7,F8}
+    ::Type{term_type} = n1 > 0 ? typeof(get1(1)) :
+                        n2 > 0 ? typeof(get2(1)) : Nothing,
+) where {F1,F2,F3,F4,F5,F6,F7,F8,term_type}
     buffer = nothing
     i = j = k = 1
     # Invariant:
@@ -109,9 +117,9 @@ function polynomial_merge!(
             if k == i
                 t0 = get1(i)
                 if buffer === nothing
-                    buffer = DataStructures.Queue{typeof(t0)}()
+                    buffer = DataStructures.Queue{term_type}()
                 end
-                DataStructures.enqueue!(buffer, t0)
+                push!(buffer, t0)
                 i += 1
             end
             set(k, get2(j))
@@ -148,7 +156,7 @@ function polynomial_merge!(
                 j += 1
             end
             if comp >= 0
-                DataStructures.dequeue!(buffer)
+                popfirst!(buffer)
             end
             # if `comp` is zero, we called `combine` so `t`
             # might not be kept. If `comp` is not zero, we
@@ -157,7 +165,7 @@ function polynomial_merge!(
                 continue
             end
             if k <= n1
-                DataStructures.enqueue!(buffer, get1(i))
+                push!(buffer, get1(i))
                 set(k, t)
             else
                 push(t)
@@ -176,7 +184,7 @@ function polynomial_merge!(
             set(k + n, get1(k))
         end
         for k in i:(i+n-1)
-            set(k, DataStructures.dequeue!(buffer))
+            set(k, popfirst!(buffer))
         end
         n1 += n
     else

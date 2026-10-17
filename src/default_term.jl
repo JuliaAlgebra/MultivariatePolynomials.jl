@@ -31,6 +31,13 @@ monomial_type(::Type{<:Term{C,M}}) where {C,M} = M
 function Base.convert(::Type{Term{T,M}}, m::AbstractMonomialLike) where {T,M}
     return Term(one(T), convert(M, m))
 end
+function Base.convert(::Type{Term{T,M}}, t::AbstractTerm) where {T,M}
+    return Term{T,M}(convert(T, coefficient(t)), convert(M, monomial(t)))
+end
+function Base.convert(::Type{Term{T,M}}, t::Term{T,M}) where {T,M}
+    return t
+end
+
 function convert_constant(::Type{Term{C,M} where C}, α) where {M}
     return convert(Term{typeof(α),M}, α)
 end

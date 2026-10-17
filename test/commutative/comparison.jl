@@ -1,6 +1,10 @@
 @testset "Comparison" begin
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
+        O = Graded{LexOrder}
+        @test ordering(x) == O
+        @test ordering(x * y) == O
+        @test ordering(variables(x * y)) == O
         @test x > y > z
         @test x^2 * y > y^3 > z
         @test y^2 >= x
@@ -20,16 +24,27 @@
         @testset "Monomial equality" begin
             Mod.@polyvar x y
             @test 1 == constant_monomial(x)
+            @test 1 ≈ constant_monomial(x)
             @test 2 != constant_monomial(x)
+            @test !(2 ≈ constant_monomial(x))
             @test 2 != x
+            @test !(2 ≈ x)
             @test 2 != x * y
+            @test !(2 ≈ x * y)
             @test x * y != x
+            @test !(x * y ≈ x)
             @test 1x * y == x * y
+            @test 1x * y ≈ x * y
             @test 2x * y != x * y
+            @test !(2x * y ≈ x * y)
             @test x == monomial(x)
+            @test x ≈ monomial(x)
             @test x * y^0 == x
+            @test x * y^0 ≈ x
             @test x != x^0 * y
+            @test !(x ≈ x^0 * y)
             @test x^2 != x * y
+            @test !(x^2 ≈ x * y)
         end
         @testset "Polynomial equality" begin
             Mod.@polyvar x y
@@ -157,6 +172,31 @@
             # [CLO13] Cox, D., Little, J., & OShea, D.
             # *Ideals, varieties, and algorithms: an introduction to computational algebraic geometry and commutative algebra*.
             # Springer Science & Business Media, **2013**.
+        end
+    end
+
+    @testset "Comparison with NaN" begin
+        Mod.@polyvar x y
+        @testset "$poly1 and $poly2" for (poly1, poly2) in [
+            (NaN * x, NaN * x),
+            (NaN * x + 0, NaN * x + 0),
+            (NaN * x, NaN * x + 0),
+            (NaN * x / y, NaN * x / y),
+            (x / (NaN * y), x / (NaN * y)),
+            ((NaN * x) / (NaN * y), (NaN * x) / (NaN * y)),
+            ((NaN * x + 0) / (NaN * y + 0), (NaN * x + 0) / (NaN * y + 0)),
+        ]
+            @test poly1 != poly2
+            @test poly1 != poly1
+            @test isequal(poly1, poly2)
+            @test isequal(poly1, poly1)
+            # RationalPoly equality multiplies and thus allocates
+            if !(poly1 isa RationalPoly)
+                @test (@allocated poly1 != poly2) == 0
+                @test (@allocated poly1 != poly1) == 0
+                @test (@allocated isequal(poly1, poly2)) == 0
+                @test (@allocated isequal(poly1, poly1)) == 0
+            end
         end
     end
 end

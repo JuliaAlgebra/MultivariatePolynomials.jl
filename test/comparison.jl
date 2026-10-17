@@ -7,6 +7,7 @@ function _test(object, M; kws...)
     it = ExponentsIterator{M}(object; kws...)
     v = collect(Iterators.take(it, 20))
     @test issorted(v, lt = (a, b) -> cmp(M(), a, b) < 0)
+    @test issorted(v, lt = M())
 end
 
 function _test(nvars::Int, M; kws...)
@@ -14,6 +15,30 @@ function _test(nvars::Int, M; kws...)
     _test(zeros(Int, nvars), M; inline = true, kws...)
     _test(ntuple(zero, nvars), M; inline = false, kws...)
     return
+end
+
+function test_equal()
+    exp = ExponentsIterator{LexOrder}([0])
+    @test exp == ExponentsIterator{LexOrder}([0])
+    @test exp != ExponentsIterator{LexOrder}((0,))
+    @test exp != ExponentsIterator{LexOrder}([0, 0])
+    @test exp != ExponentsIterator{LexOrder}([0], mindegree = 1)
+    @test exp != ExponentsIterator{LexOrder}([0], maxdegree = 2)
+end
+
+function test_in()
+    # Unbounded iterator (no maxdegree)
+    it = ExponentsIterator{Graded{LexOrder}}([0, 0])
+    @test [0, 0] in it
+    @test [1, 2] in it
+    @test [3] ∉ it          # wrong number of variables
+    @test [0, 0, 0] ∉ it   # wrong number of variables
+    # Bounded iterator
+    it2 = ExponentsIterator{LexOrder}([0, 0], mindegree = 1, maxdegree = 3)
+    @test [1, 0] in it2
+    @test [1, 2] in it2
+    @test [0, 0] ∉ it2     # degree too low
+    @test [2, 2] ∉ it2     # degree too high
 end
 
 function test_errors()
@@ -26,6 +51,11 @@ function test_errors()
         "Ordering `$M` is not a valid ordering, use `Graded{$M}` instead.",
     )
     @test_throws err ExponentsIterator{M}([0], maxdegree = 2)
+    exps = ExponentsIterator{LexOrder}([0])
+    err = ErrorException(
+        "The iterator is infinity because `maxdegree` is `nothing`.",
+    )
+    @test_throws err length(exps)
 end
 
 function test_exponents_iterator()

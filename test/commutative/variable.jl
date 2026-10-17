@@ -2,6 +2,22 @@ import MultivariatePolynomials:
     AbstractVariable, similar_variable, @similar_variable
 
 @testset "Variable" begin
+    @testset "is_commutative" begin
+        function _is_comm_test(p)
+            @test MP.is_commutative(p)
+            @test MP.is_commutative(typeof(p))
+        end
+        Mod.@polyvar x y[1:2]
+        _is_comm_test(x)
+        _is_comm_test(y)
+        _is_comm_test(x^2)
+        _is_comm_test(2x^2)
+        _is_comm_test(sum(y))
+        # Test that `is_commutative` is constant-folded for variable types,
+        # so that branches on it are eliminated at compile time.
+        _comm_branch(::Type{V}) where {V} = MP.is_commutative(V) ? Int : String
+        @test @inferred(_comm_branch(typeof(variables(x * y[1])))) === Int
+    end
     @testset "polyvar macro index set" begin
         Mod.@polyvar x y z
         Mod.@polyvar x[1:3] y z[1:2]

@@ -79,7 +79,14 @@ end
 _coefficient_gcd(α, β) = gcd(α, β)
 _coefficient_gcd(α::AbstractFloat, β) = one(Base.promote_typeof(α, β))
 _coefficient_gcd(α, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::Complex, β) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α, β::Complex) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::Complex, β::AbstractFloat) = one(Base.promote_typeof(α, β))
+_coefficient_gcd(α::AbstractFloat, β::Complex) = one(Base.promote_typeof(α, β))
 function _coefficient_gcd(α::AbstractFloat, β::AbstractFloat)
+    return one(Base.promote_typeof(α, β))
+end
+function _coefficient_gcd(α::Complex, β::Complex)
     return one(Base.promote_typeof(α, β))
 end
 
@@ -254,14 +261,8 @@ function deflation(p::AbstractPolynomialLike)
     shift_defl = shift_deflation.(p, variables(p))
     shift = getindex.(shift_defl, 1)
     defl = getindex.(shift_defl, 2)
-    s = prod(
-        variables(p) .^ shift;
-        init = constant_monomial(p),
-    )::monomial_type(p)
-    d = prod(
-        variables(p) .^ defl;
-        init = constant_monomial(p),
-    )::monomial_type(p)
+    s = monomial(variables(p), shift)
+    d = monomial(variables(p), defl)
     return s, d
 end
 
@@ -306,11 +307,9 @@ function MA.operate(
     defl,
 )
     return polynomial(
-        map(terms(p)) do t
-            return term(
-                coefficient(t),
-                MA.operate(op, monomial(t), shift, defl),
-            )
+        coefficients(p),
+        map(monomials(p)) do m
+            return MA.operate(op, m, shift, defl)
         end,
     )
 end
@@ -910,7 +909,7 @@ function content(
             end
         end
     end
-    # This is tricky to infer a `content` calls `gcd` which calls `content`, etc...
+    # This is tricky to infer as `content` calls `gcd` which calls `content`, etc...
     # To help Julia break the loop, we annotate the result here.
     g = _gcd(coefs[1], coefs[2], algo, mutability, mutability)::P
     isone(g) || for i in 3:length(coefs)
@@ -949,6 +948,13 @@ function primitive_part(
 end
 function primitive_part(
     p::_APL{<:AbstractFloat},
+    ::AbstractUnivariateGCDAlgorithm,
+    ::MA.MutableTrait,
+)
+    return p
+end
+function primitive_part(
+    p::_APL{<:Complex{<:AbstractFloat}},
     ::AbstractUnivariateGCDAlgorithm,
     ::MA.MutableTrait,
 )

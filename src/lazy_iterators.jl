@@ -43,8 +43,6 @@ end
 
 Base.size(it::LazyMap) = size(it.data)
 
-Base.length(it::LazyMap) = length(it.data)
-
 function Base.iterate(it::LazyMap, args...)
     elem_state = iterate(it.data, args...)
     if elem_state === nothing
@@ -53,10 +51,6 @@ function Base.iterate(it::LazyMap, args...)
         return it.f(elem_state[1]), elem_state[2]
     end
 end
-
-Base.IteratorSize(it::LazyMap) = Base.IteratorSize(it.data)
-
-Base.eltype(::LazyMap{T}) where {T} = T
 
 Base.getindex(it::LazyMap, i::Integer) = it.f(getindex(it.data, i))
 function Base.getindex(it::LazyMap{T}, I::AbstractVector) where {T}

@@ -3,7 +3,7 @@
 | **Documentation** | **Build Status** | **Social** | **References to cite** |
 |:-----------------:|:----------------:|:----------:|:----------------------:|
 | [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
+| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/c/cf/Discourse_logo.svg" width="64">][discourse-url] | |
 
 **WARNING** MultivariatePolynomials v0.5 has a few breaking changes including the change in the order of monomials. This means that the leading term will now appear last in the order of monomials instead of first.
 
@@ -20,7 +20,7 @@ The interface contains functions for accessing the coefficients, monomials, term
 ## Citing
 
 Please cite the [JuliaCon 2022 presentation](https://pretalx.com/juliacon-2022/talk/TRFSJY/) [[Slides](https://drive.google.com/file/d/1q9UT5rpcmm0GdRmWm7llhVpbOx7OxGnZ/view)].
-See [CITATION.bib](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/blob/master/CITATION.bib) for the BibTeX.
+See [CITATION.bib](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/blob/main/CITATION.bib) for the BibTeX.
 
 ## Examples
 
@@ -69,14 +69,14 @@ The following packages extend/use the interface:
 * [PolynomialRoots](https://github.com/giordano/PolynomialRoots.jl) for a fast complex polynomial root finder
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-stable-url]: https://JuliaAlgebra.github.io/MultivariatePolynomials.jl/stable
 [docs-latest-url]: https://juliaalgebra.github.io/MultivariatePolynomials.jl/dev
 
-[build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/workflows/CI/badge.svg?branch=master
+[build-img]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions/workflows/ci.yml/badge.svg?branch=main
 [build-url]: https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/actions?query=workflow%3ACI
-[codecov-img]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/JuliaAlgebra/MultivariatePolynomials.jl?branch=master
+[codecov-img]: http://codecov.io/gh/JuliaAlgebra/MultivariatePolynomials.jl/branch/main/graph/badge.svg
+[codecov-url]: http://codecov.io/gh/JuliaAlgebra/MultivariatePolynomials.jl
 
 [gitter-url]: https://gitter.im/JuliaAlgebra/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link
 [gitter-img]: https://badges.gitter.im/JuliaAlgebra/Lobby.svg

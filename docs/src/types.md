@@ -22,6 +22,7 @@ isrealpart
 isimagpart
 isconj
 ordinary_variable
+is_commutative
 ```
 
 ## Monomials
@@ -41,6 +42,7 @@ constant_monomial
 map_exponents
 multiplication_preserves_monomial_order
 promote_variables
+promote_variables_with_maps
 ```
 
 ### Ordering

@@ -1,4 +1,8 @@
+module MultivariatePolynomialsChainRulesCoreExt
+
 import ChainRulesCore
+using MultivariatePolynomials
+using MultivariatePolynomials: _APL, MA
 
 ChainRulesCore.@scalar_rule +(x::_APL) true
 ChainRulesCore.@scalar_rule -(x::_APL) -1
@@ -29,4 +33,6 @@ end
 function ChainRulesCore.rrule(::typeof(differentiate), p, x)
     dpdx = differentiate(p, x)
     return dpdx, Base.Fix2(pullback, x)
+end
+
 end

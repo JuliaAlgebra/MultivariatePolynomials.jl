@@ -6,10 +6,10 @@ forum: https://discourse.julialang.org/t/type-stable-zip-to-pairs/3390/2
 """
 pair_zip(::Tuple{}, ::Tuple{}) = ()
 function pair_zip(::Tuple{}, ::Tuple)
-    throw(ArgumentError("args must be equal in length"))
+    return throw(ArgumentError("args must be equal in length"))
 end
 function pair_zip(::Tuple, ::Tuple{})
-    throw(ArgumentError("args must be equal in length"))
+    return throw(ArgumentError("args must be equal in length"))
 end
 function pair_zip(t::Tuple, u::Tuple)
     return (t[1] => u[1], pair_zip(Base.tail(t), Base.tail(u))...)
@@ -20,10 +20,10 @@ pair_zip(p::Pair) = pair_zip(Tuple(p.first), Tuple(p.second))
 
 tuple_zip(::Tuple{}, ::Tuple{}) = ()
 function tuple_zip(::Tuple{}, ::Tuple)
-    throw(ArgumentError("args must be equal in length"))
+    return throw(ArgumentError("args must be equal in length"))
 end
 function tuple_zip(::Tuple, ::Tuple{})
-    throw(ArgumentError("args must be equal in length"))
+    return throw(ArgumentError("args must be equal in length"))
 end
 function tuple_zip(t::Tuple, u::Tuple)
     return ((t[1], u[1]), tuple_zip(Base.tail(t), Base.tail(u))...)

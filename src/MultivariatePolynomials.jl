@@ -6,6 +6,8 @@ import DataStructures
 
 import MutableArithmetics as MA
 
+import StarAlgebras as SA
+
 """
     AbstractPolynomialLike{T}
 
@@ -86,7 +88,6 @@ include("antidifferentiation.jl")
 include("division.jl")
 include("gcd.jl")
 include("det.jl")
-include("chain_rules.jl")
 
 include("default_term.jl")
 include("sequences.jl")
