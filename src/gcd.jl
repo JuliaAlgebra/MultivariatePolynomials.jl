@@ -833,16 +833,6 @@ _gcd(a, b, algo, ma, mb) = gcd(a, b)
 
 _simplifier(a::_APL, b::_APL, algo, ma, mb) = gcd(a, b, algo, ma, mb)
 _simplifier(a, b, algo, ma, mb) = _gcd(a, b, algo, ma, mb)
-# Before Julia v1.4, it is not defined.
-# After Julia v1.4, it is defined as `gcd of num / lcm of den`.
-# We prefer `gcd of den`, otherwise,
-# `1/a0 + 1/a1 x + 1/a2 x^2 + ... + 1/an x^n`
-# will be transformed into
-# `a1*a2*...*an + a0*a2*...*an x + ...`
-# which makes the size of the `BigInt`s grow significantly which slows things down.
-function _simplifier(a::Rational, b::Rational, algo, ma, mb)
-    return gcd(a.num, b.num) // lcm(a.den, b.den)
-end
 
 # Largely inspired from from `YingboMa/SIMDPolynomials.jl`.
 function termwise_content(p::_APL, algo, mutability::MA.MutableTrait)
