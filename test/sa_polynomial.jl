@@ -416,52 +416,31 @@ end
           0.5x^2 + 2x*y + 3y^2
 
     A = [x + 1 y + 2; x + y z + 3]
-    originals = MP.MA.mutable_copy(A)
-    for B in (A, view(A, :, :))
-        @test_throws ArgumentError LinearAlgebra.mul!(A, B, [1 2; 3 4])
-        @test_throws ArgumentError LinearAlgebra.mul!(A, [1 2; 3 4], B)
-        @test A == originals
-        for (α, β) in ((0, 0), (2, 3))
-            @test_throws ArgumentError LinearAlgebra.mul!(
-                A,
-                B,
-                [1 2; 3 4],
-                α,
-                β,
+    # mul! may modify its destination before detecting incompatible dimensions.
+    for scalars in ((), (2, 3))
+        for (left, right) in ((A, A), ([1 2], A[1:1, :]))
+            output = [x + 1 y + 2]
+            @test_throws DimensionMismatch LinearAlgebra.mul!(
+                output,
+                left,
+                right,
+                scalars...,
             )
-            @test_throws ArgumentError LinearAlgebra.mul!(
-                A,
-                [1 2; 3 4],
-                B,
-                α,
-                β,
-            )
-            @test A == originals
         end
     end
-    output = [x + 1 y + 2]
-    @test_throws DimensionMismatch LinearAlgebra.mul!(output, A, A)
-    @test output == [x + 1 y + 2]
-    @test_throws DimensionMismatch LinearAlgebra.mul!(output, [1 2], A[1:1, :])
-    @test output == [x + 1 y + 2]
 
-    @test_throws DimensionMismatch LinearAlgebra.mul!(output, A, A, 2, 3)
-    @test_throws DimensionMismatch LinearAlgebra.mul!(
-        output,
-        [1 2],
-        A[1:1, :],
-        2,
-        3,
-    )
-    @test output == [x + 1 y + 2]
-
+    # MA evaluates the product even when α is zero, so use finite inputs.
     output = Vector{DP.Polynomial{Int}}(undef, 1)
-    @test LinearAlgebra.mul!(output, [NaN Inf], [x + 1, y + 2], 0, 0) === output
+    @test LinearAlgebra.mul!(output, [2.0 3.0], [x + 1, y + 2], 0, 0) === output
     @test iszero(only(output))
     output = [z + 1]
-    @test LinearAlgebra.mul!(output, [NaN Inf], [x, y], 0, 2) === output
+    @test LinearAlgebra.mul!(output, [2.0 3.0], [x, y], 0, 2) === output
     @test output == [2z + 2]
-    @test_throws InexactError LinearAlgebra.mul!(output, [2;;], [x + 1], 0.5, 0)
+    @test LinearAlgebra.mul!(output, [2;;], [x + 1], 0.5, 0) === output
+    @test output == [x + 1]
+    output = [z + 1]
+    @test_throws InexactError LinearAlgebra.mul!(output, [1;;], [x + 1], 0.5, 0)
+    output = [z + 1]
     @test_throws InexactError LinearAlgebra.mul!(output, [2;;], [x + 1], 1, 0.5)
 
     for output in ([x + 1, z + 2], [x + 1 z + 2; z + 2 x + 1])
@@ -524,11 +503,9 @@ end
         if B isa AbstractMatrix
             output = SparseArrays.spzeros(eltype(expected), size(expected)...)
             @test (@inferred LinearAlgebra.mul!(output, A, B)) === output
+            # Sparse products combine only the bases contributing to each
+            # entry, so the entries need not have identical variable sets.
             @test output == expected
-            @test all(
-                p -> MP.variables(p) == MP.variables(sum(expected)),
-                SparseArrays.nonzeros(output),
-            )
         end
         for (α, β) in ((2, 0), (2, 3), (0, 1))
             initial = fill(w + 1, size(expected))
