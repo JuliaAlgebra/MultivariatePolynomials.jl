@@ -62,13 +62,13 @@ include("independent.jl")
 function _gcd_test(expected, a, b, algo, expected_type)
     A = deepcopy(a)
     B = deepcopy(b)
-    g = @inferred MP._simplifier(
-        a,
-        b,
-        algo,
-        MA.IsNotMutable(),
-        MA.IsNotMutable(),
-    )
+    args = (a, b, algo, MA.IsNotMutable(), MA.IsNotMutable())
+    # Older Julia versions do not infer the TypedPolynomials simplifier.
+    g = if VERSION >= v"1.13" || nameof(Mod) != :TypedPolynomials
+        @inferred MP._simplifier(args...)
+    else
+        MP._simplifier(args...)
+    end
     @test a == A
     @test b == B
     @test are_independent(g, a)
