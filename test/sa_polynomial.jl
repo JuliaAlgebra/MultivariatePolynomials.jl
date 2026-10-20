@@ -69,6 +69,26 @@ import SparseArrays
     @test iszero(sum([u, v]) - q)
 end
 
+@testset "Registered scalars extend finite polynomial bases" begin
+    DP.@polyvar x
+    basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[1], [2]])
+    alg = MP.algebra(basis)
+    p = SA.AlgebraElement([2, 3], alg)
+    t = SA.Term(alg, 1, 2)
+    for q in (p, t), a in (1, 0.5), op in (+, -), left in (false, true)
+        args = left ? (a, q) : (q, a)
+        result = @inferred op(args...)
+        @test typeof(result) === MP.MA.promote_operation(op, typeof.(args)...)
+        for value in (0, 2)
+            expected = left ? op(a, q(x => value)) : op(q(x => value), a)
+            @test result(x => value) == expected
+        end
+        @test parent(q) === alg
+    end
+    @test p == 2x + 3x^2
+    @test t == 2x
+end
+
 @testset "Ordered noncommutative monomials" begin
     DP.@ncpolyvar x y z
     @testset "Finite word bases" begin

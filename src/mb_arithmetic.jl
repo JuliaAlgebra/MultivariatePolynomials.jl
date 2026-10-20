@@ -48,24 +48,13 @@ for op in [:+, :-, :*]
     end
 end
 
-# Extend finite bases before embedding scalars as constant terms.
-for op in [:+, :-]
-    @eval begin
-        function Base.$op(
-            p::Union{T,Number},
-            q::Union{AbstractPolynomial{T},AbstractTerm{T}},
-        ) where {T}
-            i = implicit(q)
-            return $op(SA._constant_term(i, p), i)
-        end
-        function Base.$op(
-            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
-            q::Union{T,Number},
-        ) where {T}
-            i = implicit(p)
-            return $op(i, SA._constant_term(i, q))
-        end
-    end
+# Extend finite bases before SA embeds scalars as constant terms.
+SA._prepare_scalar_sum(p::Union{AbstractPolynomial,AbstractTerm}) = implicit(p)
+function MA.promote_operation(
+    ::typeof(SA._prepare_scalar_sum),
+    ::Type{P},
+) where {P<:Union{AbstractPolynomial,AbstractTerm}}
+    return MA.promote_operation(implicit, SA._algebra_element_type(P))
 end
 
 function term_element(α, p::Polynomial)
