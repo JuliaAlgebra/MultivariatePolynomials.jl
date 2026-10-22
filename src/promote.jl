@@ -3,13 +3,6 @@ function promote_variables end
 function Base.promote_rule(
     ::Type{M},
     ::Type{T},
-) where {M<:AbstractMonomialLike,T<:Number}
-    return term_type(M, T)
-end
-
-function Base.promote_rule(
-    ::Type{M},
-    ::Type{T},
 ) where {M<:AbstractMonomialLike,T<:AbstractTerm}
     return promote_type(term_type(M, coefficient_type(T)), T)
 end
@@ -19,13 +12,6 @@ function Base.promote_rule(
     ::Type{P},
 ) where {M<:AbstractMonomialLike,P<:AbstractPolynomial}
     return promote_type(polynomial_type(M, coefficient_type(P)), P)
-end
-
-function Base.promote_rule(
-    ::Type{P},
-    ::Type{T},
-) where {P<:Union{AbstractTerm,AbstractPolynomial},T<:Number}
-    return similar_type(P, promote_type(coefficient_type(P), T))
 end
 
 Base.promote_rule(::Type{M}, ::Type{M}) where {M<:AbstractMonomialLike} = M
@@ -84,20 +70,6 @@ for (L, R) in (
 end
 
 # Rational
-function promote_rule_constant(
-    ::Type{T},
-    ::Type{RationalPoly{NT,DT}},
-) where {T<:Number,NT,DT}
-    return RationalPoly{promote_type(T, NT),promote_type(DT, term_type(DT))}
-end
-
-function Base.promote_rule(
-    ::Type{RT},
-    ::Type{T},
-) where {T<:Number,RT<:RationalPoly}
-    return promote_rule_constant(T, RT)
-end
-
 function promote_rule_rational(
     ::Type{PT},
     ::Type{RationalPoly{S,T}},

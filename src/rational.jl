@@ -30,11 +30,6 @@ end
 function Base.convert(::Type{RationalPoly{NT,DT}}, p::_APL) where {NT,DT}
     return convert(NT, p) / one(DT)
 end
-function Base.convert(::Type{RationalPoly{NT,DT}}, α::Number) where {NT,DT}
-    return convert(NT, α) / one(DT)
-    #convert(RationalPoly{NT, DT}, convert(NT, α))
-end
-
 # This is called by the default implementation of `Base.oneunit`, still in Julia v1.8 at least
 RationalPoly{NT,DT}(r::RationalPoly{NT,DT}) where {NT,DT} = r
 
