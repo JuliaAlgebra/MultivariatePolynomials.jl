@@ -24,7 +24,7 @@ ChainRulesCore = "1"
 JuMP = "1"
 MathOptInterface = "1"
 MutableArithmetics = "1.9"
-StarAlgebras = "0.4"
+StarAlgebras = "0.3.1"
 julia = "1.10"
 
 [extras]
@@ -32,6 +32,3 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [targets]
 test = ["ChainRulesCore"]
-
-[sources]
-StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "main"}
