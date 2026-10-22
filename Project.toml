@@ -34,4 +34,4 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 test = ["ChainRulesCore"]
 
 [sources]
-StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "bl/scalar_interop"}
+StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "main"}
