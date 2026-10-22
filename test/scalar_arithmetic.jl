@@ -65,9 +65,49 @@ function test_dots(a, monos)
     return
 end
 
+scalar_array(p, a) = [p, a]
+
+function test_promotion(a, p)
+    P = @inferred promote_type(typeof(p), typeof(a))
+    @test isconcretetype(P)
+    @test (@inferred promote_type(typeof(a), typeof(p))) === P
+    for entries in
+        ((@inferred scalar_array(p, a)), reverse(@inferred scalar_array(a, p)))
+        @test eltype(entries) === P
+        original, constant = entries
+        if p isa MP.RationalPoly
+            C = MP.coefficient_type(numerator(original))
+            test_equal(
+                numerator(original),
+                MP.map_coefficients(Base.Fix1(convert, C), numerator(p)),
+            )
+            test_equal(denominator(original), denominator(p))
+            @test isone(denominator(constant))
+            constant = numerator(constant)
+        else
+            C = MP.coefficient_type(original)
+            test_equal(original, MP.map_coefficients(Base.Fix1(convert, C), p))
+        end
+        C = MP.coefficient_type(constant)
+        test_equal(constant, MP.constant_term(convert(C, a), constant))
+        @test MA.isequal_canonical(
+            @inferred(convert(C, constant)),
+            convert(C, a),
+        )
+    end
+    return
+end
+
 function test_scalar(a, x)
     test_monomial(a, x)
     test_monomial(a, x^2)
+    C = MA.promote_operation(+, Int, typeof(a))
+    M = MP.monomial_type(x)
+    @test (@inferred convert(M, one(C))) == one(x)
+    @test_throws InexactError convert(M, zero(C))
+    for p in (x, x^2, 2x, 2x + 3, x / (x + 1))
+        test_promotion(a, p)
+    end
     for p in (2x, 2x + 3)
         test_equal(LinearAlgebra.dot(a, p), adjoint(a) * p)
         test_equal(LinearAlgebra.dot(p, a), adjoint(p) * a)
@@ -109,6 +149,9 @@ allocated_product(a, b) = @allocated a * b
     for var in (x, y)
         @test_throws MethodError "unregistered scalar" * var
         @test_throws MethodError var + "unregistered scalar"
+        for p in (var, var^2, 2var, var + 1, var / (var + 1))
+            @test promote_type(typeof(p), String) === Any
+        end
     end
     if VERSION >= v"1.13"
         for scalar in (2, 1.5), m in (y, y^2)

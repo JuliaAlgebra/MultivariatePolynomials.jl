@@ -38,10 +38,6 @@ function Base.convert(
 ) where {T<:AbstractTerm}
     return convert(T, term(m))
 end
-function Base.convert(::Type{T}, c::Number) where {T<:AbstractTerm}
-    return convert(T, constant_term(c, T))
-end
-
 """
     term_type(p::AbstractPolynomialLike)
 

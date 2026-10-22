@@ -4,8 +4,8 @@
 Allow values of `Scalar` to act as coefficients of bare variables and monomials.
 Multiplication returns a term with the scalar as its coefficient. Addition and
 subtraction delegate to StarAlgebras' term arithmetic. This also defines scalar
-dot products and the MutableArithmetics promotion, fused accumulation, and dot
-product methods.
+dot products, scalar promotion and conversion, and the MutableArithmetics
+promotion, fused accumulation, and dot product methods.
 Each operation requires the corresponding coefficient operations and their
 MutableArithmetics promotion methods.
 
@@ -18,6 +18,43 @@ automatically.
 macro scalar_arithmetic(Scalar)
     S = esc(Scalar)
     code = quote
+        function Base.promote_rule(
+            ::Type{P},
+            ::Type{T},
+        ) where {P<:AbstractPolynomialLike,T<:$S}
+            # Scalar indices need a coefficient type that can also represent
+            # numeric constants, as when adding the scalar to a polynomial.
+            C = MA.promote_operation(+, coefficient_type(P), T)
+            return similar_type(P, C)
+        end
+
+        function Base.promote_rule(
+            ::Type{RationalPoly{NT,DT}},
+            ::Type{T},
+        ) where {NT,DT,T<:$S}
+            return RationalPoly{promote_type(NT, T),promote_type(DT, term_type(DT))}
+        end
+
+        function Base.convert(
+            ::Type{P},
+            c::$S,
+        ) where {P<:Union{AbstractTerm,AbstractPolynomial}}
+            return convert(P, constant_term(c, P))
+        end
+
+        function Base.convert(::Type{M}, c::$S) where {M<:AbstractMonomial}
+            isone(c) || throw(InexactError(:convert, M, c))
+            return one(M)
+        end
+
+        function Base.convert(::Type{T}, p::_APL) where {T<:$S}
+            return convert_to_constant(T, p)
+        end
+
+        function Base.convert(::Type{RationalPoly{NT,DT}}, c::$S) where {NT,DT}
+            return convert(NT, c) / one(DT)
+        end
+
         Base.:*(a::$S, m::AbstractMonomialLike) = term(a, m)
         Base.:*(m::AbstractMonomialLike, a::$S) = term(a, m)
 

@@ -5,15 +5,6 @@ function Base.convert(
     return convert(P, term(m))
 end
 
-function Base.convert(::Type{P}, c::Number) where {P<:AbstractPolynomial}
-    return convert(P, constant_term(c, P))
-end
-
-function Base.convert(::Type{M}, c::Number) where {M<:AbstractMonomial}
-    isone(c) || throw(InexactError(:convert, M, c))
-    return one(M)
-end
-
 function Base.convert(
     ::Type{V},
     mono::AbstractMonomial,
@@ -72,7 +63,6 @@ function convert_to_constant(::Type{S}, p::_APL) where {S}
     end
     return s
 end
-Base.convert(::Type{T}, p::_APL) where {T<:Number} = convert_to_constant(T, p)
 function convert_to_constant(p::_APL)
     return convert_to_constant(coefficient_type(p), p)
 end
