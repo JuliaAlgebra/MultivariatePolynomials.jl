@@ -876,6 +876,18 @@ end
 
 @testset "Shared coefficient mapping" begin
     DP.@polyvar x
+    for (source, expected) in ((x, 0.5x), (x^2, 0.5x^2), (3x, 1.5x)),
+        nz in (false, true)
+
+        mapped =
+            @inferred MP.map_coefficients(Base.Fix2(/, 2), source; nonzero = nz)
+        @test mapped isa MP.AbstractTerm{Float64}
+        @test mapped == expected
+        if source isa MP.AbstractTerm
+            @test parent(mapped) === parent(source)
+        end
+        @test iszero(MP.map_coefficients(zero, source))
+    end
     for T in (Int, BigInt)
         p = convert(DP.Polynomial{T}, 2x^2 + 3x + 2)
         original = deepcopy(p)
