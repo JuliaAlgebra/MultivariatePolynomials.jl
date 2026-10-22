@@ -6,6 +6,7 @@ const MP = MultivariatePolynomials
 
 # Tests that do not need any specific polynomial implementation
 include("comparison.jl")
+include("scalar_arithmetic.jl")
 
 include("utils.jl")
 
