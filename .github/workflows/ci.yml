@@ -43,7 +43,7 @@ jobs:
           Pkg.add([
               PackageSpec(name="DynamicPolynomials", rev="bl/sa_term"),
               PackageSpec(name="TypedPolynomials", rev="bl/sa_poly"),
-              PackageSpec(name="StarAlgebras", rev="main"),
+              PackageSpec(name="StarAlgebras", rev="bl/scalar_interop"),
           ])
 
       - uses: julia-actions/julia-buildpkg@v1

@@ -46,10 +46,12 @@ include("mb_monomial_basis.jl")
 include("mb_algebra.jl")
 include("noncommutative.jl")
 include("mb_arithmetic.jl")
+include("scalar_arithmetic.jl")
 
 include("deprecate.jl")
 
-const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
+const _EXCLUDE_SYMBOLS =
+    [Symbol(@__MODULE__), :eval, :include, Symbol("@scalar_arithmetic")]
 
 for sym in names(@__MODULE__; all = true)
     sym_string = string(sym)

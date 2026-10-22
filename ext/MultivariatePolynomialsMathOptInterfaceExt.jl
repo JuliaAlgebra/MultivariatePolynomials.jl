@@ -1,0 +1,8 @@
+module MultivariatePolynomialsMathOptInterfaceExt
+
+import MathOptInterface
+import MultivariatePolynomials
+
+MultivariatePolynomials.@scalar_arithmetic MathOptInterface.AbstractScalarFunction
+
+end

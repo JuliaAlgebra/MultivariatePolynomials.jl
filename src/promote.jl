@@ -51,21 +51,6 @@ function MA.promote_operation(
 end
 function MA.promote_operation(
     ::typeof(*),
-    ::Type{T},
-    ::Type{M},
-) where {T<:Number,M<:AbstractMonomialLike}
-    return term_type(M, T)
-end
-function MA.promote_operation(
-    ::typeof(*),
-    ::Type{M},
-    ::Type{T},
-) where {M<:AbstractMonomialLike,T<:Number}
-    return term_type(M, T)
-end
-
-function MA.promote_operation(
-    ::typeof(*),
     ::Type{M},
     ::Type{T},
 ) where {M<:AbstractMonomialLike,T<:AbstractTerm}

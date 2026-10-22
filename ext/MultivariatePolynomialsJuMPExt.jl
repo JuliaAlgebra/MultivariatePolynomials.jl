@@ -1,0 +1,8 @@
+module MultivariatePolynomialsJuMPExt
+
+import JuMP
+import MultivariatePolynomials
+
+MultivariatePolynomials.@scalar_arithmetic JuMP.AbstractJuMPScalar
+
+end
