@@ -522,17 +522,17 @@ Calling `map_coefficients(α -> mod(3α, 6), 2x*y + 3x + 1)` should return `3x +
 function map_coefficients end
 function map_coefficients(
     f::F,
-    p::AbstractPolynomial;
+    p::Union{AbstractPolynomial,AbstractTerm};
     nonzero = false,
 ) where {F<:Function}
     return SA.map_coefficients(f, p; nonzero)
 end
 function map_coefficients(
     f::F,
-    t::AbstractTermLike;
+    m::AbstractMonomialLike;
     nonzero = false,
 ) where {F<:Function}
-    return term(f(coefficient(t)), monomial(t))
+    return map_coefficients(f, term(m); nonzero)
 end
 
 function SA.map_coefficients_to!(
