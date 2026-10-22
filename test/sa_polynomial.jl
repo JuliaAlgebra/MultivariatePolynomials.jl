@@ -884,8 +884,10 @@ end
         @test MP.coefficient_type(mapped) === Rational{T}
         @test parent(mapped) === parent(p)
         @test SA.coeffs(mapped) !== SA.coeffs(p)
+        @test (@inferred SA.map_coefficients(c -> c // 2, p)) == mapped
         @test MP.map_coefficients(c -> c - 2, p) == x
         @test MP.map_coefficients(c -> 2c, p; nonzero = true) == 2p
+        @test SA.map_coefficients(c -> 2c, p; nonzero = true) == 2p
         @test p == original
 
         z = zero(p)

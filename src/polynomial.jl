@@ -506,7 +506,7 @@ function _div_to_one(t::AbstractTermLike, α::S) where {S}
 end
 
 """
-    map_coefficients(f::Function, p::AbstractPolynomialLike, nonzero = false)
+    map_coefficients(f::Function, p::AbstractPolynomialLike; nonzero = false)
 
 Returns a polynomial with the same monomials as `p` but each coefficient `α` is replaced by `f(α)`.
 The function may return zero in which case the term is dropped.
@@ -525,8 +525,7 @@ function map_coefficients(
     p::AbstractPolynomial;
     nonzero = false,
 ) where {F<:Function}
-    output = similar(p, Base.promote_op(f, coefficient_type(p)))
-    return SA.map_coefficients_to!(output, f, p; nonzero)
+    return SA.map_coefficients(f, p; nonzero)
 end
 function map_coefficients(
     f::F,
