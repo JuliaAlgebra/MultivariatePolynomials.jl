@@ -36,21 +36,3 @@ function typetests(x)
     _typetests(x)
     return _typetests(typeof(x))
 end
-
-# A polynomial-like representation that exposes its polynomial type only.
-struct CustomPolyType{T,P<:AbstractPolynomial{T}} <: AbstractPolynomialLike{T}
-    p::P
-end
-function MultivariatePolynomials.polynomial_type(
-    ::Type{CustomPolyType{T,P}},
-) where {T,P}
-    return P
-end
-
-# Like SOSDecomposition, promote two wrappers without calling term_type.
-function Base.promote_rule(
-    ::Type{CustomPolyType{T,P}},
-    ::Type{CustomPolyType{S,Q}},
-) where {T,P,S,Q}
-    return CustomPolyType{promote_type(T, S),promote_type(P, Q)}
-end

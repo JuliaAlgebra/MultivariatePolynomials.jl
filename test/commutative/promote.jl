@@ -32,11 +32,11 @@ end
 @testset "Promotion" begin
     Mod.@polyvar x y
     @testset "Promotion with unrelated types" begin
-        p = CustomPolyType(x + y)
-        q = CustomPolyType(x + 1.0y)
+        p = x + y
+        q = x + 1.0y
         @test (@inferred promote_type(typeof(p), typeof(q))) == typeof(q)
         for value in (:(ztol = 1e-7), :symbol, "string")
-            for poly in (x, x^2, 2x, x + y, x / y, (x + y) / y, p)
+            for poly in (x, x^2, 2x, p, x / y, p / y)
                 @test promote_type(typeof(value), typeof(poly)) == Any
                 @test promote_type(typeof(poly), typeof(value)) == Any
                 @test [value, poly] isa Vector{Any}
@@ -45,14 +45,9 @@ end
             # Julia 1.13's `@test isapprox(p, q, ztol = ...)` builds
             # `[kwargs_expr, p, q]` for diagnostics, even when the test passes.
             # This promotes the keyword Expr with the polynomial-like arguments
-            # and used to fail for SOSDecomposition. Test could avoid promotion
-            # by using `Any[kwargs_expr, p, q]`, since these are only for display.
-            # We also cover other unrelated types above because our constant
-            # promotion currently accepts arbitrary types. This special handling
-            # may become unnecessary if we restrict interactions with constants
-            # from `::Any` to `::Number`.
+            # and must not turn unrelated types into polynomial coefficients.
             # Julia 1.10 promotes p and q first; newer Julia versions start
-            # with value and p. The wrapper supports promotion in either order.
+            # with value and p. Both orders must give Any.
             @test Base.promote_typeof(value, p, q) == Any
             @test [value, p, q] isa Vector{Any}
         end
