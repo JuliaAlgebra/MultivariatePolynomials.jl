@@ -291,6 +291,16 @@ end
             @test coefficient_type(g) === Number
         end
     end
+    # https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/329
+    @testset "Rational content with more than 2 terms" begin
+        Mod.@polyvar x y z
+        p = 1 // 2 * x + 1 // 4 * y + 1 // 3 * z
+        algo = SubresultantAlgorithm()
+        @test content(p, algo, MA.IsNotMutable()) == 1 // 12
+        @test gcd(p, 1) == 1 // 12
+        @test gcd(1, p) == 1 // 12
+        @test primitive_part(p, algo, MA.IsNotMutable()) == 6x + 3y + 4z
+    end
     @testset "Complex coefficient GCD" begin
         Mod.@polyvar p q
         p1 = MP.polynomial(p^2 + q^2, ComplexF64)
