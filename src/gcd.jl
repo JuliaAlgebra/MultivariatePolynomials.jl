@@ -337,7 +337,7 @@ end
 # Inspired from to `AbstractAlgebra.deflate`
 function MA.operate(
     op::Union{typeof(deflate),typeof(inflate)},
-    t::SA.Term,
+    t::AbstractTerm,
     shift,
     defl,
 )

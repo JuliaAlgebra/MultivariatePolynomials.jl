@@ -23,6 +23,16 @@ end
         _test(p, x^2, x^2 * y^3)
     end
 
+    @testset "Terms" begin
+        t = 3a^5 * b^6
+        shift, defl = a * b^2, a^2 * b^2
+        q = @inferred MP.deflate(t, shift, defl)
+        @test q isa AbstractTerm{Int}
+        @test q == 3a^2 * b^2
+        @test (@inferred MP.inflate(q, shift, defl)) == t
+        @test t == 3a^5 * b^6
+    end
+
     @testset "Different variable sets" begin
         for (x, y) in permutations((a, b))
             m, shift, defl = y^2, y^2, x * y

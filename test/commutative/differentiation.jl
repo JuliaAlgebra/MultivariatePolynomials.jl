@@ -3,6 +3,21 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+@testset "Antidifferentiation" begin
+    Mod.@polyvar x y
+    @test antidifferentiate(3, x) == 3x
+    @test antidifferentiate(x, x) == (1 // 2) * x^2
+    @test antidifferentiate(y, x) == x * y
+    for p in (x^2, 3x^2, x^2 * y, 2x^2 * y + x + 1)
+        integral = @inferred antidifferentiate(p, x)
+        @test differentiate(integral, x) == p
+        @test subs(integral, x => 0) == 0
+    end
+    integral = @inferred antidifferentiate(x^2 * y, x)
+    @test integral isa AbstractTerm{Rational{Int}}
+    @test integral == (1 // 3) * x^3 * y
+end
+
 @testset "Differentiation" begin
     Mod.@polyvar x y z
     @test differentiate(3, y) == 0
