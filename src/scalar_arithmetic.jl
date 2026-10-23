@@ -6,6 +6,8 @@ Multiplication returns a term with the scalar as its coefficient. Addition and
 subtraction delegate to StarAlgebras' term arithmetic. This also defines scalar
 dot products, scalar promotion and conversion, and the MutableArithmetics
 promotion, fused accumulation, and dot product methods.
+Equality (`==` and `isequal`) with monomials, terms, polynomials, and rational
+polynomials uses the corresponding coefficient comparison.
 Each operation requires the corresponding coefficient operations and their
 MutableArithmetics promotion methods.
 
@@ -90,6 +92,33 @@ macro scalar_arithmetic(Scalar)
         )
             return _sum_monomial_products(b, a)
         end
+    end
+    for comp in (:(==), :isequal)
+        push!(
+            code.args,
+            quote
+                function Base.$comp(
+                    p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+                    a::Union{T,$S},
+                ) where {T}
+                    return right_constant_eq(p, a; comp = $comp)
+                end
+
+                function Base.$comp(
+                    a::Union{T,$S},
+                    p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+                ) where {T}
+                    return left_constant_eq(a, p; comp = $comp)
+                end
+
+                Base.$comp(m::AbstractMonomialLike, a::$S) =
+                    right_constant_eq(m, a; comp = $comp)
+                Base.$comp(a::$S, m::AbstractMonomialLike) =
+                    left_constant_eq(a, m; comp = $comp)
+                Base.$comp(a::$S, q::RationalPoly) = $comp(a * q.den, q.num)
+                Base.$comp(q::RationalPoly, a::$S) = $comp(a, q)
+            end,
+        )
     end
     for left in (true, false)
         L, R = left ? (S, :AbstractMonomialLike) : (:AbstractMonomialLike, S)

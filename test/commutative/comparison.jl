@@ -141,23 +141,27 @@ end
             @test !isapprox(2.001, (2x) / x, rtol = 1e-4)
         end
     end
-    @testset "Equality between a Polynomial and a type not defining zero #22" begin
+    @testset "Equality with unrelated values #22" begin
         Mod.@polyvar x
-        # Polynomial of multiple terms
-        p = x + x^2
-        @test nothing !== p
-        @test p !== nothing
-        @test Dict{Int,Int}() != p
-        @test p !== Dict{Int,Int}()
-        # Polynomial of one term
-        p = x + x^2 - x
-        @test p !== nothing
-        @test p !== Dict{Int,Int}()
-        # Polynomial of no term
-        # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-        p = x - x
-        @test p !== nothing
-        @test p !== Dict{Int,Int}()
+        for p in (x, x^2, 2x, x + x^2, polynomial(x), zero(x), x / (x + 1))
+            for other in (nothing, Dict{Int,Int}(), Int[], [1, 2], :x, "x")
+                @test p != other
+                @test other != p
+                @test !isequal(p, other)
+                @test !isequal(other, p)
+            end
+        end
+    end
+    @testset "Equality with the coefficient type" begin
+        Mod.@polyvar x
+        a = [1, 2]
+        constant = term(a, one(x))
+        for p in (constant, polynomial(constant)), comp in (==, isequal)
+            @test comp(p, a)
+            @test comp(a, p)
+            @test !comp(p, [1, 3])
+            @test !comp([1, 3], p)
+        end
     end
     lex = LexOrder
     grlex = Graded{lex}
@@ -180,6 +184,12 @@ end
 
     @testset "Comparison with NaN" begin
         Mod.@polyvar x y
+        for p in (NaN * one(x), polynomial(NaN * one(x)), (NaN * x) / x)
+            @test p != NaN
+            @test NaN != p
+            @test isequal(p, NaN)
+            @test isequal(NaN, p)
+        end
         @testset "$poly1 and $poly2" for (poly1, poly2) in [
             (NaN * x, NaN * x),
             (NaN * x + 0, NaN * x + 0),

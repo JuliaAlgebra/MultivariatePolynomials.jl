@@ -12,11 +12,6 @@ function Base.isone(p::AbstractPolynomial)
     return isone(nterms(p)) && isone(first(terms(p)))
 end
 
-Base.:(==)(α::Dict, x::_APL) = false
-Base.:(==)(x::_APL, α::Dict) = false
-Base.:(==)(α::Dict, x::RationalPoly) = false
-Base.:(==)(x::RationalPoly, α::Dict) = false
-
 function right_term_eq(p::AbstractPolynomial, t; comp = (==))
     if iszero(p)
         iszero(t)
@@ -49,20 +44,16 @@ for comp in (:(==), :isequal)
     @eval begin
         function Base.$comp(
             p::Union{AbstractPolynomial{T},AbstractTerm{T}},
-            a::Union{T,Number},
+            a::T,
         ) where {T}
             return right_constant_eq(p, a; comp = $comp)
         end
         function Base.$comp(
-            a::Union{T,Number},
+            a::T,
             p::Union{AbstractPolynomial{T},AbstractTerm{T}},
         ) where {T}
             return left_constant_eq(a, p; comp = $comp)
         end
-        Base.$comp(m::AbstractMonomialLike, a::Number) =
-            right_constant_eq(m, a; comp = $comp)
-        Base.$comp(a::Number, m::AbstractMonomialLike) =
-            left_constant_eq(a, m; comp = $comp)
         Base.$comp(p::AbstractPolynomial, m::AbstractMonomialLike) =
             right_term_eq(p, term(m); comp = $comp)
         Base.$comp(m::AbstractMonomialLike, p::AbstractPolynomial) =
@@ -143,19 +134,13 @@ function Base.isequal(p1::AbstractPolynomial, p2::AbstractPolynomial)
 end
 
 Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num * q.den == q.num * p.den
-# Solve ambiguity with (::PolyType, ::Any)
 Base.:(==)(p::_APL, q::RationalPoly) = p * q.den == q.num
 Base.:(==)(q::RationalPoly, p::_APL) = p == q
-Base.:(==)(α::_Constant, q::RationalPoly) = α * q.den == q.num
-Base.:(==)(q::RationalPoly, α::_Constant) = α == q
 function Base.isequal(p::RationalPoly, q::RationalPoly)
     return isequal(p.num * q.den, q.num * p.den)
 end
-# Solve ambiguity with (::PolyType, ::Any)
 Base.isequal(p::_APL, q::RationalPoly) = isequal(p * q.den, q.num)
 Base.isequal(q::RationalPoly, p::_APL) = isequal(p, q)
-Base.isequal(α::_Constant, q::RationalPoly) = isequal(α * q.den, q.num)
-Base.isequal(q::RationalPoly, α::_Constant) = isequal(α, q)
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real = 0.0) = false
