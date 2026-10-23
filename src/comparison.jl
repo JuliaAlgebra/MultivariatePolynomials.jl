@@ -12,23 +12,16 @@ function Base.isone(p::AbstractPolynomial)
     return isone(nterms(p)) && isone(first(terms(p)))
 end
 
-# See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
-# avoids the call to be transfered to left_constant_eq
-Base.:(==)(α::Nothing, x::_APL) = false
-Base.:(==)(x::_APL, α::Nothing) = false
-Base.:(==)(α::Dict, x::_APL) = false
-Base.:(==)(x::_APL, α::Dict) = false
-Base.:(==)(α::Nothing, x::RationalPoly) = false
-Base.:(==)(x::RationalPoly, α::Nothing) = false
-Base.:(==)(α::Dict, x::RationalPoly) = false
-Base.:(==)(x::RationalPoly, α::Dict) = false
-
 function right_term_eq(p::AbstractPolynomial, t; comp = (==))
     if iszero(p)
         iszero(t)
     else
         # terms/nterms ignore zero terms
-        nterms(p) == 1 && comp(leading_term(p), t)
+        # We don't use `leading_term` becuase it also handles zero polynomials.
+        # For JuMP.VariableRef coefficients, its zero fallback creates an affine expression,
+        # introducing a different coefficient type.
+        # That would make this comparison infer Any instead of Bool.
+        nterms(p) == 1 && comp(first(terms(p)), t)
     end
 end
 right_term_eq(p::_APL, t; comp = (==)) = right_term_eq(polynomial(p), t; comp)
@@ -55,20 +48,16 @@ for comp in (:(==), :isequal)
     @eval begin
         function Base.$comp(
             p::Union{AbstractPolynomial{T},AbstractTerm{T}},
-            a::Union{T,Number},
+            a::T,
         ) where {T}
             return right_constant_eq(p, a; comp = $comp)
         end
         function Base.$comp(
-            a::Union{T,Number},
+            a::T,
             p::Union{AbstractPolynomial{T},AbstractTerm{T}},
         ) where {T}
             return left_constant_eq(a, p; comp = $comp)
         end
-        Base.$comp(m::AbstractMonomialLike, a::Number) =
-            right_constant_eq(m, a; comp = $comp)
-        Base.$comp(a::Number, m::AbstractMonomialLike) =
-            left_constant_eq(a, m; comp = $comp)
         Base.$comp(p::AbstractPolynomial, m::AbstractMonomialLike) =
             right_term_eq(p, term(m); comp = $comp)
         Base.$comp(m::AbstractMonomialLike, p::AbstractPolynomial) =
@@ -149,19 +138,13 @@ function Base.isequal(p1::AbstractPolynomial, p2::AbstractPolynomial)
 end
 
 Base.:(==)(p::RationalPoly, q::RationalPoly) = p.num * q.den == q.num * p.den
-# Solve ambiguity with (::PolyType, ::Any)
 Base.:(==)(p::_APL, q::RationalPoly) = p * q.den == q.num
 Base.:(==)(q::RationalPoly, p::_APL) = p == q
-Base.:(==)(α, q::RationalPoly) = α * q.den == q.num
-Base.:(==)(q::RationalPoly, α) = α == q
 function Base.isequal(p::RationalPoly, q::RationalPoly)
     return isequal(p.num * q.den, q.num * p.den)
 end
-# Solve ambiguity with (::PolyType, ::Any)
 Base.isequal(p::_APL, q::RationalPoly) = isequal(p * q.den, q.num)
 Base.isequal(q::RationalPoly, p::_APL) = isequal(p, q)
-Base.isequal(α, q::RationalPoly) = isequal(α * q.den, q.num)
-Base.isequal(q::RationalPoly, α) = isequal(α, q)
 
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real = 0.0) = false

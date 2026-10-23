@@ -10,6 +10,8 @@ import JuMP
 import MathOptInterface as MOI
 import LinearAlgebra
 
+struct UnregisteredMutable <: MA.AbstractMutable end
+
 function test_equal(p, q)
     @test MP.monomials(p) == MP.monomials(q)
     @test length(MP.coefficients(p)) == length(MP.coefficients(q))
@@ -121,6 +123,29 @@ function test_scalar(a, x)
     return
 end
 
+function test_scalar_equality(a, x)
+    constant = a * one(x)
+    for p in (constant, MP.polynomial(constant), (a * x) / x)
+        for comp in (==, isequal)
+            @test (@inferred comp(p, a))
+            @test (@inferred comp(a, p))
+        end
+    end
+    for p in (x, x^2, a * x, MP.polynomial(a * x), x / (x + 1))
+        for comp in (==, isequal)
+            @test !(@inferred comp(p, a))
+            @test !(@inferred comp(a, p))
+        end
+    end
+    # A variable index needs a coefficient type to construct its scalar zero.
+    z = zero(1a)
+    for p in (0 * x, zero(x), zero(x) / x), comp in (==, isequal)
+        @test (@inferred comp(p, z))
+        @test (@inferred comp(z, p))
+    end
+    return
+end
+
 allocated_product(a, b) = @allocated a * b
 
 @testset "Registered scalar arithmetic" begin
@@ -139,6 +164,7 @@ allocated_product(a, b) = @allocated a * b
     for var in (x, y), scalar in (2, 1.5, 2 + im, big(2), a, 2a + 1, b, 2b + 1)
         @testset "$(typeof(var)), $(typeof(scalar))" begin
             test_scalar(scalar, var)
+            test_scalar_equality(scalar, var)
             # MOI needs a coefficient type to add two variable indices.
             # Multiplication by 1 supplies it for the dot product's reduction.
             dot_scalar = scalar isa MOI.VariableIndex ? 1scalar : scalar
@@ -149,8 +175,12 @@ allocated_product(a, b) = @allocated a * b
     for var in (x, y)
         @test_throws MethodError "unregistered scalar" * var
         @test_throws MethodError var + "unregistered scalar"
-        for p in (var, var^2, 2var, var + 1, var / (var + 1))
+        for p in (var, var^2, 2var, var + 1, zero(var), var / (var + 1))
             @test promote_type(typeof(p), String) === Any
+            @test p != UnregisteredMutable()
+            @test UnregisteredMutable() != p
+            @test !isequal(p, UnregisteredMutable())
+            @test !isequal(UnregisteredMutable(), p)
         end
     end
     if VERSION >= v"1.13"
