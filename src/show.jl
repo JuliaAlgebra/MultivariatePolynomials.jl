@@ -59,7 +59,7 @@ const unicode_subscripts = ("₀", "₁", "₂", "₃", "₄", "₅", "₆", "�
 unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # MONOMIALS
-function _show(io::IO, mime, m::AbstractMonomial)
+function _show(io::IO, mime::MIME, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')
     else

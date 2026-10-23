@@ -183,8 +183,7 @@ for fun in [:real, :imag]
                 # individual term, then adding them all up. This could potentially lower the overall memory requirement (in case
                 # the expansions of the individual terms simplify) at the expense of not being able to exploit optimizations that
                 # subst can do by knowing the full polynomial.
-                iszero(x) &&
-                    return zero(polynomial_type(x, real(coefficient_type(x))))
+                iszero(x) && return map_coefficients($fun, polynomial(x))
                 # We replace every complex variable by its decomposition into real and imaginary part
                 subst_vars = unique(
                     ordinary_variable(v) for v in variables(x) if !isreal(v)
@@ -198,13 +197,7 @@ for fun in [:real, :imag]
                             [real(var) + 1im * imag(var) for var in subst_vars],
                     )
                 # Now everything that is imaginary can be recognized by its coefficient
-                return convert(
-                    polynomial_type(
-                        full_version,
-                        real(coefficient_type(full_version)),
-                    ),
-                    map_coefficients!($fun, full_version),
-                )
+                return map_coefficients($fun, full_version)
             end
             function Base.$fun(x::AbstractVector{<:AbstractMonomial})
                 return map(Base.$fun, x)

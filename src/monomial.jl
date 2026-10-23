@@ -9,9 +9,13 @@ Returns the type of the monomials of a polynomial of type `PT`.
 """
 monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
 # AbstractMonomialLike is its own monomial type (like AbstractMonomial).
-# This breaks the term_type/monomial_type cycle for this bare abstract type.
-monomial_type(::Union{AbstractMonomialLike,Type{AbstractMonomialLike}}) = AbstractMonomialLike
-function monomial_type(::Union{PT,Type{PT}}) where {PT<:_APL}
+monomial_type(::Type{AbstractMonomialLike}) = AbstractMonomialLike
+# For SA.Term{T,A,I}: derive monomial type from the algebra type A
+function monomial_type(::Type{SA.Term{T,A,I}}) where {T,A<:_PolynomialAlgebra,I}
+    return monomial_type(A)
+end
+# Generic fallback for other _APL types (polynomials etc.)
+function monomial_type(::Union{PT,Type{PT}}) where {PT<:AbstractPolynomialLike}
     return monomial_type(term_type(PT))
 end
 function monomial_type(
@@ -40,7 +44,24 @@ function variables(
 end
 
 """
+    variables(ps::AbstractArray{<:AbstractPolynomialLike})
+
+Return the common variables of the elements of `ps`, including variables of zero
+degree. Commutative variables are sorted in decreasing order without duplicates.
+For noncommutative variables, the common ordered sequence may repeat variables.
+"""
+function variables(ps::AbstractArray{PT}) where {PT<:AbstractPolynomialLike}
+    vars = variables(constant_monomial(PT))
+    for p in ps
+        (vars, _), _ = promote_variables_with_maps(vars, variables(p))
+    end
+    return vars
+end
+
+"""
     nvariables(p::AbstractPolynomialLike)
+
+    nvariables(p::AbstractArray{<:AbstractPolynomialLike})
 
 Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be more than the number of variables with nonzero degree (see the Examples section of [`variables`](@ref)).
 
@@ -48,10 +69,11 @@ Returns the number of variables in `p`, i.e. `length(variables(p))`. It could be
 
 Calling `nvariables(x^2*y)` should return at least 2 and calling `nvariables(x)` should return at least 1.
 """
-nvariables(::Union{AbstractVariable,Type{<:AbstractVariable}}) = 1
+nvariables(::AbstractVariable) = 1
+nvariables(::Type{<:AbstractVariable}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
-nvariables(p::_APL) = length(variables(p))
+nvariables(p::Union{_APL,AbstractArray{<:_APL}}) = length(variables(p))
 
 """
     exponents(t::AbstractTermLike)
@@ -84,19 +106,9 @@ degree(t::AbstractTermLike) = sum(exponents(t); init = 0)
 
 degree(t::AbstractTermLike, var::AbstractVariable) = degree(monomial(t), var)
 degree(v::AbstractVariable, var::AbstractVariable) = (v == var ? 1 : 0)
-#_deg(v::AbstractVariable) = 0
-#_deg(v::AbstractVariable, power, powers...) = v == power[1] ? power[2] : _deg(v, powers...)
-#degree(m::AbstractMonomial, v::AbstractVariable) = _deg(v, powers(t)...)
-
 function degree(m::AbstractMonomial, v::AbstractVariable)
-    deg = 0
-    # With Noncommutative variables, there may be several powers with the same variable
-    for (var, exp) in powers(m)
-        if var == v
-            deg += exp
-        end
-    end
-    return deg
+    # Noncommutative monomials may contain several powers of the same variable.
+    return mapreduce(p -> p[1] == v ? p[2] : 0, +, powers(m); init = 0)
 end
 
 """
@@ -136,6 +148,10 @@ function constant_monomial(::Type{PT}) where {PT<:_APL}
     return constant_monomial(monomial_type(PT))
 end
 constant_monomial(t::AbstractTerm) = constant_monomial(monomial(t))
+constant_monomial(v::AbstractVariable) = constant_monomial(monomial(v))
+function constant_monomial(p::AbstractPolynomial)
+    return one(SA.object(parent(p)))
+end
 
 """
     map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
@@ -150,7 +166,22 @@ function map_exponents(f, m1::AbstractMonomialLike, m2::AbstractMonomialLike)
     return map_exponents(f, monomial(m1), monomial(m2))
 end
 
+"""
+    map_exponents_to!(output, f, a, b)
+
+Write the pointwise map of the exponents of `a` and `b` into `output`.
+The destination must have mutable exponent storage and contain all variables
+of both operands. Its variables are unchanged; only its exponents are mutated.
+Use `StarAlgebras.promote_bases` to prepare a common basis when necessary.
+"""
 function map_exponents_to! end
+
+"""
+    map_exponents!(f, a, b)
+
+Equivalent to `map_exponents_to!(a, f, a, b)`. The variables of `a` must
+contain those of `b`.
+"""
 function map_exponents! end
 
 map_exponents(f, a, b, ::MA.IsMutable) = map_exponents!(f, a, b)
@@ -160,11 +191,6 @@ Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constant_monomial(TT)
 Base.one(t::AbstractMonomialLike) = constant_monomial(t)
 function MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike})
     return monomial_type(MT)
-end
-# Bridge MA.operate!(one, ...) to constant_monomial for monomials
-# so that SA.Term's generic operate!(one, t) works via operate!(one, t.basis_element)
-function MA.operate!(::typeof(one), m::AbstractMonomial)
-    return MA.operate!(constant_monomial, m)
 end
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).

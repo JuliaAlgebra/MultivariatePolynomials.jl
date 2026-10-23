@@ -31,10 +31,26 @@ differentiate( [x^2+y, z^2+4x], [x, y, z]) # should return [2x 1 0; 4 0 2z]
 function differentiate end
 
 # Fallback for everything else
-differentiate(α::T, v::AbstractVariable) where {T} = zero(T)
+differentiate(α::T, v::AbstractVariable) where {T<:Number} = zero(T)
 differentiate(v1::AbstractVariable, v2::AbstractVariable) = v1 == v2 ? 1 : 0
-function differentiate(t::AbstractTermLike, v::AbstractVariable)
+function differentiate(t::AbstractTerm, v::AbstractVariable)
     return coefficient(t) * differentiate(monomial(t), v)
+end
+function _differentiate_exponents(exps, i)
+    result = copy(exps)
+    result[i] -= 1
+    return result
+end
+function _differentiate_exponents(exps::Tuple, i)
+    return Base.setindex(exps, exps[i] - 1, i)
+end
+function differentiate(m::AbstractMonomial, v::AbstractVariable)
+    i = findfirst(isequal(v), variables(m))
+    if isnothing(i) || iszero(exponents(m)[i])
+        return term(0, m)
+    end
+    e = _differentiate_exponents(exponents(m), i)
+    return term(exponents(m)[i], Polynomial(m.variables, e))
 end
 # The polynomial function will take care of removing the zeros
 function differentiate(p::_APL, v::AbstractVariable)

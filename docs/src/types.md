@@ -95,14 +95,14 @@ leading_term
 leading_coefficient
 leading_monomial
 deg_num_leading_terms
-remove_leading_term
+SA.remove_leading_term
 remove_monomials
 filter_terms
 OfDegree
 monic
 map_coefficients
-map_coefficients!
-map_coefficients_to!
+SA.map_coefficients!
+SA.map_coefficients_to!
 conj(::_APL)
 real(::_APL)
 imag(::_APL)

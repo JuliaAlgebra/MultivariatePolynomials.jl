@@ -51,6 +51,31 @@ end
 left_constant_eq(α, p::_APL; comp = (==)) = right_term_eq(p, α; comp)
 right_constant_eq(p::_APL, α; comp = (==)) = right_term_eq(p, α; comp)
 
+for comp in (:(==), :isequal)
+    @eval begin
+        function Base.$comp(
+            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+            a::Union{T,Number},
+        ) where {T}
+            return right_constant_eq(p, a; comp = $comp)
+        end
+        function Base.$comp(
+            a::Union{T,Number},
+            p::Union{AbstractPolynomial{T},AbstractTerm{T}},
+        ) where {T}
+            return left_constant_eq(a, p; comp = $comp)
+        end
+        Base.$comp(m::AbstractMonomialLike, a::Number) =
+            right_constant_eq(m, a; comp = $comp)
+        Base.$comp(a::Number, m::AbstractMonomialLike) =
+            left_constant_eq(a, m; comp = $comp)
+        Base.$comp(p::AbstractPolynomial, m::AbstractMonomialLike) =
+            right_term_eq(p, term(m); comp = $comp)
+        Base.$comp(m::AbstractMonomialLike, p::AbstractPolynomial) =
+            right_term_eq(p, term(m); comp = $comp)
+    end
+end
+
 function Base.:(==)(mono::AbstractMonomial, v::AbstractVariable)
     return isone(degree(mono)) && variable(mono) == v
 end
@@ -74,7 +99,12 @@ function Base.isequal(t::SA.Term, p::AbstractPolynomial)
     return right_term_eq(p, t; comp = isequal)
 end
 
-function compare_terms(p1::AbstractPolynomial, p2::AbstractPolynomial, isz, op)
+function compare_terms(
+    p1::AbstractPolynomialLike,
+    p2::AbstractPolynomialLike,
+    isz,
+    op,
+)
     i1 = 1
     i2 = 1
     t1 = terms(p1)
@@ -153,18 +183,29 @@ function Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...)
            monomial(t1) == monomial(t2)
 end
 function Base.isapprox(
-    p1::AbstractPolynomial{S},
-    p2::AbstractPolynomial{T};
+    p1::AbstractPolynomialLike,
+    p2::AbstractPolynomialLike;
     atol = 0,
-    ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
+    ztol::Real = if iszero(atol)
+        Base.rtoldefault(coefficient_type(p1), coefficient_type(p2), 0)
+    else
+        atol
+    end,
     kwargs...,
-) where {S,T}
+)
     return compare_terms(
         p1,
         p2,
         t -> isapproxzero(t; ztol = ztol),
         (x, y) -> isapprox(x, y; atol = atol, kwargs...),
     )
+end
+
+function Base.isapprox(p::AbstractPolynomialLike, c::Number; kwargs...)
+    return isapprox(p, constant_term(c, p); kwargs...)
+end
+function Base.isapprox(c::Number, p::AbstractPolynomialLike; kwargs...)
+    return isapprox(constant_term(c, p), p; kwargs...)
 end
 
 function Base.isapprox(p::RationalPoly, q::RationalPoly; kwargs...)
@@ -314,11 +355,11 @@ exponent vectors for the monomials of `p`.
 """
 function ordering end
 
-ordering(::Type{<:AbstractMonomial}) = Graded{LexOrder}
 ordering(::Type{P}) where {P} = ordering(monomial_type(P))
 ordering(p::AbstractPolynomialLike) = ordering(typeof(p))
-# Useful for instance to ask ordering given the list
-# of variables
+# For type-level: derive ordering from Vector's element type
+ordering(::Type{<:AbstractVector{T}}) where {T} = ordering(T)
+# Useful for instance to ask ordering given the list of variables
 ordering(::AbstractVector{T}) where {T} = ordering(T)
 ordering(t::Tuple) = ordering(first(t))
 

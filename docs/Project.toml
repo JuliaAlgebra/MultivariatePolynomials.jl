@@ -4,3 +4,6 @@ MultivariatePolynomials = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 
 [compat]
 Documenter = "1"
+
+[sources]
+MultivariatePolynomials = {path = ".."}
