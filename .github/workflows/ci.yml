@@ -30,12 +30,22 @@ jobs:
 #            os: ubuntu-latest
 #            arch: x64
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v2
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
+      - name: MP
+        shell: julia --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.add([
+              PackageSpec(name="DynamicPolynomials", rev="master"),
+              PackageSpec(name="TypedPolynomials", rev="master"),
+              PackageSpec(name="StarAlgebras", rev="bl/term"),
+          ])
+
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         #with:
@@ -51,7 +61,7 @@ jobs:
         # └
         # No idea why, try enabling it back later
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}

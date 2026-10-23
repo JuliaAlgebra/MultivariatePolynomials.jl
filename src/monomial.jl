@@ -8,6 +8,9 @@ Return the type of the monomials of `p`.
 Returns the type of the monomials of a polynomial of type `PT`.
 """
 monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
+# AbstractMonomialLike is its own monomial type (like AbstractMonomial).
+# This breaks the term_type/monomial_type cycle for this bare abstract type.
+monomial_type(::Union{AbstractMonomialLike,Type{AbstractMonomialLike}}) = AbstractMonomialLike
 function monomial_type(::Union{PT,Type{PT}}) where {PT<:_APL}
     return monomial_type(term_type(PT))
 end
@@ -157,6 +160,11 @@ Base.one(::Type{TT}) where {TT<:AbstractMonomialLike} = constant_monomial(TT)
 Base.one(t::AbstractMonomialLike) = constant_monomial(t)
 function MA.promote_operation(::typeof(one), MT::Type{<:AbstractMonomialLike})
     return monomial_type(MT)
+end
+# Bridge MA.operate!(one, ...) to constant_monomial for monomials
+# so that SA.Term's generic operate!(one, t) works via operate!(one, t.basis_element)
+function MA.operate!(::typeof(one), m::AbstractMonomial)
+    return MA.operate!(constant_monomial, m)
 end
 # See https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/82
 # By default, Base do oneunit(v::VT) = VT(one(v)).
