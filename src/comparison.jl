@@ -17,6 +17,10 @@ function right_term_eq(p::AbstractPolynomial, t; comp = (==))
         iszero(t)
     else
         # terms/nterms ignore zero terms
+        # We don't use `leading_term` becuase it also handles zero polynomials.
+        # For JuMP.VariableRef coefficients, its zero fallback creates an affine expression,
+        # introducing a different coefficient type.
+        # That would make this comparison infer Any instead of Bool.
         nterms(p) == 1 && comp(first(terms(p)), t)
     end
 end
