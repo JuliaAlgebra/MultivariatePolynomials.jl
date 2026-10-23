@@ -17,7 +17,7 @@ function right_term_eq(p::AbstractPolynomial, t; comp = (==))
         iszero(t)
     else
         # terms/nterms ignore zero terms
-        nterms(p) == 1 && comp(leading_term(p), t)
+        nterms(p) == 1 && comp(first(terms(p)), t)
     end
 end
 right_term_eq(p::_APL, t; comp = (==)) = right_term_eq(polynomial(p), t; comp)

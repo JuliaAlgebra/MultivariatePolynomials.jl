@@ -139,7 +139,7 @@ function test_scalar_equality(a, x)
     end
     # A variable index needs a coefficient type to construct its scalar zero.
     z = zero(1a)
-    for p in (0x, zero(x), zero(x) / x), comp in (==, isequal)
+    for p in (0 * x, zero(x), zero(x) / x), comp in (==, isequal)
         @test (@inferred comp(p, z))
         @test (@inferred comp(z, p))
     end
