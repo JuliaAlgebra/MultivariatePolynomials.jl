@@ -2,64 +2,11 @@ module MultivariatePolynomials
 
 import LinearAlgebra
 
-import DataStructures
-
 import MutableArithmetics as MA
 
 import StarAlgebras as SA
 
-"""
-    AbstractPolynomialLike{T}
-
-Abstract type for a value that can act like a polynomial. For instance, an
-`AbstractTerm{T}` is an `AbstractPolynomialLike{T}` since it can act as a
-polynomial of only one term.
-"""
-abstract type AbstractPolynomialLike{T} <: MA.AbstractMutable end
-
-"""
-    AbstractTermLike{T}
-
-Abstract type for a value that can act like a term. For instance, an `AbstractMonomial` is an `AbstractTermLike{Int}` since it can act as a term with coefficient `1`.
-"""
-abstract type AbstractTermLike{T} <: AbstractPolynomialLike{T} end
-
-"""
-    AbstractMonomialLike
-
-Abstract type for a value that can act like a monomial. For instance, an `AbstractVariable` is an `AbstractMonomialLike` since it can act as a monomial of one variable with degree `1`.
-"""
-abstract type AbstractMonomialLike <: AbstractTermLike{Int} end
-
-"""
-    AbstractVariable <: AbstractMonomialLike
-
-Abstract type for a variable.
-"""
-abstract type AbstractVariable <: AbstractMonomialLike end
-
-"""
-    AbstractMonomial <: AbstractMonomialLike
-
-Abstract type for a monomial, i.e. a product of variables elevated to a nonnegative integer power.
-"""
-abstract type AbstractMonomial <: AbstractMonomialLike end
-
-"""
-    AbstractTerm{T} <: AbstractTermLike{T}
-
-Abstract type for a term of coefficient type `T`, i.e. the product between a value of type `T` and a monomial.
-"""
-abstract type AbstractTerm{T} <: AbstractTermLike{T} end
-
-"""
-    AbstractPolynomial{T} <: AbstractPolynomialLike{T}
-
-Abstract type for a polynomial of coefficient type `T`, i.e. a sum of `AbstractTerm{T}`s.
-"""
-abstract type AbstractPolynomial{T} <: AbstractPolynomialLike{T} end
-
-const _APL{T} = AbstractPolynomialLike{T}
+include("types.jl")
 
 include("zip.jl")
 include("lazy_iterators.jl")
@@ -89,13 +36,22 @@ include("division.jl")
 include("gcd.jl")
 include("det.jl")
 
-include("default_term.jl")
-include("sequences.jl")
-include("default_polynomial.jl")
+# Polynomial bases and algebra representation shared with MultivariateBases.
+include("mb_interface.jl")
+include("mb_variables.jl")
+include("mb_polynomial.jl")
+include("mb_bases.jl")
+include("mb_mstructures.jl")
+include("mb_monomial_basis.jl")
+include("mb_algebra.jl")
+include("noncommutative.jl")
+include("mb_arithmetic.jl")
+include("scalar_arithmetic.jl")
 
 include("deprecate.jl")
 
-const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
+const _EXCLUDE_SYMBOLS =
+    [Symbol(@__MODULE__), :eval, :include, Symbol("@scalar_arithmetic")]
 
 for sym in names(@__MODULE__; all = true)
     sym_string = string(sym)

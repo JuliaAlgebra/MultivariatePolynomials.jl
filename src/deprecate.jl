@@ -5,7 +5,9 @@
 @deprecate jointerms join_terms
 @deprecate jointerms! join_terms!
 @deprecate mapcoefficients map_coefficients
-@deprecate mapcoefficients! map_coefficients!
+@deprecate mapcoefficients! SA.map_coefficients!
+@deprecate map_coefficients! SA.map_coefficients!
+@deprecate map_coefficients_to! SA.map_coefficients_to!
 @deprecate mapexponents map_exponents
 @deprecate mapexponents! map_exponents!
 @deprecate monomialtype monomial_type
@@ -17,7 +19,6 @@
 @deprecate leading_term leadingterm
 @deprecate leading_monomial leading_monomial
 @deprecate leading_coefficient leading_coefficient
-@deprecate removeleadingterm remove_leading_term
 @deprecate removemonomials remove_monomials
 @deprecate coefficienttype coefficient_type
 @deprecate constantterm constant_term
@@ -52,8 +53,8 @@ end
 
 function mapcoefficientsnz_to!(output::_APL, f::F, p::_APL) where {F<:Function}
     Base.depwarn(
-        "`mapcoefficientsnz_to!(output, f, p)` is deprecated, use `map_coefficients_to!(output, f, p, nonzero = true)` instead",
+        "`mapcoefficientsnz_to!(output, f, p)` is deprecated, use `SA.map_coefficients_to!(output, f, p, nonzero = true)` instead",
         :map_coefficientsnz_to!,
     )
-    return map_coefficients_to!(output, f, p, nonzero = true)
+    return SA.map_coefficients_to!(output, f, p, nonzero = true)
 end

@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 struct CustomLaTeXPrint
     s::String
 end
@@ -13,8 +18,6 @@ end
     @test sprint(show, (x * y^2 + x + 1 + y)) == "1 + y + x + xy²"
     @test sprint(show, (x + 1 + y) / x^2) == "(1 + y + x) / (x²)"
     @test sprint(show, (x - y - x + y) / (x^2 - x)) == "(0) / (-x + x²)"
-    cp = CustomPoly(1 + x)
-    @test sprint(show, cp) == "$(typeof(cp))(1 + x)"
     # Test taken from TypedPolynomials
     @test sprint(show, x) == "x"
     @test sprint(show, x^0) == "1"
@@ -62,10 +65,12 @@ end
     a = CustomLaTeXPrint(" \$\$ \\[\\(α_β∀ \\) \\]\t  \$\$")
     @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==
           "\$\$ (α_β∀)x_{1}^{2} \$\$"
-    @test sprint(
-        (io, x) -> show(io, "text/latex", x),
-        polynomial([a, a], [x[1]^2, x[2]]),
-    ) == "\$\$ (α_β∀)x_{2} + (α_β∀)x_{1}^{2} \$\$"
+    # This display fixture does not implement coefficient arithmetic.
+    p = let a = a
+        map_coefficients(_ -> a, x[1]^2 + x[2]; nonzero = true)
+    end
+    @test sprint((io, x) -> show(io, "text/latex", x), p) ==
+          "\$\$ (α_β∀)x_{2} + (α_β∀)x_{1}^{2} \$\$"
     # Test that the check for `\\)` handles unicode well
     a = CustomLaTeXPrint("\\(β∀")
     @test sprint((io, x) -> show(io, "text/latex", x), term(a, x[1]^2)) ==

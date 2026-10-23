@@ -1,3 +1,8 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+end
+
+using Test
 using Latexify
 
 @testset "Latexify Extension" begin

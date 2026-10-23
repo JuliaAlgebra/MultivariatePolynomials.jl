@@ -5,26 +5,30 @@ version = "0.5.20"
 repo = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl"
 
 [deps]
-DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 StarAlgebras = "0c0c59c1-dc5f-42e9-9a8b-b5dc384a6cd1"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 
 [extensions]
-MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
 LatexifyExt = "Latexify"
+MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
+MultivariatePolynomialsJuMPExt = "JuMP"
+MultivariatePolynomialsMathOptInterfaceExt = "MathOptInterface"
 
 [compat]
 ChainRulesCore = "1"
-DataStructures = "0.19"
+JuMP = "1"
 Latexify = "0.16.12"
 LinearAlgebra = "1.10"
-MutableArithmetics = "0.3, 1"
-StarAlgebras = "0.3"
+MathOptInterface = "1"
+MutableArithmetics = "1.9"
+StarAlgebras = "0.3.1"
 julia = "1.10"
 
 [extras]

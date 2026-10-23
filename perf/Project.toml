@@ -6,3 +6,11 @@ MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 SIMDPolynomials = "4edc584b-a88b-4acf-80bb-891198a11e01"
 TypedPolynomials = "afbbf031-7a57-5f58-a1b9-b774a0fad08d"
+
+[compat]
+MutableArithmetics = "1.9"
+
+[sources]
+DynamicPolynomials = {url = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl", rev = "bl/sa_term"}
+MultivariatePolynomials = {path = ".."}
+TypedPolynomials = {url = "https://github.com/JuliaAlgebra/TypedPolynomials.jl", rev = "bl/sa_poly"}

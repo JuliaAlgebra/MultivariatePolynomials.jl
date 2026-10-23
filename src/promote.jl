@@ -1,198 +1,75 @@
-"""
-    promote_variables(p::AbstractPolynomialLike, q::AbstractPolynomialLike)
-
-Return two polynomials over the same variables.
-"""
 function promote_variables end
 
-# MonomialLike
+function Base.promote_rule(
+    ::Type{M},
+    ::Type{T},
+) where {M<:AbstractMonomialLike,T<:AbstractTerm}
+    return promote_type(term_type(M, coefficient_type(T)), T)
+end
+
+function Base.promote_rule(
+    ::Type{M},
+    ::Type{P},
+) where {M<:AbstractMonomialLike,P<:AbstractPolynomial}
+    return promote_type(polynomial_type(M, coefficient_type(P)), P)
+end
+
 Base.promote_rule(::Type{M}, ::Type{M}) where {M<:AbstractMonomialLike} = M
 function Base.promote_rule(
-    M1::Type{<:AbstractMonomialLike},
-    M2::Type{<:AbstractMonomialLike},
+    ::Type{M},
+    ::Type{N},
+) where {M<:AbstractMonomialLike,N<:AbstractMonomialLike}
+    return promote_type(monomial_type(M), monomial_type(N))
+end
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{M},
+    ::Type{N},
+) where {M<:AbstractMonomialLike,N<:AbstractMonomialLike}
+    return promote_type(monomial_type(M), monomial_type(N))
+end
+function MA.promote_operation(
+    op::Union{typeof(+),typeof(-)},
+    ::Type{M},
+    ::Type{N},
+) where {M<:AbstractMonomialLike,N<:AbstractMonomialLike}
+    return polynomial_type(MA.promote_operation(*, M, N))
+end
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{M},
+    ::Type{T},
+) where {M<:AbstractMonomialLike,T<:AbstractTerm}
+    return term_type(
+        MA.promote_operation(*, M, monomial_type(T)),
+        coefficient_type(T),
+    )
+end
+function MA.promote_operation(
+    ::typeof(*),
+    ::Type{T},
+    ::Type{M},
+) where {T<:AbstractTerm,M<:AbstractMonomialLike}
+    return term_type(
+        MA.promote_operation(*, monomial_type(T), M),
+        coefficient_type(T),
+    )
+end
+
+for (L, R) in (
+    (AbstractMonomialLike, Union{AbstractTerm,AbstractPolynomial}),
+    (Union{AbstractTerm,AbstractPolynomial}, AbstractMonomialLike),
 )
-    return promote_type(monomial_type(M1), monomial_type(M2))
+    @eval function MA.promote_operation(
+        op::Union{typeof(+),typeof(-),typeof(*)},
+        ::Type{A},
+        ::Type{B},
+    ) where {A<:$L,B<:$R}
+        return MA.promote_operation(op, polynomial_type(A), polynomial_type(B))
+    end
 end
-
-# TermLike
-Base.promote_rule(::Type{T}, ::Type{T}) where {T<:AbstractTermLike} = T
-function Base.promote_rule(
-    TS::Type{<:AbstractTermLike{S}},
-    TT::Type{<:AbstractTermLike{T}},
-) where {S,T}
-    U = promote_type(S, T)
-    M = promote_type(monomial_type(TS), monomial_type(TT))
-    return term_type(M, U)
-end
-function promote_rule_constant(
-    ::Type{S},
-    TT::Type{<:AbstractTermLike{T}},
-) where {S,T}
-    return term_type(TT, promote_type(S, T))
-end
-
-# PolynomialLike
-Base.promote_rule(::Type{PT}, ::Type{PT}) where {PT<:_APL} = PT
-function Base.promote_rule(PS::Type{<:_APL}, PT::Type{<:_APL})
-    return polynomial_type(promote_type(term_type(PS), term_type(PT)))
-end
-
-function promote_rule_constant(::Type{S}, PT::Type{<:_APL{T}}) where {S,T}
-    return polynomial_type(PT, promote_type(S, T))
-end
-function Base.promote_rule(::Type{PT}, ::Type{T}) where {T,PT<:_APL}
-    R = promote_rule_constant(T, PT)
-    # Unrelated constants must not be converted to polynomial coefficients.
-    return R <: _APL{Any} ? Any : R
-end
-
-# We don't have any information on the MultivariatePolynomials implementation,
-# so we won't be able to convert the constant to `_APL`.
-promote_rule_constant(::Type, PT::Type{AbstractMonomialLike}) = Any
-promote_rule_constant(::Type, PT::Type{AbstractTermLike{T}}) where {T} = Any
-promote_rule_constant(::Type, PT::Type{AbstractTermLike}) = Any
-promote_rule_constant(::Type, PT::Type{_APL{T}}) where {T} = Any
-promote_rule_constant(::Type, PT::Type{_APL}) = Any
-
-# AbstractMonomialLike{T}
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{<:AbstractMonomialLike},
-)
-    return AbstractMonomialLike
-end
-function Base.promote_rule(
-    ::Type{<:AbstractMonomialLike},
-    ::Type{AbstractMonomialLike},
-)
-    return AbstractMonomialLike
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{<:AbstractTermLike{T}},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{<:AbstractTermLike{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{AbstractTermLike{T}},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _atl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{<:_APL{T}},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{<:_APL{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{AbstractMonomialLike},
-    ::Type{_APL{T}},
-) where {T}
-    return _apl(Int, T)
-end
-function Base.promote_rule(
-    ::Type{_APL{T}},
-    ::Type{AbstractMonomialLike},
-) where {T}
-    return _apl(Int, T)
-end
-
-# AbstractTermLike{T}
-_atl(::Type{T}, ::Type{T}) where {T} = AbstractTermLike{T}
-_atl(::Type, ::Type) = AbstractTermLike
-__atl(::Type{T}, ::Type{<:AbstractTermLike{S}}) where {S,T} = _atl(T, S)
-__atl(::Type{T}, ::Type{<:_APL{S}}) where {S,T} = _apl(T, S)
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{<:AbstractTermLike{S}},
-) where {S,T}
-    return _atl(T, S)
-end
-function Base.promote_rule(
-    P::Type{<:AbstractTermLike{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _atl(T, S)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{<:_APL{S}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    P::Type{<:_APL{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    ::Type{AbstractTermLike{T}},
-    P::Type{_APL{S}},
-) where {S,T}
-    return _apl(T, S)
-end
-function Base.promote_rule(
-    P::Type{_APL{S}},
-    ::Type{AbstractTermLike{T}},
-) where {S,T}
-    return _apl(T, S)
-end
-
-# AbstractTermLike
-function Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:AbstractTermLike})
-    return AbstractTermLike
-end
-function Base.promote_rule(::Type{<:AbstractTermLike}, ::Type{AbstractTermLike})
-    return AbstractTermLike
-end
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{<:_APL}) = _APL
-Base.promote_rule(::Type{<:_APL}, ::Type{AbstractTermLike}) = _APL
-Base.promote_rule(::Type{AbstractTermLike}, ::Type{_APL}) = _APL
-Base.promote_rule(::Type{_APL}, ::Type{AbstractTermLike}) = _APL
-
-# _APL{T}
-_apl(::Type{T}, ::Type{T}) where {T} = _APL{T}
-_apl(::Type, ::Type) = _APL
-Base.promote_rule(::Type{_APL{T}}, ::Type{<:_APL{S}}) where {S,T} = _apl(S, T)
-Base.promote_rule(::Type{<:_APL{S}}, ::Type{_APL{T}}) where {S,T} = _apl(S, T)
-
-# _APL
-Base.promote_rule(::Type{_APL}, ::Type{<:_APL}) = _APL
-Base.promote_rule(::Type{<:_APL}, ::Type{_APL}) = _APL
 
 # Rational
-function promote_rule_constant(
-    ::Type{T},
-    ::Type{RationalPoly{NT,DT}},
-) where {T,NT,DT}
-    U = promote_type(T, NT)
-    return U === Any ? Any : RationalPoly{U,promote_type(DT, term_type(DT))}
-end
-
-function Base.promote_rule(::Type{RT}, ::Type{T}) where {T,RT<:RationalPoly}
-    return promote_rule_constant(T, RT)
-end
-
 function promote_rule_rational(
     ::Type{PT},
     ::Type{RationalPoly{S,T}},
@@ -217,98 +94,6 @@ function Base.promote_rule(
     ::Type{RT},
 ) where {PT<:_APL,RT<:RationalPoly}
     return promote_rule_rational(PT, RT)
-end
-function Base.promote_rule(
-    ::Type{RT},
-    ::Type{PT},
-) where {PT<:_APL,RT<:RationalPoly}
-    return promote_rule_rational(PT, RT)
-end
-
-# MutableArithmetics
-function MA.promote_operation(
-    op::Union{typeof(+),typeof(-)},
-    PT::Type{<:_APL{S}},
-    QT::Type{<:_APL{T}},
-) where {S,T}
-    U = MA.promote_operation(op, S, T)
-    return polynomial_type(
-        promote_type(monomial_type(PT), monomial_type(QT)),
-        U,
-    )
-end
-function MA.promote_operation(
-    ::typeof(*),
-    MT1::Type{<:AbstractMonomialLike},
-    MT2::Type{<:AbstractMonomialLike},
-)
-    return promote_type(monomial_type(MT1), monomial_type(MT2))
-end
-function MA.promote_operation(
-    ::typeof(*),
-    TT::Type{<:AbstractTermLike{S}},
-    ST::Type{<:AbstractTermLike{T}},
-) where {S,T}
-    UT = MA.promote_operation(*, monomial_type(TT), monomial_type(ST))
-    U = MA.promote_operation(*, S, T)
-    return promote_operation_left_constant(*, U, UT)
-end
-function MA.promote_operation(
-    ::typeof(*),
-    PT::Type{<:_APL{S}},
-    QT::Type{<:_APL{T}},
-) where {S,T}
-    UP = MA.promote_operation(*, monomial_type(PT), monomial_type(QT))
-    U = MA.promote_sum_mul(S, T)
-    return polynomial_type(promote_operation_left_constant(*, U, UP))
-end
-
-function promote_operation_left_constant(
-    ::typeof(*),
-    ::Type{T},
-    ::Type{M},
-) where {T,M<:AbstractMonomialLike}
-    return term_type(M, T)
-end
-
-function promote_operation_right_constant(
-    ::typeof(*),
-    ::Type{M},
-    ::Type{T},
-) where {T,M<:AbstractMonomialLike}
-    return term_type(M, T)
-end
-
-function promote_operation_left_constant(
-    ::typeof(*),
-    ::Type{T},
-    ::Type{P},
-) where {T,U,P<:_APL{U}}
-    return similar_type(P, MA.promote_operation(*, T, U))
-end
-
-function promote_operation_right_constant(
-    ::typeof(*),
-    ::Type{P},
-    ::Type{T},
-) where {T,U,P<:_APL{U}}
-    return similar_type(P, MA.promote_operation(*, U, T))
-end
-
-function MA.promote_operation(
-    ::typeof(*),
-    ::Type{T},
-    ::Type{P},
-) where {T,P<:_APL}
-    return promote_operation_left_constant(*, T, P)
-end
-
-function MA.promote_operation(
-    ::typeof(*),
-    ::Type{P},
-    ::Type{T},
-) where {T,P<:_APL}
-    return promote_operation_right_constant(*, P, T)
 end
 
 function MA.promote_operation(
@@ -362,9 +147,6 @@ end
 
 function (map::ExponentMap{NTuple{N,Int}})(exp::NTuple{N,Int}) where {N}
     return ntuple(map.length::Val) do i
-        # This does not have the best complexity since `findfirst`
-        # search through the whole list each time but since we're using
-        # tuples, we're probably not having a large list if indices anyway
         j = findfirst(isequal(i), map.indices)
         if isnothing(j)
             return 0
@@ -411,22 +193,37 @@ function promote_variables_with_maps(a, b)
     return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
 end
 
-function SA.promote_with_map(t::AbstractTerm, all_vars, map::ExponentMap)
-    mono, _ = SA.promote_with_map(monomial(t), all_vars, map)
-    return term(coefficient(t), mono), map
+function SA.promote_with_map(p::Polynomial{B}, vars, map::ExponentMap) where {B}
+    return Polynomial(Variables{B}(vars), map(exponents(p))), map
 end
-
-function SA.promote_with_map(p::AbstractPolynomial, all_vars, map::ExponentMap)
-    new_terms = [
-        term(
-            coefficient(t),
-            first(SA.promote_with_map(monomial(t), all_vars, map)),
-        ) for t in terms(p)
-    ]
-    return polynomial(new_terms, SortedUniqState()), map
+function SA.promote_bases_with_maps(
+    p::Polynomial{B},
+    q::Polynomial{B},
+) where {B}
+    a, b = promote_variables_with_maps(variables(p), variables(q))
+    return SA.maybe_promote(p, a...), SA.maybe_promote(q, b...)
 end
-
-function SA.promote_bases_with_maps(p::_APL, q::_APL)
-    _p, _q = promote_variables_with_maps(variables(p), variables(q))
-    return SA.maybe_promote(p, _p...), SA.maybe_promote(q, _q...)
+function SA.promote_bases_with_maps(
+    p::AbstractVariable,
+    q::AbstractMonomialLike,
+)
+    return SA.promote_bases_with_maps(monomial(p), monomial(q))
+end
+function SA.promote_bases_with_maps(p::AbstractMonomial, q::AbstractVariable)
+    return SA.promote_bases_with_maps(monomial(p), monomial(q))
+end
+function SA.promote_bases_with_maps(
+    p::AbstractMonomialLike,
+    q::Union{AbstractTerm,AbstractPolynomial},
+)
+    return SA.promote_bases_with_maps(term(p), q)
+end
+function SA.promote_bases_with_maps(
+    p::Union{AbstractTerm,AbstractPolynomial},
+    q::AbstractMonomialLike,
+)
+    return SA.promote_bases_with_maps(p, term(q))
+end
+function promote_variables(p::AbstractMonomial, q::AbstractMonomial)
+    return SA.promote_bases(p, q)
 end

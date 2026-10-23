@@ -1,17 +1,42 @@
+if !@isdefined(Mod)
+    import DynamicPolynomials as Mod
+    include("../utils.jl")
+end
+
 using Test
 import MutableArithmetics as MA
 using MultivariatePolynomials
 import MultivariatePolynomials as MP
 using LinearAlgebra
 
+@testset "Fused promotion preserves operand bases" begin
+    Mod.@polyvar x y z
+    f = x + 1
+    for op in (MA.add_mul, MA.sub_mul), a in (2, 2y, y + 1), b in (3z, z + 1)
+        expected = op(f, a, b)
+        @test (@inferred MA.promote_operation(
+            op,
+            typeof(f),
+            typeof(a),
+            typeof(b),
+        )) === typeof(expected)
+        @test (@inferred MA.promote_operation(
+            op,
+            typeof(f),
+            typeof(b),
+            typeof(a),
+        )) === typeof(op(f, b, a))
+    end
+end
+
 @testset "Promotion" begin
     Mod.@polyvar x y
     @testset "Promotion with unrelated types" begin
-        p = CustomPolyType(x + y)
-        q = CustomPolyType(x + 1.0y)
+        p = x + y
+        q = x + 1.0y
         @test (@inferred promote_type(typeof(p), typeof(q))) == typeof(q)
         for value in (:(ztol = 1e-7), :symbol, "string")
-            for poly in (x, x^2, 2x, x + y, x / y, (x + y) / y, p)
+            for poly in (x, x^2, 2x, p, x / y, p / y)
                 @test promote_type(typeof(value), typeof(poly)) == Any
                 @test promote_type(typeof(poly), typeof(value)) == Any
                 @test [value, poly] isa Vector{Any}
@@ -20,14 +45,9 @@ using LinearAlgebra
             # Julia 1.13's `@test isapprox(p, q, ztol = ...)` builds
             # `[kwargs_expr, p, q]` for diagnostics, even when the test passes.
             # This promotes the keyword Expr with the polynomial-like arguments
-            # and used to fail for SOSDecomposition. Test could avoid promotion
-            # by using `Any[kwargs_expr, p, q]`, since these are only for display.
-            # We also cover other unrelated types above because our constant
-            # promotion currently accepts arbitrary types. This special handling
-            # may become unnecessary if we restrict interactions with constants
-            # from `::Any` to `::Number`.
+            # and must not turn unrelated types into polynomial coefficients.
             # Julia 1.10 promotes p and q first; newer Julia versions start
-            # with value and p. The wrapper supports promotion in either order.
+            # with value and p. Both orders must give Any.
             @test Base.promote_typeof(value, p, q) == Any
             @test [value, p, q] isa Vector{Any}
         end
@@ -60,72 +80,34 @@ using LinearAlgebra
     @test Y[2] == 2x + 4y
     @test dot(X, [1 2; 3 4] * X) == x^2 + 5x * y + 4y^2
 
-    function _t(a, b, T)
-        if VERSION < v"1.6"
-            @test typeof(@inferred vcat(a, b)) in [Vector{T}, Vector{Any}]
-            @test typeof(@inferred vcat(b, a)) in [Vector{T}, Vector{Any}]
-        else
-            @test typeof(@inferred vcat(a, b)) == Vector{T}
-            @test typeof(@inferred vcat(b, a)) == Vector{T}
-        end
+    # Concatenation promotes concrete terms and polynomial coefficients.
+    for (a, b, T) in (
+        ([x^2], x, monomial_type(x)),
+        ([x^2], 2x, term_type(x, Int)),
+        ([2x], 2.0x, term_type(x, Float64)),
+        ([2x, 2.0x], 3x, term_type(x, Float64)),
+        ([x + y], 2.0x, polynomial_type(x * y, Float64)),
+        ([x + 2, x + 2.0], y, polynomial_type(x * y, Float64)),
+    )
+        ab = @inferred vcat(a, b)
+        ba = @inferred vcat(b, a)
+        @test ab isa Vector{T}
+        @test ba isa Vector{T}
+        @test ab[1:(end-1)] == ba[2:end] == a
+        @test ab[end] == ba[1] == b
     end
 
-    function __test(a, PT, TT, MT)
-        @test typeof(a) == Vector{MT(Int)}
-        _t(a, 1, Any)
-        _t(a, x, MT(Int))
-        _t(a, x^2, MT(Int))
-        _t(a, 1x, TT(Int))
-        _t(a, 1.0x, TT())
-        _t(a, x + y, PT(Int))
-        return _t(a, 1.0x + y, PT())
+    # Concrete type promote_type tests
+    @test promote_type(typeof(x), typeof(y)) <: AbstractMonomialLike
+    @test promote_type(typeof(2x), typeof(3y)) <: AbstractTerm{Int}
+    @test promote_type(typeof(2x), typeof(3.0y)) <: AbstractTerm{Float64}
+    @test promote_type(typeof(x + y), typeof(x)) <: AbstractPolynomialLike{Int}
+    @test promote_type(typeof(2x + y), typeof(3.0y)) <:
+          AbstractPolynomialLike{Float64}
+
+    for p in (x, x^2, 2x, x + y)
+        @test promote_type(typeof(p), String) === Any
     end
-
-    function _test(a, af, TT)
-        __test(a, apl, TT, TT)
-        # `x isa _APL{Int}` so here we don't have `Float64`:
-        pt() = apl()
-        pt(T) = apl()
-        tt() = TT()
-        tt(T) = TT()
-        __test(af, pt, tt, tt)
-        @test typeof(af) == Vector{TT()}
-        return _t(af, a, TT())
-    end
-
-    apl() = MP._APL
-    apl(T::Type) = MP._APL{T}
-    p = [i == 1 ? x + y : x for i in 1:2]
-    pf = [i == 1 ? 1.0x + y : x for i in 1:2]
-    _test(p, pf, apl)
-
-    atl() = MP.AbstractTermLike
-    atl(T::Type) = MP.AbstractTermLike{T}
-    t = [i == 1 ? 2x : x for i in 1:2]
-    tf = [i == 1 ? 2.0x : x for i in 1:2]
-    _test(t, tf, atl)
-    _t(p, t, apl(Int))
-    _t(pf, t, apl())
-    _t(p, tf, apl())
-    _t(pf, tf, apl())
-
-    __pt = Base.promote_typejoin(typeof(x + 2), typeof(x + 2.0))
-    _pt() = __pt
-    _pt(::Type) = __pt
-    __test([i == 1 ? x + 2 : x + 2.0 for i in 1:2], _pt, _pt, _pt)
-
-    __tt = Base.promote_typejoin(typeof(2x), typeof(2.0x))
-    _tt() = __tt
-    _tt(::Type) = __tt
-    __test([i == 1 ? 2x : 2.0x for i in 1:2], _pt, _tt, _tt)
-
-    aml(args...) = MP.AbstractMonomialLike
-    a = [i == 1 ? x^2 : x for i in 1:2]
-    __test(a, apl, atl, aml)
-    _t(a, t, atl(Int))
-    _t(a, tf, atl())
-    _t(a, p, apl(Int))
-    _t(a, pf, apl())
 end
 
 struct A end
@@ -133,6 +115,8 @@ Base.zero(::Type{A}) = A()
 Base.:*(::A, ::A) = B()
 struct B end
 Base.zero(::Type{B}) = B()
+# Algebra products multiply coefficient products by integer basis weights.
+Base.:*(::Int, ::B) = B()
 Base.:+(::B, ::B) = C()
 struct C end
 Base.:+(::B, ::C) = C()
@@ -201,6 +185,17 @@ end
         __promote_prod(PY, PY, PY)
         __promote_prod(PXY, PY, PXY)
         __promote_prod(PXY, PXY, PXY)
+    end
+    a = x + 1
+    p = polynomial([a, x], [y, one(y)])
+    expected = polynomial([a * a, a * x], [y, one(y)])
+    @test (@inferred a * p) == expected
+    @test (@inferred p * a) == expected
+    @test coefficient_type(a * p) === typeof(a)
+    for (left, right) in ((a, p), (p, a))
+        output = zero(p)
+        @test (@inferred MA.operate_to!!(output, *, left, right)) === output
+        @test output == expected
     end
 end
 
@@ -348,4 +343,12 @@ end
     pp1, pp2 = SA.promote_bases(p1, p2)
     @test MP.variables(pp1) == MP.variables(pp2)
     @test length(MP.variables(pp1)) == 2
+
+    for (a, b) in ((x, y), (x, y^2), (2x, y^2), (x + 1, y^2))
+        aa, bb = @inferred SA.promote_bases(a, b)
+        rb, ra = @inferred SA.promote_bases(b, a)
+        @test variables(aa) == variables(bb) == variables(ra) == variables(rb)
+        @test aa == ra == a
+        @test bb == rb == b
+    end
 end

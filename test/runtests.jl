@@ -6,6 +6,8 @@ const MP = MultivariatePolynomials
 
 # Tests that do not need any specific polynomial implementation
 include("comparison.jl")
+include("scalar_arithmetic.jl")
+include("extensions.jl")
 
 include("utils.jl")
 
@@ -21,6 +23,7 @@ end
 
 if try_import(:DynamicPolynomials)
     Mod = DynamicPolynomials
+    include("sa_polynomial.jl")
     include("commutativetests.jl")
     include("noncommutativetests.jl")
 end
