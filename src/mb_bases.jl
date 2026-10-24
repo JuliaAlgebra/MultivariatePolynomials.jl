@@ -20,7 +20,7 @@ function FullBasis(vars::Variables{B,V}) where {B,V}
             unique!(sort(vars.variables; rev = true)),
         )
     end
-    O = ordering(vars.variables)
+    O = typeof(ordering(vars.variables))
     exps = ExponentsIterator{O}(constant_monomial_exponents(vars))
     return SA.MappedBasis{Polynomial{B,V,eltype(exps)}}(exps, vars, exponents)
 end
@@ -229,7 +229,7 @@ function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
     return SA.MappedBasis{
         Polynomial{B,V,E},
         E,
-        ExponentsIterator{ordering(V),Nothing,E},
+        ExponentsIterator{typeof(ordering(V)),Nothing,E},
         Variables{B,V},
         typeof(exponents),
     }

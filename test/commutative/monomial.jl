@@ -33,7 +33,8 @@ import MutableArithmetics as MA
         @test MP.variable_index(b, x) == 1
         @test MP.variable_index(b, y) == 2
         @test monomial_type(typeof(b)) === monomial_type(x * y)
-        @test MP.ordering(b) === MP.ordering(x)
+        @test (@inferred MP.ordering(b)) === MP.Graded(MP.LexOrder())
+        @test (@inferred MP.ordering(typeof(b))) === MP.ordering(x)
         @test polynomial_type(b, Int) === polynomial_type(x * y, Int)
         @test polynomial_type(typeof(b), Float64) ===
               polynomial_type(x * y, Float64)
