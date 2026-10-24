@@ -329,12 +329,14 @@ function Base.cmp(ordering::Reverse, a::_TupleOrVector, b::_TupleOrVector)
     return cmp(ordering.reverse_ordering, b, a)
 end
 
-#TODO(breaking) Return an instance, not a type
 """
-    ordering(p::AbstractPolynomialLike)::Type{<:AbstractMonomialOrdering}
+    ordering(p::AbstractPolynomialLike)::AbstractMonomialOrdering
+    ordering(::Type{<:AbstractPolynomialLike})::AbstractMonomialOrdering
 
-Returns the [`AbstractMonomialOrdering`](@ref) type to be used to compare
+Return the [`AbstractMonomialOrdering`](@ref) instance used to compare
 exponent vectors for the monomials of `p`.
+Use `cmp(ordering(p), e1, e2)` for a three-way comparison, or
+`ordering(p)(e1, e2)` as a less-than predicate.
 """
 function ordering end
 
@@ -356,7 +358,7 @@ end
 
 function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
     s1, s2 = promote_variables(m1, m2)
-    return cmp(ordering(m1)(), exponents(s1), exponents(s2))
+    return cmp(ordering(m1), exponents(s1), exponents(s2))
 end
 
 # Implement this to make coefficients be compared with terms.

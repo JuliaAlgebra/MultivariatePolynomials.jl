@@ -29,7 +29,7 @@ function _monomials(vars, degrees, filter::F) where {F}
     end
     basis = FullBasis{Monomial}(vars)
     mindeg, maxdeg = isempty(degrees) ? (0, -1) : extrema(degrees)
-    exps = ExponentsIterator{ordering(vars)}(
+    exps = ExponentsIterator{typeof(ordering(vars))}(
         constant_monomial_exponents(basis);
         mindegree = mindeg,
         maxdegree = maxdeg,
@@ -44,7 +44,7 @@ function _monomials(vars, degrees, filter::F) where {F}
 end
 
 function _noncommutative_monomials(vars, degrees, filter::F) where {F}
-    if ordering(vars) !== Graded{LexOrder}
+    if !(ordering(vars) isa Graded{LexOrder})
         throw(
             ArgumentError(
                 "Noncommutative enumeration requires Graded{LexOrder}.",
