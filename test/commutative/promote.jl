@@ -7,6 +7,7 @@ using Test
 import MutableArithmetics as MA
 using MultivariatePolynomials
 import MultivariatePolynomials as MP
+import StarAlgebras as SA
 using LinearAlgebra
 
 @testset "Fused promotion preserves operand bases" begin
@@ -122,6 +123,8 @@ struct C end
 Base.:+(::B, ::C) = C()
 Base.:+(::C, ::B) = C()
 Base.:+(::C, ::C) = C()
+# `A` is not a scalar by default, register it for polynomial coefficients
+SA.@scalar_arithmetic A
 @testset "promote_operation with tricky types" begin
     Mod.@polyvar x
     @test MA.promote_operation(
