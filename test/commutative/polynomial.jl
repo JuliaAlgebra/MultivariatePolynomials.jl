@@ -290,7 +290,7 @@ end
     @test filter_terms(iseven ∘ MP.coefficient, 4x^2 * y + x * y + 2x) ==
           4x^2 * y + 2x
 
-    @test_throws InexactError push!([1], x + 1)
+    @test_throws MethodError push!([1], x + 1)
 
     @test polynomial([1 2; 3 4], [x^2, y]) == x^4 + 5x^2 * y + 4y^2
     @test polynomial([1 2; 3 4], [x^2, y], Float64) isa
@@ -324,7 +324,7 @@ end
     @testset "Convertion" begin
         Mod.@polyvar x y z
         p = 2.5x + 1 - 2.5x
-        @test convert(Int, p) == 1
+        @test MP.convert_to_constant(Int, p) == 1
         @test convert(typeof(p), p) === p
         @test convert(Union{Nothing,typeof(p)}, p) === p
         a = 2y

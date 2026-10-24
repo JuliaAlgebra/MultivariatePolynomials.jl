@@ -100,7 +100,7 @@ Base.iszero(::CoefNotComparable) = false
     @test (@inferred polynomial(t)) isa AbstractPolynomial{Int}
     @test (@inferred polynomial(t, Float64)) isa AbstractPolynomial{Float64}
 
-    @test_throws InexactError push!([1], 2x)
+    @test_throws MethodError push!([1], 2x)
     @test_throws InexactError push!([x^2], 2x)
 
     t = MP.term(1, x)

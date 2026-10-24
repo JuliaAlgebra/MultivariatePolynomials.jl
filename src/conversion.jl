@@ -48,7 +48,7 @@ function Base.convert(
         throw(InexactError(:convert, T, p))
     end
 end
-MA.scaling(p::AbstractPolynomialLike) = convert(coefficient_type(p), p)
+MA.scaling(p::AbstractPolynomialLike) = convert_to_constant(p)
 # Conversion polynomial -> constant
 # We don't define a method for `Base.convert` to reduce invalidations;
 # see https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/172

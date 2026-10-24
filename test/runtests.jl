@@ -8,6 +8,7 @@ const MP = MultivariatePolynomials
 include("comparison.jl")
 include("scalar_arithmetic.jl")
 include("extensions.jl")
+include("invalidations.jl")
 
 include("utils.jl")
 

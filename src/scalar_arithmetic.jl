@@ -47,10 +47,6 @@ macro scalar_arithmetic(Scalar)
             return one(M)
         end
 
-        function Base.convert(::Type{T}, p::_APL) where {T<:$S}
-            return convert_to_constant(T, p)
-        end
-
         function Base.convert(::Type{RationalPoly{NT,DT}}, c::$S) where {NT,DT}
             return convert(NT, c) / one(DT)
         end
@@ -96,16 +92,16 @@ macro scalar_arithmetic(Scalar)
             code.args,
             quote
                 function Base.$comp(
-                    p::Union{AbstractPolynomial{T},AbstractTerm{T}},
-                    a::Union{T,$S},
-                ) where {T}
+                    p::Union{AbstractPolynomial,AbstractTerm},
+                    a::$S,
+                )
                     return right_constant_eq(p, a; comp = $comp)
                 end
 
                 function Base.$comp(
-                    a::Union{T,$S},
-                    p::Union{AbstractPolynomial{T},AbstractTerm{T}},
-                ) where {T}
+                    a::$S,
+                    p::Union{AbstractPolynomial,AbstractTerm},
+                )
                     return left_constant_eq(a, p; comp = $comp)
                 end
 
