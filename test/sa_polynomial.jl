@@ -7,6 +7,9 @@ import StarAlgebras as SA
 import LinearAlgebra
 import SparseArrays
 
+# Matrices are not scalars by default, register them for matrix coefficients
+SA.@scalar_arithmetic Matrix{Int}
+
 @testset "Shared polynomial representation" begin
     DP.@polyvar x y
     p = 2x + y
