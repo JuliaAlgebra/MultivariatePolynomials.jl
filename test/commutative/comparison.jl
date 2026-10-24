@@ -6,10 +6,13 @@ end
 @testset "Comparison" begin
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
-        O = Graded{LexOrder}
-        @test ordering(x) == O
-        @test ordering(x * y) == O
-        @test ordering(variables(x * y)) == O
+        O = Graded(LexOrder())
+        for p in (x, x * y, 2x, x + y, variables(x * y))
+            @test (@inferred ordering(p)) === O
+            @test (@inferred ordering(typeof(p))) === O
+        end
+        @test sort([(1, 0), (0, 2), (0, 1)]; lt = ordering(x)) ==
+              [(0, 1), (1, 0), (0, 2)]
         @test x > y > z
         @test x^2 * y > y^3 > z
         @test y^2 >= x
