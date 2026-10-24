@@ -1,3 +1,8 @@
+"""
+    promote_variables(p::AbstractMonomial, q::AbstractMonomial)
+
+Return two monomials represented over the same variables.
+"""
 function promote_variables end
 
 function Base.promote_rule(
