@@ -47,10 +47,13 @@ promote_variables_with_maps
 
 ### Ordering
 
+Use `cmp(a, b)` to compare monomials or terms with their monomial ordering.
+For exponent vectors or tuples, use `cmp(order, e1, e2)`, where `order` is an
+[`AbstractMonomialOrdering`](@ref) instance.
+
 ```@docs
 AbstractMonomialOrdering
 ordering
-compare
 LexOrder
 InverseLexOrder
 Graded

@@ -359,15 +359,6 @@ function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
     return cmp(ordering(m1)(), exponents(s1), exponents(s2))
 end
 
-function compare(
-    m1::AbstractMonomial,
-    m2::AbstractMonomial,
-    ::Type{O},
-) where {O<:AbstractMonomialOrdering}
-    s1, s2 = promote_variables(m1, m2)
-    return cmp(O(), exponents(s1), exponents(s2))
-end
-
 # Implement this to make coefficients be compared with terms.
 function _cmp_coefficient(a::Real, b::Real)
     return cmp(a, b)
@@ -657,63 +648,6 @@ function Base.iterate(it::ExponentsIterator, state)
         return
     end
     return state[1], state
-end
-
-# TODO Backward compat, remove the following in next breaking release
-"""
-    compare(a, b, order::Type{<:AbstractMonomialOrdering})
-
-Returns a negative number if `a < b`, a positive number if `a > b` and zero if `a == b`.
-The comparison is done according to `order`.
-
-**Warning** This is deprecated, use `cmp(order(), a, b)` instead.
-"""
-function compare end
-
-function compare(t1::AbstractTermLike, t2::AbstractTermLike)
-    return compare(t1, t2, ordering(t1))
-end
-
-function compare(
-    e1::_TupleOrVector,
-    e2::_TupleOrVector,
-    ::Type{O},
-) where {O<:AbstractMonomialOrdering}
-    return cmp(O(), e1, e2)
-end
-
-function compare(
-    t1::AbstractTermLike,
-    t2::AbstractTermLike,
-    ::Type{O},
-) where {O<:AbstractMonomialOrdering}
-    Δ = compare(monomial(t1), monomial(t2), O)
-    if iszero(Δ)
-        return _cmp_coefficient(coefficient(t1), coefficient(t2))
-    end
-    return Δ
-end
-
-function compare(
-    a::AbstractMonomial,
-    b::AbstractMonomial,
-    ::Type{Graded{O}},
-) where {O}
-    deg_a = degree(a)
-    deg_b = degree(b)
-    if deg_a == deg_b
-        return compare(a, b, O)
-    else
-        return deg_a - deg_b
-    end
-end
-
-function compare(
-    a::AbstractMonomial,
-    b::AbstractMonomial,
-    ::Type{Reverse{O}},
-) where {O}
-    return compare(b, a, O)
 end
 
 Base.isless(v1::AbstractVariable, v2::AbstractVariable) = cmp(v1, v2) < 0
