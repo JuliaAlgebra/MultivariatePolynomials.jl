@@ -144,14 +144,6 @@ function convert_basis(basis::SA.AbstractBasis, p::SA.AlgebraElement)
     return SA.AlgebraElement(SA.coeffs(p, basis), algebra(basis))
 end
 
-function Base.isapprox(a::SA.AlgebraElement, α::Number; kws...)
-    return isapprox(
-        a,
-        α * constant_algebra_element(SA.basis(a), typeof(α));
-        kws...,
-    )
-end
-
 # Type operations for AlgebraElement
 function monomial_type(::Type{<:SA.AlgebraElement{T,A}}) where {T,A}
     return monomial_type(A)
