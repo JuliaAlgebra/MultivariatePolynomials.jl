@@ -23,9 +23,7 @@ macro scalar_arithmetic(Scalar)
         function Base.promote_rule(
             ::Type{P},
             ::Type{T},
-        ) where {P<:AbstractPolynomialLike,T<:$S}
-            # Scalar indices need a coefficient type that can also represent
-            # numeric constants, as when adding the scalar to a polynomial.
+        ) where {P<:AbstractMonomialLike,T<:$S}
             C = MA.promote_operation(+, coefficient_type(P), T)
             return similar_type(P, C)
         end
