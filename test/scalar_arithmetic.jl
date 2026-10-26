@@ -93,7 +93,11 @@ function test_promotion(a, p)
         C = MP.coefficient_type(constant)
         test_equal(constant, MP.constant_term(convert(C, a), constant))
         @test MA.isequal_canonical(
-            @inferred(convert(C, constant)),
+            @inferred(MP.convert_to_constant(constant)),
+            convert(C, a),
+        )
+        @test MA.isequal_canonical(
+            @inferred(MA.scaling(constant)),
             convert(C, a),
         )
     end

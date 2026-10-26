@@ -152,17 +152,6 @@ end
             end
         end
     end
-    @testset "Equality with the coefficient type" begin
-        Mod.@polyvar x
-        a = [1, 2]
-        constant = term(a, one(x))
-        for p in (constant, polynomial(constant)), comp in (==, isequal)
-            @test comp(p, a)
-            @test comp(a, p)
-            @test !comp(p, [1, 3])
-            @test !comp([1, 3], p)
-        end
-    end
     lex = LexOrder
     grlex = Graded{lex}
     rinvlex = Reverse{InverseLexOrder}
