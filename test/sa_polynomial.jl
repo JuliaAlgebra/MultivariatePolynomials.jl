@@ -25,6 +25,8 @@ SA.@scalar_arithmetic Matrix{Int}
     @test MP.term_type(x) === DP.Term{Int}
     @test MP.polynomial_type(x) === typeof(p)
     @test MP.polynomial_type(p, Float64) === DP.Polynomial{Float64}
+    @test MP.similar_type(typeof(p), Float64) === DP.Polynomial{Float64}
+    @test MP.similar_type(typeof(2x), Float64) === DP.Term{Float64}
     @test MP.coefficient_type(x^2) === Int
     @test MP.coefficients(p) == [1, 2]
     @test MP.coefficient.(MP.terms(p)) == [1, 2]
