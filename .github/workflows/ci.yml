@@ -41,8 +41,8 @@ jobs:
         run: |
           using Pkg
           Pkg.add([
-              PackageSpec(name="DynamicPolynomials", rev="bl/sa_term"),
-              PackageSpec(name="TypedPolynomials", rev="bl/sa_poly"),
+              PackageSpec(name="DynamicPolynomials", rev="bl/ordering_instance"),
+              PackageSpec(name="TypedPolynomials", rev="bl/ordering_instance"),
           ])
 
       - uses: julia-actions/julia-buildpkg@v1
