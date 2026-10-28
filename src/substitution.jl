@@ -117,10 +117,49 @@ function _check_substitution(s::AbstractMultiSubstitution)
     return
 end
 
+# Returns `nothing` for the variables that are not substituted.
+struct _Partial <: AbstractSubstitutionType end
+_substitution_value(::Type, ::_Partial, v) = nothing
+
+function _is_numeric_substitution(p, s)
+    return p isa AbstractPolynomial &&
+           SA.basis(p) isa FullBasis{Monomial} &&
+           SA.coeffs(p) isa SA.SparseCoefficients &&
+           variables(p) isa AbstractVector &&
+           _substitution_type(Eval, typeof(p), typeof.(s)...) <: Number
+end
+
+# Substituting numbers does not change the monomials of the remaining
+# variables so we update the exponents directly instead of multiplying terms
+# that have different variables.
+function _substitute_numbers(p, s)
+    R = _substitution_type(Eval, typeof(p), typeof.(s)...)
+    vars = variables(p)
+    vals = [_substitution_value(R, _Partial(), v, s...) for v in vars]
+    keep = findall(isnothing, vals)
+    c = SA.coeffs(p)
+    new_keys = [exps[keep] for exps in keys(c)]
+    new_values = map(keys(c), values(c)) do exps, α
+        β = one(R)
+        for (i, val) in enumerate(vals)
+            if !isnothing(val)
+                β *= val^exps[i]
+            end
+        end
+        return α * β
+    end
+    basis = FullBasis{Monomial}(vars[keep])
+    coeffs = SA.SparseCoefficients(new_keys, new_values, SA.comparable(basis))
+    return SA.AlgebraElement(MA.operate!(SA.canonical, coeffs), algebra(basis))
+end
+
 function substitute(st::_AST, p::_APL, s::Substitutions)
     foreach(_check_substitution, s)
     if st isa Eval && isempty(s)
         return convert_to_constant(p)
+    end
+    if st isa Subs && _is_numeric_substitution(p, s)
+        return _substitute_numbers(p, s)
     end
     T =
         variables(p) isa Tuple && st isa Subs ? Any :
@@ -146,7 +185,12 @@ function _evaluate_positional(p, vals)
     return _substitute(p, vals)
 end
 
-function substitute(::Eval, p::_APL, vals::AbstractVector)
+# The empty tuple is handled as an empty tuple of substitutions.
+function substitute(
+    ::Eval,
+    p::_APL,
+    vals::Union{AbstractVector,Tuple{Number,Vararg{Number}}},
+)
     return _evaluate_positional(p, vals)
 end
 
