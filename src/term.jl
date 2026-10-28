@@ -17,7 +17,7 @@ difference between this and `coef * mono`:
 Converts the polynomial `p` to a term.
 When applied on a polynomial, it throws an `InexactError` if it has more than one term.
 When applied to a term, it is the identity and does not copy it.
-When applied to a monomial, it create a term of type `AbstractTerm{Int}`.
+When applied to a monomial, it create a term of type `AbstractTerm{Bool}`.
 """
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
@@ -25,7 +25,7 @@ function term(coef, mono::AbstractMonomialLike)
     return SA.Term(coef, mono)
 end
 # Convert any polynomial-like to a term
-term(m::AbstractMonomialLike) = term(one(Int), monomial(m))
+term(m::AbstractMonomialLike) = term(true, monomial(m))
 term(t::AbstractTerm) = t
 function term(p::AbstractPolynomial)
     nterms(p) <= 1 || throw(InexactError(:term, term_type(p), p))
@@ -61,7 +61,7 @@ term_type(::Type{TT}) where {TT<:SA.Term} = TT
 function term_type(::Type{<:SA.Term{<:Any,A,I}}, ::Type{T}) where {T,A,I}
     return SA.Term{T,A,I}
 end
-term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Int)
+term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Bool)
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)
@@ -105,7 +105,7 @@ Calling `coefficient(2x + 4y^2 + 3, x^2)` should return ``0``.
 """
 function coefficient end
 coefficient(t::SA.Term) = SA.coefficient(t)
-coefficient(m::AbstractMonomialLike) = 1
+coefficient(m::AbstractMonomialLike) = true
 function coefficient(p::AbstractPolynomialLike, m::AbstractMonomialLike)
     for t in terms(p)
         if monomial(t) == m
@@ -155,7 +155,7 @@ Returns the coefficient type of a polynomial of type `PT`.
 
 Calling `coefficient_type` on ``(4//5)x^2y`` should return `Rational{Int}`,
 calling `coefficient_type` on ``1.0x^2y + 2.0x`` should return `Float64` and
-calling `coefficient_type` on ``xy`` should return `Int`.
+calling `coefficient_type` on ``xy`` should return `Bool`.
 """
 function coefficient_type(
     ::Union{AbstractVector{P},Type{<:AbstractVector{P}}},
@@ -165,7 +165,7 @@ end
 function coefficient_type(
     ::Union{AbstractMonomialLike,Type{<:AbstractMonomialLike}},
 )
-    return Int
+    return Bool
 end
 coefficient_type(::Union{AbstractTerm{T},Type{<:AbstractTerm{T}}}) where {T} = T
 function coefficient_type(

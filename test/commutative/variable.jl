@@ -37,11 +37,11 @@ import MultivariatePolynomials:
         @test !iszero(x)
         @test zero(x) == 0
         @test iszero(zero(x))
-        @test zero(x) isa AbstractPolynomial{Int}
+        @test zero(x) isa AbstractPolynomial{Bool}
         @inferred zero(x)
 
-        typetests(x)
-        @test (@inferred polynomial(x)) isa AbstractPolynomial{Int}
+        typetests(x, Bool)
+        @test (@inferred polynomial(x)) isa AbstractPolynomial{Bool}
         @test (@inferred polynomial(x, Float64)) isa AbstractPolynomial{Float64}
 
         @test nterms(x) == 1

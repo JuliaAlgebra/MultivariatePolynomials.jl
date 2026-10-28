@@ -18,21 +18,22 @@ function alloc_test(f, n)
     @test n == @allocated f()
 end
 
-function _typetests(x)
-    @test (@inferred coefficient_type(x)) == Int
+function _typetests(x, T)
+    @test (@inferred coefficient_type(x)) == T
 
     @test (@inferred monomial_type(x))<:AbstractMonomial
 
-    @test (@inferred term_type(x))<:AbstractTerm{Int}
+    @test (@inferred term_type(x))<:AbstractTerm{T}
     @test (@inferred term_type(x, Float64))<:AbstractTerm{Float64}
 
-    @test (@inferred polynomial_type(x))<:AbstractPolynomial{Int}
+    @test (@inferred polynomial_type(x))<:AbstractPolynomial{T}
     @test (@inferred polynomial_type(x, Float64))<:AbstractPolynomial{Float64}
 
     @test (@inferred monomial_vector_type(x))<:AbstractArray{<:AbstractMonomial}
 end
 
-function typetests(x)
-    _typetests(x)
-    return _typetests(typeof(x))
+# `T` is the expected coefficient type
+function typetests(x, T)
+    _typetests(x, T)
+    return _typetests(typeof(x), T)
 end

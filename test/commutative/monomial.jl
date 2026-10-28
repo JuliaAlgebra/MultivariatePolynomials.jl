@@ -225,7 +225,7 @@ end
     Mod.@polyvar x
 
     @test zero(x^2) == 0
-    @test zero(x^2) isa AbstractPolynomial{Int}
+    @test zero(x^2) isa AbstractPolynomial{Bool}
     @inferred zero(x^2)
     @test (@inferred one(x^2)) == 1
     @test one(x^2) isa AbstractMonomial
@@ -259,9 +259,9 @@ end
     m = x^2
     @test x != m
     @test m != x
-    typetests(m)
-    typetests([x^2, x^3])
-    @test (@inferred polynomial(m)) isa AbstractPolynomial{Int}
+    typetests(m, Bool)
+    typetests([x^2, x^3], Bool)
+    @test (@inferred polynomial(m)) isa AbstractPolynomial{Bool}
     @test (@inferred polynomial(m, Float64)) isa AbstractPolynomial{Float64}
 
     @test variable(x^1) == x

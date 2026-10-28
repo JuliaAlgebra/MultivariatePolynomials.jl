@@ -186,8 +186,8 @@ end
     @test *(p) === p
     @test terms(p)[1] == 2x
     @test terms(p)[end] == 3x^2 * y^4
-    typetests(p)
-    typetests([p, x + y])
+    typetests(p, Int)
+    typetests([p, x + y], Int)
     @test (@inferred polynomial(p)) isa AbstractPolynomial{Int}
     @test (@inferred polynomial(p, Float64)) isa AbstractPolynomial{Float64}
 

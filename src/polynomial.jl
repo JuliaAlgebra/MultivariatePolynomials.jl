@@ -117,7 +117,7 @@ Returns the same as `polynomial_type(::PT, ::Type{T})`.
 function polynomial_type end
 polynomial_type(p::_APL, args::Type...) = polynomial_type(typeof(p), args...)
 function polynomial_type(::Type{M}) where {M<:AbstractMonomialLike}
-    return polynomial_type(M, Int)
+    return polynomial_type(M, Bool)
 end
 function polynomial_type(::Type{V}, ::Type{T}) where {V<:AbstractVariable,T}
     return polynomial_type(monomial_type(V), T)
