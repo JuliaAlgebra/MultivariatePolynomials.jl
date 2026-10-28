@@ -1,5 +1,6 @@
 if !@isdefined(Mod)
-    import DynamicPolynomials as Mod
+    include("../SimplePolynomials.jl")
+    import .SimplePolynomials as Mod
     include("../utils.jl")
 end
 
@@ -9,6 +10,10 @@ import MutableArithmetics as MA
 import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
+
+# Used as coefficients in "Scalar coefficient promotion"
+SA.@scalar_arithmetic Matrix{Int}
+MP.@scalar_arithmetic Matrix{Int}
 
 @testset "Polynomial coefficient and monomial lengths" begin
     Mod.@polyvar x

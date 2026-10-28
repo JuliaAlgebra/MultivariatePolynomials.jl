@@ -1,7 +1,10 @@
 module TestSAPolynomial
 
 using Test
-import DynamicPolynomials as DP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import StarAlgebras as SA
 import LinearAlgebra
@@ -12,7 +15,7 @@ SA.@scalar_arithmetic Matrix{Int}
 MP.@scalar_arithmetic Matrix{Int}
 
 @testset "Shared polynomial representation" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     p = 2x + y
     for a in (x, x * y)
         @test +a === a
@@ -22,21 +25,23 @@ MP.@scalar_arithmetic Matrix{Int}
     @test x^2 isa MP.AbstractTermLike
     @test 2x isa MP.AbstractTerm
     @test p isa MP.AbstractPolynomial
-    @test typeof(p) === DP.Polynomial{Int}
-    @test MP.term_type(x) === DP.Term{Bool}
-    @test MP.polynomial_type(x) === DP.Polynomial{Bool}
-    @test MP.polynomial_type(p, Float64) === DP.Polynomial{Float64}
-    @test MP.similar_type(typeof(p), Float64) === DP.Polynomial{Float64}
-    @test MP.similar_type(typeof(2x), Float64) === DP.Term{Float64}
+    @test typeof(p) === Mod.Polynomial{Int}
+    @test MP.term_type(x) === Mod.Term{Bool}
+    @test MP.polynomial_type(x) === Mod.Polynomial{Bool}
+    @test MP.polynomial_type(p, Float64) === Mod.Polynomial{Float64}
+    @test MP.similar_type(typeof(p), Float64) === Mod.Polynomial{Float64}
+    @test MP.similar_type(typeof(2x), Float64) === Mod.Term{Float64}
     @test MP.coefficient_type(x^2) === Bool
     @test MP.coefficients(p) == [1, 2]
     @test MP.coefficient.(MP.terms(p)) == [1, 2]
     @test length(MP.monomials(p)) == 2
     @test MP.polynomial(p) === p
     @test MP.polynomial!(p) === p
-    @test MP.polynomial!(2x, Float64) isa DP.Polynomial{Float64}
-    @test sprint(show, typeof(p)) == "DynamicPolynomials.Polynomial{$Int}"
-    @test sprint(show, typeof(2x)) == "DynamicPolynomials.Term{$Int}"
+    @test MP.polynomial!(2x, Float64) isa Mod.Polynomial{Float64}
+    @static if nameof(Mod) == :DynamicPolynomials
+        @test sprint(show, typeof(p)) == "DynamicPolynomials.Polynomial{$Int}"
+        @test sprint(show, typeof(2x)) == "DynamicPolynomials.Term{$Int}"
+    end
     @test promote_type(typeof(x), String) === Any
     @test_throws MethodError p * "x"
     @test MP.coefficients(@inferred p * 0.5) == [0.5, 1.0]
@@ -49,7 +54,7 @@ MP.@scalar_arithmetic Matrix{Int}
     @test iszero(sum([x, y]) - (x + y))
     @test iszero(sum([p, p]) - 2p)
     @test MP.coefficients(p) == [1, 2]
-    @test iszero(sum(DP.Polynomial{Int}[]))
+    @test iszero(sum(Mod.Polynomial{Int}[]))
     @test !isone(zero(p))
     @test SA.coeffs(zero(p)) != SA.coeffs(p)
     @test MP.coefficients(MP.differentiate(p, x)) == [2]
@@ -68,22 +73,24 @@ MP.@scalar_arithmetic Matrix{Int}
     @test (2x)(x => 3) == 6
     @test MP.coefficient_type([x, y]) === Bool
 
-    DP.@polyvar u v monomial_order=MP.LexOrder
-    q = u + v
-    @test !(q isa DP.Polynomial)
-    @test MP.polynomial_type(u, Int) === typeof(q)
-    @test iszero(sum([u, v]) - q)
+    @static if nameof(Mod) == :DynamicPolynomials
+        Mod.@polyvar u v monomial_order=MP.LexOrder
+        q = u + v
+        @test !(q isa Mod.Polynomial)
+        @test MP.polynomial_type(u, Int) === typeof(q)
+        @test iszero(sum([u, v]) - q)
+    end
 end
 
 # Issue #277: monomials have coefficient `true` so they do not widen narrower
 # coefficient types.
 @testset "Bool coefficient type of monomials" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for m in (x, x * y)
         @test MP.coefficient_type(m) === Bool
-        @test MP.term_type(m) === DP.Term{Bool}
-        @test MP.polynomial_type(m) === DP.Polynomial{Bool}
-        @test MP.term(m) isa DP.Term{Bool}
+        @test MP.term_type(m) === Mod.Term{Bool}
+        @test MP.polynomial_type(m) === Mod.Polynomial{Bool}
+        @test MP.term(m) isa Mod.Term{Bool}
     end
     @test MP.coefficient_type(x + one(UInt16)) === UInt16
     @test MP.coefficient_type(UInt8(2) * x + y) === UInt8
@@ -93,7 +100,7 @@ end
 end
 
 @testset "Registered scalars extend finite polynomial bases" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[1], [2]])
     alg = MP.algebra(basis)
     p = SA.AlgebraElement([2, 3], alg)
@@ -112,103 +119,107 @@ end
     @test t == 2x
 end
 
-@testset "Promotion without common type" begin
-    DP.@polyvar x
-    DP.@ncpolyvar y
-    # Used to overflow the stack
-    for (a, b) in ((x, y), (x^2, y^2), (x, y^2))
-        P = promote_type(typeof(a), typeof(b))
-        @test promote_type(typeof(b), typeof(a)) == P
-        @test !isconcretetype(P)
-        @test [a, b] isa Vector{P}
+@static if isdefined(Mod, Symbol("@ncpolyvar"))
+    @testset "Promotion without common type" begin
+        Mod.@polyvar x
+        Mod.@ncpolyvar y
+        # Used to overflow the stack
+        for (a, b) in ((x, y), (x^2, y^2), (x, y^2))
+            P = promote_type(typeof(a), typeof(b))
+            @test promote_type(typeof(b), typeof(a)) == P
+            @test !isconcretetype(P)
+            @test [a, b] isa Vector{P}
+        end
+        @test eltype([x, y]) <: Mod.Variable
+        for (a, b) in ((x, 2y), (2x, 2y), (x + 1, y + 1))
+            @test promote_type(typeof(a), typeof(b)) == Any
+            @test promote_type(typeof(b), typeof(a)) == Any
+        end
+        # Issue DynamicPolynomials#94
+        P = MP.polynomial_type(x + 1, Any)
+        @test promote_type(Any, P) == Any
+        @test promote_type(P, Any) == Any
     end
-    @test eltype([x, y]) <: DP.Variable
-    for (a, b) in ((x, 2y), (2x, 2y), (x + 1, y + 1))
-        @test promote_type(typeof(a), typeof(b)) == Any
-        @test promote_type(typeof(b), typeof(a)) == Any
+
+    @testset "Ordered noncommutative monomials" begin
+        Mod.@ncpolyvar x y z
+        @testset "Finite word bases" begin
+            full = MP.FullBasis{MP.Monomial}([x, y])
+            basis = MP.SubBasis{MP.Monomial}([x * y * x, y^2, 1])
+            @test (@inferred MP.explicit_basis_type(typeof(full))) ===
+                  typeof(basis)
+            @test (@inferred MP.maxdegree(basis)) == 3
+            @test MP.mindegree(basis) == 0
+            @test MP.extdegree(basis) == (0, 3)
+            @test MP.maxdegree(basis, x) == MP.maxdegree(basis, y) == 2
+            @test MP.mindegree(basis, x) == 0
+            @test MP.extdegree(basis, x) == (0, 2)
+            @test MP.explicit_basis_covering(full, basis) == basis
+            @test MP.keys_as_monomials(MP.maxdegree_basis(full, 2)) ==
+                  MP.monomials([x, y], 0:2)
+        end
+        xy, yx = @inferred(x * y), @inferred(y * x)
+        @test xy != yx
+        @test MP.variables(xy) == [x, y]
+        @test MP.variables(yx) == [y, x]
+        @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
+        @test x * x == x^2
+        for (word, vars, exps) in (
+            (x * (y * x), [x, y, x], [1, 1, 1]),
+            ((x * y^2) * (y^3 * z), [x, y, z], [1, 5, 1]),
+            ((x * x * y) * (y * x), [x, y, x], [2, 2, 1]),
+            ((x * y)^2, [x, y, x, y], [1, 1, 1, 1]),
+            ((x * y)^3, [x, y, x, y, x, y], ones(Int, 6)),
+            (x^1000000 * y, [x, y], [1000000, 1]),
+        )
+            @test MP.variables(word) == vars
+            @test MP.exponents(word) == exps
+        end
+        @test x^0 * y == y
+        @test y * x^0 == y
+        @test isone((x * y)^0)
+        @test (x * y)^1 == xy
+        copied = xy^1
+        @test MP.variables(copied) !== MP.variables(xy)
+        @test MP.exponents(copied) !== MP.exponents(xy)
+        MP.variables(copied)[1] = z
+        MP.exponents(copied)[2] = 3
+        @test MP.variables(xy) == [x, y]
+        @test MP.exponents(xy) == [1, 1]
+        @test (@inferred MP.degree(x * y^4 * x^2, x)) == 3
+
+        a, b = @inferred SA.promote_bases(xy, yx)
+        @test MP.variables(a) == MP.variables(b) == [x, y, x]
+        @test MP.exponents(a) == [1, 1, 0]
+        @test MP.exponents(b) == [0, 1, 1]
+        @test a == xy && b == yx
+        @test isequal(a, xy) && hash(a) == hash(xy)
+        @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
+        @test (@inferred MP.exponents(x^2 * y * x, [x, y, x, z])) ==
+              [2, 1, 1, 0]
+        @test MP.exponents(a, MP.variables(a)) == MP.exponents(a)
+        @test MP.exponents(a, MP.variables(a)) !== MP.exponents(a)
+        @test_throws ArgumentError MP.exponents(yx, [x, y])
+
+        p = @inferred x + y
+        @test typeof(2x) === MP.term_type(x, Int)
+        @test typeof(p) === MP.polynomial_type(x, Int)
+        @test p == y + x
+        @test (@inferred sum([x, y])) == p
+        @test (@inferred LinearAlgebra.dot([x, y], [x, y])) == x^2 + y^2
+        @test (x + 1) * (x + 2) == x^2 + 3x + 2
+        p = MP.term(2, xy) + MP.term(3, yx)
+        @test MP.coefficient(p, xy) == 2
+        @test MP.coefficient(p, yx) == 3
+
+        Mod.@polyvar u v w
+        @test (@inferred MP.exponents(u^2 * v, [u, v, w])) == [2, 1, 0]
+        @test_throws ArgumentError MP.exponents(u * v, [u])
     end
-    # Issue DynamicPolynomials#94
-    P = MP.polynomial_type(x + 1, Any)
-    @test promote_type(Any, P) == Any
-    @test promote_type(P, Any) == Any
-end
-
-@testset "Ordered noncommutative monomials" begin
-    DP.@ncpolyvar x y z
-    @testset "Finite word bases" begin
-        full = MP.FullBasis{MP.Monomial}([x, y])
-        basis = MP.SubBasis{MP.Monomial}([x * y * x, y^2, 1])
-        @test (@inferred MP.explicit_basis_type(typeof(full))) === typeof(basis)
-        @test (@inferred MP.maxdegree(basis)) == 3
-        @test MP.mindegree(basis) == 0
-        @test MP.extdegree(basis) == (0, 3)
-        @test MP.maxdegree(basis, x) == MP.maxdegree(basis, y) == 2
-        @test MP.mindegree(basis, x) == 0
-        @test MP.extdegree(basis, x) == (0, 2)
-        @test MP.explicit_basis_covering(full, basis) == basis
-        @test MP.keys_as_monomials(MP.maxdegree_basis(full, 2)) ==
-              MP.monomials([x, y], 0:2)
-    end
-    xy, yx = @inferred(x * y), @inferred(y * x)
-    @test xy != yx
-    @test MP.variables(xy) == [x, y]
-    @test MP.variables(yx) == [y, x]
-    @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
-    @test x * x == x^2
-    for (word, vars, exps) in (
-        (x * (y * x), [x, y, x], [1, 1, 1]),
-        ((x * y^2) * (y^3 * z), [x, y, z], [1, 5, 1]),
-        ((x * x * y) * (y * x), [x, y, x], [2, 2, 1]),
-        ((x * y)^2, [x, y, x, y], [1, 1, 1, 1]),
-        ((x * y)^3, [x, y, x, y, x, y], ones(Int, 6)),
-        (x^1000000 * y, [x, y], [1000000, 1]),
-    )
-        @test MP.variables(word) == vars
-        @test MP.exponents(word) == exps
-    end
-    @test x^0 * y == y
-    @test y * x^0 == y
-    @test isone((x * y)^0)
-    @test (x * y)^1 == xy
-    copied = xy^1
-    @test MP.variables(copied) !== MP.variables(xy)
-    @test MP.exponents(copied) !== MP.exponents(xy)
-    MP.variables(copied)[1] = z
-    MP.exponents(copied)[2] = 3
-    @test MP.variables(xy) == [x, y]
-    @test MP.exponents(xy) == [1, 1]
-    @test (@inferred MP.degree(x * y^4 * x^2, x)) == 3
-
-    a, b = @inferred SA.promote_bases(xy, yx)
-    @test MP.variables(a) == MP.variables(b) == [x, y, x]
-    @test MP.exponents(a) == [1, 1, 0]
-    @test MP.exponents(b) == [0, 1, 1]
-    @test a == xy && b == yx
-    @test isequal(a, xy) && hash(a) == hash(xy)
-    @test MP.exponents(xy) == MP.exponents(yx) == [1, 1]
-    @test (@inferred MP.exponents(x^2 * y * x, [x, y, x, z])) == [2, 1, 1, 0]
-    @test MP.exponents(a, MP.variables(a)) == MP.exponents(a)
-    @test MP.exponents(a, MP.variables(a)) !== MP.exponents(a)
-    @test_throws ArgumentError MP.exponents(yx, [x, y])
-
-    p = @inferred x + y
-    @test typeof(2x) === MP.term_type(x, Int)
-    @test typeof(p) === MP.polynomial_type(x, Int)
-    @test p == y + x
-    @test (@inferred sum([x, y])) == p
-    @test (@inferred LinearAlgebra.dot([x, y], [x, y])) == x^2 + y^2
-    @test (x + 1) * (x + 2) == x^2 + 3x + 2
-    p = MP.term(2, xy) + MP.term(3, yx)
-    @test MP.coefficient(p, xy) == 2
-    @test MP.coefficient(p, yx) == 3
-
-    DP.@polyvar u v w
-    @test (@inferred MP.exponents(u^2 * v, [u, v, w])) == [2, 1, 0]
-    @test_throws ArgumentError MP.exponents(u * v, [u])
 end
 
 @testset "Parent-aware sums" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     left, right = @inferred SA.promote_bases(2x, 3y)
     @test parent(left) == parent(right)
     @test left == 2x
@@ -220,7 +231,7 @@ end
         @test (@inferred MP.MA.operate(sum, a)) == expected
         @test sum(a; init = z + 1) == expected + z + 1
         @test sum(a; init = 0.5) ==
-              convert(DP.Polynomial{Float64}, expected) + 0.5
+              convert(Mod.Polynomial{Float64}, expected) + 0.5
         @test a == originals
         @test parent(sum(a)) == parent(expected)
     end
@@ -230,11 +241,11 @@ end
     original = deepcopy(p)
     @test sum(a; init = p) == 3p
     @test p == original
-    @test iszero(sum(DP.Polynomial{Int}[]))
-    @test iszero(sum(DP.Term{Int}[]))
+    @test iszero(sum(Mod.Polynomial{Int}[]))
+    @test iszero(sum(Mod.Term{Int}[]))
     @test iszero(sum(typeof(x)[]))
-    @test sum(DP.Polynomial{Int}[]; init = p) == p
-    @test parent(sum(DP.Polynomial{Int}[]; init = p)) === parent(p)
+    @test sum(Mod.Polynomial{Int}[]; init = p) == p
+    @test parent(sum(Mod.Polynomial{Int}[]; init = p)) === parent(p)
 
     a = [x y; z x]
     @test sum(a; dims = 1) == [x + z y + x]
@@ -243,12 +254,12 @@ end
 
     @test MP.polynomial([2x, 3y, -2x]) == 3y
     @test MP.differentiate(x^2 + 2x*y + y, x) == 2x + 2y
-    DP.@complex_polyvar w
+    Mod.@complex_polyvar w
     @test adjoint((1 + im) * w + x) == (1 - im) * conj(w) + x
 end
 
 @testset "Parent-aware dot products" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for (a, b) in (
         ([x, y], [y, z]),
         ([2x, 3y], [4y, 5z]),
@@ -267,17 +278,17 @@ end
         @test (a, b) == originals
         @test_throws DimensionMismatch LinearAlgebra.dot(a, b[1:1])
     end
-    for T in (Int, BigInt, Complex{Int}), P in (DP.Polynomial{T}, DP.Term{T})
-        @test (@inferred LinearAlgebra.dot(P[], P[])) isa DP.Polynomial{T}
+    for T in (Int, BigInt, Complex{Int}), P in (Mod.Polynomial{T}, Mod.Term{T})
+        @test (@inferred LinearAlgebra.dot(P[], P[])) isa Mod.Polynomial{T}
         result = LinearAlgebra.dot(P[], P[])
         @test iszero(result)
         @test MP.coefficient_type(result) === T
     end
     @test iszero(LinearAlgebra.dot(typeof(x)[], typeof(x)[]))
 
-    DP.@complex_polyvar w
-    a = DP.Polynomial{Complex{Int}}[(1+2im)*w+x, w+y]
-    b = DP.Polynomial{Complex{Int}}[z+w, (2-im)*w+x]
+    Mod.@complex_polyvar w
+    a = Mod.Polynomial{Complex{Int}}[(1+2im)*w+x, w+y]
+    b = Mod.Polynomial{Complex{Int}}[z+w, (2-im)*w+x]
     originals = MP.MA.mutable_copy.((a, b))
     @test (@inferred LinearAlgebra.dot(a, b)) ==
           ((1 - 2im) * conj(w) + x) * b[1] + (conj(w) + y) * b[2]
@@ -289,7 +300,7 @@ end
 end
 
 @testset "Mixed numeric and polynomial dot products" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for polynomials in (
             [x, y],
             [x^2, y^2],
@@ -332,22 +343,22 @@ end
     MP.MA.operate!(+, first(MP.coefficients(result)), big(1))
     @test numbers == [2, 3]
 
-    for T in (Int, BigInt, Complex{Int}), P in (DP.Polynomial{T}, DP.Term{T})
+    for T in (Int, BigInt, Complex{Int}), P in (Mod.Polynomial{T}, Mod.Term{T})
         for (a, b) in ((Float64[], P[]), (P[], Float64[]))
             result = @inferred LinearAlgebra.dot(a, b)
-            @test result isa DP.Polynomial{promote_type(T, Float64)}
+            @test result isa Mod.Polynomial{promote_type(T, Float64)}
             @test iszero(result)
         end
     end
     for T in (Float64, BigInt), P in (typeof(x), typeof(x^2))
         for (a, b) in ((T[], P[]), (P[], T[]))
             result = @inferred LinearAlgebra.dot(a, b)
-            @test result isa DP.Polynomial{T}
+            @test result isa Mod.Polynomial{T}
             @test iszero(result)
         end
     end
 
-    DP.@complex_polyvar w
+    Mod.@complex_polyvar w
     numbers = [1 + 2im, 3 - im]
     for polynomials in (
             [w, x],
@@ -368,7 +379,7 @@ end
 end
 
 @testset "Matrix products in a common basis" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for (A, b) in (
         ([1 2; 3 4], [x, y]),
         ([0.5 1.5; 2.5 3.5], [x^2, y^2]),
@@ -414,8 +425,8 @@ end
         end
     end
 
-    DP.@complex_polyvar w
-    A = DP.Polynomial{Complex{Int}}[
+    Mod.@complex_polyvar w
+    A = Mod.Polynomial{Complex{Int}}[
         (1 + im) * w + x w + y
         w + z (2 - im) * w + x
     ]
@@ -459,7 +470,7 @@ end
         @test output == expected .* (1 + im) .+ initial .* (2 - im)
     end
 
-    for P in (typeof(x), DP.Term{Int}, DP.Polynomial{Int})
+    for P in (typeof(x), Mod.Term{Int}, Mod.Polynomial{Int})
         result = @inferred zeros(Float64, 2, 0) * P[]
         @test length(result) == 2
         @test all(iszero, result)
@@ -494,7 +505,7 @@ end
     end
 
     # MA evaluates the product even when α is zero, so use finite inputs.
-    output = Vector{DP.Polynomial{Int}}(undef, 1)
+    output = Vector{Mod.Polynomial{Int}}(undef, 1)
     @test LinearAlgebra.mul!(output, [2.0 3.0], [x + 1, y + 2], 0, 0) === output
     @test iszero(only(output))
     output = [z + 1]
@@ -510,8 +521,8 @@ end
     for output in ([x + 1, z + 2], [x + 1 z + 2; z + 2 x + 1])
         initial = copy(output)
         B =
-            output isa AbstractVector ? DP.Polynomial{Int}[] :
-            Matrix{DP.Polynomial{Int}}(undef, 0, 2)
+            output isa AbstractVector ? Mod.Polynomial{Int}[] :
+            Matrix{Mod.Polynomial{Int}}(undef, 0, 2)
         @test (@inferred LinearAlgebra.mul!(
             output,
             zeros(Int, 2, 0),
@@ -521,18 +532,18 @@ end
         )) === output
         @test output == initial .* 3
     end
-    output = Matrix{DP.Polynomial{Int}}(undef, 0, 2)
+    output = Matrix{Mod.Polynomial{Int}}(undef, 0, 2)
     @test (@inferred LinearAlgebra.mul!(output, zeros(Int, 0, 2), A, 2, 3)) ===
           output
 
     result =
-        @inferred zeros(Int, 2, 0) * Matrix{DP.Polynomial{BigInt}}(undef, 0, 2)
+        @inferred zeros(Int, 2, 0) * Matrix{Mod.Polynomial{BigInt}}(undef, 0, 2)
     MP.MA.operate!(+, result[1], one(result[1]))
     @test result == [1 0; 0 0]
 end
 
 @testset "Mixed sparse and dense matrix products" begin
-    DP.@polyvar x y z w
+    Mod.@polyvar x y z w
     N = SparseArrays.sparse([0 2; 3 0])
     P = SparseArrays.sparse([2, 1, 2], [1, 2, 2], [x + 1, y + 2, z + 3], 2, 2)
     D = [x + 1 y + 2; y + 1 z + 2]
@@ -581,11 +592,11 @@ end
         @test SparseArrays.nonzeros(P) == originals
     end
 
-    DP.@complex_polyvar u
+    Mod.@complex_polyvar u
     P = SparseArrays.sparse(
         [2, 1, 2],
         [1, 2, 2],
-        DP.Polynomial{Complex{Int}}[(1+im)*u+x, y+u, z+2u],
+        Mod.Polynomial{Complex{Int}}[(1+im)*u+x, y+u, z+2u],
         2,
         2,
     )
@@ -606,7 +617,7 @@ end
         @test output == expected .* 2
     end
 
-    empty = SparseArrays.spzeros(DP.Polynomial{Int}, 2, 2)
+    empty = SparseArrays.spzeros(Mod.Polynomial{Int}, 2, 2)
     @test (@inferred empty * [2, 3]) == [0, 0]
     @test (@inferred [1 2; 3 4] * empty) == zeros(Int, 2, 2)
     @test isempty(@inferred zeros(Int, 0, 2) * empty)
@@ -614,7 +625,7 @@ end
 end
 
 @testset "Equality and adjoints" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     p = x + y
     for comp in (==, isequal)
         @test comp(zero(p), 0) && comp(0, zero(p))
@@ -644,11 +655,11 @@ include("sa_operand_promotion.jl")
 include("sa_dense_products.jl")
 
 @testset "Prepared fused polynomial destinations" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for T in (Int, BigInt)
-        a = convert(DP.Polynomial{T}, 2x + 2)
-        b = convert(DP.Polynomial{T}, y + 1)
-        prototype = convert(DP.Polynomial{T}, x + y + z)
+        a = convert(Mod.Polynomial{T}, 2x + 2)
+        b = convert(Mod.Polynomial{T}, y + 1)
+        prototype = convert(Mod.Polynomial{T}, x + y + z)
         alg = parent(prototype)
         originals = MP.MA.mutable_copy.((a, b))
         for op in (MP.MA.add_mul, MP.MA.sub_mul),
@@ -667,14 +678,14 @@ include("sa_dense_products.jl")
 end
 
 @testset "Fused polynomial products" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for T in (Int, BigInt), op in (MP.MA.add_mul, MP.MA.sub_mul)
         a, b = SA.promote_bases(
-            convert(DP.Polynomial{T}, x + 1),
-            convert(DP.Polynomial{T}, y + 2),
+            convert(Mod.Polynomial{T}, x + 1),
+            convert(Mod.Polynomial{T}, y + 2),
         )
         for (left, right) in ((a, b), (last(MP.terms(a)), last(MP.terms(b))))
-            f = convert(DP.Polynomial{T}, x + y)
+            f = convert(Mod.Polynomial{T}, x + y)
             originals = MP.MA.copy_if_mutable.((f, left, right))
             expected = op(f, left, right)
             out = zero(f)
@@ -694,9 +705,9 @@ end
 end
 
 @testset "Fused scalar products" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for T in (Int, BigInt), op in (MP.MA.add_mul, MP.MA.sub_mul)
-        g = convert(DP.Polynomial{T}, x + 2y)
+        g = convert(Mod.Polynomial{T}, x + 2y)
         for p in (g, last(MP.terms(g))), (a, b) in ((2.0, p), (p, 2.0))
             f = one(g)
             expected = op(f, a, b)
@@ -722,7 +733,7 @@ end
 end
 
 @testset "Matching coefficient type" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     a = [1 2; 3 4]
     t = MP.term(a, x)
     c = one(x)
@@ -737,7 +748,7 @@ end
 end
 
 @testset "Coefficient types in division and GCD" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     algo = MP.SubresultantAlgorithm()
     immutable = MP.MA.IsNotMutable()
     for (p, T, field) in (
@@ -752,11 +763,11 @@ end
     )
         P = typeof(p)
         for op in (div, rem)
-            @test MP.MA.promote_operation(op, P, P) === DP.Polynomial{field}
+            @test MP.MA.promote_operation(op, P, P) === Mod.Polynomial{field}
         end
         for op in (MP.pseudo_rem, MP.rem_or_pseudo_rem)
             @test MP.MA.promote_operation(op, P, P, typeof(algo)) ===
-                  DP.Polynomial{T}
+                  Mod.Polynomial{T}
         end
     end
     for p in (x, x^2)
@@ -779,7 +790,7 @@ end
 end
 
 @testset "Monomial divisibility" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for (a, b, expected) in (
         (x, x, true),
         (x, y, false),
@@ -806,16 +817,18 @@ end
         @test (a, b) == originals
     end
     @test (@inferred MP.divides(x, x^2))
-    DP.@ncpolyvar u v
-    @test MP.divides(u, u)
-    @test !MP.divides(u, v)
-    @test_throws ErrorException MP.divides(u, u^2)
-    @test_throws ErrorException MP.divides(u^2, v^2)
+    @static if isdefined(Mod, Symbol("@ncpolyvar"))
+        Mod.@ncpolyvar u v
+        @test MP.divides(u, u)
+        @test !MP.divides(u, v)
+        @test_throws ErrorException MP.divides(u, u^2)
+        @test_throws ErrorException MP.divides(u^2, v^2)
+    end
 end
 
 @testset "Polynomial conversion" begin
-    DP.@polyvar x
-    R = DP.Polynomial{Rational{Int}}
+    Mod.@polyvar x
+    R = Mod.Polynomial{Rational{Int}}
     for p in (x, x^2, 2x, 2x + 1, 3, 0)
         converted = convert(R, p)
         @test converted isa R
@@ -824,39 +837,39 @@ end
     end
     p = 2x + 1
     @test parent(convert(R, p)) === parent(p)
-    @test_throws InexactError convert(DP.Polynomial{Int}, (1 // 2) * x + 1)
-    @test_throws InexactError convert(DP.Polynomial{Int}, (1 // 2) * x)
-    @test_throws InexactError convert(DP.Polynomial{Int}, 1 // 2)
+    @test_throws InexactError convert(Mod.Polynomial{Int}, (1 // 2) * x + 1)
+    @test_throws InexactError convert(Mod.Polynomial{Int}, (1 // 2) * x)
+    @test_throws InexactError convert(Mod.Polynomial{Int}, 1 // 2)
 end
 
 @testset "Polynomial conversion in division and GCD" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for p in (x, x^2, 2x, 2x + 1)
         original = deepcopy(p)
         q, r = divrem(p, typeof(p)[])
         @test isempty(q)
         @test r == p
-        @test r isa DP.Polynomial{Rational{Int}}
+        @test r isa Mod.Polynomial{Rational{Int}}
         MP.MA.operate!(zero, r)
         @test p == original
     end
     q, r = divrem(zero(2x), 2x)
-    @test q isa DP.Polynomial{Rational{Int}}
+    @test q isa Mod.Polynomial{Rational{Int}}
     @test iszero(q) && iszero(r)
 
     algo = MP.GeneralizedEuclideanAlgorithm()
     g = MP.primitive_univariate_gcd!(2x, zero(2x), algo)
-    @test g isa DP.Polynomial{Int}
+    @test g isa Mod.Polynomial{Int}
     @test g == 2x
     @test MP.inflate(3, one(x), one(x)) == 3
     nested = MP.term(2x, MP.monomial(y))
     c = MP.content(nested, algo, MP.MA.IsNotMutable())
-    @test c isa DP.Term{Int}
+    @test c isa Mod.Term{Int}
     @test c == 2x
 end
 
 @testset "Leading-term removal and restoration" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     p = big(2) * x + 3
     owned = MP.MA.copy_if_mutable(p)
     @test parent(owned) === parent(p)
@@ -919,7 +932,7 @@ end
 end
 
 @testset "Shared coefficient mapping" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     for (source, expected) in ((x, 0.5x), (x^2, 0.5x^2), (3x, 1.5x)),
         nz in (false, true)
 
@@ -933,7 +946,7 @@ end
         @test iszero(MP.map_coefficients(zero, source))
     end
     for T in (Int, BigInt)
-        p = convert(DP.Polynomial{T}, 2x^2 + 3x + 2)
+        p = convert(Mod.Polynomial{T}, 2x^2 + 3x + 2)
         original = deepcopy(p)
         mapped = @inferred MP.map_coefficients(c -> c // 2, p)
         @test mapped == x^2 + (3 // 2) * x + 1
@@ -963,8 +976,8 @@ end
         @test SA.map_coefficients!(zero, p) === p
         @test iszero(p)
 
-        f = convert(DP.Polynomial{T}, x^3 + 2x + 1)
-        g = convert(DP.Polynomial{T}, 2x^2 + 1)
+        f = convert(Mod.Polynomial{T}, x^3 + 2x + 1)
+        g = convert(Mod.Polynomial{T}, 2x^2 + 1)
         g_original = deepcopy(g)
         @test MP.MA.operate!(
             MP.pseudo_rem,
@@ -990,7 +1003,7 @@ end
     p = SA.AlgebraElement(c, parent(p))
     mapped = @inferred MP.map_coefficients(c -> c / 2, p)
     @test mapped == 1 + 1.5x
-    @test mapped isa DP.Polynomial{Float64}
+    @test mapped isa Mod.Polynomial{Float64}
     @test parent(mapped) === parent(p)
     @test values(c) == (2, 3)
 
@@ -1004,7 +1017,7 @@ end
 end
 
 @testset "Coefficient mapping deprecations" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     p = x + 1
     @test_deprecated r"SA\.map_coefficients!" MP.map_coefficients!(
         identity,
@@ -1020,11 +1033,11 @@ end
 end
 
 @testset "Remainder operation routing" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     algo = MP.GeneralizedEuclideanAlgorithm()
     for T in (Int, BigInt, Rational{Int}, Float64)
-        f = convert(DP.Polynomial{T}, x^3 + 2x + 1)
-        g = convert(DP.Polynomial{T}, 2x^2 + 1)
+        f = convert(Mod.Polynomial{T}, x^3 + 2x + 1)
+        g = convert(Mod.Polynomial{T}, 2x^2 + 1)
         originals = deepcopy((f, g))
         for op in (MP.pseudo_rem, MP.rem_or_pseudo_rem)
             expected =
@@ -1051,7 +1064,7 @@ end
             (x, 2x + 1, -1),
             (x^2, 2x, 0),
             (2x, x^2 + 1, 2x),
-            (x^3 + 2x + 1, convert(DP.Polynomial{BigInt}, 2x^2 + 1), 3x + 2),
+            (x^3 + 2x + 1, convert(Mod.Polynomial{BigInt}, 2x^2 + 1), 3x + 2),
         )
             originals = deepcopy((f, g))
             r = @inferred MP.MA.operate!!(op, f, g, algo)
@@ -1103,9 +1116,9 @@ end
 end
 
 @testset "In-place quotient term accumulation" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for T in (Int, BigInt)
-        q = convert(DP.Polynomial{T}, x^2 + 1)
+        q = convert(Mod.Polynomial{T}, x^2 + 1)
         t = MP.term(T(2), x)
         original = deepcopy(t)
         @test (@inferred MP.MA.add!!(q, t)) === q
@@ -1132,7 +1145,7 @@ end
     original = deepcopy((q, t))
     result = @inferred MP.MA.add!!(q, t)
     @test result == 1.5x + 1
-    @test result isa DP.Polynomial{Float64}
+    @test result isa Mod.Polynomial{Float64}
     @test (q, t) == original
 
     q = x + 1
@@ -1145,10 +1158,10 @@ end
 end
 
 @testset "In-place polynomial addition" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for T in (Int, BigInt)
-        f = convert(DP.Polynomial{T}, x^2 + 1)
-        g = convert(DP.Polynomial{T}, 2x - 1)
+        f = convert(Mod.Polynomial{T}, x^2 + 1)
+        g = convert(Mod.Polynomial{T}, 2x - 1)
         original = deepcopy(g)
         @test (@inferred MP.MA.add!!(f, g)) === f
         @test f == x^2 + 2x
@@ -1163,7 +1176,7 @@ end
     originals = deepcopy((f, g))
     result = @inferred MP.MA.add!!(f, g)
     @test result == 1.5x
-    @test result isa DP.Polynomial{Float64}
+    @test result isa Mod.Polynomial{Float64}
     @test (f, g) == originals
 
     g = y + 1
@@ -1175,12 +1188,12 @@ end
 end
 
 @testset "Polynomial division" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for T in (Int, Rational{Int}, Float64, BigInt)
         for (f, g, q, r) in
             ((x^2 - 1, x - 1, x + 1, 0), (x^3 + 2x + 1, x^2 + 1, x, x + 1))
-            f = convert(DP.Polynomial{T}, f)
-            g = convert(DP.Polynomial{T}, g)
+            f = convert(Mod.Polynomial{T}, f)
+            g = convert(Mod.Polynomial{T}, g)
             originals = deepcopy((f, g))
             quotient, remainder = divrem(f, g)
             @test quotient == q
@@ -1197,7 +1210,7 @@ end
     @test remainder == x + 1
     @test (f, divisors) == originals
 
-    g = convert(DP.Polynomial{Rational{Int}}, 3x^2 + 1)
+    g = convert(Mod.Polynomial{Rational{Int}}, 3x^2 + 1)
     f = 2 * one(g)
     original = deepcopy(g)
     @test MP.MA.operate!(rem, f, g, MP.GeneralizedEuclideanAlgorithm()) === f
@@ -1206,7 +1219,7 @@ end
 end
 
 @testset "Ordered term products in division" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     f, g, t = x^2 + x + 1, x + 1, 2x
     @test SA.term_product_style(SA.mstructure(f), SA.coeffs(f).isless) isa
           SA.OrderedTermProduct
@@ -1221,7 +1234,7 @@ end
     original = deepcopy(f)
     result = MP.MA.operate!!(MP.MA.sub_mul, f, t, g)
     @test result == f - t * g
-    @test result isa DP.Polynomial{Rational{Int}}
+    @test result isa Mod.Polynomial{Rational{Int}}
     @test f == original
     @test (@inferred MP.MA.operate!(MP.MA.sub_mul, f, 2y, y + 1)) === f
     @test f == original - 2y * (y + 1)
@@ -1242,8 +1255,8 @@ end
     @test (f, divisors) == originals
     @test MP.div_multiple((x + y) * (x + 1), x + 1) == x + y
 
-    f = convert(DP.Polynomial{Rational{Int}}, x^3 + 2x + 1)
-    g = convert(DP.Polynomial{Rational{Int}}, x^2 + 1)
+    f = convert(Mod.Polynomial{Rational{Int}}, x^3 + 2x + 1)
+    g = convert(Mod.Polynomial{Rational{Int}}, x^2 + 1)
     original = deepcopy(g)
     @test MP.MA.operate!(rem, f, g, MP.GeneralizedEuclideanAlgorithm()) === f
     @test f == x + 1
@@ -1251,7 +1264,7 @@ end
 end
 
 @testset "GCD result type promotion" begin
-    DP.@polyvar x y
+    Mod.@polyvar x y
     for (a, b) in (
         (x, y),
         (x^2, x),
@@ -1278,7 +1291,7 @@ end
         end
     end
     @test MP.MA.promote_operation(gcd, typeof(x + 1), typeof(x + 1)) ===
-          DP.Polynomial{Int}
+          Mod.Polynomial{Int}
     nested = MP.term(x, MP.monomial(y))
     c = MP.content(nested, MP.SubresultantAlgorithm(), MP.MA.IsNotMutable())
     @test c isa MP.AbstractMonomial

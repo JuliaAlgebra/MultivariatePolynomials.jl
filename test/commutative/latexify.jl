@@ -1,5 +1,6 @@
 if !@isdefined(Mod)
-    import DynamicPolynomials as Mod
+    include("../SimplePolynomials.jl")
+    import .SimplePolynomials as Mod
 end
 
 using Test

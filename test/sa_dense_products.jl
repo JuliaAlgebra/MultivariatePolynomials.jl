@@ -1,15 +1,18 @@
 module TestSADenseProducts
 
 using Test
-import DynamicPolynomials as DP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import StarAlgebras as SA
 import LinearAlgebra
 
 @testset "Dense products use MA zero preparation" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for T in (Int, BigInt)
-        P = DP.Polynomial{T}
+        P = Mod.Polynomial{T}
         polys = P[x + 1 y + 2; z + 3 x + y]
         for (A, b) in (
             ([1 2; 3 4], P[x+1, y+2]),
@@ -62,8 +65,8 @@ import LinearAlgebra
         @test isempty(@inferred zeros(Int, 0, 2) * Matrix{P}(undef, 2, 0))
     end
 
-    DP.@complex_polyvar w
-    A = DP.Polynomial{Complex{Int}}[(1 + im)*w + x w + y; w + z (2 - im)*w + x]
+    Mod.@complex_polyvar w
+    A = Mod.Polynomial{Complex{Int}}[(1 + im)*w + x w + y; w + z (2 - im)*w + x]
     b = [1 + im, 2 - im]
     for left in (A, transpose(A), adjoint(A), view(A, :, :)),
         right in (b, hcat(b, reverse(b)))
@@ -84,9 +87,9 @@ import LinearAlgebra
 end
 
 @testset "Outer products use MA zero preparation" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for T in (Int, BigInt)
-        P = DP.Polynomial{T}
+        P = Mod.Polynomial{T}
         left = P[x+1, y+2]
         for right in (transpose(P[y+1, z+2]), adjoint(P[y+1, z+2]))
             expected = left * right

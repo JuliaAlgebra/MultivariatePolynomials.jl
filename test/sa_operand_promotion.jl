@@ -1,7 +1,10 @@
 module TestSAOperandPromotion
 
 using Test
-import DynamicPolynomials as DP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import StarAlgebras as SA
 import LinearAlgebra
@@ -12,7 +15,7 @@ function same_basis_promotion_allocations(output, x)
 end
 
 @testset "Scalar addition prepares an implicit basis" begin
-    DP.@polyvar x
+    Mod.@polyvar x
     p = 2x + 1
     @test (@inferred MP.implicit(p)) === p
     t = 2x
@@ -29,11 +32,11 @@ end
 end
 
 @testset "Mutable destinations promote bases" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for T in (Int, BigInt)
-        a = convert(DP.Polynomial{T}, 2x + 2)
-        b = convert(DP.Polynomial{T}, y + 1)
-        prototype = convert(DP.Polynomial{T}, x + y + z)
+        a = convert(Mod.Polynomial{T}, 2x + 2)
+        b = convert(Mod.Polynomial{T}, y + 1)
+        prototype = convert(Mod.Polynomial{T}, x + y + z)
         alg = parent(prototype)
         originals = MP.MA.mutable_copy.((a, b))
         same_basis = first(SA.promote_bases(a, alg))
@@ -110,12 +113,12 @@ end
 end
 
 @testset "Prepared zeros reuse MA reductions" begin
-    DP.@polyvar x y z
+    Mod.@polyvar x y z
     for T in (Int, BigInt)
         terms = [T(2) * x, T(3) * y]
         polys = [T(1) * y + 1, T(1) * z + 2]
         originals = MP.MA.mutable_copy.((terms, polys))
-        P = DP.Polynomial{T}
+        P = Mod.Polynomial{T}
         left, right = @inferred SA.promote_bases(terms[1], terms[2])
         @test parent(left) == parent(right)
         @test (left, right) == (terms[1], terms[2])
@@ -163,8 +166,8 @@ end
     @test (@inferred LinearAlgebra.dot(b, a)) == (y + 1) * x + (z + 2) * y
     @test LinearAlgebra.dot([0.5, 2.5], a) == 0.5x + 2.5y
     @test LinearAlgebra.dot(a, [0.5, 2.5]) == 0.5x + 2.5y
-    DP.@complex_polyvar w
-    terms = DP.Term{Complex{Int}}[(1+im)*w, 2x]
+    Mod.@complex_polyvar w
+    terms = Mod.Term{Complex{Int}}[(1+im)*w, 2x]
     polys = [y + 1, z + 2]
     expected = (1 - im) * conj(w) * (y + 1) + 2x * (z + 2)
     @test (@inferred LinearAlgebra.dot(terms, polys)) == expected

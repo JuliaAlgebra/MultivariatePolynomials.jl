@@ -1,8 +1,10 @@
 module TestExtensions
 
 using Test
-import DynamicPolynomials as DP
-import TypedPolynomials as TP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import JuMP
 import MathOptInterface as MOI
@@ -38,12 +40,9 @@ function test_without_indices(x)
 end
 
 @testset "JuMP and MOI extensions" begin
-    DP.@polyvar x
-    TP.@polyvar y
-    for variable in (x, y)
-        test_printing(variable)
-        test_without_indices(variable)
-    end
+    Mod.@polyvar x
+    test_printing(x)
+    test_without_indices(x)
 end
 
 end
