@@ -129,25 +129,33 @@ function _is_numeric_substitution(p, s)
            _substitution_type(Eval, typeof(p), typeof.(s)...) <: Number
 end
 
+function _substituted_product(::Type{R}, vals, exps) where {R}
+    β = one(R)
+    for (i, val) in enumerate(vals)
+        if !isnothing(val)
+            β *= val^exps[i]
+        end
+    end
+    return β
+end
+
 # Substituting numbers does not change the monomials of the remaining
 # variables so we update the exponents directly instead of multiplying terms
 # that have different variables.
 function _substitute_numbers(p, s)
     R = _substitution_type(Eval, typeof(p), typeof.(s)...)
     vars = variables(p)
-    vals = [_substitution_value(R, _Partial(), v, s...) for v in vars]
+    vals = Union{Nothing,R}[
+        _substitution_value(R, _Partial(), v, s...) for v in vars
+    ]
     keep = findall(isnothing, vals)
     c = SA.coeffs(p)
     new_keys = [exps[keep] for exps in keys(c)]
-    new_values = map(keys(c), values(c)) do exps, α
-        β = one(R)
-        for (i, val) in enumerate(vals)
-            if !isnothing(val)
-                β *= val^exps[i]
-            end
-        end
-        return α * β
-    end
+    U = MA.promote_operation(*, coefficient_type(p), R)
+    new_values = U[
+        α * _substituted_product(R, vals, exps) for
+        (exps, α) in zip(keys(c), values(c))
+    ]
     basis = FullBasis{Monomial}(vars[keep])
     coeffs = SA.SparseCoefficients(new_keys, new_values, SA.comparable(basis))
     return SA.AlgebraElement(MA.operate!(SA.canonical, coeffs), algebra(basis))
