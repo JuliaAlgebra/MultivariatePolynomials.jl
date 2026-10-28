@@ -6,6 +6,7 @@ end
 using LinearAlgebra, Test
 using MultivariatePolynomials
 using ChainRulesCore
+import MutableArithmetics as MA
 
 function test_chain_rule(dot, op, args, Δin, Δout)
     output = op(args...)
@@ -19,7 +20,12 @@ function test_chain_rule(dot, op, args, Δin, Δout)
 end
 
 function coefficient_dot(p::AbstractPolynomialLike, q::AbstractPolynomialLike)
-    return sum(terms(p); init = 0.0im) do t
+    T = MA.promote_operation(
+        *,
+        MA.promote_operation(conj, coefficient_type(p)),
+        coefficient_type(q),
+    )
+    return sum(terms(p); init = zero(T)) do t
         return conj(coefficient(t)) * coefficient(q, monomial(t))
     end
 end
@@ -29,6 +35,38 @@ coefficient_dot(p::Tuple, q::Tuple) = sum(map(coefficient_dot, p, q))
     Mod.@polyvar x y
     p = 1.1x + y
     q = (-0.1 + im) * x - y
+
+    @testset "Coefficient pairing" begin
+        ext = Base.get_extension(
+            MultivariatePolynomials,
+            :MultivariatePolynomialsChainRulesCoreExt,
+        )
+        for inner in (coefficient_dot, ext.coefficient_dot)
+            p32 = polynomial(2.0f0 * x)
+            q32 = polynomial(3.0f0 * y)
+            # The stored coefficient vectors have equal lengths, but their
+            # entries refer to different monomials.
+            @test inner(p32, q32) === 0.0f0
+            @test inner(zero(p32), q32) === 0.0f0
+            @test inner(p32, zero(q32)) === 0.0f0
+            @test inner(p32, p32) === 4.0f0
+            @test inner((1.0f0 + 2.0f0im) * x, (3.0f0 + 4.0f0im) * x) ===
+                  11.0f0 - 2.0f0im
+        end
+    end
+
+    @testset "Symbolic powers" begin
+        for m in (x, x * y), n in (0, 1, 3)
+            output, pullback = ChainRulesCore.rrule(^, m, n)
+            @test output == m^n
+            for delta in (1.0, x + y, ZeroTangent(), Thunk(() -> x))
+                @test pullback(delta) == (NoTangent(), NoTangent(), NoTangent())
+            end
+        end
+        # Terms still have a differentiable coefficient.
+        _, pullback = ChainRulesCore.rrule(^, 2.0x, 2)
+        @test pullback(x^2) == (NoTangent(), 4x, NoTangent())
+    end
 
     output, pullback = ChainRulesCore.rrule(+, q)
     @test output == q

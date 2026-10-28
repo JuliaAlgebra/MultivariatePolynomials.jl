@@ -42,6 +42,11 @@ for (op, A, B) in (
 )
     @eval CRC.rrule(::typeof($op), p::$A, q::$B) = _rrule($op, p, q)
 end
+# Monomials and integer exponents are symbolic, not coefficient coordinates.
+function CRC.rrule(::typeof(^), m::AbstractMonomialLike, n::Integer)
+    return m^n, _ -> (CRC.NoTangent(), CRC.NoTangent(), CRC.NoTangent())
+end
+
 CRC.rrule(::typeof(coefficient), p::AbstractTerm) = _rrule(coefficient, p)
 CRC.rrule(::typeof(polynomial), p::_APL) = _rrule(polynomial, p)
 
