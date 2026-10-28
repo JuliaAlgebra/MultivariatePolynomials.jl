@@ -14,12 +14,14 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 
 [extensions]
 LatexifyExt = "Latexify"
 MultivariatePolynomialsChainRulesCoreExt = "ChainRulesCore"
 MultivariatePolynomialsJuMPExt = "JuMP"
 MultivariatePolynomialsMathOptInterfaceExt = "MathOptInterface"
+MultivariatePolynomialsMooncakeExt = ["Mooncake", "ChainRulesCore"]
 
 [compat]
 ChainRulesCore = "1"
@@ -27,6 +29,7 @@ JuMP = "1"
 Latexify = "0.16.12"
 LinearAlgebra = "1.10"
 MathOptInterface = "1"
+Mooncake = "0.5.67"
 MutableArithmetics = "1.9"
 StarAlgebras = "0.4"
 julia = "1.10"

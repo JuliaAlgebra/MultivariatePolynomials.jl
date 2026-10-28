@@ -34,3 +34,7 @@ if try_import(:TypedPolynomials)
     include("commutativetests.jl")
     include("allocations.jl")
 end
+
+if VERSION < v"1.14-"
+    include("mooncake.jl")
+end
