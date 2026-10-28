@@ -85,6 +85,7 @@ import MutableArithmetics as MA
             @test (@inferred q(vals...)) == expected
             @test (@inferred q(collect(vals))) == expected
             @test (@inferred substitute(Eval(), q, collect(vals))) == expected
+            @test (@inferred substitute(Eval(), q, vals)) == expected
             @test_throws ArgumentError q([vals...; 3.0])
             @test_throws ArgumentError q(Float64[])
         end
@@ -97,6 +98,20 @@ import MutableArithmetics as MA
         mr = m(x => reverse(x))
         @test isconstant(mr)
         @test variables(mr) == x
+    end
+
+    @testset "Partial numeric substitution" begin
+        Mod.@polyvar a b c
+        q = 3a^2 * b + 2b * c + c^3 + 1
+        r = @inferred subs(q, a => 2)
+        @test r == 12b + 2b * c + c^3 + 1
+        @test variables(r) == variables(b * c)
+        @test (@inferred subs(q, a => 2.0, c => 1)) == 14.0b + 2.0
+        @test (@inferred subs(q, (a, b) => (1, 0.5))) == c^3 + c + 2.5
+        @test (@inferred subs(q, b => 1 + im)) ==
+              (3 + 3im) * a^2 + (2 + 2im) * c + c^3 + 1
+        # Terms with the same remaining monomial are combined
+        @test (@inferred subs(a * b - 2b + c, a => 2)) == c
     end
 
     Mod.@polyvar x y
