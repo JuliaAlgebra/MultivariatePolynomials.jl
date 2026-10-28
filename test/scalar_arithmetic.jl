@@ -19,6 +19,11 @@ function test_equal(p, q)
     return
 end
 
+# MOI only supports operations with constants of the same coefficient type so
+# it does not support the `Bool` coefficient of monomials
+_supports_bool(a) = true
+_supports_bool(::Union{MOI.VariableIndex,MOI.ScalarAffineFunction}) = false
+
 function test_monomial(a, m)
     for product in ((@inferred a * m), (@inferred m * a))
         @test product isa MP.AbstractTerm{typeof(a)}
@@ -28,6 +33,7 @@ function test_monomial(a, m)
     @test MA.promote_operation(*, typeof(a), typeof(m)) === typeof(a * m)
     @test MA.promote_operation(*, typeof(m), typeof(a)) === typeof(m * a)
     for op in (+, -), left in (false, true)
+        _supports_bool(a) || continue
         p = left ? (@inferred op(a, m)) : (@inferred op(m, a))
         A, B = left ? (typeof(a), typeof(m)) : (typeof(m), typeof(a))
         @test (@inferred MA.promote_operation(op, A, B)) === typeof(p)
@@ -41,6 +47,7 @@ function test_monomial(a, m)
         )
     end
     for (op, add) in ((MA.add_mul, +), (MA.sub_mul, -)), left in (false, true)
+        _supports_bool(a) || continue
         p = MP.polynomial(m + 2)
         expected = add(p, left ? a * (1m) : (1m) * a)
         output = convert(typeof(expected), MA.mutable_copy(p))
@@ -111,13 +118,19 @@ function test_scalar(a, x)
     M = MP.monomial_type(x)
     @test (@inferred convert(M, one(C))) == one(x)
     @test_throws InexactError convert(M, zero(C))
-    for p in (x, x^2, 2x, 2x + 3, x / (x + 1))
+    for p in (x, x^2, 2x, 2x + 3, x / (x + 1), 2x / (x + 1))
+        num = p isa MP.RationalPoly ? numerator(p) : p
+        if MP.coefficient_type(num) == Bool && !_supports_bool(a)
+            continue
+        end
         test_promotion(a, p)
     end
     for p in (2x, 2x + 3)
         test_equal(LinearAlgebra.dot(a, p), adjoint(a) * p)
         test_equal(LinearAlgebra.dot(p, a), adjoint(p) * a)
     end
+    # `@rewrite` multiplies `a` with the monomial `x`
+    _supports_bool(a) || return
     p = MA.@rewrite((2x + 3) + a * (x + 1))
     @test MA.isequal_canonical(MP.coefficient(p, x), 2 + a)
     @test MA.isequal_canonical(MP.coefficient(p, one(x)), 3 + a)

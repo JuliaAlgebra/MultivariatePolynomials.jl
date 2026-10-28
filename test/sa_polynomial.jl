@@ -23,12 +23,12 @@ MP.@scalar_arithmetic Matrix{Int}
     @test 2x isa MP.AbstractTerm
     @test p isa MP.AbstractPolynomial
     @test typeof(p) === DP.Polynomial{Int}
-    @test MP.term_type(x) === DP.Term{Int}
-    @test MP.polynomial_type(x) === typeof(p)
+    @test MP.term_type(x) === DP.Term{Bool}
+    @test MP.polynomial_type(x) === DP.Polynomial{Bool}
     @test MP.polynomial_type(p, Float64) === DP.Polynomial{Float64}
     @test MP.similar_type(typeof(p), Float64) === DP.Polynomial{Float64}
     @test MP.similar_type(typeof(2x), Float64) === DP.Term{Float64}
-    @test MP.coefficient_type(x^2) === Int
+    @test MP.coefficient_type(x^2) === Bool
     @test MP.coefficients(p) == [1, 2]
     @test MP.coefficient.(MP.terms(p)) == [1, 2]
     @test length(MP.monomials(p)) == 2
@@ -66,13 +66,30 @@ MP.@scalar_arithmetic Matrix{Int}
 
     @test p(x => 2, y => 3) == 7
     @test (2x)(x => 3) == 6
-    @test MP.coefficient_type([x, y]) === Int
+    @test MP.coefficient_type([x, y]) === Bool
 
     DP.@polyvar u v monomial_order=MP.LexOrder
     q = u + v
     @test !(q isa DP.Polynomial)
-    @test MP.polynomial_type(u) === typeof(q)
+    @test MP.polynomial_type(u, Int) === typeof(q)
     @test iszero(sum([u, v]) - q)
+end
+
+# Issue #277: monomials have coefficient `true` so they do not widen narrower
+# coefficient types.
+@testset "Bool coefficient type of monomials" begin
+    DP.@polyvar x y
+    for m in (x, x * y)
+        @test MP.coefficient_type(m) === Bool
+        @test MP.term_type(m) === DP.Term{Bool}
+        @test MP.polynomial_type(m) === DP.Polynomial{Bool}
+        @test MP.term(m) isa DP.Term{Bool}
+    end
+    @test MP.coefficient_type(x + one(UInt16)) === UInt16
+    @test MP.coefficient_type(UInt8(2) * x + y) === UInt8
+    # Like `true + true`, sums of `Bool` coefficients are `Int`
+    @test MP.coefficient_type(x + true) === Int
+    @test MP.coefficient_type(x + y) === Int
 end
 
 @testset "Registered scalars extend finite polynomial bases" begin
@@ -154,8 +171,8 @@ end
     @test_throws ArgumentError MP.exponents(yx, [x, y])
 
     p = @inferred x + y
-    @test typeof(2x) === MP.term_type(x)
-    @test typeof(p) === MP.polynomial_type(x)
+    @test typeof(2x) === MP.term_type(x, Int)
+    @test typeof(p) === MP.polynomial_type(x, Int)
     @test p == y + x
     @test (@inferred sum([x, y])) == p
     @test (@inferred LinearAlgebra.dot([x, y], [x, y])) == x^2 + y^2
@@ -722,7 +739,7 @@ end
         end
     end
     for p in (x, x^2)
-        @test (@inferred MP.content(p, algo, immutable)) === 1
+        @test (@inferred MP.content(p, algo, immutable)) === true
         @test MP.primitive_part(p, algo, immutable) == p
     end
     @test MP.content(6x, algo, immutable) == 6

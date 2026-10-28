@@ -56,7 +56,7 @@ end
     @inferred x * y + x
     @test [x, x * y + x, x] isa Vector{<:AbstractPolynomial{Int}}
     @test eltype([1, x / y, x]) <:
-          RationalPoly{<:AbstractTerm{Int},<:AbstractTerm{Int}}
+          RationalPoly{<:AbstractTerm{Int},<:AbstractTerm{Bool}}
     @test [(x^2-2x+2) x; x x^2] isa Matrix{<:AbstractPolynomial{Int}}
     @test [2.0x, 3x] isa Vector{<:AbstractTerm{Float64}}
     @inferred Any[x*y, x+y]
@@ -64,13 +64,13 @@ end
     @test [x * y, x + y] isa Vector{<:AbstractPolynomial{Int}}
     @test [2x * y, x + y] isa Vector{<:AbstractPolynomial{Int}}
     @test eltype([2.0x, x / y]) <:
-          RationalPoly{<:AbstractTerm{Float64},<:AbstractTerm{Int}}
+          RationalPoly{<:AbstractTerm{Float64},<:AbstractTerm{Bool}}
     @test eltype([2.0x, x / y, 1y]) <:
-          RationalPoly{<:AbstractTerm{Float64},<:AbstractTerm{Int}}
+          RationalPoly{<:AbstractTerm{Float64},<:AbstractTerm{Bool}}
     @test eltype([2x + y, x / 2.0y, x + 1y]) <:
           RationalPoly{<:AbstractPolynomial{Int},<:AbstractTerm{Float64}}
     @test eltype([-1 / x^2, 1]) <:
-          RationalPoly{<:AbstractTerm{Int},<:AbstractTerm{Int}}
+          RationalPoly{<:AbstractTerm{Int},<:AbstractTerm{Bool}}
 
     X = [x, y]
     Y = [1 2; 3 4] * X

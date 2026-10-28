@@ -1,4 +1,4 @@
-const NonMutable = Union{Int,Float64}
+const NonMutable = Union{Bool,Int,Float64}
 const MP = MultivariatePolynomials
 are_independent(::NonMutable, ::NonMutable) = true
 are_independent(::BigInt, ::NonMutable) = true

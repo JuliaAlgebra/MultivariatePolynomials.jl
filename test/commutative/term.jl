@@ -95,8 +95,8 @@ Base.iszero(::CoefNotComparable) = false
 
     t = 3x^2 * y^4
     alloc_test(() -> convert(typeof(t), t), 0)
-    typetests(t)
-    typetests([t, 2x])
+    typetests(t, Int)
+    typetests([t, 2x], Int)
     @test (@inferred polynomial(t)) isa AbstractPolynomial{Int}
     @test (@inferred polynomial(t, Float64)) isa AbstractPolynomial{Float64}
 

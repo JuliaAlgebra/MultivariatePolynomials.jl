@@ -38,7 +38,11 @@ function MA.promote_operation(
     ::Type{M},
     ::Type{N},
 ) where {M<:AbstractMonomialLike,N<:AbstractMonomialLike}
-    return polynomial_type(MA.promote_operation(*, M, N))
+    # Like `true + true`, the sum of `Bool` coefficients is an `Int`
+    return polynomial_type(
+        MA.promote_operation(*, M, N),
+        MA.promote_operation(op, coefficient_type(M), coefficient_type(N)),
+    )
 end
 function MA.promote_operation(
     ::typeof(*),

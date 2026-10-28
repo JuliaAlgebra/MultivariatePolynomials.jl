@@ -1,6 +1,6 @@
 # Polynomial{Monomial,...} acts as a monomial: support term creation and const mult
 term(coeff, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(coeff, p)
-term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(one(Int), p)
+term(p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(true, p)
 left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
 function right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α)
     return left_constant_mult(α, p)
@@ -11,7 +11,7 @@ function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
     A = MA.promote_operation(algebra, BT)
     return SA.Term{T,A,SA.key_type(BT)}
 end
-term_type(::Type{P}) where {P<:Polynomial} = term_type(P, Int)
+term_type(::Type{P}) where {P<:Polynomial} = term_type(P, Bool)
 
 function explicit_basis_covering(
     full::FullBasis{B},
