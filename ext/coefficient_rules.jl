@@ -11,15 +11,10 @@ end
 # The Hermitian coefficient pairing; reverse AD uses its real part.
 # This is independent of MP's polynomial-valued dot product.
 function coefficient_dot(p, q)
-    T = MA.promote_operation(
-        *,
-        MA.promote_operation(conj, coefficient_type(p)),
-        coefficient_type(q),
-    )
-    return sum(terms(p); init = zero(T)) do t
-        return conj(coefficient(t)) * coefficient(q, monomial(t))
-    end
+    p, q = SA.promote_bases(polynomial(p), polynomial(q))
+    return LinearAlgebra.dot(SA.coeffs(p), SA.coeffs(q))
 end
+
 coefficient_at(p::Number, m) = isone(m) ? p : zero(p)
 coefficient_at(p, m) = coefficient(p, m)
 

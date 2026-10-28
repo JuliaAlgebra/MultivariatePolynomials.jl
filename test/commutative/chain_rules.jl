@@ -51,6 +51,8 @@ coefficient_dot(p::Tuple, q::Tuple) = sum(map(coefficient_dot, p, q))
             @test inner(zero(p32), q32) === 0.0f0
             @test inner(p32, zero(q32)) === 0.0f0
             @test inner(p32, p32) === 4.0f0
+            @test inner(p32 + q32, q32) === 9.0f0
+            @test inner(q32, p32 + q32) === 9.0f0
             @test inner((1.0f0 + 2.0f0im) * x, (3.0f0 + 4.0f0im) * x) ===
                   11.0f0 - 2.0f0im
         end

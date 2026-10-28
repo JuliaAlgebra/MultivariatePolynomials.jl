@@ -37,6 +37,7 @@ end
 function complex_mixed(a, x)
     return real(MP.coefficient((a * x + 1) * ((1.0 + 2im) * x + 3im), x))
 end
+scaled_coefficient(c, p, x) = real(MP.coefficient(c * p, x))
 missing_coefficient(p, x) = MP.coefficient(p, x^3)
 product_different_parents(p, q, x, y) = MP.coefficient(p * q, x * y)
 product_same_argument(p, q, x) = MP.coefficient(p * q, x^2)
@@ -116,6 +117,14 @@ function test_backend(x, y)
         end
         _, g = gradient(complex_mixed, 2.0, x)
         @test g[2] == 0.0
+        # The scalar pullback uses SA's coefficient dot, with conjugation
+        # on the polynomial's coefficients rather than the cotangent.
+        p = (1.0 + 2im) * x + 3.0 * y
+        v, g = gradient(scaled_coefficient, 3.0 + 4im, p, x)
+        @test v == -5.0
+        @test g[2] == 1.0 - 2im
+        @test g[3].polynomial == (3.0 - 4im) * x
+        @test p == (1.0 + 2im) * x + 3.0 * y
     end
     @testset "Polynomial inputs and aliasing" begin
         p, q = MP.polynomial(2.0 * x), MP.polynomial(3.0 * y)
