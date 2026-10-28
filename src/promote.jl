@@ -24,7 +24,16 @@ function Base.promote_rule(
     ::Type{M},
     ::Type{N},
 ) where {M<:AbstractMonomialLike,N<:AbstractMonomialLike}
-    return promote_type(monomial_type(M), monomial_type(N))
+    MM, NN = monomial_type(M), monomial_type(N)
+    if MM === M && NN === N
+        # Calling `promote_type(M, N)` would recurse into this method, e.g.,
+        # for commutative and noncommutative monomials.
+        return Union{}
+    end
+    P = promote_type(MM, NN)
+    # If there is no common monomial type, `M` and `N` cannot be converted to
+    # `P` so we let Julia fall back to `typejoin(M, N)`.
+    return isconcretetype(P) ? P : Union{}
 end
 function MA.promote_operation(
     ::typeof(*),
