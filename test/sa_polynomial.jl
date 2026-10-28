@@ -112,6 +112,27 @@ end
     @test t == 2x
 end
 
+@testset "Promotion without common type" begin
+    DP.@polyvar x
+    DP.@ncpolyvar y
+    # Used to overflow the stack
+    for (a, b) in ((x, y), (x^2, y^2), (x, y^2))
+        P = promote_type(typeof(a), typeof(b))
+        @test promote_type(typeof(b), typeof(a)) == P
+        @test !isconcretetype(P)
+        @test [a, b] isa Vector{P}
+    end
+    @test eltype([x, y]) <: DP.Variable
+    for (a, b) in ((x, 2y), (2x, 2y), (x + 1, y + 1))
+        @test promote_type(typeof(a), typeof(b)) == Any
+        @test promote_type(typeof(b), typeof(a)) == Any
+    end
+    # Issue DynamicPolynomials#94
+    P = MP.polynomial_type(x + 1, Any)
+    @test promote_type(Any, P) == Any
+    @test promote_type(P, Any) == Any
+end
+
 @testset "Ordered noncommutative monomials" begin
     DP.@ncpolyvar x y z
     @testset "Finite word bases" begin
