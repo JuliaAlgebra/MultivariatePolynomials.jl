@@ -39,7 +39,17 @@ jobs:
       - name: MP
         shell: julia --project=@. {0}
         run: |
-          using Pkg
+          using Pkg, TOML
+          # Mooncake supports Julia 1.10--1.13. Keep testing MP on newer
+          # Julia versions without asking Pkg to resolve Mooncake there.
+          if VERSION >= v"1.14-"
+              path = joinpath("test", "Project.toml")
+              project = TOML.parsefile(path)
+              for section in ("deps", "compat"), name in ("Mooncake", "JET", "AllocCheck")
+                  delete!(project[section], name)
+              end
+              open(io -> TOML.print(io, project), path, "w")
+          end
           Pkg.add([
               PackageSpec(name="DynamicPolynomials", rev="bl/ordering_instance"),
               PackageSpec(name="TypedPolynomials", rev="bl/ordering_instance"),
