@@ -116,6 +116,16 @@ function test_term_gcd()
     return _test_term_gcd(Int)
 end
 
+# GMP grows the limbs of a `BigInt` the first time the result of an in-place
+# operation does not fit. Multiplying by one grows them as much as the
+# operations on the small coefficients of the tests need.
+_grow_limbs!(::Any) = nothing
+function _grow_limbs!(p::AbstractPolynomial{BigInt})
+    for c in coefficients(p)
+        operate!(*, c, one(BigInt))
+    end
+end
+
 function _pseudo_rem_test(p1, p2, algo)
     backup_1 = deepcopy(p1)
     MA_copy_1 = mutable_copy(p1)
@@ -123,8 +133,13 @@ function _pseudo_rem_test(p1, p2, algo)
     MA_copy_2 = mutable_copy(p2)
     buffer =
         buffer_for(MP.rem_or_pseudo_rem, typeof(p1), typeof(p2), typeof(algo))
-    mutable_alloc_test(p1, 0) do p1
-        return buffered_operate!!(buffer, MP.rem_or_pseudo_rem, p1, p2, algo)
+    _grow_limbs!(p1)
+    f = p1 -> buffered_operate!!(buffer, MP.rem_or_pseudo_rem, p1, p2, algo)
+    if coefficient_type(p1) == BigInt && algo.primitive_rem
+        # TODO The content computed by `primitive_rem` allocates a `BigInt`
+        f(p1)
+    else
+        mutable_alloc_test(f, p1, 0)
     end
     @test backup_1 == MA_copy_1
     @test backup_2 == MA_copy_2
@@ -146,7 +161,7 @@ function _test_div(T)
 end
 
 function test_div()
-    @testset "$T" for T in [Int] # FIXME , BigInt] # TODO add Rational{BigInt} when https://github.com/jump-dev/MutableArithmetics.jl/issues/187 is fixed
+    @testset "$T" for T in [Int, BigInt] # TODO add Rational{BigInt} when https://github.com/jump-dev/MutableArithmetics.jl/issues/187 is fixed
         _test_div(T)
     end
 end
@@ -164,7 +179,8 @@ end
 function test_univ_gcd()
     algo = GeneralizedEuclideanAlgorithm()
     return _test_univ_gcd(Int, algo)
-    #_test_univ_gcd(BigInt, algo) # TODO
+    # TODO The content of the remainder allocates a `BigInt` at each step
+    #_test_univ_gcd(BigInt, algo)
 end
 
 end

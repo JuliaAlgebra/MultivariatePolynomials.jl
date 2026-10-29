@@ -288,7 +288,12 @@ function MA.promote_operation(
     )
 end
 
-function MA.buffer_for(::typeof(pseudo_rem), F::Type, G::Type, ::Type)
+function MA.buffer_for(
+    ::Union{typeof(rem),typeof(pseudo_rem)},
+    F::Type,
+    G::Type,
+    ::Type,
+)
     return MA.buffer_for(MA.sub_mul, F, term_type(F), G)
 end
 
@@ -307,7 +312,8 @@ function MA.operate!(
     g::_APL,
     algo,
 )
-    return MA.buffered_operate!(nothing, op, f, g, algo)
+    buffer = MA.buffer_for(op, typeof(f), typeof(g), typeof(algo))
+    return MA.buffered_operate!(buffer, op, f, g, algo)
 end
 
 # TODO As suggested in [Knu14, Algorithm R, p. 426] (univariate case only), if
@@ -354,6 +360,8 @@ function MA.buffered_operate!(
         if _skip_last(algo) && maxdegree(f) == maxdegree(g)
             break
         end
+        # The leading term of zero would allocate a zero coefficient
+        iszero(f) && break
         ltf = leading_term(f)
     end
     # Add it back as we cannot modify `g`
