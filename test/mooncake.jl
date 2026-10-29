@@ -2,8 +2,10 @@ module TestMooncake
 
 using Test, Random
 using JET, AllocCheck
-import DynamicPolynomials as DP
-import TypedPolynomials as TP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import Mooncake as MC
 import ChainRulesCore as CRC
@@ -157,17 +159,13 @@ end
 
 @testset "Mooncake" begin
     @test Ext !== nothing
-    DP.@ncpolyvar nx ny
-    @test_throws ArgumentError CRC.rrule(*, 1.0nx, 1.0ny)
-    @test_throws ArgumentError CRC.rrule(^, 1.0nx + 1.0ny, 2)
-    DP.@polyvar dx dy
-    TP.@polyvar tx ty
-    @testset "DynamicPolynomials" begin
-        test_backend(dx, dy)
+    @static if isdefined(Mod, Symbol("@ncpolyvar"))
+        Mod.@ncpolyvar nx ny
+        @test_throws ArgumentError CRC.rrule(*, 1.0nx, 1.0ny)
+        @test_throws ArgumentError CRC.rrule(^, 1.0nx + 1.0ny, 2)
     end
-    @testset "TypedPolynomials" begin
-        test_backend(tx, ty)
-    end
+    Mod.@polyvar x y
+    test_backend(x, y)
 end
 
 end

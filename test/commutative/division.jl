@@ -7,7 +7,8 @@ import StarAlgebras as SA
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 if !@isdefined(Mod)
-    import DynamicPolynomials as Mod
+    include("../SimplePolynomials.jl")
+    import .SimplePolynomials as Mod
 end
 
 function div_number_test()

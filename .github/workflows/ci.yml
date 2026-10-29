@@ -6,26 +6,40 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.implementation }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # Since MultivariatePolynomials doesn't have binary dependencies,
         # only test on a subset of possible platforms.
+        # `implementation` is the package implementing the variables used by
+        # the tests. `SimplePolynomials` is defined in `test/SimplePolynomials.jl`.
         include:
           - version: '1'
             os: ubuntu-latest
             arch: x64
+            implementation: SimplePolynomials
           - version: '1.10'
             os: ubuntu-latest
             arch: x64
+            implementation: SimplePolynomials
           - version: '1'
             os: ubuntu-latest
             arch: x86
+            implementation: SimplePolynomials
           - version: 'pre'
             os: ubuntu-latest
             arch: x64
+            implementation: SimplePolynomials
+          - version: '1'
+            os: ubuntu-latest
+            arch: x64
+            implementation: DynamicPolynomials
+          - version: '1'
+            os: ubuntu-latest
+            arch: x64
+            implementation: TypedPolynomials
 #          - version: 'nightly'
 #            os: ubuntu-latest
 #            arch: x64
@@ -36,10 +50,10 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
-      - name: MP
-        shell: julia --project=@. {0}
+      - name: Remove Mooncake on Julia v1.14
+        shell: julia {0}
         run: |
-          using Pkg, TOML
+          using TOML
           # Mooncake supports Julia 1.10--1.13. Keep testing MP on newer
           # Julia versions without asking Pkg to resolve Mooncake there.
           if VERSION >= v"1.14-"
@@ -50,14 +64,16 @@ jobs:
               end
               open(io -> TOML.print(io, project), path, "w")
           end
-          Pkg.add([
-              PackageSpec(name="DynamicPolynomials", rev="bl/ordering_instance"),
-              PackageSpec(name="TypedPolynomials", rev="bl/ordering_instance"),
-          ])
-
+      - name: Add ${{ matrix.implementation }} to the test environment
+        if: matrix.implementation != 'SimplePolynomials'
+        shell: julia --project=test {0}
+        run: |
+          using Pkg
+          Pkg.add(PackageSpec(name="${{ matrix.implementation }}", rev="bl/ordering_instance"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-        #with:
+        with:
+          test_args: ${{ matrix.implementation }}
         #  depwarn: error # Had to disable it because DataStructures does
         #    1 dependency had output during precompilation:
         # ┌ DataStructures

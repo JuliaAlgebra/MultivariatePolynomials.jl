@@ -1,4 +1,4 @@
-for file in readdir(joinpath(@__DIR__, "commutative"))
+for file in filter(endswith(".jl"), readdir(joinpath(@__DIR__, "commutative")))
     if file == "independent.jl"
         # It's included by `gcd.jl`
         continue

@@ -4,34 +4,35 @@ using LinearAlgebra
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
-# Tests that do not need any specific polynomial implementation
-include("comparison.jl")
-include("scalar_arithmetic.jl")
-include("extensions.jl")
-include("invalidations.jl")
+# The implementation of variables used by the tests can be selected with
+# `Pkg.test(test_args = ["DynamicPolynomials"])`. It defaults to the one of
+# `SimplePolynomials.jl` which does not need any other package.
+const IMPLEMENTATION = isempty(ARGS) ? :SimplePolynomials : Symbol(only(ARGS))
+if IMPLEMENTATION == :SimplePolynomials
+    include("SimplePolynomials.jl")
+else
+    @eval import $IMPLEMENTATION
+end
+const Mod = getfield(@__MODULE__, IMPLEMENTATION)
 
 include("utils.jl")
 
-# Taken from JuMP/test/solvers.jl
-function try_import(name::Symbol)
-    try
-        @eval import $name
-        return true
-    catch e
-        return false
-    end
+if IMPLEMENTATION == :SimplePolynomials
+    # Tests that do not depend on the implementation
+    include("comparison.jl")
+    include("invalidations.jl")
 end
-
-if try_import(:DynamicPolynomials)
-    Mod = DynamicPolynomials
+include("scalar_arithmetic.jl")
+include("extensions.jl")
+if IMPLEMENTATION != :TypedPolynomials
     include("sa_polynomial.jl")
-    include("commutativetests.jl")
+end
+include("commutativetests.jl")
+if isdefined(Mod, Symbol("@ncpolyvar"))
     include("noncommutativetests.jl")
 end
-
-if try_import(:TypedPolynomials)
-    Mod = TypedPolynomials
-    include("commutativetests.jl")
+if IMPLEMENTATION == :TypedPolynomials
+    # Monomials of TypedPolynomials are `isbits` so they do not allocate
     include("allocations.jl")
 end
 

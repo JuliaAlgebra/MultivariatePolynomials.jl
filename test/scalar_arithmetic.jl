@@ -1,8 +1,10 @@
 module TestScalarArithmetic
 
 using Test
-import DynamicPolynomials as DP
-import TypedPolynomials as TP
+if !isdefined(Main, :Mod)
+    include("SimplePolynomials.jl")
+end
+const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
 import StarAlgebras as SA
 import MutableArithmetics as MA
@@ -176,9 +178,8 @@ allocated_product(a, b) = @allocated a * b
     model = JuMP.Model()
     JuMP.@variable(model, a)
     b = MOI.VariableIndex(1)
-    DP.@polyvar x
-    TP.@polyvar y
-    for var in (x, y), scalar in (2, 1.5, 2 + im, big(2), a, 2a + 1, b, 2b + 1)
+    Mod.@polyvar var
+    for scalar in (2, 1.5, 2 + im, big(2), a, 2a + 1, b, 2b + 1)
         @testset "$(typeof(var)), $(typeof(scalar))" begin
             test_scalar(scalar, var)
             test_scalar_equality(scalar, var)
@@ -189,19 +190,18 @@ allocated_product(a, b) = @allocated a * b
             test_dots(dot_scalar, [var^2, var^3])
         end
     end
-    for var in (x, y)
-        @test_throws MethodError "unregistered scalar" * var
-        @test_throws MethodError var + "unregistered scalar"
-        for p in (var, var^2, 2var, var + 1, zero(var), var / (var + 1))
-            @test promote_type(typeof(p), String) === Any
-            @test p != UnregisteredMutable()
-            @test UnregisteredMutable() != p
-            @test !isequal(p, UnregisteredMutable())
-            @test !isequal(UnregisteredMutable(), p)
-        end
+    @test_throws MethodError "unregistered scalar" * var
+    @test_throws MethodError var + "unregistered scalar"
+    for p in (var, var^2, 2var, var + 1, zero(var), var / (var + 1))
+        @test promote_type(typeof(p), String) === Any
+        @test p != UnregisteredMutable()
+        @test UnregisteredMutable() != p
+        @test !isequal(p, UnregisteredMutable())
+        @test !isequal(UnregisteredMutable(), p)
     end
-    if VERSION >= v"1.13"
-        for scalar in (2, 1.5), m in (y, y^2)
+    # Monomials of TypedPolynomials are `isbits`
+    if VERSION >= v"1.13" && nameof(Mod) == :TypedPolynomials
+        for scalar in (2, 1.5), m in (var, var^2)
             allocated_product(scalar, m)
             allocated_product(m, scalar)
             @test allocated_product(scalar, m) == 0
