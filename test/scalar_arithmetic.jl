@@ -29,7 +29,7 @@ _supports_bool(::Union{MOI.VariableIndex,MOI.ScalarAffineFunction}) = false
 function test_monomial(a, m)
     for product in ((@inferred a * m), (@inferred m * a))
         @test product isa MP.AbstractTerm{typeof(a)}
-        @test MP.coefficient(product) === a
+        @test MA.isequal_canonical(MP.coefficient(product), a)
         @test MP.monomial(product) == m
     end
     @test MA.promote_operation(*, typeof(a), typeof(m)) === typeof(a * m)
@@ -146,8 +146,10 @@ function test_scalar_equality(a, x)
     constant = a * one(x)
     for p in (constant, MP.polynomial(constant), (a * x) / x)
         for comp in (==, isequal)
-            @test (@inferred comp(p, a))
-            @test (@inferred comp(a, p))
+            # MOI uses identity equality, so equal copies can compare unequal.
+            expected = comp(a, MA.copy_if_mutable(a))
+            @test (@inferred comp(p, a)) == expected
+            @test (@inferred comp(a, p)) == expected
         end
     end
     for p in (x, x^2, a * x, MP.polynomial(a * x), x / (x + 1))
@@ -161,6 +163,19 @@ function test_scalar_equality(a, x)
     for p in (0 * x, zero(x), zero(x) / x), comp in (==, isequal)
         @test (@inferred comp(p, z))
         @test (@inferred comp(z, p))
+    end
+    return
+end
+
+function test_monomial_ownership(a, m)
+    original = MA.copy_if_mutable(a)
+    for args in ((a, m), (m, a))
+        for product in
+            ((@inferred *(args...)), (@inferred MA.operate(*, args...)))
+            @test MA.isequal_canonical(MP.coefficient(product), original)
+            MA.operate!(zero, MP.coefficient(product))
+            @test MA.isequal_canonical(a, original)
+        end
     end
     return
 end
@@ -189,6 +204,11 @@ allocated_product(a, b) = @allocated a * b
             test_dots(dot_scalar, [var, var])
             test_dots(dot_scalar, [var^2, var^3])
         end
+    end
+    for scalar in (big(2), BigFloat(2), big(2) // 3, 2a + 1, 2b + 1),
+        m in (var, var^2)
+
+        test_monomial_ownership(scalar, m)
     end
     @test_throws MethodError "unregistered scalar" * var
     @test_throws MethodError var + "unregistered scalar"

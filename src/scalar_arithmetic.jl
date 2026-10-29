@@ -51,8 +51,10 @@ macro scalar_arithmetic(Scalar)
             return convert(NT, c) / one(DT)
         end
 
-        Base.:*(a::$S, m::_BasisElementLike) = term(a, m)
-        Base.:*(m::_BasisElementLike, a::$S) = term(a, m)
+        function Base.:*(a::$S, m::_BasisElementLike)
+            return term(MA.copy_if_mutable(a), m)
+        end
+        Base.:*(m::_BasisElementLike, a::$S) = a * m
 
         function MA.promote_operation(
             ::typeof(*),
