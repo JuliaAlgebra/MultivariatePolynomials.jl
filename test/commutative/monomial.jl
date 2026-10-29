@@ -213,6 +213,18 @@ function map_exponents_test()
     a = @inferred MP.map_exponents_to!(a, -, a, a)
     @test isone(a)
     @test (@inferred MP.map_exponents!(div, x^4 * y^6, x^2 * y^3)) == x^2 * y^2
+    # See https://github.com/JuliaAlgebra/DynamicPolynomials.jl/pull/105
+    e = x * y^0
+    f = x * y^2
+    @test variables(e) == variables(f)
+    g = @inferred MP.map_exponents!(div, e, f)
+    if exponents(e) isa AbstractVector
+        @test g === e
+    end
+    @test g == x
+    @test variables(g) == variables(f)
+    @test degree(g, x) == 1
+    @test degree(g, y) == 0
 
     let output = output, a = x^2 * y, b = x * y^3
         alloc_test(() -> MP.map_exponents_to!(output, +, a, b), 0)
