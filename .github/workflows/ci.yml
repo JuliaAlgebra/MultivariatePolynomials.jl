@@ -50,11 +50,10 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
-      - name: Add ${{ matrix.implementation }} to the test environment
-        if: matrix.implementation != 'SimplePolynomials'
-        shell: julia --project=test {0}
+      - name: Remove Mooncake on Julia v1.14
+        shell: julia {0}
         run: |
-          using Pkg, TOML
+          using TOML
           # Mooncake supports Julia 1.10--1.13. Keep testing MP on newer
           # Julia versions without asking Pkg to resolve Mooncake there.
           if VERSION >= v"1.14-"
@@ -65,6 +64,11 @@ jobs:
               end
               open(io -> TOML.print(io, project), path, "w")
           end
+      - name: Add ${{ matrix.implementation }} to the test environment
+        if: matrix.implementation != 'SimplePolynomials'
+        shell: julia --project=test {0}
+        run: |
+          using Pkg
           Pkg.add(PackageSpec(name="${{ matrix.implementation }}", rev="bl/ordering_instance"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
