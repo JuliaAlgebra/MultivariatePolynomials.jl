@@ -30,6 +30,8 @@ end
 
 const AbstractMonomial = Polynomial{Monomial}
 const AbstractMonomialLike = Union{AbstractVariable,AbstractMonomial}
+# Includes basis elements of non-monomial bases, e.g., Chebyshev polynomials
+const _BasisElementLike = Union{AbstractVariable,Polynomial}
 const _PolynomialAlgebra =
     SA.StarAlgebra{<:Union{Variables,_NoncommutativeBasis}}
 const AbstractTerm{T} = SA.Term{T,<:_PolynomialAlgebra}
