@@ -21,9 +21,6 @@ When applied to a monomial, it create a term of type `AbstractTerm{Bool}`.
 """
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
-function term(coef, mono::AbstractMonomialLike)
-    return SA.Term(coef, mono)
-end
 # Convert any polynomial-like to a term
 term(m::AbstractMonomialLike) = term(true, monomial(m))
 term(t::AbstractTerm) = t
@@ -61,7 +58,6 @@ term_type(::Type{TT}) where {TT<:SA.Term} = TT
 function term_type(::Type{<:SA.Term{<:Any,A,I}}, ::Type{T}) where {T,A,I}
     return SA.Term{T,A,I}
 end
-term_type(::Type{M}) where {M<:AbstractMonomialLike} = term_type(M, Bool)
 term_type(v::Type{<:AbstractVariable}) = term_type(monomial_type(v))
 function term_type(v::Type{<:AbstractVariable}, ::Type{T}) where {T}
     return term_type(monomial_type(v), T)
