@@ -42,6 +42,11 @@ coefficient_dot(p::Tuple, q::Tuple) = sum(map(coefficient_dot, p, q))
             MultivariatePolynomials,
             :MultivariatePolynomialsChainRulesCoreExt,
         )
+        p32, q32 = polynomial(2.0f0 * x), polynomial(3.0f0 * y)
+        @test dot(p32, q32) == 6.0f0 * x * y
+        @test ext.coefficient_dot(p32, q32) === 0.0f0
+        @test dot(p32, p32) == 4.0f0 * x^2
+        @test ext.coefficient_dot(p32, p32) === 4.0f0
         for inner in (coefficient_dot, ext.coefficient_dot)
             p32 = polynomial(2.0f0 * x)
             q32 = polynomial(3.0f0 * y)
@@ -51,6 +56,8 @@ coefficient_dot(p::Tuple, q::Tuple) = sum(map(coefficient_dot, p, q))
             @test inner(zero(p32), q32) === 0.0f0
             @test inner(p32, zero(q32)) === 0.0f0
             @test inner(p32, p32) === 4.0f0
+            @test inner(p32 + q32, q32) === 9.0f0
+            @test inner(q32, p32 + q32) === 9.0f0
             @test inner((1.0f0 + 2.0f0im) * x, (3.0f0 + 4.0f0im) * x) ===
                   11.0f0 - 2.0f0im
         end

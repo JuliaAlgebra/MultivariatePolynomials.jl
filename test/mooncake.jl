@@ -1,12 +1,13 @@
 module TestMooncake
 
-using Test, Random
+using Test, Random, LinearAlgebra
 using JET, AllocCheck
 if !isdefined(Main, :Mod)
     include("SimplePolynomials.jl")
 end
 const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
+import StarAlgebras as SA
 import Mooncake as MC
 import ChainRulesCore as CRC
 
@@ -37,6 +38,7 @@ end
 function complex_mixed(a, x)
     return real(MP.coefficient((a * x + 1) * ((1.0 + 2im) * x + 3im), x))
 end
+scaled_coefficient(c, p, x) = real(MP.coefficient(c * p, x))
 missing_coefficient(p, x) = MP.coefficient(p, x^3)
 product_different_parents(p, q, x, y) = MP.coefficient(p * q, x * y)
 product_same_argument(p, q, x) = MP.coefficient(p * q, x^2)
@@ -116,6 +118,14 @@ function test_backend(x, y)
         end
         _, g = gradient(complex_mixed, 2.0, x)
         @test g[2] == 0.0
+        # The scalar pullback uses SA's coefficient dot, with conjugation
+        # on the polynomial's coefficients rather than the cotangent.
+        p = (1.0 + 2im) * x + 3.0 * y
+        v, g = gradient(scaled_coefficient, 3.0 + 4im, p, x)
+        @test v == -5.0
+        @test g[2] == 1.0 - 2im
+        @test g[3].polynomial == (3.0 - 4im) * x
+        @test p == (1.0 + 2im) * x + 3.0 * y
     end
     @testset "Polynomial inputs and aliasing" begin
         p, q = MP.polynomial(2.0 * x), MP.polynomial(3.0 * y)
@@ -142,6 +152,16 @@ function test_backend(x, y)
         @test g[2].polynomial == x
         @test p == 2x
         @test q == 3y
+    end
+    @testset "Algebra dot and cotangent pairing" begin
+        p = MP.polynomial((1.0 + 2im) * x)
+        q = MP.polynomial((3.0 + 4im) * x)
+        @test dot(p, q) == (11.0 - 2im) * x^2
+        @test MC._dot(Ext.PolynomialTangent(p), Ext.PolynomialTangent(q)) ===
+              11.0
+        p, q = SA.promote_bases(MP.polynomial(2.0x), MP.polynomial(3.0y))
+        @test MC._dot(Ext.PolynomialTangent(p), Ext.PolynomialTangent(q)) ===
+              0.0
     end
     @testset "Mooncake tangent interface" begin
         rng = MersenneTwister(0)

@@ -1,10 +1,11 @@
 module MultivariatePolynomialsChainRulesCoreExt
 
 import ChainRulesCore
+import LinearAlgebra
 import ChainRulesCore as CRC
 import MultivariatePolynomials as MP
 using MultivariatePolynomials
-using MultivariatePolynomials: _APL, MA
+using MultivariatePolynomials: _APL, MA, SA
 
 ChainRulesCore.@scalar_rule +(x::_APL) true
 ChainRulesCore.@scalar_rule -(x::_APL) -1
