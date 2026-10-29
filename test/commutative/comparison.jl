@@ -5,6 +5,22 @@ if !@isdefined(Mod)
 end
 
 @testset "Comparison" begin
+    @testset "Monomial hash consistency" begin
+        Mod.@polyvar x y
+        for (a, b) in (
+            (one(x), 1),
+            (monomial(x), x),
+            (monomial([x, y], [2, 0]), x^2),
+            (monomial([x, y], [0, 3]), y^3),
+            (monomial([x, y], [1, 1]), y * x),
+        )
+            @test isequal(a, b)
+            for seed in (UInt(0), UInt(1), typemax(UInt))
+                @test (@inferred hash(a, seed)) == hash(b, seed)
+            end
+            @test Dict(a => 42)[b] == 42
+        end
+    end
     @testset "Graded Lex Order" begin
         Mod.@polyvar x y z
         O = Graded(LexOrder())

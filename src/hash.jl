@@ -1,4 +1,5 @@
 function Base.hash(m::AbstractMonomial, u::UInt)
+    @assert is_commutative(m)
     nnz = count(!iszero, exponents(m))
     if iszero(nnz)
         hash(1, u)

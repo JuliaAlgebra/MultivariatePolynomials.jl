@@ -30,6 +30,7 @@ function Base.copy(p::Polynomial{B}) where {B}
 end
 
 function Base.hash(p::Polynomial{B}, u::UInt) where {B}
+    @assert is_commutative(variables(p))
     return hash(
         Tuple(
             (v, e) for (v, e) in zip(variables(p), exponents(p)) if !iszero(e)
@@ -38,6 +39,7 @@ function Base.hash(p::Polynomial{B}, u::UInt) where {B}
     )
 end
 function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
+    @assert is_commutative(variables(p)) && is_commutative(variables(q))
     a, b = SA.promote_bases(p, q)
     return isequal(exponents(a), exponents(b))
 end
@@ -60,6 +62,7 @@ Base.iterate(p::Polynomial) = p, nothing
 Base.iterate(::Polynomial, ::Nothing) = nothing
 
 function Base.:(==)(p::Polynomial{B}, q::Polynomial{B}) where {B}
+    @assert is_commutative(variables(p)) && is_commutative(variables(q))
     a, b = SA.promote_bases(p, q)
     return exponents(a) == exponents(b)
 end

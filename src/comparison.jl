@@ -344,6 +344,7 @@ Base.@pure function Base.cmp(v1::AbstractVariable, v2::AbstractVariable)
 end
 
 function Base.cmp(m1::AbstractMonomial, m2::AbstractMonomial)
+    @assert is_commutative(m1) && is_commutative(m2)
     s1, s2 = promote_variables(m1, m2)
     return cmp(ordering(m1), exponents(s1), exponents(s2))
 end
