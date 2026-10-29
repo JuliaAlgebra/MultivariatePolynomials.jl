@@ -9,6 +9,11 @@ import Test: @inferred
 
 import MutableArithmetics as MA
 
+function substitution_allocated(p, vals)
+    p(vals)
+    return @allocated p(vals)
+end
+
 @testset "Substitution" begin
     Mod.@polyvar x[1:3]
 
@@ -92,6 +97,43 @@ import MutableArithmetics as MA
         end
         c = constant_monomial(typeof(x[1]))
         @test (@inferred c(ntuple(_ -> 2, nvariables(c)))) == 1
+    end
+
+    @testset "Mutable substitution values" begin
+        # https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/208
+        Mod.@polyvar a b
+        m = a * b
+        p = a * b * (1 + b)
+        for T in (BigInt, BigFloat, Rational{BigInt})
+            # The two entries deliberately share their mutable storage.
+            vals = fill(T(-1), 2)
+            original = MA.mutable_copy(vals)
+            for point in (vals, Tuple(vals))
+                @test (@inferred m(point)) == 1
+                @test vals == original
+                @test iszero(@inferred p(point))
+                @test vals == original
+            end
+            @test iszero(@inferred p(a => vals[1], b => vals[2]))
+            @test vals == original
+            @test iszero(@inferred subs(p, a => vals[1], b => vals[2]))
+            @test vals == original
+            @test (@inferred subs(p, a => vals[1])) == -b - b^2
+            @test vals == original
+        end
+    end
+
+    @testset "Heterogeneous tuple substitution" begin
+        Mod.@polyvar a b c d e f g h
+        m = a * b * c * d * e * f * g * h
+        @test (@inferred subs(m, a => 2.0)) == 2.0b * c * d * e * f * g * h
+        @test subs(m + 1, a => 2.0) == 2.0b * c * d * e * f * g * h + 1
+        for vals in (fill(2, 8), ntuple(_ -> 2, 8))
+            @test substitution_allocated(m, vals) == 0
+        end
+        # Powers allocate BigInts, but multiplication reuses the accumulator.
+        # This budget excludes allocating another product for every factor.
+        @test substitution_allocated(m, fill(big(2), 8)) <= 16 * BIGINT_ALLOC
     end
 
     @testset "Eval on constant monomial" begin
