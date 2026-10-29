@@ -1,10 +1,8 @@
 Base.iszero(v::AbstractVariable) = false
-Base.iszero(m::AbstractMonomial) = false
 # SA.Term already has `iszero` defined in StarAlgebras
 Base.iszero(t::AbstractPolynomial) = iszero(nterms(t))
 
 Base.isone(v::AbstractVariable) = false
-Base.isone(m::AbstractMonomial) = isconstant(m)
 # isone for SA.Term is defined in StarAlgebras using `isone(basis_element(t))`.
 # For polynomials, `isone(monomial)` means `isconstant(monomial)` which should
 # be equivalent to `isone(monomial)` as defined by the monomial type.
