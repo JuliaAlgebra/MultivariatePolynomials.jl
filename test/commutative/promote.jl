@@ -33,6 +33,13 @@ end
 
 @testset "Promotion" begin
     Mod.@polyvar x y
+    # Regression for DynamicPolynomials.jl#168.
+    @testset "Promotion with Any" begin
+        for T in (typeof(x), typeof(x^2))
+            @test promote_type(T, Any) === Any
+            @test promote_type(Any, T) === Any
+        end
+    end
     @testset "Promotion with unrelated types" begin
         p = x + y
         q = x + 1.0y
