@@ -65,7 +65,6 @@ function Base.:(==)(p::Polynomial{B}, q::Polynomial{B}) where {B}
 end
 
 variables(p::Polynomial) = variables(p.variables)
-nvariables(p::Polynomial) = nvariables(p.variables)
 
 monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
 monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
@@ -74,13 +73,6 @@ monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
 function algebra_element(p, basis::SA.AbstractBasis)
     return SA.AlgebraElement(p, algebra(basis))
 end
-
-function _algebra_element(p, ::Type{B}) where {B<:AbstractMonomialIndexed}
-    return algebra_element(sparse_coefficients(p), FullBasis{B}(variables(p)))
-end
-
-algebra_element(p::Polynomial{B}) where {B} = _algebra_element(monomial(p), B)
-polynomial(p::Polynomial) = algebra_element(p)
 
 function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
     if B != Monomial
@@ -93,24 +85,6 @@ function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
     end
     return
 end
-
-function Base.show(io::IO, mime::MIME"text/latex", p::Polynomial)
-    print(io, "\$\$ ")
-    _show(io, mime, p)
-    print(io, " \$\$")
-    return
-end
-
-function Base.show(io::IO, mime::MIME"text/plain", p::Polynomial)
-    return _show(io, mime, p)
-end
-
-function Base.show(io::IO, mime::MIME"text/print", p::Polynomial)
-    return _show(io, mime, p)
-end
-
-Base.show(io::IO, p::Polynomial) = show(io, MIME"text/plain"(), p)
-Base.print(io::IO, p::Polynomial) = show(io, MIME"text/print"(), p)
 
 # zero for a Polynomial type: return an AlgebraElement with no terms
 function Base.zero(::Type{Polynomial{B,V,E}}) where {B,V,E}

@@ -22,7 +22,7 @@ When applied to a monomial, it create a term of type `AbstractTerm{Bool}`.
 function term end
 term(coef, var::AbstractVariable) = term(coef, monomial(var))
 # Convert any polynomial-like to a term
-term(m::AbstractMonomialLike) = term(true, monomial(m))
+term(m::_BasisElementLike) = term(true, m)
 term(t::AbstractTerm) = t
 function term(p::AbstractPolynomial)
     nterms(p) <= 1 || throw(InexactError(:term, term_type(p), p))

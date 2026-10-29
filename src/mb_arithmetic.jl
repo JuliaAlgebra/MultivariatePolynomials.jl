@@ -31,20 +31,16 @@ const _AE = AbstractPolynomial
 
 # polynomial() on an AlgebraElement is the identity
 polynomial(a::AbstractPolynomial) = a
-polynomial(a::AbstractTermLike) = algebra_element(a)
+polynomial(a::Union{AbstractTermLike,Polynomial}) = algebra_element(a)
 function polynomial(a::AbstractPolynomialLike, ::Type{T}) where {T}
     return SA.AlgebraElement{T}(polynomial(a))
 end
 
-# Bare monomials enter SA's term arithmetic.
+# Variables and basis elements enter SA's term arithmetic.
 for op in [:+, :-, :*]
     @eval begin
-        Base.$op(p::AbstractMonomialLike, q::_AE) = $op(term(p), q)
-        Base.$op(p::_AE, q::AbstractMonomialLike) = $op(p, term(q))
-        Base.$op(p::Polynomial{<:AbstractMonomialIndexed}, q::_AE) =
-            $op(SA.Term(1, p), q)
-        Base.$op(p::_AE, q::Polynomial{<:AbstractMonomialIndexed}) =
-            $op(p, SA.Term(1, q))
+        Base.$op(p::_BasisElementLike, q::_AE) = $op(term(p), q)
+        Base.$op(p::_AE, q::_BasisElementLike) = $op(p, term(q))
     end
 end
 

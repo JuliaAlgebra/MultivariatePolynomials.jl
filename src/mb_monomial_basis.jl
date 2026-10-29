@@ -1,6 +1,5 @@
 # Polynomial{Monomial,...} acts as a monomial: support term creation and const mult
 term(coeff, p::Polynomial) = SA.Term(coeff, p)
-term(p::Polynomial) = SA.Term(true, p)
 left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
 function right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α)
     return left_constant_mult(α, p)
