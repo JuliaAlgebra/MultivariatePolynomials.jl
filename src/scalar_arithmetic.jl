@@ -70,8 +70,8 @@ macro scalar_arithmetic(Scalar)
             return term_type(M, T)
         end
 
-        LinearAlgebra.dot(a::$S, p::AbstractPolynomialLike) = a' * p
-        LinearAlgebra.dot(p::AbstractPolynomialLike, a::$S) = p' * a
+        LinearAlgebra.dot(a::$S, p::AbstractMonomialLike) = a' * p
+        LinearAlgebra.dot(p::AbstractMonomialLike, a::$S) = p' * a
 
         function LinearAlgebra._dot_nonrecursive(
             a::AbstractArray{<:$S},

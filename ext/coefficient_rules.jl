@@ -9,7 +9,7 @@ function _rrule(f, args...)
 end
 
 # The Hermitian coefficient pairing; reverse AD uses its real part.
-# This is independent of MP's polynomial-valued dot product.
+# This pairs coefficient coordinates, independently of algebra-valued dot.
 function coefficient_dot(p, q)
     p, q = SA.promote_bases(polynomial(p), polynomial(q))
     return LinearAlgebra.dot(SA.coeffs(p), SA.coeffs(q))

@@ -92,9 +92,12 @@ function LinearAlgebra.transpose(r::RationalPoly)
     return transpose(numerator(r)) / transpose(denominator(r))
 end
 
+function LinearAlgebra.dot(p1::AbstractMonomialLike, p2::AbstractPolynomialLike)
+    return p1' * p2
+end
 function LinearAlgebra.dot(
-    p1::AbstractPolynomialLike,
-    p2::AbstractPolynomialLike,
+    p1::Union{AbstractPolynomial,AbstractTerm},
+    p2::AbstractMonomialLike,
 )
     return p1' * p2
 end

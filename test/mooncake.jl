@@ -1,12 +1,13 @@
 module TestMooncake
 
-using Test, Random
+using Test, Random, LinearAlgebra
 using JET, AllocCheck
 if !isdefined(Main, :Mod)
     include("SimplePolynomials.jl")
 end
 const Mod = isdefined(Main, :Mod) ? Main.Mod : SimplePolynomials
 import MultivariatePolynomials as MP
+import StarAlgebras as SA
 import Mooncake as MC
 import ChainRulesCore as CRC
 
@@ -151,6 +152,16 @@ function test_backend(x, y)
         @test g[2].polynomial == x
         @test p == 2x
         @test q == 3y
+    end
+    @testset "Algebra dot and cotangent pairing" begin
+        p = MP.polynomial((1.0 + 2im) * x)
+        q = MP.polynomial((3.0 + 4im) * x)
+        @test dot(p, q) == (11.0 - 2im) * x^2
+        @test MC._dot(Ext.PolynomialTangent(p), Ext.PolynomialTangent(q)) ===
+              11.0
+        p, q = SA.promote_bases(MP.polynomial(2.0x), MP.polynomial(3.0y))
+        @test MC._dot(Ext.PolynomialTangent(p), Ext.PolynomialTangent(q)) ===
+              0.0
     end
     @testset "Mooncake tangent interface" begin
         rng = MersenneTwister(0)

@@ -1,3 +1,5 @@
+using Test, LinearAlgebra, MultivariatePolynomials
+
 if !@isdefined(Mod)
     include("../SimplePolynomials.jl")
     import .SimplePolynomials as Mod
@@ -5,6 +7,25 @@ if !@isdefined(Mod)
 end
 
 import MutableArithmetics as MA
+
+@testset "Scalar dot semantics" begin
+    Mod.@polyvar x y
+    for a in (x, x^2, (1 + 2im) * x, x + 2im * y),
+        b in (y, y^2, (3 - im) * y, 2x - im * y)
+
+        @test (@inferred dot(a, b)) == a' * b
+    end
+    for a in (2, 1 + 2im), p in (x, x^2, 3x, x + y)
+        @test (@inferred dot(a, p)) == a' * p
+        @test (@inferred dot(p, a)) == p' * a
+    end
+    for t in ((1 + 2im) * x, polynomial((1 + 2im) * x))
+        a = [t 2t; 3t 4t]
+        b = [2t 3t; 4t 5t]
+        @test (@inferred dot(a, b)) == 200x^2
+        @test MA.operate(dot, a, b) == 200x^2
+    end
+end
 
 @testset "Algebra" begin
     Mod.@polyvar x y
