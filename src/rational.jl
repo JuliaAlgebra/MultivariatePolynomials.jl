@@ -50,7 +50,7 @@ function Base.:/(num::AbstractMonomialLike, den::Number)
     return map_coefficients(α -> α / den, num, nonzero = true)
 end
 function Base.:/(num::AbstractTerm{T}, den::Union{T,Number}) where {T}
-    return algebra_element(num) / den
+    return SA.algebra_element(num) / den
 end
 
 function Base.:+(r::RationalPoly, s::RationalPoly)

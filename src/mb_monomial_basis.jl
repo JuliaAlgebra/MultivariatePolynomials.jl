@@ -119,7 +119,7 @@ end
 keys_as_monomials(mb::SubBasis) = keys_as_monomials(mb.keys, parent(mb))
 
 function polynomial(f::Function, mb::SubBasis)
-    return implicit(algebra_element(f, mb))
+    return implicit(SA.algebra_element(f, mb))
 end
 
 function polynomial(Q::AbstractMatrix, mb::SubBasis{Monomial}, T::Type)
@@ -206,7 +206,7 @@ function SA.adjoint_coeffs!(
     MA.operate!(zero, res)
     target_full = implicit_basis(target)
     for (i, src_elem) in enumerate(source)
-        full_col = SA.coeffs(algebra_element(src_elem), target_full)
+        full_col = SA.coeffs(SA.algebra_element(src_elem), target_full)
         col = SA.coeffs(full_col, target_full, target)
         for (j, v) in SA.nonzero_pairs(col)
             res[i] += v * cfs[j]

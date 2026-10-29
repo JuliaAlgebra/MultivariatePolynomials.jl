@@ -117,7 +117,7 @@ end
 function implicit(a::SA.AlgebraElement)
     basis = implicit_basis(SA.basis(a))
     basis === SA.basis(a) && return a
-    return algebra_element(SA.coeffs(a, basis), basis)
+    return SA.AlgebraElement(SA.coeffs(a, basis), algebra(basis))
 end
 
 function implicit(t::SA.Term)
@@ -174,7 +174,7 @@ end
 _explicit_basis(_, basis::SubBasis) = basis
 
 function explicit_basis(p::AbstractTermLike)
-    return explicit_basis(algebra_element(p))
+    return explicit_basis(polynomial(p))
 end
 
 function explicit_basis(a::SA.AlgebraElement)
@@ -205,14 +205,20 @@ _lazy_collect(v::AbstractVector) = collect(v)
 _lazy_collect(v::Tuple) = collect(v)
 _lazy_collect(v::Vector) = v
 
-sparse_coefficients(p::AbstractPolynomial) = SA.coeffs(p)
-sparse_coefficients(t::AbstractTermLike) = SA.coeffs(algebra_element(t))
-algebra_element(p::AbstractPolynomial) = p
-algebra_element(t::AbstractTerm) = SA.algebra_element(t)
-algebra_element(m::_BasisElementLike) = SA.algebra_element(term(m))
+SA.algebra_element(m::_BasisElementLike) = SA.algebra_element(term(m))
+function SA.coeffs(t::Union{_BasisElementLike,AbstractTerm})
+    return SA.coeffs(SA.algebra_element(t))
+end
 
-function algebra_element(f::Function, basis::SubBasis)
-    return algebra_element(map(f, eachindex(basis)), basis)
+function SA.algebra_element(
+    coeffs,
+    basis::Union{MonomialIndexedBasis,_NoncommutativeBasis},
+)
+    return SA.AlgebraElement(coeffs, algebra(basis))
+end
+
+function SA.algebra_element(f::Function, basis::SubBasis)
+    return SA.algebra_element(map(f, eachindex(basis)), basis)
 end
 
 _similar_type(::Type{<:NTuple{N,Any}}, ::Type{T}) where {N,T} = NTuple{N,T}
@@ -236,8 +242,8 @@ function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
 end
 
 function MA.promote_operation(
-    ::typeof(algebra_element),
-    P::Type{<:AbstractPolynomialLike},
+    ::typeof(SA.algebra_element),
+    P::Type{<:AbstractTermLike},
 )
     return polynomial_type(P)
 end
@@ -266,7 +272,7 @@ function constant_algebra_element_type(
 end
 
 function constant_algebra_element(basis::SubBasis, α)
-    return algebra_element(
+    return SA.algebra_element(
         [_one_if_type(α)],
         SA.SubBasis(
             parent(basis),

@@ -70,10 +70,6 @@ monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
 monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
 # SA.Term constructor for Polynomial{...} basis elements is in mb_monomial_basis.jl
 
-function algebra_element(p, basis::SA.AbstractBasis)
-    return SA.AlgebraElement(p, algebra(basis))
-end
-
 function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
     if B != Monomial
         print(io, B)
@@ -111,7 +107,7 @@ function convert_basis(
     basis::SA.AbstractBasis,
     p::Union{AbstractTermLike,Polynomial},
 )
-    return convert_basis(basis, algebra_element(p))
+    return convert_basis(basis, polynomial(p))
 end
 
 function convert_basis(basis::SA.AbstractBasis, p::SA.AlgebraElement)
