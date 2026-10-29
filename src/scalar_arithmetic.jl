@@ -51,14 +51,14 @@ macro scalar_arithmetic(Scalar)
             return convert(NT, c) / one(DT)
         end
 
-        Base.:*(a::$S, m::AbstractMonomialLike) = term(a, m)
-        Base.:*(m::AbstractMonomialLike, a::$S) = term(a, m)
+        Base.:*(a::$S, m::_BasisElementLike) = term(a, m)
+        Base.:*(m::_BasisElementLike, a::$S) = term(a, m)
 
         function MA.promote_operation(
             ::typeof(*),
             ::Type{T},
             ::Type{M},
-        ) where {T<:$S,M<:AbstractMonomialLike}
+        ) where {T<:$S,M<:_BasisElementLike}
             return term_type(M, T)
         end
 
@@ -66,7 +66,7 @@ macro scalar_arithmetic(Scalar)
             ::typeof(*),
             ::Type{M},
             ::Type{T},
-        ) where {M<:AbstractMonomialLike,T<:$S}
+        ) where {M<:_BasisElementLike,T<:$S}
             return term_type(M, T)
         end
 

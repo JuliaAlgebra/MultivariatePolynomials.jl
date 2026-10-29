@@ -56,8 +56,3 @@ function MA.promote_operation(
 ) where {P<:Union{AbstractPolynomial,AbstractTerm}}
     return MA.promote_operation(implicit, SA._algebra_element_type(P))
 end
-
-function term_element(α, p::Polynomial)
-    return SA.algebra_element(SA.Term(α, p))
-end
-Base.:*(α::Number, p::Polynomial) = term_element(α, p)
