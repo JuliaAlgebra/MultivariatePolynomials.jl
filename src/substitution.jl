@@ -133,7 +133,7 @@ function _substituted_product(::Type{R}, vals, exps) where {R}
     β = one(R)
     for (i, val) in enumerate(vals)
         if !isnothing(val)
-            β *= val^exps[i]
+            β = MA.operate!!(*, β, val^exps[i])
         end
     end
     return β
@@ -221,10 +221,12 @@ function _substitute(m::AbstractMonomial, vals::AbstractVector{T}) where {T}
         return one(MA.promote_operation(*, T, T))
     end
     z = exponents(m)
-    result = vals[1]^z[1]
+    # Powers may alias their input, e.g. Rational{BigInt} raised to 1.
+    # Copy the initial value before accumulating in place.
+    result = MA.copy_if_mutable(vals[1]^z[1])
     for i in 2:length(vals)
         # Keep zero powers: their parents are part of the result's basis.
-        result = result * vals[i]^z[i]
+        result = MA.operate!!(*, result, vals[i]^z[i])
     end
     return result
 end
