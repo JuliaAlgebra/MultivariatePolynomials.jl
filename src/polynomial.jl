@@ -116,7 +116,7 @@ Returns the same as `polynomial_type(::PT, ::Type{T})`.
 """
 function polynomial_type end
 polynomial_type(p::_APL, args::Type...) = polynomial_type(typeof(p), args...)
-function polynomial_type(::Type{M}) where {M<:AbstractMonomialLike}
+function polynomial_type(::Type{M}) where {M<:_BasisElementLike}
     return polynomial_type(M, Bool)
 end
 function polynomial_type(::Type{V}, ::Type{T}) where {V<:AbstractVariable,T}
@@ -251,7 +251,7 @@ With graded lexicographic order and `x > y`,
 monomials(p::AbstractPolynomial) = monomial.(terms(p))
 monomials(t::AbstractTermLike) = OneOrZeroElementVector(iszero(t), monomial(t))
 
-function isconstant(p::_APL)
+function isconstant(p::AbstractPolynomial)
     n = nterms(p)
     return iszero(n) || (isone(n) && isconstant(first(terms(p))))
 end

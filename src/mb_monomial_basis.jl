@@ -1,9 +1,5 @@
-# Polynomial{Monomial,...} acts as a monomial: support term creation and const mult
+# Polynomial{Monomial,...} acts as a monomial: support term creation
 term(coeff, p::Polynomial) = SA.Term(coeff, p)
-left_constant_mult(α, p::Polynomial{<:AbstractMonomialBasis}) = SA.Term(α, p)
-function right_constant_mult(p::Polynomial{<:AbstractMonomialBasis}, α)
-    return left_constant_mult(α, p)
-end
 
 function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
     BT = full_basis_type(B, Polynomial{B,V,E})
@@ -25,11 +21,6 @@ function explicit_basis_covering(
 ) where {B<:AbstractMonomialBasis}
     @assert full == parent(target)
     return SA.SubBasis(parent(target), target.keys)
-end
-
-function Base.adjoint(p::Polynomial{B}) where {B<:AbstractMonomialIndexed}
-    mono = adjoint(monomial(p))
-    return Polynomial(Variables{B}(variables(mono)), exponents(mono))
 end
 
 degree_one_univariate_polynomial(::Type{Monomial}, value) = value
