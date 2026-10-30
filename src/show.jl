@@ -1,6 +1,6 @@
 const TypesWithShow = Union{
     AbstractVariable,
-    Polynomial,
+    BasisElement,
     AbstractTerm,
     AbstractPolynomial,
     RationalPoly,
@@ -59,7 +59,7 @@ const unicode_subscripts = ("₀", "₁", "₂", "₃", "₄", "₅", "₆", "�
 unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
 # BASIS ELEMENTS
-function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
+function _show(io::IO, mime::MIME, p::BasisElement{B}) where {B}
     print(io, B, "(")
     _show(io, mime, monomial(p))
     print(io, ")")

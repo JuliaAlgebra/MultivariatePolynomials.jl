@@ -1,17 +1,17 @@
 variables(p::AbstractPolynomial) = variables(SA.basis(p))
 
-function Polynomial{B}(v::AbstractVariable) where {B}
+function BasisElement{B}(v::AbstractVariable) where {B}
     vars = variables(v)
-    return Polynomial(Variables{B}(vars), map(_ -> 1, vars))
+    return BasisElement(Variables{B}(vars), map(_ -> 1, vars))
 end
 
-function Polynomial{B}(mono::AbstractMonomial) where {B}
+function BasisElement{B}(mono::AbstractMonomial) where {B}
     vars = variables(mono)
-    return Polynomial(Variables{B}(vars), exponents(mono))
+    return BasisElement(Variables{B}(vars), exponents(mono))
 end
 
-exponents(p::Polynomial) = p.exponents
-function exponents(p::Polynomial, vars)
+exponents(p::BasisElement) = p.exponents
+function exponents(p::BasisElement, vars)
     (all_vars, map), _ = promote_variables_with_maps(variables(p), vars)
     if all_vars != vars
         throw(
@@ -24,40 +24,39 @@ function exponents(p::Polynomial, vars)
            map(exponents(p))
 end
 
-function Base.copy(p::Polynomial{B}) where {B}
-    return Polynomial(Variables{B}(copy(variables(p))), copy(exponents(p)))
+function Base.copy(p::BasisElement{B}) where {B}
+    return BasisElement(Variables{B}(copy(variables(p))), copy(exponents(p)))
 end
 
-function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
+function Base.isequal(p::BasisElement{B}, q::BasisElement{B}) where {B}
     @assert is_commutative(variables(p)) && is_commutative(variables(q))
     a, b = SA.promote_bases(p, q)
     return isequal(exponents(a), exponents(b))
 end
 
-Base.isone(p::Polynomial) = all(iszero, p.exponents)
+Base.isone(p::BasisElement) = all(iszero, p.exponents)
 # A monomial basis element is never zero
-Base.iszero(p::Polynomial) = false
+Base.iszero(p::BasisElement) = false
 # Ordering: derive from the variable type
-ordering(::Type{Polynomial{B,V,E}}) where {B,V,E} = ordering(V)
+ordering(::Type{BasisElement{B,V,E}}) where {B,V,E} = ordering(V)
 # constant_monomial: return a monomial with all-zero exponents
-function constant_monomial(p::Polynomial)
-    return Polynomial(p.variables, map(zero, p.exponents))
+function constant_monomial(p::BasisElement)
+    return BasisElement(p.variables, map(zero, p.exponents))
 end
 
-Base.iterate(p::Polynomial) = p, nothing
-Base.iterate(::Polynomial, ::Nothing) = nothing
+Base.iterate(p::BasisElement) = p, nothing
+Base.iterate(::BasisElement, ::Nothing) = nothing
 
-function Base.:(==)(p::Polynomial{B}, q::Polynomial{B}) where {B}
+function Base.:(==)(p::BasisElement{B}, q::BasisElement{B}) where {B}
     @assert is_commutative(variables(p)) && is_commutative(variables(q))
     a, b = SA.promote_bases(p, q)
     return exponents(a) == exponents(b)
 end
 
-variables(p::Polynomial) = variables(p.variables)
+variables(p::BasisElement) = variables(p.variables)
 
 monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
 monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
-# SA.Term constructor for Polynomial{...} basis elements is in mb_monomial_basis.jl
 
 """
     convert_basis(basis, p)
@@ -67,7 +66,7 @@ arithmetic between different families requires an explicit conversion first.
 """
 function convert_basis(
     basis::SA.AbstractBasis,
-    p::Union{AbstractTermLike,Polynomial},
+    p::Union{AbstractTermLike,BasisElement},
 )
     return convert_basis(basis, polynomial(p))
 end

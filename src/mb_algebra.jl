@@ -18,7 +18,7 @@ function MA.promote_operation(
     ::typeof(algebra),
     BT::Type{<:Union{FullBasis{B,V,E},SubBasis{B,V,E}}},
 ) where {B,V,E}
-    P = Polynomial{B,V,E}
+    P = BasisElement{B,V,E}
     MS = if is_commutative(V)
         MStruct{B,V,E,SA.key_type(BT),BT}
     else

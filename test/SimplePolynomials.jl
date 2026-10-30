@@ -108,7 +108,7 @@ function Base.imag(x::Variable)
     return MA.Zero()
 end
 
-const Monomial = MP.Polynomial{MP.Monomial,Vector{Variable},Vector{Int}}
+const Monomial = MP.BasisElement{MP.Monomial,Vector{Variable},Vector{Int}}
 
 function MP.variable_union_type(
     ::Union{M,Type{M}} where {M<:Union{Variable,Monomial}},
@@ -116,12 +116,12 @@ function MP.variable_union_type(
     return Variable
 end
 MP.monomial_type(::Union{Variable,Type{Variable}}) = Monomial
-MP.monomial(v::Variable) = MP.Polynomial{MP.Monomial}(v)
+MP.monomial(v::Variable) = MP.BasisElement{MP.Monomial}(v)
 function MP.monomial(vars::Vector{Variable}, z::Vector{Int})
     length(vars) == length(z) ||
         throw(ArgumentError("There should be as many exponents as variables"))
     @assert issorted(vars, rev = true)
-    return MP.Polynomial(MP.Variables{MP.Monomial}(vars), z)
+    return MP.BasisElement(MP.Variables{MP.Monomial}(vars), z)
 end
 function MP.constant_monomial(::Type{Monomial})
     return MP.monomial(Variable[], Int[])

@@ -25,7 +25,7 @@ import MutableArithmetics as MA
     @test vars == other_vars
     @test hash(vars) == hash(other_vars)
     @test one(vars) == one(x * y)
-    @test MP.Polynomial{MP.Monomial}(x * y) == x * y
+    @test MP.BasisElement{MP.Monomial}(x * y) == x * y
     @test SA.star(full, full[x*y]) == full[x*y]
 
     for b in (full, basis)

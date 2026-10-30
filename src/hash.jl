@@ -1,4 +1,4 @@
-function Base.hash(p::Polynomial{B}, u::UInt) where {B}
+function Base.hash(p::BasisElement{B}, u::UInt) where {B}
     @assert is_commutative(variables(p))
     return hash(monomial(p), hash(B, u))
 end

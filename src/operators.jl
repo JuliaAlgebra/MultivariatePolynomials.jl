@@ -59,9 +59,9 @@ function right_constant_mult(p::AbstractPolynomial, α)
 end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
-function LinearAlgebra.adjoint(p::Polynomial{B}) where {B}
+function LinearAlgebra.adjoint(p::BasisElement{B}) where {B}
     mono = adjoint(monomial(p))
-    return Polynomial(Variables{B}(variables(mono)), exponents(mono))
+    return BasisElement(Variables{B}(variables(mono)), exponents(mono))
 end
 LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 function LinearAlgebra.adjoint(t::AbstractTerm)

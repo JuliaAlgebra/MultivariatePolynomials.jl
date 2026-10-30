@@ -1,5 +1,5 @@
-# SA.Term constructor for Polynomial{...} basis elements (monomials)
-function SA.Term(coeff, p::Polynomial{B}) where {B}
+# SA.Term constructor for BasisElement{...} basis elements (monomials)
+function SA.Term(coeff, p::BasisElement{B}) where {B}
     alg = algebra(FullBasis{B}(p))
     idx = SA.basis(alg)[p]
     return SA.Term(alg, idx, coeff)
@@ -16,7 +16,7 @@ function Base.zero(
     E,
     A<:SA.StarAlgebra{
         <:Union{Variables,_NoncommutativeBasis},
-        Polynomial{B,V,E},
+        BasisElement{B,V,E},
     },
     C,
 }
@@ -31,7 +31,7 @@ const _AE = AbstractPolynomial
 
 # polynomial() on an AlgebraElement is the identity
 polynomial(a::AbstractPolynomial) = a
-polynomial(a::Union{AbstractTermLike,Polynomial}) = SA.algebra_element(a)
+polynomial(a::Union{AbstractTermLike,BasisElement}) = SA.algebra_element(a)
 function polynomial(a::AbstractPolynomialLike, ::Type{T}) where {T}
     return SA.AlgebraElement{T}(polynomial(a))
 end
