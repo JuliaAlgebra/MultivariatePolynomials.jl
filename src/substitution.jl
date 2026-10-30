@@ -153,7 +153,7 @@ function _substitute_numbers(p, s)
     new_keys = [exps[keep] for exps in keys(c)]
     U = MA.promote_operation(*, coefficient_type(p), R)
     new_values = U[
-        α * _substituted_product(R, vals, exps) for
+        MA.operate(*, α, _substituted_product(R, vals, exps)) for
         (exps, α) in zip(keys(c), values(c))
     ]
     basis = FullBasis{Monomial}(vars[keep])
@@ -232,7 +232,7 @@ function _substitute(m::AbstractMonomial, vals::AbstractVector{T}) where {T}
 end
 
 function _substitute(t::AbstractTerm, vals)
-    return coefficient(t) * _substitute(monomial(t), vals)
+    return MA.operate(*, coefficient(t), _substitute(monomial(t), vals))
 end
 
 function MA.promote_operation(

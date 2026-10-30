@@ -123,6 +123,46 @@ end
         end
     end
 
+    @testset "Mutable source coefficients" begin
+        # https://github.com/JuliaAlgebra/DynamicPolynomials.jl/pull/100
+        Mod.@polyvar a b
+        for T in (BigInt, BigFloat, Rational{BigInt})
+            t = term(T(2), a)
+            q = @inferred subs(t, a => b)
+            @test q == 2b
+            MA.operate!(one, coefficient(q))
+            @test coefficient(t) == 2
+
+            for value in (false, true)
+                t = term(T(2), a)
+                result = @inferred t(a => value)
+                @test result == 2value
+                MA.operate!(one, result)
+                @test coefficient(t) == 2
+
+                p = T(2) * a + T(3) * b
+                q = @inferred subs(p, a => value)
+                @test q == 2value + 3b
+                MA.operate!(one, coefficient(q, b))
+                @test p == 2a + 3b
+
+                # Combining equal remaining monomials must also preserve p.
+                p = T(2) * a * b + T(3) * b
+                q = @inferred subs(p, a => value)
+                @test q == (2value + 3) * b
+                @test p == 2a * b + 3b
+                MA.operate!(one, coefficient(q, b))
+                @test p == 2a * b + 3b
+            end
+
+            p = T(2) * a + T(3)
+            q = @inferred subs(p, a => b)
+            @test q == 2b + 3
+            MA.operate!(one, coefficient(q, b))
+            @test p == 2a + 3
+        end
+    end
+
     @testset "Heterogeneous tuple substitution" begin
         Mod.@polyvar a b c d e f g h
         m = a * b * c * d * e * f * g * h
