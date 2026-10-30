@@ -25,6 +25,17 @@ ordinary_variable
 is_commutative
 ```
 
+## Basis elements
+
+A [`BasisElement`](@ref) represents one element of a chosen polynomial basis.
+`BasisElement{Monomial}` is the monomial type `AbstractMonomial`.
+Terms attach coefficients to basis elements, and polynomials store linear
+combinations of them in `StarAlgebras.AlgebraElement`.
+
+```@docs
+BasisElement
+```
+
 ## Monomials
 
 ```@docs
@@ -83,7 +94,6 @@ halfdegree
 ```@docs
 AbstractPolynomialLike
 AbstractPolynomial
-Polynomial
 polynomial
 polynomial_type
 terms

@@ -211,12 +211,16 @@ function promote_variables_with_maps(a, b)
     return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
 end
 
-function SA.promote_with_map(p::Polynomial{B}, vars, map::ExponentMap) where {B}
-    return Polynomial(Variables{B}(vars), map(exponents(p))), map
+function SA.promote_with_map(
+    p::BasisElement{B},
+    vars,
+    map::ExponentMap,
+) where {B}
+    return BasisElement(Variables{B}(vars), map(exponents(p))), map
 end
 function SA.promote_bases_with_maps(
-    p::Polynomial{B},
-    q::Polynomial{B},
+    p::BasisElement{B},
+    q::BasisElement{B},
 ) where {B}
     a, b = promote_variables_with_maps(variables(p), variables(q))
     return SA.maybe_promote(p, a...), SA.maybe_promote(q, b...)

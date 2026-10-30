@@ -1,3 +1,9 @@
+if !@isdefined(Mod)
+    include("../SimplePolynomials.jl")
+    import .SimplePolynomials as Mod
+    include("../utils.jl")
+end
+
 import StarAlgebras as SA
 
 # Basis indexed by monomials other than the monomial basis, to test the methods
@@ -7,17 +13,17 @@ struct TestBasis <: MP.AbstractMonomialIndexed end
 @testset "Basis elements" begin
     Mod.@polyvar x y z
     mono = x^2 * y
-    p = MP.Polynomial{TestBasis}(mono)
+    p = MP.BasisElement{TestBasis}(mono)
     @test monomial(p) == mono
     @test monomial_type(p) == typeof(mono)
     @test monomial_type(typeof(p)) == typeof(mono)
-    @test hash(p) == hash(MP.Polynomial{TestBasis}(x^2 * y))
+    @test hash(p) == hash(MP.BasisElement{TestBasis}(x^2 * y))
     @test hash(p) != hash(mono)
-    q = MP.Polynomial{TestBasis}(mono * z^0)
+    q = MP.BasisElement{TestBasis}(mono * z^0)
     @test q == p
     @test hash(q) == hash(p)
     @test !isconstant(p)
-    @test isconstant(MP.Polynomial{TestBasis}(constant_monomial(mono)))
+    @test isconstant(MP.BasisElement{TestBasis}(constant_monomial(mono)))
     @test sprint(print, p) == "TestBasis(x^2*y)"
     @test adjoint(p) == p
     @test MP.left_constant_mult(2, p) == SA.Term(2, p)

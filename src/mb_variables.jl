@@ -1,7 +1,7 @@
 Variables{B}(vars) where {B} = Variables{B,typeof(vars)}(vars)
 
 function Base.one(v::Variables)
-    return Polynomial(v, constant_monomial_exponents(v))
+    return BasisElement(v, constant_monomial_exponents(v))
 end
 
 function variable_index(v::Variables, var)
@@ -23,7 +23,7 @@ monomial_type(v::Variables) = monomial_type(prod(v.variables))
 constant_monomial_exponents(v::Variables) = map(_ -> 0, v.variables)
 
 function (v::Variables)(exponents)
-    return Polynomial(v, exponents)
+    return BasisElement(v, exponents)
 end
 
 variables(v::Variables) = v.variables

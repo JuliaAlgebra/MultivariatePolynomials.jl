@@ -1,12 +1,12 @@
-# Polynomial{Monomial,...} acts as a monomial: support term creation
-term(coeff, p::Polynomial) = SA.Term(coeff, p)
+# BasisElement{Monomial,...} acts as a monomial: support term creation
+term(coeff, p::BasisElement) = SA.Term(coeff, p)
 
-function term_type(::Type{Polynomial{B,V,E}}, ::Type{T}) where {B,V,E,T}
-    BT = full_basis_type(B, Polynomial{B,V,E})
+function term_type(::Type{BasisElement{B,V,E}}, ::Type{T}) where {B,V,E,T}
+    BT = full_basis_type(B, BasisElement{B,V,E})
     A = MA.promote_operation(algebra, BT)
     return SA.Term{T,A,SA.key_type(BT)}
 end
-term_type(::Type{P}) where {P<:Polynomial} = term_type(P, Bool)
+term_type(::Type{P}) where {P<:BasisElement} = term_type(P, Bool)
 
 function explicit_basis_covering(
     full::FullBasis{B},
@@ -43,9 +43,9 @@ end
 
 # Monomial multiplication: align variables via promote_variables_with_maps,
 # then apply f to the aligned exponent vectors.
-function map_exponents(f, a::Polynomial{Monomial}, b::Polynomial{Monomial})
+function map_exponents(f, a::BasisElement{Monomial}, b::BasisElement{Monomial})
     a, b = SA.promote_bases(a, b)
-    return Polynomial(a.variables, f.(exponents(a), exponents(b)))
+    return BasisElement(a.variables, f.(exponents(a), exponents(b)))
 end
 
 function _aligned_exponents(m::AbstractMonomialLike, vars)
@@ -54,7 +54,7 @@ function _aligned_exponents(m::AbstractMonomialLike, vars)
 end
 
 function map_exponents_to!(
-    output::Polynomial{Monomial,V,<:AbstractVector},
+    output::BasisElement{Monomial,V,<:AbstractVector},
     f::F,
     a::AbstractMonomialLike,
     b::AbstractMonomialLike,
@@ -67,7 +67,7 @@ function map_exponents_to!(
 end
 
 function map_exponents_to!(
-    output::Polynomial{Monomial,V,<:Tuple},
+    output::BasisElement{Monomial,V,<:Tuple},
     f::F,
     a::AbstractMonomialLike,
     b::AbstractMonomialLike,
@@ -75,32 +75,32 @@ function map_exponents_to!(
     vars = variables(output)
     ea = _aligned_exponents(a, vars)
     eb = _aligned_exponents(b, vars)
-    return Polynomial(output.variables, map(f, ea, eb))
+    return BasisElement(output.variables, map(f, ea, eb))
 end
 
 function map_exponents!(f, a::AbstractMonomial, b::AbstractMonomialLike)
     return map_exponents_to!(a, f, a, b)
 end
 
-function Base.:*(a::Polynomial{Monomial}, b::Polynomial{Monomial})
+function Base.:*(a::BasisElement{Monomial}, b::BasisElement{Monomial})
     return map_exponents(+, a, b)
 end
 
 # Monomial power: multiply exponents by n
-function Base.:^(m::Polynomial{Monomial}, n::Integer)
-    return Polynomial(m.variables, m.exponents .* n)
+function Base.:^(m::BasisElement{Monomial}, n::Integer)
+    return BasisElement(m.variables, m.exponents .* n)
 end
 
-SA.coeffs(p::Polynomial{Monomial}, ::FullBasis{Monomial}) = p
+SA.coeffs(p::BasisElement{Monomial}, ::FullBasis{Monomial}) = p
 
 function polynomial_type(
     ::Union{SubBasis{B,V,E},Type{<:SubBasis{B,V,E}}},
     ::Type{T},
 ) where {B,V,E,T}
-    return polynomial_type(Polynomial{B,V,E}, T)
+    return polynomial_type(BasisElement{B,V,E}, T)
 end
 
-function polynomial_type(::Type{P}, ::Type{T}) where {B,P<:Polynomial{B},T}
+function polynomial_type(::Type{P}, ::Type{T}) where {B,P<:BasisElement{B},T}
     return algebra_element_type(Vector{T}, full_basis_type(B, P))
 end
 
@@ -128,7 +128,7 @@ end
 function _assert_constant(α) end
 
 function _assert_constant(
-    x::Union{Polynomial,SA.AlgebraElement,AbstractPolynomialLike},
+    x::Union{BasisElement,SA.AlgebraElement,AbstractPolynomialLike},
 )
     return error("Expected constant element, got type `$(typeof(x))`")
 end

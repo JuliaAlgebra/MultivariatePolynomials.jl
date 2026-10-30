@@ -12,12 +12,14 @@ abstract type AbstractMonomialBasis <: AbstractMonomialIndexed end
 struct Monomial <: AbstractMonomialBasis end
 
 """
-    Polynomial{B,V,E}
+    BasisElement{B,V,E}
 
-A single element of basis `B`, identified by its variables and exponents.
-Sums of basis elements are stored in `StarAlgebras.AlgebraElement`.
+A single element of polynomial basis `B`, identified by its variables and
+exponents. `BasisElement{Monomial}` is the monomial type `AbstractMonomial`.
+A coefficient times a basis element is stored in `StarAlgebras.Term`, and sums
+of terms are stored in `StarAlgebras.AlgebraElement`.
 """
-struct Polynomial{B<:AbstractMonomialIndexed,V,E} <: MA.AbstractMutable
+struct BasisElement{B<:AbstractMonomialIndexed,V,E} <: MA.AbstractMutable
     variables::Variables{B,V}
     exponents::E
 end
@@ -28,10 +30,10 @@ struct _NoncommutativeBasis{M,V} <: SA.ImplicitBasis{M,M}
     variables::V
 end
 
-const AbstractMonomial = Polynomial{Monomial}
+const AbstractMonomial = BasisElement{Monomial}
 const AbstractMonomialLike = Union{AbstractVariable,AbstractMonomial}
 # Includes basis elements of non-monomial bases, e.g., Chebyshev polynomials
-const _BasisElementLike = Union{AbstractVariable,Polynomial}
+const _BasisElementLike = Union{AbstractVariable,BasisElement}
 const _PolynomialAlgebra =
     SA.StarAlgebra{<:Union{Variables,_NoncommutativeBasis}}
 const AbstractTerm{T} = SA.Term{T,<:_PolynomialAlgebra}

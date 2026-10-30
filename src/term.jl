@@ -191,9 +191,8 @@ In order to create `x^2 * y`,
 * with TypedPolynomials, use `monomial((x, y), (2, 1))`.
 """
 function monomial end
-# basis_element returns Polynomial{Monomial,...}, monomial() converts to actual monomial
 monomial(t::AbstractTerm) = SA.basis_element(t)
-monomial(p::Polynomial) = monomial(variables(p), exponents(p))
+monomial(p::BasisElement) = monomial(variables(p), exponents(p))
 monomial(m::AbstractMonomial) = m
 
 """

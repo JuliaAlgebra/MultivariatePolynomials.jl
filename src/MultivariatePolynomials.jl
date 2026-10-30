@@ -39,7 +39,7 @@ include("det.jl")
 # Polynomial bases and algebra representation shared with MultivariateBases.
 include("mb_interface.jl")
 include("mb_variables.jl")
-include("mb_polynomial.jl")
+include("basis_element.jl")
 include("mb_bases.jl")
 include("mb_mstructures.jl")
 include("mb_monomial_basis.jl")

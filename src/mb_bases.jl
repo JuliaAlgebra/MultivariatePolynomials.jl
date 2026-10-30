@@ -1,7 +1,7 @@
 # From MultivariateBases/src/bases.jl
 
-const FullBasis{B,V,E} = SA.MappedBasis{Polynomial{B,V,E}}
-const SubBasis{B,V,E} = SA.SubBasis{Polynomial{B,V,E}}
+const FullBasis{B,V,E} = SA.MappedBasis{BasisElement{B,V,E}}
+const SubBasis{B,V,E} = SA.SubBasis{BasisElement{B,V,E}}
 const MonomialIndexedBasis{B,V,E} = Union{SubBasis{B,V,E},FullBasis{B,V,E}}
 
 exponents_index(::FullBasis, exp) = exp
@@ -22,7 +22,7 @@ function FullBasis(vars::Variables{B,V}) where {B,V}
     end
     O = typeof(ordering(vars.variables))
     exps = ExponentsIterator{O}(constant_monomial_exponents(vars))
-    return SA.MappedBasis{Polynomial{B,V,eltype(exps)}}(exps, vars, exponents)
+    return SA.MappedBasis{BasisElement{B,V,eltype(exps)}}(exps, vars, exponents)
 end
 
 function FullBasis{B}(vars) where {B}
@@ -32,8 +32,8 @@ end
 function FullBasis{B}(p::_APL) where {B}
     return FullBasis{B}(variables(p))
 end
-# Also accept Polynomial basis elements (monomials in the new world)
-function FullBasis{B}(p::Polynomial) where {B}
+# Also accept BasisElement basis elements (monomials in the new world)
+function FullBasis{B}(p::BasisElement) where {B}
     return FullBasis{B}(variables(p))
 end
 
@@ -226,14 +226,14 @@ function _similar_type(::Type{V}, ::Type{T}) where {V<:AbstractVector,T}
     return SA.similar_type(V, T)
 end
 
-function full_basis_type(::Type{B}, ::Type{Polynomial{B,V,E}}) where {B,V,E}
+function full_basis_type(::Type{B}, ::Type{BasisElement{B,V,E}}) where {B,V,E}
     if !is_commutative(V)
         B === Monomial ||
             error("Noncommutative variables require the Monomial basis")
-        return _NoncommutativeBasis{Polynomial{B,V,E},V}
+        return _NoncommutativeBasis{BasisElement{B,V,E},V}
     end
     return SA.MappedBasis{
-        Polynomial{B,V,E},
+        BasisElement{B,V,E},
         E,
         ExponentsIterator{typeof(ordering(V)),Nothing,E},
         Variables{B,V},

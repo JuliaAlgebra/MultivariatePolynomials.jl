@@ -10,8 +10,8 @@ Returns the type of the monomials of a polynomial of type `PT`.
 For an element of a basis other than the monomial basis, this is the type of
 the monomial with the same variables and exponents, see [`monomial`](@ref).
 """
-function monomial_type(::Union{P,Type{P}}) where {B,V,E,P<:Polynomial{B,V,E}}
-    return Polynomial{Monomial,V,E}
+function monomial_type(::Union{P,Type{P}}) where {B,V,E,P<:BasisElement{B,V,E}}
+    return BasisElement{Monomial,V,E}
 end
 # AbstractMonomialLike is its own monomial type (like AbstractMonomial).
 monomial_type(::Type{AbstractMonomialLike}) = AbstractMonomialLike
@@ -78,7 +78,7 @@ nvariables(::AbstractVariable) = 1
 nvariables(::Type{<:AbstractVariable}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
-function nvariables(p::Union{_APL,Polynomial,AbstractArray{<:_APL}})
+function nvariables(p::Union{_APL,BasisElement,AbstractArray{<:_APL}})
     return length(variables(p))
 end
 

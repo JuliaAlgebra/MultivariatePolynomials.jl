@@ -50,7 +50,7 @@ function differentiate(m::AbstractMonomial, v::AbstractVariable)
         return term(0, m)
     end
     e = _differentiate_exponents(exponents(m), i)
-    return term(exponents(m)[i], Polynomial(m.variables, e))
+    return term(exponents(m)[i], BasisElement(m.variables, e))
 end
 # The polynomial function will take care of removing the zeros
 function differentiate(p::_APL, v::AbstractVariable)

@@ -34,7 +34,7 @@ end
     )
     @test_throws AssertionError invoke(
         hash,
-        Tuple{MP.Polynomial,UInt},
+        Tuple{MP.BasisElement,UInt},
         word,
         UInt(0),
     )
