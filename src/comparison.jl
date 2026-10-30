@@ -135,7 +135,8 @@ Base.isequal(q::RationalPoly, p::_APL) = isequal(p, q)
 # α could be a JuMP affine expression
 isapproxzero(α; ztol::Real = 0.0) = false
 function isapproxzero(α::Number; ztol::Real = Base.rtoldefault(α, α, 0))
-    return abs(α) <= ztol
+    # `abs` would allocate for `BigInt`, `ztol` is zero for exact types
+    return iszero(ztol) ? iszero(α) : abs(α) <= ztol
 end
 
 isapproxzero(m::AbstractMonomialLike; kwargs...) = false

@@ -606,6 +606,8 @@ function primitive_univariate_gcd!(
     R = polynomial_type(MA.promote_operation(gcd, typeof(p), typeof(q)))
     u = convert(R, p)
     v = convert(R, q)
+    # Reuse the same buffer for every division
+    buffer = MA.buffer_for(rem_or_pseudo_rem, R, R, typeof(algo))
     while true
         if isapproxzero(v)
             return u
@@ -616,7 +618,7 @@ function primitive_univariate_gcd!(
         end
 
         d_before = degree(leading_monomial(u))
-        r = MA.operate!(rem_or_pseudo_rem, u, v, algo)
+        r = MA.buffered_operate!(buffer, rem_or_pseudo_rem, u, v, algo)
         d_after = degree(leading_monomial(r))
         if d_after == d_before
             not_divided_error(u, v)
@@ -649,6 +651,8 @@ function primitive_univariate_gcd!(
     R = polynomial_type(MA.promote_operation(gcd, typeof(p), typeof(q)))
     u = convert(R, p)
     v = convert(R, q)
+    # Reuse the same buffer for every division
+    buffer = MA.buffer_for(rem_or_pseudo_rem, R, R, typeof(algo))
     if isapproxzero(v)
         return primitive_part(u, algo, MA.IsMutable())::R
     elseif isconstant(v)
@@ -660,7 +664,7 @@ function primitive_univariate_gcd!(
     while true
         δ = maxdegree(u) - maxdegree(v)
         d_before = degree(leading_monomial(u))
-        r = MA.operate!(rem_or_pseudo_rem, u, v, algo)
+        r = MA.buffered_operate!(buffer, rem_or_pseudo_rem, u, v, algo)
         if isapproxzero(r)
             return primitive_part(v, algo, MA.IsMutable())::R
         elseif isconstant(r)
