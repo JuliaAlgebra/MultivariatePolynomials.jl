@@ -129,3 +129,20 @@ end
     g = T(2)x^4 + x^3
     all_tests(a, b, c, d, e, f, g)
 end
+
+@testset "In-place negation of polynomials in $T" for T in [Int, BigInt]
+    Mod.@polyvar x y
+    p = T(2) * x^2 - T(3) * x * y + T(4)
+    expected = -p
+    coefficient = first(coefficients(p))
+    @test MA.operate!!(-, p) === p
+    @test p == expected
+    if T == BigInt
+        @test first(coefficients(p)) === coefficient
+    end
+    # Negation promotes `Bool` coefficients so it cannot be done in place.
+    q = polynomial(x + y, Bool)
+    @test eltype(coefficients(q)) == Bool
+    @test MA.operate!!(-, q) == -x - y
+    @test q == x + y
+end
