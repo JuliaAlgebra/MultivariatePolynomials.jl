@@ -193,6 +193,7 @@ In order to create `x^2 * y`,
 function monomial end
 # basis_element returns Polynomial{Monomial,...}, monomial() converts to actual monomial
 monomial(t::AbstractTerm) = SA.basis_element(t)
+monomial(p::Polynomial) = monomial(variables(p), exponents(p))
 monomial(m::AbstractMonomial) = m
 
 """
@@ -224,13 +225,11 @@ function zero_term(
     return constant_term(zero(coefficient_type(p)), p)
 end
 
-function Base.zero(::Type{TT}) where {TT<:AbstractMonomialLike}
+function Base.zero(::Type{TT}) where {TT<:_BasisElementLike}
     return zero(polynomial_type(TT))
 end
-function Base.zero(t::AbstractMonomialLike)
-    return zero(polynomial_type(t))
-end
-function MA.promote_operation(::typeof(zero), PT::Type{<:AbstractMonomialLike})
+Base.zero(t::_BasisElementLike) = zero(typeof(t))
+function MA.promote_operation(::typeof(zero), PT::Type{<:_BasisElementLike})
     return polynomial_type(PT)
 end
 function Base.zero(::Type{T}) where {T<:AbstractTerm}

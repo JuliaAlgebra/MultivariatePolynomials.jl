@@ -41,9 +41,8 @@ Base.:+(p::Union{AbstractMonomialLike,RationalPoly}) = p
 Base.:*(p::Union{AbstractMonomialLike,RationalPoly}) = p
 
 # Coefficients and variables commute
-left_constant_mult(α, v::AbstractMonomialLike) = SA.Term(α, monomial(v))
-right_constant_mult(m::AbstractMonomialLike, α) = left_constant_mult(α, m)
-# Polynomial{Monomial,...} methods added in mb_monomial_basis.jl
+left_constant_mult(α, m::_BasisElementLike) = term(α, m)
+right_constant_mult(m::_BasisElementLike, α) = left_constant_mult(α, m)
 
 function left_constant_mult(α, t::SA.Term)
     return term(α * coefficient(t), monomial(t))
@@ -52,14 +51,18 @@ function right_constant_mult(t::SA.Term, α)
     return term(coefficient(t) * α, monomial(t))
 end
 
-function left_constant_mult(α, p::AbstractPolynomialLike)
+function left_constant_mult(α, p::AbstractPolynomial)
     return map_coefficients(Base.Fix1(*, α), p)
 end
-function right_constant_mult(p::AbstractPolynomialLike, α)
+function right_constant_mult(p::AbstractPolynomial, α)
     return map_coefficients(Base.Fix2(*, α), p)
 end
 
 LinearAlgebra.adjoint(v::AbstractVariable) = conj(v)
+function LinearAlgebra.adjoint(p::Polynomial{B}) where {B}
+    mono = adjoint(monomial(p))
+    return Polynomial(Variables{B}(variables(mono)), exponents(mono))
+end
 LinearAlgebra.adjoint(m::AbstractMonomial) = conj(m)
 function LinearAlgebra.adjoint(t::AbstractTerm)
     return _term(adjoint(coefficient(t)), adjoint(monomial(t)))

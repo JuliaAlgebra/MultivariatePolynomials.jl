@@ -7,7 +7,10 @@ Return the type of the monomials of `p`.
 
 Returns the type of the monomials of a polynomial of type `PT`.
 """
-monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
+# The monomial with the same variables and exponents as a basis element
+function monomial_type(::Union{P,Type{P}}) where {B,V,E,P<:Polynomial{B,V,E}}
+    return Polynomial{Monomial,V,E}
+end
 # AbstractMonomialLike is its own monomial type (like AbstractMonomial).
 monomial_type(::Type{AbstractMonomialLike}) = AbstractMonomialLike
 # For SA.Term{T,A,I}: derive monomial type from the algebra type A
@@ -119,7 +122,7 @@ end
 Returns whether the monomial of `t` is constant.
 """
 isconstant(t::AbstractTerm) = isconstant(monomial(t))
-isconstant(t::AbstractMonomialLike) = all(iszero, exponents(t))
+isconstant(t::_BasisElementLike) = all(iszero, exponents(t))
 isconstant(v::AbstractVariable) = false
 
 """

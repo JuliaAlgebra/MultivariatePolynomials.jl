@@ -23,21 +23,11 @@ function exponents(p::Polynomial, vars)
     return map === nothing ? MA.copy_if_mutable(exponents(p)) :
            map(exponents(p))
 end
-monomial(p::Polynomial) = monomial(variables(p), exponents(p))
 
 function Base.copy(p::Polynomial{B}) where {B}
     return Polynomial(Variables{B}(copy(variables(p))), copy(exponents(p)))
 end
 
-function Base.hash(p::Polynomial{B}, u::UInt) where {B}
-    @assert is_commutative(variables(p))
-    return hash(
-        Tuple(
-            (v, e) for (v, e) in zip(variables(p), exponents(p)) if !iszero(e)
-        ),
-        hash(B, u),
-    )
-end
 function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
     @assert is_commutative(variables(p)) && is_commutative(variables(q))
     a, b = SA.promote_bases(p, q)
@@ -45,12 +35,8 @@ function Base.isequal(p::Polynomial{B}, q::Polynomial{B}) where {B}
 end
 
 Base.isone(p::Polynomial) = all(iszero, p.exponents)
-isconstant(p::Polynomial) = all(iszero, p.exponents)
 # A monomial basis element is never zero
 Base.iszero(p::Polynomial) = false
-# Polynomial{Monomial,...} is its own monomial type
-monomial_type(::Type{PT}) where {PT<:Polynomial{<:AbstractMonomialIndexed}} = PT
-monomial_type(p::Polynomial{<:AbstractMonomialIndexed}) = typeof(p)
 # Ordering: derive from the variable type
 ordering(::Type{Polynomial{B,V,E}}) where {B,V,E} = ordering(V)
 # constant_monomial: return a monomial with all-zero exponents
@@ -72,33 +58,6 @@ variables(p::Polynomial) = variables(p.variables)
 monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
 monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
 # SA.Term constructor for Polynomial{...} basis elements is in mb_monomial_basis.jl
-
-function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
-    if B != Monomial
-        print(io, B)
-        print(io, "(")
-    end
-    _show(io, mime, monomial(p))
-    if B != Monomial
-        print(io, ")")
-    end
-    return
-end
-
-# zero for a Polynomial type: return an AlgebraElement with no terms
-function Base.zero(::Type{Polynomial{B,V,E}}) where {B,V,E}
-    vars = V()
-    basis = FullBasis{B}(vars)
-    sc = SA.SparseCoefficients(E[], Int[])
-    return SA.algebra_element(sc, algebra(basis))
-end
-
-function Base.zero(p::Polynomial)
-    basis = FullBasis{typeof_basis(p)}(p)
-    sc = SA.SparseCoefficients(typeof(p.exponents)[], Int[])
-    return SA.algebra_element(sc, algebra(basis))
-end
-typeof_basis(::Polynomial{B}) where {B} = B
 
 """
     convert_basis(basis, p)

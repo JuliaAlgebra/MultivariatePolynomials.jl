@@ -58,7 +58,13 @@ end
 const unicode_subscripts = ("₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉")
 unicode_subscript(i) = join(unicode_subscripts[d+1] for d in reverse(digits(i)))
 
-# MONOMIALS
+# BASIS ELEMENTS
+function _show(io::IO, mime::MIME, p::Polynomial{B}) where {B}
+    print(io, B, "(")
+    _show(io, mime, monomial(p))
+    print(io, ")")
+    return
+end
 function _show(io::IO, mime::MIME, m::AbstractMonomial)
     if isconstant(m)
         print(io, '1')

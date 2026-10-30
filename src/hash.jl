@@ -1,3 +1,12 @@
+function Base.hash(p::Polynomial{B}, u::UInt) where {B}
+    @assert is_commutative(variables(p))
+    return hash(
+        Tuple(
+            (v, e) for (v, e) in zip(variables(p), exponents(p)) if !iszero(e)
+        ),
+        hash(B, u),
+    )
+end
 function Base.hash(m::AbstractMonomial, u::UInt)
     @assert is_commutative(m)
     nnz = count(!iszero, exponents(m))
