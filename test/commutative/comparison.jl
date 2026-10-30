@@ -7,12 +7,13 @@ end
 @testset "Comparison" begin
     @testset "Monomial hash consistency" begin
         Mod.@polyvar x y
+        vars = variables(x * y)
         for (a, b) in (
             (one(x), 1),
             (monomial(x), x),
-            (monomial([x, y], [2, 0]), x^2),
-            (monomial([x, y], [0, 3]), y^3),
-            (monomial([x, y], [1, 1]), y * x),
+            (monomial(vars, map(v -> v == x ? 2 : 0, vars)), x^2),
+            (monomial(vars, map(v -> v == y ? 3 : 0, vars)), y^3),
+            (monomial(vars, map(_ -> 1, vars)), y * x),
         )
             @test isequal(a, b)
             for seed in (UInt(0), UInt(1), typemax(UInt))
