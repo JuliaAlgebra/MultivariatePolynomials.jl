@@ -73,7 +73,9 @@ nvariables(::AbstractVariable) = 1
 nvariables(::Type{<:AbstractVariable}) = 1
 nvariables(t::AbstractTerm) = nvariables(monomial(t))
 nvariables(::Type{TT}) where {TT<:AbstractTerm} = variables(monomial_type(TT))
-nvariables(p::Union{_APL,AbstractArray{<:_APL}}) = length(variables(p))
+function nvariables(p::Union{_APL,Polynomial,AbstractArray{<:_APL}})
+    return length(variables(p))
+end
 
 """
     exponents(t::AbstractTermLike)

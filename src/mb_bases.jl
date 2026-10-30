@@ -209,7 +209,7 @@ sparse_coefficients(p::AbstractPolynomial) = SA.coeffs(p)
 sparse_coefficients(t::AbstractTermLike) = SA.coeffs(algebra_element(t))
 algebra_element(p::AbstractPolynomial) = p
 algebra_element(t::AbstractTerm) = SA.algebra_element(t)
-algebra_element(m::AbstractMonomialLike) = SA.algebra_element(term(m))
+algebra_element(m::_BasisElementLike) = SA.algebra_element(term(m))
 
 function algebra_element(f::Function, basis::SubBasis)
     return algebra_element(map(f, eachindex(basis)), basis)

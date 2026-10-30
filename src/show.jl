@@ -1,6 +1,6 @@
 const TypesWithShow = Union{
     AbstractVariable,
-    AbstractMonomial,
+    Polynomial,
     AbstractTerm,
     AbstractPolynomial,
     RationalPoly,
