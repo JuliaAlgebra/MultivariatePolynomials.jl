@@ -5,7 +5,7 @@ import StarAlgebras as SA
 struct TestBasis <: MP.AbstractMonomialIndexed end
 
 @testset "Basis elements" begin
-    Mod.@polyvar x y
+    Mod.@polyvar x y z
     mono = x^2 * y
     p = MP.Polynomial{TestBasis}(mono)
     @test monomial(p) == mono
@@ -13,6 +13,9 @@ struct TestBasis <: MP.AbstractMonomialIndexed end
     @test monomial_type(typeof(p)) == typeof(mono)
     @test hash(p) == hash(MP.Polynomial{TestBasis}(x^2 * y))
     @test hash(p) != hash(mono)
+    q = MP.Polynomial{TestBasis}(mono * z^0)
+    @test q == p
+    @test hash(q) == hash(p)
     @test !isconstant(p)
     @test isconstant(MP.Polynomial{TestBasis}(constant_monomial(mono)))
     @test sprint(print, p) == "TestBasis(x^2*y)"

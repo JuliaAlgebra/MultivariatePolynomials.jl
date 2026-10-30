@@ -6,8 +6,10 @@ Return the type of the monomials of `p`.
     monomial_type(::Type{PT}) where PT<:AbstractPolynomialLike
 
 Returns the type of the monomials of a polynomial of type `PT`.
+
+For an element of a basis other than the monomial basis, this is the type of
+the monomial with the same variables and exponents, see [`monomial`](@ref).
 """
-# The monomial with the same variables and exponents as a basis element
 function monomial_type(::Union{P,Type{P}}) where {B,V,E,P<:Polynomial{B,V,E}}
     return Polynomial{Monomial,V,E}
 end
