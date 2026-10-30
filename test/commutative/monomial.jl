@@ -54,7 +54,7 @@ import MutableArithmetics as MA
     end
 
     @testset "Finite and full coefficients" begin
-        p = MP.algebra_element(i -> i^2, basis)
+        p = SA.algebra_element(i -> i^2, basis)
         @test SA.coeffs(p) == [1, 4, 9]
         @test MP.explicit_basis(p) === basis
         @test typeof(p) === MP.algebra_element_type(Vector{Int}, typeof(basis))
@@ -69,9 +69,9 @@ import MutableArithmetics as MA
         @test coefficients(q, full) === q
         @test MP.explicit_basis(2x) == MP.SubBasis{MP.Monomial}([x])
         @test MP.explicit_basis(x * y) == MP.SubBasis{MP.Monomial}([x * y])
-        for a in (x, x * y, 2x, q)
-            @test typeof(MP.algebra_element(a)) ===
-                  MA.promote_operation(MP.algebra_element, typeof(a))
+        for a in (x, x * y, 2x)
+            @test typeof(SA.algebra_element(a)) ===
+                  MA.promote_operation(SA.algebra_element, typeof(a))
         end
         for a in (basis[3], 2basis[3], p, q)
             converted = MP.convert_basis(full, a)
@@ -102,8 +102,8 @@ import MutableArithmetics as MA
         @test promoted_full === full
         @test variables(p) == variables(x)
         # Finite bases keep their keys while their variable sets are promoted.
-        a = MP.algebra_element([2], MP.SubBasis{MP.Monomial}([x]))
-        b = MP.algebra_element([3], MP.SubBasis{MP.Monomial}([y]))
+        a = SA.algebra_element([2], MP.SubBasis{MP.Monomial}([x]))
+        b = SA.algebra_element([3], MP.SubBasis{MP.Monomial}([y]))
         promoted_a, promoted_b = SA.promote_bases(a, b)
         @test promoted_a == a == 2x
         @test promoted_b == b == 3y

@@ -31,7 +31,7 @@ const _AE = AbstractPolynomial
 
 # polynomial() on an AlgebraElement is the identity
 polynomial(a::AbstractPolynomial) = a
-polynomial(a::Union{AbstractTermLike,Polynomial}) = algebra_element(a)
+polynomial(a::Union{AbstractTermLike,Polynomial}) = SA.algebra_element(a)
 function polynomial(a::AbstractPolynomialLike, ::Type{T}) where {T}
     return SA.AlgebraElement{T}(polynomial(a))
 end
