@@ -35,7 +35,10 @@ RationalPoly{NT,DT}(r::RationalPoly{NT,DT}) where {NT,DT} = r
 
 Base.inv(r::RationalPoly) = r.den / r.num
 Base.inv(p::_APL) = one(coefficient_type(p)) / p
-Base.:/(r::RationalPoly, p::Number) = r.num / (r.den * p)
+function Base.:/(r::RationalPoly, p::Number)
+    iszero(p) && throw(DivideError())
+    return r.num / (r.den * p)
+end
 Base.:/(r::RationalPoly, p::_APL) = r.num / (r.den * p)
 Base.:/(r::RationalPoly, s::RationalPoly) = (r.num * s.den) / (s.num * r.den)
 function Base.:/(num::NT, den::DT) where {NT<:_APL,DT<:_APL}
@@ -47,6 +50,8 @@ end
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
 # (1/den) * num would not be correct in case of noncommutative coefficients
 function Base.:/(num::AbstractMonomialLike, den::Number)
+    # The coefficients of the other monomials would become `0 / 0`
+    iszero(den) && throw(DivideError())
     return map_coefficients(α -> α / den, num, nonzero = true)
 end
 function Base.:/(num::AbstractTerm{T}, den::Union{T,Number}) where {T}

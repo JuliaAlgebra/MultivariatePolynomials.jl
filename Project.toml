@@ -31,7 +31,7 @@ LinearAlgebra = "1.10"
 MathOptInterface = "1"
 Mooncake = "0.5.67"
 MutableArithmetics = "1.9.2"
-StarAlgebras = "0.4.2"
+StarAlgebras = "0.4.3"
 julia = "1.10"
 
 [extras]
