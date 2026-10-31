@@ -41,3 +41,14 @@
     @test one(poly) isa RType
     @test zero(poly) isa RType
 end
+
+# Regression for #153: the coefficients of the monomials that are not stored
+# would become `0 / 0`.
+@testset "Division by zero" begin
+    Mod.@polyvar x
+    for a in (0, 0.0)
+        for p in (x, 2x, x + 1, x - x, (x + 1) / x)
+            @test_throws DivideError p / a
+        end
+    end
+end
