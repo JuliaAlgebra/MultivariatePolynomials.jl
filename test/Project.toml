@@ -20,7 +20,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [sources]
 MultivariatePolynomials = {path = ".."}
-StarAlgebras = {path = "/home/blegat/Worktrees/StarAlgebras/bl/divide_by_zero"}
 
 [compat]
 AllocCheck = "0.2.6"
