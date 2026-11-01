@@ -56,7 +56,9 @@ end
 variables(p::BasisElement) = variables(p.variables)
 
 monomial_type(::Type{<:SA.SparseCoefficients{K}}) where {K} = K
-monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P} = P
+function monomial_type(::Type{<:SA.StarAlgebra{O,P}}) where {O<:Variables,P}
+    return monomial_type(P)
+end
 
 """
     convert_basis(basis, p)

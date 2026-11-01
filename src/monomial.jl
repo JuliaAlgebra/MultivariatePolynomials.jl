@@ -13,6 +13,7 @@ the monomial with the same variables and exponents, see [`monomial`](@ref).
 function monomial_type(::Union{P,Type{P}}) where {B,V,E,P<:BasisElement{B,V,E}}
     return BasisElement{Monomial,V,E}
 end
+monomial_type(::Union{M,Type{M}}) where {M<:AbstractMonomial} = M
 # AbstractMonomialLike is its own monomial type (like AbstractMonomial).
 monomial_type(::Type{AbstractMonomialLike}) = AbstractMonomialLike
 # For SA.Term{T,A,I}: derive monomial type from the algebra type A
