@@ -74,9 +74,9 @@ function differentiate(ps::AbstractArray{PT}, xs::Tuple) where {PT<:_ARPL}
     return differentiate(ps, collect(xs))
 end
 
-# TODO: this signature is probably too wide and creates the potential
-# for stack overflows
-differentiate(p::_ARPL, xs) = [differentiate(p, x) for x in xs]
+function differentiate(p::_ARPL, xs::Union{AbstractArray,Tuple})
+    return [differentiate(p, x) for x in xs]
+end
 
 # differentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
 differentiate(p::_ARPL, m::AbstractMonomial) = differentiate(p, variable(m))
