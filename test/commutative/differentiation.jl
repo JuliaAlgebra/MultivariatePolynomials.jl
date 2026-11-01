@@ -9,6 +9,11 @@ end
     @test antidifferentiate(3, x) == 3x
     @test antidifferentiate(x, x) == (1 // 2) * x^2
     @test antidifferentiate(y, x) == x * y
+    @test_throws MethodError antidifferentiate(x^2 - 2x - 1, 1)
+    for xs in ([x, y], (x, y))
+        @test antidifferentiate(x * y, xs) ==
+              [(1 // 2) * x^2 * y, (1 // 2) * x * y^2]
+    end
     for p in (x^2, 3x^2, x^2 * y, 2x^2 * y + x + 1)
         integral = @inferred antidifferentiate(p, x)
         @test differentiate(integral, x) == p
@@ -21,6 +26,7 @@ end
 
 @testset "Differentiation" begin
     Mod.@polyvar x y z
+    @test_throws MethodError differentiate(x^2 - 2x - 1, 1)
     @test differentiate(3, y) == 0
     d = @inferred differentiate(1.5x^2, x)
     @test d isa AbstractTerm{Float64}

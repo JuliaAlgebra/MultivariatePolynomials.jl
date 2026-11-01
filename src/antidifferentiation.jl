@@ -39,9 +39,9 @@ function antidifferentiate(p::_APL, v::AbstractVariable)
     return polynomial!(antidifferentiate.(terms(p), v), SortedState())
 end
 
-# TODO: this signature is probably too wide and creates the potential
-# for stack overflows
-antidifferentiate(p::_APL, xs) = [antidifferentiate(p, x) for x in xs]
+function antidifferentiate(p::_APL, xs::Union{AbstractArray,Tuple})
+    return [antidifferentiate(p, x) for x in xs]
+end
 
 # antidifferentiate(p, [x, y]) with TypedPolynomials promote x to a Monomial
 function antidifferentiate(p::_APL, m::AbstractMonomial)
