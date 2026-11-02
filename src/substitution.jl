@@ -265,7 +265,11 @@ function _substitute(p::AbstractPolynomial, vals)
     # Noncommutative monomial products may drop zero-degree variables. Algebra
     # elements keep their parents when raised to the zeroth power.
     unit_vals = is_commutative(p) ? vals : _polynomial.(vals)
-    unit = prod(Base.Fix2(^, 0), unit_vals)
+    unit = if isempty(unit_vals)
+        unit_vals isa Tuple ? 1 : one(eltype(unit_vals))
+    else
+        prod(Base.Fix2(^, 0), unit_vals)
+    end
     result = _polynomial(zero(coefficient_type(p)) * unit)
     for t in terms(p)
         # Noncommutative keys have their own variable sequence, with repetitions.
