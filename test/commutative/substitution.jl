@@ -256,6 +256,16 @@ end
         @test (@inferred m()) === 1
         @test isone(@inferred subs(m))
         @test iszero(@inferred zero(t)(x => 2.0))
+
+        empty_m = monomial(variables(m)[1:0], exponents(m)[1:0])
+        for T in (Int, Float64), value in (0, 3)
+            p = polynomial(term(T(value), empty_m))
+            @test isempty(variables(p))
+            @test (@inferred p()) == value
+            @test (@inferred subs(p)) == value
+            @test p(variables(p) => typeof(x)[]) == value
+            @test p(variables(p) => Float64[]) == value
+        end
     end
 
     for (p, s) in [(x^1, x => 2x)]
