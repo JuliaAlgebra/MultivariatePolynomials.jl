@@ -72,6 +72,19 @@ function MA.promote_operation(
     return SA.StarAlgebra{B,M,SA.DiracMStructure{M,M,B,typeof(*)}}
 end
 
+function SA.promote_bases_with_maps(
+    ::MStruct,
+    ::SA.DiracMStructure{<:Any,<:Any,<:_NoncommutativeBasis},
+)
+    return _mixed_commutativity_error()
+end
+function SA.promote_bases_with_maps(
+    a::SA.DiracMStructure{<:Any,<:Any,<:_NoncommutativeBasis},
+    b::MStruct,
+)
+    return SA.promote_bases_with_maps(b, a)
+end
+
 function SA.promote_bases_with_maps(a::B, b::B) where {B<:_NoncommutativeBasis}
     a == b && return (a, nothing), (b, nothing)
     vars = SA.merge_sorted(

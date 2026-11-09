@@ -3,6 +3,30 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+@testset "Mixed commutativity (DynamicPolynomials#219)" begin
+    Mod.@polyvar x y
+    Mod.@ncpolyvar s
+    err = ArgumentError("Cannot mix commutative and noncommutative variables.")
+    for a in (x, x^2, 2x, x + 1), b in (s, s^2, 3s, s + 1)
+        for op in (+, -, *)
+            @test_throws err op(a, b)
+            @test_throws err op(b, a)
+        end
+    end
+    for op in (+, -, min, max)
+        @test_throws err map_exponents(op, x, s)
+        @test_throws err map_exponents(op, s, x)
+    end
+    @test (@inferred x * y) == y * x
+    @test (@inferred x + y) == y + x
+    @test (@inferred x - y) == -(y - x)
+    # Even empty variable sets retain their commutativity.
+    for (a, b) in (([x], [s]), (typeof(x)[], typeof(s)[]))
+        @test_throws err MP.promote_variables_with_maps(a, b)
+        @test_throws err MP.promote_variables_with_maps(b, a)
+    end
+end
+
 @testset "Product with non-commutative monomials and variables" begin
     Mod.@ncpolyvar x y z
     m1 = x * (y * x)

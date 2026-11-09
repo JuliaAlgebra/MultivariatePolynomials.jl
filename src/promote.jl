@@ -187,6 +187,12 @@ function _map(needles, haystack)
     )
 end
 
+function _mixed_commutativity_error()
+    return throw(
+        ArgumentError("Cannot mix commutative and noncommutative variables."),
+    )
+end
+
 """
     promote_variables_with_maps(a, b)
 
@@ -197,6 +203,9 @@ that maps exponents from `a` (resp. `b`) to exponents in `all_vars`,
 or `nothing` if no mapping is needed.
 """
 function promote_variables_with_maps(a, b)
+    if is_commutative(a) != is_commutative(b)
+        return _mixed_commutativity_error()
+    end
     if a == b
         return (a, nothing), (b, nothing)
     end
