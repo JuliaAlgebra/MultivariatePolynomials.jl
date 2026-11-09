@@ -3,6 +3,28 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+@testset "Mixed commutativity (DynamicPolynomials#219)" begin
+    Mod.@polyvar x
+    Mod.@ncpolyvar s
+    A, B = MP.variable_union_type(x), MP.variable_union_type(s)
+    err_xs = ArgumentError("Cannot combine variables of type $A and $B.")
+    err_sx = ArgumentError("Cannot combine variables of type $B and $A.")
+    for p in (x, x^2, 2x, x + 1), q in (s, s^2, 3s, s + 1)
+        for op in (+, -, *)
+            @test_throws err_xs op(p, q)
+            @test_throws err_sx op(q, p)
+        end
+    end
+    for op in (+, -, min, max)
+        @test_throws err_xs map_exponents(op, x, s)
+        @test_throws err_sx map_exponents(op, s, x)
+    end
+    for (a, b) in (([x], [s]), (typeof(x)[], typeof(s)[]))
+        @test_throws err_xs MP.promote_variables_with_maps(a, b)
+        @test_throws err_sx MP.promote_variables_with_maps(b, a)
+    end
+end
+
 @testset "Product with non-commutative monomials and variables" begin
     Mod.@ncpolyvar x y z
     m1 = x * (y * x)
