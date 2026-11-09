@@ -73,16 +73,22 @@ function MA.promote_operation(
 end
 
 function SA.promote_bases_with_maps(
-    ::MStruct,
-    ::SA.DiracMStructure{<:Any,<:Any,<:_NoncommutativeBasis},
+    a::MStruct,
+    b::SA.DiracMStructure{<:Any,<:Any,<:_NoncommutativeBasis},
 )
-    return _mixed_commutativity_error()
+    return _incompatible_variables_error(
+        variable_union_type(monomial_type(SA.basis(a))),
+        variable_union_type(monomial_type(SA.basis(b))),
+    )
 end
 function SA.promote_bases_with_maps(
     a::SA.DiracMStructure{<:Any,<:Any,<:_NoncommutativeBasis},
     b::MStruct,
 )
-    return SA.promote_bases_with_maps(b, a)
+    return _incompatible_variables_error(
+        variable_union_type(monomial_type(SA.basis(a))),
+        variable_union_type(monomial_type(SA.basis(b))),
+    )
 end
 
 function SA.promote_bases_with_maps(a::B, b::B) where {B<:_NoncommutativeBasis}

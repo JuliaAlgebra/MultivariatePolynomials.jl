@@ -20,6 +20,7 @@ include("utils.jl")
 if IMPLEMENTATION == :SimplePolynomials
     # Tests that do not depend on the implementation
     include("comparison.jl")
+    include("mixed_variables.jl")
     include("invalidations.jl")
 end
 include("scalar_arithmetic.jl")

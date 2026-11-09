@@ -187,10 +187,8 @@ function _map(needles, haystack)
     )
 end
 
-function _mixed_commutativity_error()
-    return throw(
-        ArgumentError("Cannot mix commutative and noncommutative variables."),
-    )
+function _incompatible_variables_error(A, B)
+    return throw(ArgumentError("Cannot combine variables of type $A and $B."))
 end
 
 """
@@ -201,10 +199,15 @@ Given two sorted variable collections `a` and `b`, return
 sorted variable set and `map_a` (resp. `map_b`) is an `ExponentMap`
 that maps exponents from `a` (resp. `b`) to exponents in `all_vars`,
 or `nothing` if no mapping is needed.
+
+The variables must have the same [`variable_union_type`](@ref); otherwise
+an `ArgumentError` is thrown.
 """
 function promote_variables_with_maps(a, b)
-    if is_commutative(a) != is_commutative(b)
-        return _mixed_commutativity_error()
+    A = variable_union_type(monomial_type(a))
+    B = variable_union_type(monomial_type(b))
+    if A !== B
+        return _incompatible_variables_error(A, B)
     end
     if a == b
         return (a, nothing), (b, nothing)
