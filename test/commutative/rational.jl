@@ -29,6 +29,11 @@
     @test numerator(x / x^2) == x
     @test denominator(x / x^2) == x^2
     @test inv(x / x^2) == x
+    @test LinearAlgebra.dot(x + 1, x / (x - 1)) == (x^2 + x) / (x - 1)
+    @test LinearAlgebra.dot(x / (x - 1), x + 1) == (x^2 + x) / (x - 1)
+    @test LinearAlgebra.dot(1 / x, x / (x - 1)) == 1 / (x - 1)
+    @test LinearAlgebra.dot([x + 1, 2x], [x / (x - 1), 1 / x]) ==
+          (x^2 + x) / (x - 1) + 2
     @test x / x^2 == inv(x)
     @test isone(((x + 1) / (x - 1)) / ((x + 1) / (x - 1)))
     @test ((x + 1)^2 / (x - 1)) / ((x + 1) / (x - 1)) == x + 1
