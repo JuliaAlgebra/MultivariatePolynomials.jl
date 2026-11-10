@@ -107,24 +107,10 @@ end
 
 SubBasis{B}(monos::Tuple) where {B} = SubBasis{B}([monos...])
 
-function implicit_basis(basis::SA.SubBasis)
-    return parent(basis)
-end
-function implicit_basis(basis::SA.ImplicitBasis)
-    return basis
-end
-
-function implicit(a::SA.AlgebraElement)
-    basis = implicit_basis(SA.basis(a))
-    basis === SA.basis(a) && return a
-    return SA.AlgebraElement(SA.coeffs(a, basis), algebra(basis))
-end
-
-function implicit(t::SA.Term)
-    basis = implicit_basis(SA.basis(parent(t)))
-    basis === SA.basis(parent(t)) && return t
-    return SA.Term(algebra(basis), basis[SA.basis_element(t)], coefficient(t))
-end
+# `implicit` and `implicit_basis` are defined in StarAlgebras, these are kept
+# for packages that import them from `MultivariatePolynomials`.
+const implicit = SA.implicit
+const implicit_basis = SA.implicit_basis
 
 function _comparable_type(
     ::Type{<:SA.MappedBasis{T,I,<:ExponentsIterator{M}}},
@@ -148,23 +134,6 @@ end
 function algebra_element_type(::Type{C}, ::Type{B}) where {C,B}
     A = MA.promote_operation(algebra, B)
     return SA.AlgebraElement{eltype(C),A,_coeffs_type(C, B)}
-end
-
-function MA.promote_operation(
-    ::typeof(implicit),
-    ::Type{AE},
-) where {AG,T,AE<:SA.AlgebraElement{T,AG}}
-    BT =
-        MA.promote_operation(implicit_basis, MA.promote_operation(SA.basis, AE))
-    return algebra_element_type(Vector{T}, BT)
-end
-
-MA.promote_operation(::typeof(implicit_basis), B::Type{<:SA.ImplicitBasis}) = B
-function MA.promote_operation(
-    ::typeof(implicit_basis),
-    ::Type{<:SA.SubBasis{T,I,K,B}},
-) where {T,I,K,B}
-    return B
 end
 
 function _explicit_basis(coeffs, basis::SA.ImplicitBasis)
