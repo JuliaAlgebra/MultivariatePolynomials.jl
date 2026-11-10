@@ -3,6 +3,8 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+import StarAlgebras as SA
+
 @testset "Mixed commutativity (DynamicPolynomials#219)" begin
     Mod.@polyvar x
     Mod.@ncpolyvar s
@@ -110,4 +112,15 @@ end
     p = 1x[1]^2 + (2 + 3im) * x[1] * x[2] + (2 - 3im) * x[2] * x[1] + 4x[2]^2
     @test polynomial(Q[2:-1:1, 2:-1:1], x) == p
     @test polynomial(Q, monomial_vector(x)) == p
+end
+@testset "Noncommutative polynomial in a SubBasis" begin
+    Mod.@ncpolyvar x y
+    b = MP.SubBasis{MP.Monomial}([x, y])
+    q = SA.algebra_element([1, 2], b)
+    @test typeof(q) == MP.algebra_element_type(Vector{Int}, typeof(b))
+    p = sum([1, 2] .* MP.keys_as_monomials(b))
+    @test q * q == p * p
+    @test q' * q == p' * p
+    @test q + x == p + x
+    @test x * q == x * p
 end

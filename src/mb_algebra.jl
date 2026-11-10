@@ -1,17 +1,17 @@
 # From MultivariateBases/src/MultivariateBases.jl — algebra() function
 
 function algebra(basis::Union{FullBasis{B,V},SubBasis{B,V}}) where {B,V}
-    mstruct = if is_commutative(V)
-        MStruct(basis)
-    else
-        if B != Monomial
-            error(
-                "Only the `Monomial` basis is supported with noncommutative variables",
-            )
-        end
-        SA.DiracMStructure(basis, *)
+    if is_commutative(V)
+        return SA.StarAlgebra(Variables{B}(variables(basis)), MStruct(basis))
     end
-    return SA.StarAlgebra(Variables{B}(variables(basis)), mstruct)
+    if B != Monomial
+        error(
+            "Only the `Monomial` basis is supported with noncommutative variables",
+        )
+    end
+    # Use the parent basis as object, like `algebra(::_NoncommutativeBasis)`,
+    # so that this algebra can be promoted with the one of the parent basis.
+    return SA.StarAlgebra(implicit_basis(basis), SA.DiracMStructure(basis, *))
 end
 
 function MA.promote_operation(
@@ -19,10 +19,11 @@ function MA.promote_operation(
     BT::Type{<:Union{FullBasis{B,V,E},SubBasis{B,V,E}}},
 ) where {B,V,E}
     P = BasisElement{B,V,E}
-    MS = if is_commutative(V)
-        MStruct{B,V,E,SA.key_type(BT),BT}
-    else
-        SA.DiracMStructure{P,SA.key_type(BT),BT,typeof(*)}
+    if is_commutative(V)
+        MS = MStruct{B,V,E,SA.key_type(BT),BT}
+        return SA.StarAlgebra{Variables{B,V},P,MS}
     end
-    return SA.StarAlgebra{Variables{B,V},P,MS}
+    O = MA.promote_operation(implicit_basis, BT)
+    MS = SA.DiracMStructure{P,SA.key_type(BT),BT,typeof(*)}
+    return SA.StarAlgebra{O,P,MS}
 end
