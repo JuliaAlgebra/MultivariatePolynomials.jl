@@ -42,7 +42,7 @@ end
 
 function SA.promote_bases_with_maps(a::MStruct, b::MStruct)
     _a, _b = SA.promote_bases_with_maps(SA.basis(a), SA.basis(b))
-    return SA.maybe_promote(a, _a...), SA.maybe_promote(b, _b...)
+    return SA.promote_parents(a, b, _a, _b)
 end
 
 function SA.promote_object(

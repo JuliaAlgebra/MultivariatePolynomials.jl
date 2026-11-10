@@ -187,6 +187,16 @@ function _map(needles, haystack)
     )
 end
 
+# Whether all the `needles` are in `haystack`, both sorted in decreasing order
+function _issubset_sorted(needles, haystack)
+    return all(needles) do needle
+        i = _idx(needle, haystack)
+        return !isnothing(i) &&
+               i <= lastindex(haystack) &&
+               haystack[i] == needle
+    end
+end
+
 function _incompatible_variables_error(A, B)
     return throw(ArgumentError("Cannot combine variables of type $A and $B."))
 end
@@ -212,14 +222,22 @@ function promote_variables_with_maps(a, b)
     if a == b
         return (a, nothing), (b, nothing)
     end
-    all_vars = SA.merge_sorted(
-        a,
-        b;
-        lt = isless,
-        combine = SA.first_of,
-        filter = _ -> true,
-        rev = true,
-    )
+    # Avoid allocating the merged variables when one contains the other, e.g.,
+    # when adding terms to a polynomial that already has all their variables.
+    all_vars = if length(a) >= length(b) && _issubset_sorted(b, a)
+        a
+    elseif length(a) < length(b) && _issubset_sorted(a, b)
+        b
+    else
+        SA.merge_sorted(
+            a,
+            b;
+            lt = isless,
+            combine = SA.first_of,
+            filter = _ -> true,
+            rev = true,
+        )
+    end
     return (all_vars, _map(a, all_vars)), (all_vars, _map(b, all_vars))
 end
 
