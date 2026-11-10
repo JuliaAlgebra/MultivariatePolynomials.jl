@@ -116,7 +116,29 @@ end
 #    end
 #    return true
 #end
+_basis_family(::AbstractVariable) = Monomial
+_basis_family(::BasisElement{B}) where {B} = B
+_basis_family(::SA.StarAlgebra{<:Variables{B}}) where {B} = B
+_basis_family(::SA.StarAlgebra{<:_NoncommutativeBasis}) = Monomial
+_basis_family(p::Union{SA.Term,SA.AlgebraElement}) = _basis_family(parent(p))
+
+# Terms of different basis families are never equal even if the polynomials
+# are so comparing them term by term would silently give a wrong answer.
+function _check_same_basis_family(p1, p2)
+    B1 = _basis_family(p1)
+    B2 = _basis_family(p2)
+    if B1 !== B2
+        throw(
+            ArgumentError(
+                "Cannot compare different basis families $B1 and $B2; use convert_basis explicitly.",
+            ),
+        )
+    end
+    return
+end
+
 function Base.:(==)(p1::AbstractPolynomial, p2::AbstractPolynomial)
+    _check_same_basis_family(p1, p2)
     return compare_terms(p1, p2, iszero, ==)
 end
 function Base.isequal(p1::AbstractPolynomial, p2::AbstractPolynomial)
@@ -163,6 +185,7 @@ function Base.isapprox(
     end,
     kwargs...,
 )
+    _check_same_basis_family(p1, p2)
     return compare_terms(
         p1,
         p2,
