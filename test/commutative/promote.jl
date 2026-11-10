@@ -300,6 +300,21 @@ end
     end
 end
 
+@testset "common_parent" begin
+    Mod.@polyvar x y z
+    ts = MP.term.([z^2, x^2, 2y * z])
+    ps = [x + y, z^2 + 1]
+    for a in (ts, ps, ts[1:2])
+        alg = SA.common_parent(a)
+        # The product promotes the operands two at a time
+        @test MP.variables(SA.basis(alg)) == MP.variables(prod(a))
+        @test parent(sum(a)) == alg
+    end
+    @test sum(ts) == z^2 + x^2 + 2y * z
+    @test SA.common_parent(empty(ts)) === nothing
+    @test SA.common_parent(empty(ps)) === nothing
+end
+
 @testset "promote_bases end-to-end" begin
     # Monomials with different variables
     Mod.@polyvar x
