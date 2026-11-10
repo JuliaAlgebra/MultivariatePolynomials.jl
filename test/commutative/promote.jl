@@ -260,6 +260,19 @@ end
 
     # The expanded exponents should not overlap (different slots)
     @test all(new_exp_x .* new_exp_y .== 0)
+
+    # One contains the other: its variables are reused
+    vars_xy = MP.variables(x + y)
+    (vxy, mxy), (vy, my) = MP.promote_variables_with_maps(vars_xy, vars_y)
+    @test vxy === vars_xy
+    @test vy === vars_xy
+    @test mxy === nothing
+    @test collect(my(exp_y)) == [v == y ? 2 : 0 for v in vars_xy]
+    (vy, my), (vxy, mxy) = MP.promote_variables_with_maps(vars_y, vars_xy)
+    @test vy === vars_xy
+    @test vxy === vars_xy
+    @test collect(my(exp_y)) == [v == y ? 2 : 0 for v in vars_xy]
+    @test mxy === nothing
 end
 
 @testset "promote_bases_with_maps" begin
@@ -277,6 +290,14 @@ end
     pp2, qq2 = SA.promote_bases(p, q)
     @test pp2 === p
     @test qq2 === q
+
+    # The basis that has all the variables is reused
+    r = b^2 + a
+    for (s, t) in ((r, p), (p, r))
+        ss, tt = SA.promote_bases(s, t)
+        @test SA.basis(ss) === SA.basis(r)
+        @test SA.basis(tt) === SA.basis(r)
+    end
 end
 
 @testset "promote_bases end-to-end" begin

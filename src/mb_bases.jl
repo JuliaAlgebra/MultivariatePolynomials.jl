@@ -302,5 +302,11 @@ end
 
 function SA.promote_bases_with_maps(a::FullBasis, b::FullBasis)
     _a, _b = promote_variables_with_maps(a.map, b.map)
+    # Reuse the basis that has all the variables instead of building an equal one
+    if isnothing(last(_a))
+        return (a, nothing), (a, last(_b))
+    elseif isnothing(last(_b))
+        return (b, last(_a)), (b, nothing)
+    end
     return SA.maybe_promote(a, _a...), SA.maybe_promote(b, _b...)
 end
