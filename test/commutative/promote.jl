@@ -291,12 +291,12 @@ end
     @test pp2 === p
     @test qq2 === q
 
-    # The basis that has all the variables is reused
+    # The algebra that has all the variables is reused
     r = b^2 + a
     for (s, t) in ((r, p), (p, r))
         ss, tt = SA.promote_bases(s, t)
-        @test SA.basis(ss) === SA.basis(r)
-        @test SA.basis(tt) === SA.basis(r)
+        @test parent(ss) === parent(r)
+        @test parent(tt) === parent(r)
     end
 end
 
