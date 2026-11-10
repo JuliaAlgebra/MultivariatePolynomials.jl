@@ -123,4 +123,5 @@ end
     @test q' * q == p' * p
     @test q + x == p + x
     @test x * q == x * p
+    @test sprint(show, b) == "SubBasis{Monomial}([y, x])"
 end

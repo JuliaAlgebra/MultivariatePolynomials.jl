@@ -209,7 +209,7 @@ end
 # FIXME this assumes that the basis is invariant under adjoint
 SA.star(::SubBasis, coeffs) = SA.star.(coeffs)
 
-function _show_vector(io::IO, mime::MIME, v, map = identity)
+function _show_vector(io::IO, mime::MIME, v)
     print(io, '[')
     first = true
     for el in v
@@ -217,14 +217,14 @@ function _show_vector(io::IO, mime::MIME, v, map = identity)
             print(io, ", ")
         end
         first = false
-        show(io, mime, map(el))
+        show(io, mime, el)
     end
     return print(io, ']')
 end
 
 function _show(io::IO, mime::MIME, basis::SubBasis{B}) where {B}
     print(io, "SubBasis{$(nameof(B))}(")
-    _show_vector(io, mime, basis.keys, Base.Fix1(monomial, variables(basis)))
+    _show_vector(io, mime, keys_as_monomials(basis))
     print(io, ')')
     return
 end
