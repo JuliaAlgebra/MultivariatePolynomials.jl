@@ -157,8 +157,9 @@ function _substitute_numbers(p, s)
         (exps, α) in zip(keys(c), values(c))
     ]
     basis = FullBasis{Monomial}(vars[keep])
-    coeffs = SA.SparseCoefficients(new_keys, new_values, SA.comparable(basis))
-    return SA.AlgebraElement(MA.operate!(SA.canonical, coeffs), algebra(basis))
+    # Removing the substituted variables may reorder and merge the monomials
+    coeffs = SA.sparse_coefficients(new_keys, new_values, SA.comparable(basis))
+    return SA.AlgebraElement(coeffs, algebra(basis))
 end
 
 function substitute(st::_AST, p::_APL, s::Substitutions)
