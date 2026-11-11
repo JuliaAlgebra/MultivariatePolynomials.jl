@@ -44,3 +44,18 @@ struct TestBasis <: MP.AbstractMonomialIndexed end
         @test SA.basis(z) isa MP.FullBasis{TestBasis}
     end
 end
+
+@testset "Compare different basis families" begin
+    Mod.@polyvar x y
+    p = polynomial(MP.BasisElement{TestBasis}(x * y))
+    q = polynomial(x * y)
+    err = ArgumentError(
+        "Cannot compare different basis families $TestBasis and $(MP.Monomial); use convert_basis explicitly.",
+    )
+    @test_throws err p == q
+    @test_throws err p ≈ q
+    @test_throws err p ≈ x * y
+    @test !isequal(p, q)
+    @test p == p
+    @test p ≈ p
+end
