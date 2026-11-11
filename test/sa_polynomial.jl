@@ -99,6 +99,17 @@ end
     @test MP.coefficient_type(x + y) === Int
 end
 
+@testset "Coefficients in a full basis with other variables" begin
+    Mod.@polyvar x y z
+    full = MP.FullBasis{MP.Monomial}([x, y, z])
+    p = 2y - 1
+    q = SA.AlgebraElement(SA.coeffs(p, full), MP.algebra(full))
+    @test MP.variables(q) == [x, y, z]
+    @test q == p
+    @test full[MP.monomial(y^2 * x)] == [1, 2, 0]
+    @test_throws ArgumentError MP.FullBasis{MP.Monomial}([x, z])[MP.monomial(y)]
+end
+
 @testset "Registered scalars extend finite polynomial bases" begin
     Mod.@polyvar x
     basis = SA.SubBasis(MP.FullBasis{MP.Monomial}([x]), [[1], [2]])
