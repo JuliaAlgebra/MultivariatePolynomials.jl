@@ -4,11 +4,28 @@ if !@isdefined(Mod)
     include("../utils.jl")
 end
 
+import MutableArithmetics as MA
 import StarAlgebras as SA
 
 # Basis indexed by monomials other than the monomial basis, to test the methods
 # that are shared by the elements of all bases.
 struct TestBasis <: MP.AbstractMonomialIndexed end
+
+# The element of `TestBasis` with exponents `e` is twice the monomial with
+# exponents `e`.
+MP._promote_coef(::Type{T}, ::Type{TestBasis}) where {T} = promote_type(T, Int)
+function SA.coeffs!(
+    res,
+    cfs,
+    ::MP.FullBasis{TestBasis},
+    ::MP.FullBasis{MP.Monomial},
+)
+    MA.operate!(zero, res)
+    for (k, v) in SA.nonzero_pairs(cfs)
+        res[k] = 2v
+    end
+    return res
+end
 
 @testset "Basis elements" begin
     Mod.@polyvar x y z
@@ -58,4 +75,13 @@ end
     @test !isequal(p, q)
     @test p == p
     @test p ≈ p
+end
+
+@testset "Adjoint coefficients between basis families" begin
+    Mod.@polyvar x y
+    source = MP.SubBasis{TestBasis}([x, y])
+    target = MP.SubBasis{MP.Monomial}([x^0, x, y])
+    # The coefficients of `y` and `x` in `target` are 4 and 9
+    @test SA.adjoint_coeffs([1, 4, 9], source, target) == [8, 18]
+    @test SA.adjoint_coeffs!([99, 99], [1, 4, 9], source, target) == [8, 18]
 end
