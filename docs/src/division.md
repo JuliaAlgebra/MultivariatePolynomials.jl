@@ -18,6 +18,24 @@ If the coefficient type is not a field, it is promoted to a field using [`promot
 ```@docs
 promote_to_field
 ```
+
+For noncommutative polynomials, `rem(p, d)` and `rem(p, [d_1, ..., d_n])`
+reduce contiguous occurrences of each divisor's leading monomial, preserving
+the factors on both sides. For example, with noncommutative variables:
+
+```julia
+rem(x * y^2 * z, y^2 - (2x - 1)) == 2x^2 * z - x * z
+```
+
+Divisors are tried in the supplied order, and the leftmost occurrence is
+reduced first. Termination requires a well-founded monomial order compatible
+with multiplication on both sides. The remainder can depend on these choices
+unless the divisors form a noncommutative Gröbner basis for that order;
+`rem` does not compute or complete such a basis.
+This two-sided reduction is supported only by `rem`, since its reduction
+steps cannot generally be represented by the left quotients returned by
+`div` and `divrem`.
+
 Alternatively, [`pseudo_rem`](@ref) or [`pseudo_divrem`](@ref) can be used
 instead as they do not require the coefficient type to be a field.
 ```@docs

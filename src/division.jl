@@ -200,7 +200,75 @@ function Base.div(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
     return divrem(f, g; kwargs...)[1]
 end
 function Base.rem(f::_APL, g::Union{_APL,AbstractVector{<:_APL}}; kwargs...)
+    if !is_commutative(f)
+        return _noncommutative_rem(f, g; kwargs...)
+    end
     return divrem(f, g; kwargs...)[2]
+end
+
+_word(m) = [v for (v, e) in powers(m) for _ in 1:e]
+
+# Return the factors surrounding the first contiguous occurrence of `d`.
+function _subword_factors(m, d)
+    word, pattern = _word(m), _word(d)
+    n = length(pattern)
+    for i in 1:(length(word)-n+1)
+        if view(word, i:(i+n-1)) == pattern
+            left = prod(view(word, 1:(i-1)); init = one(m))
+            right = prod(view(word, (i+n):length(word)); init = one(m))
+            return left, right
+        end
+    end
+    return nothing
+end
+
+function _noncommutative_rem(f, g::_APL; kwargs...)
+    return _noncommutative_rem(f, [g]; kwargs...)
+end
+
+function _noncommutative_rem(f, g::AbstractVector; kwargs...)
+    R = MA.promote_operation(rem, typeof(f), eltype(g))
+    rf = convert(R, MA.copy_if_mutable(f))
+    divisors = map(g) do p
+        if iszero(p)
+            throw(DivideError())
+        end
+        return convert(polynomial_type(p), p)
+    end
+    for p in divisors
+        rf, _ = SA.promote_bases(rf, p)
+    end
+    divisors = map(first ∘ Base.Fix2(SA.promote_bases, rf), divisors)
+    lt = leading_term.(divisors)
+    tails = SA.remove_leading_term.(divisors)
+    r = zero(rf)
+    while !iszero(rf)
+        t = leading_term(rf)
+        rf = MA.operate!!(SA.remove_leading_term, rf)
+        if isapproxzero(t; kwargs...)
+            continue
+        end
+        reduced = false
+        for i in eachindex(divisors)
+            factors = _subword_factors(monomial(t), monomial(lt[i]))
+            if factors !== nothing
+                left, right = factors
+                c = coefficient(t) / coefficient(lt[i])
+                rf = MA.operate!!(
+                    MA.sub_mul,
+                    rf,
+                    term(c, left),
+                    tails[i] * right,
+                )
+                reduced = true
+                break
+            end
+        end
+        if !reduced
+            r = MA.add!!(r, t)
+        end
+    end
+    return r
 end
 
 """
