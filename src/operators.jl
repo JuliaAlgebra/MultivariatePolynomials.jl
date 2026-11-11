@@ -104,6 +104,9 @@ function LinearAlgebra.dot(
 )
     return p1' * p2
 end
+LinearAlgebra.dot(r::RationalPoly, s::RationalPoly) = r' * s
+LinearAlgebra.dot(p::_APL, r::RationalPoly) = p' * r
+LinearAlgebra.dot(r::RationalPoly, p::_APL) = r' * p
 
 _sum_product_operand(p) = p
 _sum_product_operand(m::AbstractMonomialLike) = term(m)
