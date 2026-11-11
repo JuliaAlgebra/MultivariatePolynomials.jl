@@ -43,14 +43,3 @@ for op in [:+, :-, :*]
         Base.$op(p::_AE, q::_BasisElementLike) = $op(p, term(q))
     end
 end
-
-# Extend finite bases before SA embeds scalars as constant terms.
-function SA._prepare_scalar_sum(p::Union{AbstractPolynomial,AbstractTerm})
-    return SA.implicit(p)
-end
-function MA.promote_operation(
-    ::typeof(SA._prepare_scalar_sum),
-    ::Type{P},
-) where {P<:Union{AbstractPolynomial,AbstractTerm}}
-    return MA.promote_operation(SA.implicit, SA._algebra_element_type(P))
-end
