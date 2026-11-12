@@ -5,6 +5,23 @@ if !@isdefined(Mod)
 end
 
 @testset "Comparison" begin
+    @testset "Array isapprox" begin
+        Mod.@polyvar x y
+        for p in (x, x * y, 2x, x + y, 1.0x, 1.0x + y, (1 + im) * x)
+            @test p ≈ p
+            @test [p] ≈ [p]
+            @test [p p; p p] ≈ [p p; p p]
+        end
+        @test !([x] ≈ [y])
+        @test !([x + y] ≈ [x - y])
+        @test [x] ≈ [1.0x]
+        @test [1.0x] ≈ [(1 + 1e-9) * x]
+        @test !isapprox([1.0x], [(1 + 1e-9) * x]; rtol = 1e-10)
+        @test isapprox([0.0x], [1e-9x]; atol = 1e-8)
+        @test !isapprox([0.0x], [1e-9x]; atol = 1e-10)
+        @test isapprox([x], [1.01x]; rtol = 0.02)
+        @test !isapprox([x], [1.01x]; rtol = 0.001)
+    end
     @testset "Monomial hash consistency" begin
         Mod.@polyvar x y
         vars = variables(x * y)
