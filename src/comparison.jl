@@ -171,7 +171,9 @@ end
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
 # Variables and basis elements have exact unit coefficients.
-function LinearAlgebra.promote_leaf_eltypes(::_BasisElementLike)
+function LinearAlgebra.promote_leaf_eltypes(
+    ::Union{_BasisElementLike,AbstractArray{<:_BasisElementLike}},
+)
     return Bool
 end
 
