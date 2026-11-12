@@ -10,6 +10,8 @@ end
         for p in (x, x * y, 2x, x + y, 1.0x, 1.0x + y, (1 + im) * x)
             @test p ≈ p
             @test [p] ≈ [p]
+            @test Any[p] ≈ Any[p]
+            @test view([p], :) ≈ view([p], :)
             @test [p p; p p] ≈ [p p; p p]
         end
         @test !([x] ≈ [y])
