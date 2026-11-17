@@ -1,10 +1,11 @@
 # These aliases live outside StarAlgebras, where the underlying types are defined.
 # Explicit display methods also use the aliases inside other parametric types.
 function _show_basis_type(io::IO, name, type)
-    if type isa Union
+    unwrapped = Base.unwrap_unionall(type)
+    if type === Union{} || unwrapped isa Union
         return invoke(show, Tuple{IO,Type}, io, type)
     end
-    element = Base.unwrap_unionall(type).parameters[1]
+    element = unwrapped.parameters[1]
     parameters = Base.unwrap_unionall(element).parameters
     for parameter in parameters
         if parameter isa TypeVar && parameter.lb !== Union{}
@@ -39,10 +40,8 @@ function _show_basis_type(io::IO, name, type)
     return
 end
 
-function Base.show(io::IO, type::Type{<:FullBasis})
-    return _show_basis_type(io, "FullBasis", type)
-end
-
-function Base.show(io::IO, type::Type{<:SubBasis})
-    return _show_basis_type(io, "SubBasis", type)
+# A single method avoids ambiguity at Union{}, which is below both families.
+function Base.show(io::IO, type::Type{<:MonomialIndexedBasis})
+    name = type <: FullBasis ? "FullBasis" : "SubBasis"
+    return _show_basis_type(io, name, type)
 end

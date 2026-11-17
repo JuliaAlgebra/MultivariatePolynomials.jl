@@ -40,10 +40,18 @@ include("SimplePolynomials.jl")
             lower_bound,
         )
     end
+    displayed = sprint(show, Union{typeof(full),typeof(sub)})
+    @test startswith(displayed, "Union{")
+    @test occursin(sprint(show, typeof(full)), displayed)
+    @test occursin(sprint(show, typeof(sub)), displayed)
     # Preserve variable names for implementations that encode them in a tuple.
     V = Tuple{Val{:x},Val{:y}}
     @test occursin(string(V), sprint(show, MP.FullBasis{MP.Monomial,V,E}))
     @test sprint(show, Union{}) == "Union{}"
+    @test sprint(show, MP.MonomialIndexedBasis) == sprint(
+        (io, type) -> invoke(show, Tuple{IO,Type}, io, type),
+        MP.MonomialIndexedBasis,
+    )
     @test isempty(filter(m -> m.name == :show, Test.detect_unbound_args(MP)))
 end
 
