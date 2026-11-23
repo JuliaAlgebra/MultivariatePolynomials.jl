@@ -170,6 +170,13 @@ function isapproxzero(p::_APL; kwargs...)
 end
 isapproxzero(p::RationalPoly; kwargs...) = isapproxzero(p.num; kwargs...)
 
+# Variables and basis elements have exact unit coefficients.
+function LinearAlgebra.promote_leaf_eltypes(
+    ::Union{_BasisElementLike,AbstractArray{<:_BasisElementLike}},
+)
+    return Bool
+end
+
 function Base.isapprox(t1::AbstractTerm, t2::AbstractTerm; kwargs...)
     return isapprox(coefficient(t1), coefficient(t2); kwargs...) &&
            monomial(t1) == monomial(t2)
