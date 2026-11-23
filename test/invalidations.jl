@@ -13,18 +13,32 @@ using SnoopCompileCore
 invs = @snoop_invalidations using MultivariatePolynomials
 using SnoopCompile
 dir = pkgdir(MultivariatePolynomials)
-trees = filter(invalidation_trees(invs)) do tree
+function belongs_to_mp(tree)
+    if tree.method === nothing
+        return false
+    end
     return startswith(String(tree.method.file), dir)
 end
+@assert !belongs_to_mp((method = nothing,))
+trees = filter(belongs_to_mp, invalidation_trees(invs))
 show(stderr, MIME"text/plain"(), trees)
 println(stderr)
-println(sum(SnoopCompile.countchildren, trees; init = 0))
+for name in (:show, :other)
+    selected = filter(trees) do tree
+        return (tree.method.name == :show) == (name == :show)
+    end
+    println(sum(SnoopCompile.countchildren, selected; init = 0))
+end
 """
 
 @testset "Invalidations" begin
     project = dirname(Base.active_project())
     cmd = `$(Base.julia_cmd()) --startup-file=no --project=$project -e $INVALIDATIONS_SCRIPT`
-    count = parse(Int, readchomp(cmd))
+    display_count, count = parse.(Int, split(readchomp(cmd)))
+    # Adding type display methods invalidates callers of Base.show(::IO, ::Type)
+    # compiled before MP was loaded. Track these separately to preserve the
+    # tighter limit on arithmetic invalidations below.
+    @test display_count <= (VERSION < v"1.11" ? 15_000 : 5_000)
     # The remaining invalidations are due to the equality between polynomials
     # and JuMP or MOI scalars defined by the extensions. They invalidate poorly
     # inferred call sites in MathOptInterface and JuMP:
