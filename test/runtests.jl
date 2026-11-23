@@ -22,7 +22,6 @@ if IMPLEMENTATION == :SimplePolynomials
     include("comparison.jl")
     include("invalidations.jl")
 end
-include("type_display.jl")
 include("scalar_arithmetic.jl")
 include("extensions.jl")
 if IMPLEMENTATION != :TypedPolynomials

@@ -47,7 +47,6 @@ include("mb_algebra.jl")
 include("noncommutative.jl")
 include("mb_arithmetic.jl")
 include("scalar_arithmetic.jl")
-include("type_display.jl")
 
 include("deprecate.jl")
 
