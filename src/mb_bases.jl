@@ -29,6 +29,20 @@ function FullBasis{B}(vars) where {B}
     return FullBasis(Variables{B,typeof(vars)}(vars))
 end
 
+# The `inverse_map` of the `SA.MappedBasis` is `exponents` which ignores the
+# variables of the basis so a basis element in other variables would get the
+# exponents of the wrong variables.
+function Base.getindex(
+    basis::FullBasis{B,V,E},
+    x::BasisElement{B,V,E},
+) where {B,V,E}
+    vars = variables(basis)
+    if variables(x) == vars
+        return basis.inverse_map(x)
+    end
+    return exponents(x, vars)
+end
+
 function FullBasis{B}(p::_APL) where {B}
     return FullBasis{B}(variables(p))
 end

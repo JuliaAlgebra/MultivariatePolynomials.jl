@@ -33,9 +33,11 @@ println(sum(SnoopCompile.countchildren, trees; init = 0))
     # `==(::JuMP.NonlinearExpr, ::WeakRef)` and
     # `==(::Any, ::JuMP.NonlinearParameter)` in `JuMP.function_string`.
     # These will be fixed in JuMP and MOI, after which this should be 0.
-    # Julia 1.14 also records `isequal(::Any, ::JuMP.NonlinearParameter)`
-    # and more callers of the MOI variable comparison.
-    @test count <= (VERSION >= v"1.14-" ? 90 : 81)
+    # The count depends on the Julia version, e.g., Julia v1.13.4 also records
+    # `isequal(::JuMP.GenericNonlinearExpr, ::Any)` (81 -> 86) and Julia
+    # v1.14.0-beta1 more callers of `==(::Any, ::JuMP.NonlinearParameter)`
+    # (90 -> 95).
+    @test count <= (VERSION >= v"1.14-" ? 95 : 86)
 end
 
 end
