@@ -28,7 +28,7 @@ include("SimplePolynomials.jl")
               "$prefix{$(MP.Monomial), $V, $E}"
         bounded = family{B} where {B<:MP.AbstractMonomialBasis}
         @test sprint(show, bounded) == "$prefix{<:$(MP.AbstractMonomialBasis)}"
-        first_type = family{MP.Monomial,V,Vector{Int}}
+        first_type = family{MP.Monomial,V,Vector{Int64}}
         second_type = family{MP.Monomial,V,Vector{Int32}}
         displayed = sprint(show, Union{first_type,second_type})
         @test startswith(displayed, "Union{")
